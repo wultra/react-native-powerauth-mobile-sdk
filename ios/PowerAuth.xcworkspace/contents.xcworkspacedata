@@ -4,4 +4,7 @@
    <FileRef
       location = "group:PowerAuth.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:Pods/Pods.xcodeproj">
+   </FileRef>
 </Workspace>

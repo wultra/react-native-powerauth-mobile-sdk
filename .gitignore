@@ -11,6 +11,7 @@ android/.settings
 
 # iOS
 *.xcuserstate
+ios/Pods/*
 
 # IDEs
 .vscode

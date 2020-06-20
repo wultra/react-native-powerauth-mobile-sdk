@@ -9,7 +9,8 @@
     "android",
     "PowerAuth.js",
     "PowerAuth.d.ts",
-    "ios",
+    "ios/PowerAuth/PowerAuth.m",
+    "ios/PowerAuth/PowerAuth.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
   "scripts": {
