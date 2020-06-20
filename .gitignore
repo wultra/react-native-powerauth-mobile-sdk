@@ -1,0 +1,16 @@
+# OSX
+.DS_Store
+
+# node.js
+node_modules/
+
+# Android
+android/.gradle/
+android/.project
+android/.settings
+
+# iOS
+*.xcuserstate
+
+# IDEs
+.vscode
