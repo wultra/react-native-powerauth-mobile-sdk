@@ -14,10 +14,11 @@ var PowerAuth = /** @class */ (function () {
      * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
      * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
      * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
+     * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @returns Promise that with result of the configuration.
      */
-    PowerAuth.prototype.configure = function (instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl) {
-        return this.nativeModule.configure(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl);
+    PowerAuth.prototype.configure = function (instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic) {
+        return this.nativeModule.configure(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
     };
     /**
      * Checks if there is a valid activation.
@@ -51,8 +52,146 @@ var PowerAuth = /** @class */ (function () {
     PowerAuth.prototype.fetchActivationStatus = function () {
         return this.nativeModule.fetchActivationStatus();
     };
+    /**
+     * Create a new activation.
+     *
+     * @param activation A PowerAuthActivation object containg all information required for the activation creation.
+     */
+    PowerAuth.prototype.createActivation = function (activation) {
+        return this.nativeModule.createActivation(activation);
+    };
+    /**
+     * Commit activation that was created and store related data using provided authentication instance.
+     *
+     * @param authentication An authentication instance specifying what factors should be stored.
+     */
+    PowerAuth.prototype.commitActivation = function (authentication) {
+        return this.nativeModule.commitActivation(authentication);
+    };
+    /**
+     * Activation identifier or null if object has no valid activation.
+     */
+    PowerAuth.prototype.getActivationIdentifier = function () {
+        return this.nativeModule.activationIdentifier();
+    };
+    /**
+     * Fingerprint calculated from device's public key or null if object has no valid activation.
+     */
+    PowerAuth.prototype.getActivationFingerprint = function () {
+        return this.nativeModule.activationFingerprint();
+    };
+    /**
+     * Remove current activation by calling a PowerAuth Standard RESTful API endpoint '/pa/activation/remove'.
+     *
+     * @param authentication An authentication instance specifying what factors should be used to sign the request.
+     */
+    PowerAuth.prototype.removeActivationWithAuthentication = function (authentication) {
+        return this.nativeModule.removeActivationWithAuthentication(authentication);
+    };
+    /**
+     * This method removes the activation session state and biometry factor key. Cached possession related key remains intact.
+     * Unlike the `removeActivationWithAuthentication`, this method doesn't inform server about activation removal. In this case
+     * user has to remove the activation by using another channel (typically internet banking, or similar web management console)
+     */
+    PowerAuth.prototype.removeActivationLocal = function () {
+        return this.nativeModule.removeActivationLocal();
+    };
     return PowerAuth;
 }());
+export var PA2ActivationState;
+(function (PA2ActivationState) {
+    PA2ActivationState["PA2ActivationState_Created"] = "PA2ActivationState_Created";
+    PA2ActivationState["PA2ActivationState_PendingCommit"] = "PA2ActivationState_PendingCommit";
+    PA2ActivationState["PA2ActivationState_Active"] = "PA2ActivationState_Active";
+    PA2ActivationState["PA2ActivationState_Blocked"] = "PA2ActivationState_Blocked";
+    PA2ActivationState["PA2ActivationState_Removed"] = "PA2ActivationState_Removed";
+    PA2ActivationState["PA2ActivationState_Deadlock"] = "PA2ActivationState_Deadlock";
+})(PA2ActivationState || (PA2ActivationState = {}));
+/**
+ * The `PowerAuthActivation` object contains activation data required for the activation creation. The object supports
+ * all types of activation currently supported in the SDK.
+ */
+var PowerAuthActivation = /** @class */ (function () {
+    function PowerAuthActivation() {
+    }
+    /**
+     * Create an instance of `PowerAuthActivation` configured with the activation code. The activation code may contain
+     * an optional signature part, in case that it is scanned from QR code.
+     *
+     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
+     * an activation record on PowerAuth Server.
+     *
+     * @param activationCode Activation code, obtained either via QR code scanning or by manual entry.
+     * @param name Activation name to be used for the activation.
+     * @return New instance of `PowerAuthActivation`.
+     */
+    PowerAuthActivation.createWithActivationCode = function (activationCode, name) {
+        var a = new PowerAuthActivation();
+        a.activationName = name;
+        a.activationCode = activationCode;
+        return a;
+    };
+    /**
+     * Creates an instance of `PowerAuthActivation` with a recovery activation code and PUK.
+     *
+     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
+     * an activation record on PowerAuth Server.
+     *
+     * @param recoveryCode Recovery code, obtained either via QR code scanning or by manual entry.
+     * @param recoveryPuk PUK obtained by manual entry.
+     * @param name Activation name to be used for the activation.
+     * @return New instance of `PowerAuthActivation`.
+     */
+    PowerAuthActivation.createWithRecoveryCode = function (recoveryCode, recoveryPuk, name) {
+        var a = new PowerAuthActivation();
+        a.activationName = name;
+        a.recoveryCode = recoveryCode;
+        a.recoveryPuk = recoveryPuk;
+        return a;
+    };
+    /**
+     * Creates an instance of `PowerAuthActivation` with an identity attributes for the custom activation purposes.
+     *
+     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
+     * an activation record on PowerAuth Server.
+     *
+     * @param identityAttributes Custom activation parameters that are used to prove identity of a user (each object value is serialized and used).
+     * @param name Activation name to be used for the activation.
+     * @return New instance of `PowerAuthActivation`.
+     */
+    PowerAuthActivation.createWithIdentityAttributes = function (identityAttributes, name) {
+        var a = new PowerAuthActivation();
+        a.activationName = name;
+        a.identityAttributes = identityAttributes;
+        return a;
+    };
+    return PowerAuthActivation;
+}());
+export { PowerAuthActivation };
+;
+/**
+ * Class representing a multi-factor authentication object.
+ */
+var PowerAuthAuthentication = /** @class */ (function () {
+    function PowerAuthAuthentication() {
+        /** Indicates if a possession factor should be used. */
+        this.usePossession = false;
+        /** Indicates if a biometry factor should be used. */
+        this.useBiometry = false;
+        /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
+        this.userPassword = null;
+        /**
+         * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
+         *
+         * Use this value to give user a hint on what is biometric authentication used for in this specific authentication.
+         * For example, include a name of the account user uses to log in.
+         * */
+        this.biometryPrompt = null;
+    }
+    return PowerAuthAuthentication;
+}());
+export { PowerAuthAuthentication };
+;
 export var PowerAuthErrorCode;
 (function (PowerAuthErrorCode) {
     /** When the error is not originating from the native module */
