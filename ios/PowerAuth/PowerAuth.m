@@ -328,7 +328,7 @@ RCT_EXPORT_METHOD(fetchEncryptionKey:(NSDictionary*)authDict
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] fetchEncryptionKey:auth index:index  callback:^(NSData * encryptionKey, NSError * error) {
         if (encryptionKey) {
-            resolve([RCTConvert NSString:encryptionKey]);
+            resolve([encryptionKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         }
@@ -406,9 +406,13 @@ RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
 - (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict {
     PowerAuthAuthentication *auth = [[PowerAuthAuthentication alloc] init];
     auth.usePossession = [RCTConvert BOOL:dict[@"usePossession"]];
-    auth.usePassword = dict[@"userPassword"];
     auth.useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
-    auth.biometryPrompt = dict[@"biometryPrompt"];
+    if (dict[@"userPassword"] != [NSNull null]) {
+        auth.usePassword = [RCTConvert NSString:dict[@"userPassword"]];
+    }
+    if (dict[@"biometryPrompt"] != [NSNull null]) {
+        auth.biometryPrompt = [RCTConvert NSString:dict[@"biometryPrompt"]];
+    }
     return auth;
 }
 

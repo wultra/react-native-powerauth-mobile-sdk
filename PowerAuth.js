@@ -178,7 +178,7 @@ var PowerAuth = /** @class */ (function () {
      * This method returns the information about the key value being present in keychain.
      */
     PowerAuth.prototype.hasBiometryFactor = function () {
-        return this.nativeModule.hasBiometryKey();
+        return this.nativeModule.hasBiometryFactor();
     };
     /**
      * Remove the biometry related factor key.
@@ -190,6 +190,7 @@ var PowerAuth = /** @class */ (function () {
     };
     /**
      * Generate a derived encryption key with given index.
+     * The key is returned in form of base64 encoded string.
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for subsequent key derivation using given index.
      *
      * @param authentication Authentication used for vault unlocking call.

@@ -197,7 +197,7 @@ class PowerAuth {
      * This method returns the information about the key value being present in keychain.
      */
     hasBiometryFactor(): Promise<boolean> {
-        return this.nativeModule.hasBiometryKey();
+        return this.nativeModule.hasBiometryFactor();
     }
 
     /**
@@ -211,6 +211,7 @@ class PowerAuth {
 
     /** 
      * Generate a derived encryption key with given index.
+     * The key is returned in form of base64 encoded string.
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for subsequent key derivation using given index.
      * 
      * @param authentication Authentication used for vault unlocking call.
@@ -237,7 +238,7 @@ class PowerAuth {
      * 
      * @param password Password to be verified.
      */
-    validatePassword(password: string): Promise<boolean> {
+    validatePassword(password: string): Promise<void> {
         return this.nativeModule.validatePassword(password);
     }
 
@@ -400,7 +401,7 @@ export class PowerAuthAuthentication {
     /** Indicates if a biometry factor should be used. */
     useBiometry: boolean = false;
     /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
-    userPassword: string = null;
+    userPassword?: string = null;
     /**
      * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
      * 

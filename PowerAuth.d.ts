@@ -147,6 +147,7 @@ declare class PowerAuth {
     removeBiometryFactor(): Promise<boolean>;
     /**
      * Generate a derived encryption key with given index.
+     * The key is returned in form of base64 encoded string.
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for subsequent key derivation using given index.
      *
      * @param authentication Authentication used for vault unlocking call.
@@ -167,7 +168,7 @@ declare class PowerAuth {
      *
      * @param password Password to be verified.
      */
-    validatePassword(password: string): Promise<boolean>;
+    validatePassword(password: string): Promise<void>;
     /**
      * Returns YES if underlying session contains an activation recovery data.
      */
@@ -291,8 +292,8 @@ export declare class PowerAuthAuthentication {
     usePossession: boolean;
     /** Indicates if a biometry factor should be used. */
     useBiometry: boolean;
-    /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
-    userPassword: string;
+    /** Password to be used for knowledge factor, or null of knowledge factor should not be used */
+    userPassword?: string;
     /**
      * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
      *
