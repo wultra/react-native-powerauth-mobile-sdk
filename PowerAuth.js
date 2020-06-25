@@ -343,6 +343,22 @@ var PowerAuthAuthentication = /** @class */ (function () {
 }());
 export { PowerAuthAuthentication };
 ;
+var PowerAuthError = /** @class */ (function () {
+    function PowerAuthError(exception) {
+        var _a, _b, _c, _d, _e;
+        this.originalException = exception;
+        this.code = (_a = exception === null || exception === void 0 ? void 0 : exception.code) !== null && _a !== void 0 ? _a : null;
+        this.message = (_b = exception === null || exception === void 0 ? void 0 : exception.message) !== null && _b !== void 0 ? _b : null;
+        this.domain = (_c = exception === null || exception === void 0 ? void 0 : exception.domain) !== null && _c !== void 0 ? _c : null;
+        this.description = (_e = (_d = exception === null || exception === void 0 ? void 0 : exception.userInfo) === null || _d === void 0 ? void 0 : _d.NSLocalizedDescription) !== null && _e !== void 0 ? _e : null;
+    }
+    PowerAuthError.prototype.print = function () {
+        return "code: " + this.code + "\nmessage: " + this.message + "\ndomain: " + this.domain + "\ndescription: " + this.description;
+    };
+    return PowerAuthError;
+}());
+export { PowerAuthError };
+;
 export var PowerAuthErrorCode;
 (function (PowerAuthErrorCode) {
     /** When the error is not originating from the native module */
@@ -391,6 +407,7 @@ export var PowerAuthErrorCode;
     /** Error code for a general error related to WatchConnectivity (iOS only) */
     PowerAuthErrorCode["PA2ErrorCodeWatchConnectivity"] = "PA2ErrorCodeWatchConnectivity";
 })(PowerAuthErrorCode || (PowerAuthErrorCode = {}));
+// HELPER METHODS
 function toBase64(input) {
     var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
     var str = input;

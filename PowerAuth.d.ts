@@ -292,7 +292,7 @@ export declare class PowerAuthAuthentication {
     usePossession: boolean;
     /** Indicates if a biometry factor should be used. */
     useBiometry: boolean;
-    /** Password to be used for knowledge factor, or null of knowledge factor should not be used */
+    /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
     userPassword?: string;
     /**
      * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
@@ -301,6 +301,15 @@ export declare class PowerAuthAuthentication {
      * For example, include a name of the account user uses to log in.
      * */
     biometryPrompt: string;
+}
+export declare class PowerAuthError {
+    code?: PowerAuthErrorCode;
+    message?: string;
+    domain?: string;
+    description?: string;
+    originalException: any;
+    constructor(exception: any);
+    print(): string;
 }
 export declare enum PowerAuthErrorCode {
     /** When the error is not originating from the native module */

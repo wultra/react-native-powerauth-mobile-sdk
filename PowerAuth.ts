@@ -411,6 +411,28 @@ export class PowerAuthAuthentication {
     biometryPrompt: string = null;
 };
 
+export class PowerAuthError {
+
+    code?: PowerAuthErrorCode;
+    message?: string;
+    domain?: string;
+    description?: string;
+
+    originalException: any;
+
+    constructor(exception: any) {
+        this.originalException = exception;
+        this.code = exception?.code ?? null;
+        this.message = exception?.message ?? null;
+        this.domain = exception?.domain ?? null;
+        this.description = exception?.userInfo?.NSLocalizedDescription ?? null;
+    }
+
+    print(): string {
+        return `code: ${this.code}\nmessage: ${this.message}\ndomain: ${this.domain}\ndescription: ${this.description}`;
+    }
+};
+
 export enum PowerAuthErrorCode {
 
     /** When the error is not originating from the native module */
@@ -479,7 +501,7 @@ export enum PowerAuthErrorCode {
     PA2ErrorCodeWatchConnectivity = "PA2ErrorCodeWatchConnectivity"
 }
 
-
+// HELPER METHODS
 
 function toBase64(input: string) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
