@@ -2,16 +2,25 @@
 .DS_Store
 
 # node.js
-node_modules/
+node_modules
+demoapp/node_modules
 
 # Android
 android/.gradle/
 android/.project
 android/.settings
+demoapp/android/.gradle/
+demoapp/android/.project
+demoapp/android/.settings
+demoapp/android/app/.gradle/
+demoapp/android/app/.project
+demoapp/android/app/.settings
+*build/
 
 # iOS
 *.xcuserstate
 ios/Pods/*
+demoapp/ios/Pods/*
 
 # IDEs
 .vscode

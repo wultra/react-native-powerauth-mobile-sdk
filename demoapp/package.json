@@ -1,0 +1,42 @@
+{
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "copymodule": "npm r react-native-powerauth-mobile-sdk && pushd ../../repos/react-native-powerauth-mobile-sdk && npm pack && popd && npm i ../../repos/react-native-powerauth-mobile-sdk/react-native-powerauth-mobile-sdk-0.9.0.tgz",
+    "cpi": "npm run copymodule && cd ios && pod install && cd .. && react-native run-ios",
+    "cpa": "npm run copymodule && react-native run-android",
+    "web": "expo start --web",
+    "haul": "haul start"
+  },
+  "dependencies": {
+    "expo": "~37.0.3",
+    "expo-splash-screen": "^0.2.3",
+    "expo-updates": "~0.2.0",
+    "react": "~16.9.0",
+    "react-dom": "~16.9.0",
+    "react-native": "~0.61.5",
+    "react-native-gesture-handler": "~1.6.0",
+    "react-native-powerauth-mobile-sdk": "file:../../repos/react-native-powerauth-mobile-sdk/react-native-powerauth-mobile-sdk-0.9.0.tgz",
+    "react-native-reanimated": "~1.7.0",
+    "react-native-screens": "~2.2.0",
+    "react-native-unimodules": "~0.9.0",
+    "react-native-web": "~0.11.7",
+    "rn-prompt": "^1.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.6",
+    "@haul-bundler/babel-preset-react-native": "^0.16.0",
+    "@haul-bundler/cli": "^0.22.1",
+    "@haul-bundler/preset-0.60": "^0.18.0",
+    "@types/react": "~16.9.23",
+    "@types/react-native": "~0.61.17",
+    "babel-jest": "~25.2.6",
+    "babel-preset-expo": "~8.1.0",
+    "babel-preset-react-native": "^4.0.1",
+    "jest": "~25.2.6",
+    "react-test-renderer": "~16.9.0",
+    "typescript": "~3.8.3"
+  },
+  "private": true
+}
