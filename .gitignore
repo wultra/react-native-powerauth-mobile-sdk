@@ -21,6 +21,3 @@ demoapp/android/app/.settings
 *.xcuserstate
 ios/Pods/*
 demoapp/ios/Pods/*
-
-# IDEs
-.vscode
