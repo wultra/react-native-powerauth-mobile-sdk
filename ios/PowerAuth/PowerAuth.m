@@ -119,8 +119,9 @@ RCT_EXPORT_METHOD(createActivation:(NSDictionary*)activation
         paActivation = [PowerAuthActivation activationWithIdentityAttributes:identityAttributes name:name];
     }
     
-    if (!activation) {
+    if (!paActivation) {
         reject(@"PA2RNInvalidActivationObject", @"Activation object is invalid.", nil);
+        return;
     }
     
     if (extras) {
@@ -274,7 +275,7 @@ RCT_EXPORT_METHOD(verifyServerSignedData:(nonnull NSString*)data
     resolve([[NSNumber alloc] initWithBool:result]);
 }
 
-RCT_EXPORT_METHOD(unsafeChangedPassword:(nonnull NSString*)oldPassword
+RCT_EXPORT_METHOD(unsafeChangePassword:(nonnull NSString*)oldPassword
                  to:(nonnull NSString*)newPassword
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject) {

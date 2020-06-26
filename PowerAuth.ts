@@ -178,8 +178,8 @@ class PowerAuth {
      @param newPassword New password, to be set in case authentication with old password passes.
      @return Returns true in case password was changed without error, NO otherwise.
      */
-    unsafeChangedPassword(oldPassword: string, newPassword: string): Promise<boolean> {
-        return this.nativeModule.unsafeChangedPassword(oldPassword, newPassword);
+    unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
+        return this.nativeModule.unsafeChangePassword(oldPassword, newPassword);
     }
 
     /**

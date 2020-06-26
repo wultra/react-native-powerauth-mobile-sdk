@@ -126,7 +126,7 @@ declare class PowerAuth {
      @param newPassword New password, to be set in case authentication with old password passes.
      @return Returns true in case password was changed without error, NO otherwise.
      */
-    unsafeChangedPassword(oldPassword: string, newPassword: string): Promise<boolean>;
+    unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean>;
     /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for original private key decryption.

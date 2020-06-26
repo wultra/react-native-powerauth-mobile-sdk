@@ -161,8 +161,8 @@ var PowerAuth = /** @class */ (function () {
      @param newPassword New password, to be set in case authentication with old password passes.
      @return Returns true in case password was changed without error, NO otherwise.
      */
-    PowerAuth.prototype.unsafeChangedPassword = function (oldPassword, newPassword) {
-        return this.nativeModule.unsafeChangedPassword(oldPassword, newPassword);
+    PowerAuth.prototype.unsafeChangePassword = function (oldPassword, newPassword) {
+        return this.nativeModule.unsafeChangePassword(oldPassword, newPassword);
     };
     /**
      * Regenerate a biometry related factor key.

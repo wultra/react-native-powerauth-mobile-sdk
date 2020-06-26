@@ -1,6 +1,6 @@
 rootProject.name = 'PowerAuthDemo'
-include ':react-native-powerauth'
-project(':react-native-powerauth').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-powerauth/android')
+include ':react-native-powerauth-mobile-sdk'
+project(':react-native-powerauth-mobile-sdk').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-powerauth-mobile-sdk/android')
 
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'
 includeUnimodulesProjects()

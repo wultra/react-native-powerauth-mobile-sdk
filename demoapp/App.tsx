@@ -149,6 +149,7 @@ export default class App extends Component<any, State> {
           }} />
           <Button title="Remove activation local" onPress={e => {
             PowerAuth.removeActivationLocal();
+            this.refreshActivationInfo();
             alert("Done!")
           }} />
 
@@ -181,7 +182,7 @@ export default class App extends Component<any, State> {
             setTimeout(async () => {
               this.setState({ passPromptVisible: true, passPromptLabel: "Enter new password", passPromptCallback: async newPassword => {
                 try {
-                  await PowerAuth.unsafeChangedPassword(oldPassword, newPassword);
+                  await PowerAuth.unsafeChangePassword(oldPassword, newPassword);
                   alert("Password changed");
                 } catch (e) {
                   alert(`Change failed: ${e.code}`);
