@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
 
+import android.support.v4.app.FragmentActivity;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -248,9 +250,13 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void verifyServerSignedData(String data, String signature, boolean masterKey, Promise promise) {
-        byte[] decodedData = Base64.decode(data, Base64.DEFAULT);
-        byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
-        promise.resolve(this.powerAuth.verifyServerSignedData(decodedData, decodedSignature, masterKey));
+        try {
+            byte[] decodedData = Base64.decode(data, Base64.DEFAULT);
+            byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
+            promise.resolve(this.powerAuth.verifyServerSignedData(decodedData, decodedSignature, masterKey));
+        } catch (Exception e) {
+            promise.reject("PA2ReactNativeError", "Verify failed");
+        }
     }
 
     @ReactMethod
@@ -274,18 +280,32 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void addBiometryFactor(String password, final Promise promise) {
-        this.powerAuth.addBiometryFactor(this.context, password, null, new IAddBiometryFactorListener() {
-            @Override
-            public void onAddBiometryFactorSucceed() {
-                promise.resolve(null);
-            }
+    public void addBiometryFactor(String password, String title, String description, final Promise promise) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                this.powerAuth.addBiometryFactor(
+                        this.context,
+                        ((FragmentActivity)getCurrentActivity()).getSupportFragmentManager(),
+                        title,
+                        description,
+                        password,
+                        new IAddBiometryFactorListener() {
+                            @Override
+                            public void onAddBiometryFactorSucceed() {
+                                promise.resolve(null);
+                            }
 
-            @Override
-            public void onAddBiometryFactorFailed(Throwable t) {
-                promise.reject(PowerAuthModule.getErrorCodeFromThrowable(t) ,t);
+                            @Override
+                            public void onAddBiometryFactorFailed(Throwable t) {
+                                promise.reject(PowerAuthModule.getErrorCodeFromThrowable(t), t);
+                            }
+                        });
+            } catch (Exception e) {
+                promise.reject(PowerAuthModule.getErrorCodeFromThrowable(e) ,e);
             }
-        });
+        } else {
+            promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+        }
     }
 
     @ReactMethod

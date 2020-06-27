@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
@@ -169,9 +169,16 @@ var PowerAuth = /** @class */ (function () {
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for original private key decryption.
      *
      * @param password Password used for authentication during vault unlocking call.
+     * @param title (used only in Android) Title for biometry dialog
+     * @param description (used only in Android) Description for biometry dialog
      */
-    PowerAuth.prototype.addBiometryFactor = function (password) {
-        return this.nativeModule.addBiometryFactor(password);
+    PowerAuth.prototype.addBiometryFactor = function (password, title, description) {
+        if (Platform.OS == "android") {
+            return this.nativeModule.addBiometryFactor(password, title, description);
+        }
+        else {
+            return this.nativeModule.addBiometryFactor(password);
+        }
     };
     /**
      * Checks if a biometry related factor is present.

@@ -200,7 +200,7 @@ export default class App extends Component<any, State> {
           <Button title="Add biometry factor" onPress={ async _ => {
             this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
               try {
-                const r = await PowerAuth.addBiometryFactor(pass)
+                const r = await PowerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
                 alert(`Biometry factor added`);
               } catch (e) {
                 alert(`Failed: ${e.code}`);
@@ -270,9 +270,13 @@ export default class App extends Component<any, State> {
           } }) }} />
           <Button title="Test verifyServerSignedData" onPress={ async _ => {
             // TODO: solve this differently, this failes for now as we pass nonsense data
-            const r = await PowerAuth.verifyServerSignedData("data", "signature", true);
-            alert(`Verified: ${r}`);
-            await this.refreshActivationInfo();
+            try {
+              const r = await PowerAuth.verifyServerSignedData("data", "signature", true);
+              alert(`Verified: ${r}`);
+            } catch (e) {
+              alert(`Remove failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
            }} />
           <Button title="Test requestGetSignature" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
             const auth = new PowerAuthAuthentication();

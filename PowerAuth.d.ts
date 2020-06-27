@@ -132,8 +132,10 @@ declare class PowerAuth {
      * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for original private key decryption.
      *
      * @param password Password used for authentication during vault unlocking call.
+     * @param title (used only in Android) Title for biometry dialog
+     * @param description (used only in Android) Description for biometry dialog
      */
-    addBiometryFactor(password: string): Promise<void>;
+    addBiometryFactor(password: string, title: string, description: string): Promise<void>;
     /**
      * Checks if a biometry related factor is present.
      * This method returns the information about the key value being present in keychain.
