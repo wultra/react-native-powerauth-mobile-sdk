@@ -411,8 +411,8 @@ RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
     if (dict[@"userPassword"] != [NSNull null]) {
         auth.usePassword = [RCTConvert NSString:dict[@"userPassword"]];
     }
-    if (dict[@"biometryPrompt"] != [NSNull null]) {
-        auth.biometryPrompt = [RCTConvert NSString:dict[@"biometryPrompt"]];
+    if (dict[@"biometryMessage"] != [NSNull null]) {
+        auth.biometryPrompt = [RCTConvert NSString:dict[@"biometryMessage"]];
     }
     return auth;
 }

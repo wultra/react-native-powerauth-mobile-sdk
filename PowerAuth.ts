@@ -72,8 +72,8 @@ class PowerAuth {
      * 
      * @param authentication An authentication instance specifying what factors should be stored.
      */
-    commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.commitActivation(authentication)
+    async  commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
+        return this.nativeModule.commitActivation(await this.processAuthentication(authentication))
     }
 
     /**
@@ -95,8 +95,8 @@ class PowerAuth {
      * 
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
-    removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.removeActivationWithAuthentication(authentication);
+    async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
+        return this.nativeModule.removeActivationWithAuthentication(await this.processAuthentication(authentication));
     }
 
     /**
@@ -116,8 +116,8 @@ class PowerAuth {
      * @param params HTTP query params.
      * @return HTTP header with PowerAuth authorization signature
      */
-    requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.nativeModule.requestGetSignature(authentication, uriId, params ?? null);
+    async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
+        return this.nativeModule.requestGetSignature(await this.processAuthentication(authentication), uriId, params ?? null);
     }
 
     /**
@@ -129,8 +129,8 @@ class PowerAuth {
      * @param body HTTP request body.
      * @return HTTP header with PowerAuth authorization signature.
      */
-    requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.nativeModule.requestSignature(authentication, method, uriId, body ? toBase64(body) : null);
+    async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
+        return this.nativeModule.requestSignature(await this.processAuthentication(authentication), method, uriId, body ? toBase64(body) : null);
     }
 
     /**
@@ -142,8 +142,8 @@ class PowerAuth {
      * @param nonce NONCE in Base64 format.
      * @return String representing a calculated signature for all involved factors.
      */
-    offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return this.nativeModule.offlineSignature(authentication, uriId, body ? toBase64(body) : null, nonce);
+    async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
+        return this.nativeModule.offlineSignature(await this.processAuthentication(authentication), uriId, body ? toBase64(body) : null, nonce);
     }
 
     /**
@@ -223,8 +223,8 @@ class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      * @param index Index of the derived key using KDF. 
      */
-    fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return this.nativeModule.fetchEncryptionKey(authentication, index);
+    async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
+        return this.nativeModule.fetchEncryptionKey(await this.processAuthentication(authentication), index);
     }
 
     /**
@@ -234,8 +234,8 @@ class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      * @param data Data to be signed with the private key.
      */
-    signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return this.nativeModule.signDataWithDevicePrivateKey(authentication, toBase64(data));
+    async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
+        return this.nativeModule.signDataWithDevicePrivateKey(await this.processAuthentication(authentication), toBase64(data));
     }
 
     /** 
@@ -261,8 +261,8 @@ class PowerAuth {
      * 
      * @param authentication Authentication used for vault unlocking call.
      */
-    activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
-        return this.nativeModule.activationRecoveryData(authentication);
+    async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
+        return this.nativeModule.activationRecoveryData(await this.processAuthentication(authentication));
     }
 
     /**
@@ -276,8 +276,23 @@ class PowerAuth {
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
      */
-    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.confirmRecoveryCode(recoveryCode, authentication);
+    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
+        return this.nativeModule.confirmRecoveryCode(recoveryCode, await this.processAuthentication(authentication));
+    }
+
+    /**
+     * Retrieves authenticaiton key for biometry.
+     * 
+     * @param title Dialog title
+     * @param description  Dialog description
+     */
+    private async processAuthentication(authentication: PowerAuthAuthentication): Promise<PowerAuthAuthentication> {
+        if (Platform.OS == "android" && authentication.useBiometry) {
+            const key = await this.nativeModule.authenticateWithBiometry(authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??");
+            authentication.biometryKey = key;
+        }
+        
+        return authentication;
     }
 }
 
@@ -409,12 +424,15 @@ export class PowerAuthAuthentication {
     /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
     userPassword?: string = null;
     /**
-     * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
-     * 
-     * Use this value to give user a hint on what is biometric authentication used for in this specific authentication.
-     * For example, include a name of the account user uses to log in. 
-     * */
-    biometryPrompt: string = null;
+     * Message displayed when prompted for biometric authentication
+     */
+    biometryMessage: string = null;
+
+    /** (Android only) Title of biometric prompt */
+    biometryTitle: string = null;
+
+    /** Filled by the SDK. */
+    biometryKey: string = null;
 };
 
 export class PowerAuthError {

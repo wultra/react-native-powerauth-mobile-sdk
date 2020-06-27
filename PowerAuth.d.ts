@@ -194,6 +194,13 @@ declare class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    /**
+     * Retrieves authenticaiton key for biometry.
+     *
+     * @param title Dialog title
+     * @param description  Dialog description
+     */
+    private processAuthentication;
 }
 /**
  * Success object returned by "createActivation" call.
@@ -297,12 +304,13 @@ export declare class PowerAuthAuthentication {
     /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
     userPassword?: string;
     /**
-     * Specifies the text displayed on Touch or Face ID prompt in case biometry is required to obtain data.
-     *
-     * Use this value to give user a hint on what is biometric authentication used for in this specific authentication.
-     * For example, include a name of the account user uses to log in.
-     * */
-    biometryPrompt: string;
+     * Message displayed when prompted for biometric authentication
+     */
+    biometryMessage: string;
+    /** (Android only) Title of biometric prompt */
+    biometryTitle: string;
+    /** Filled by the SDK. */
+    biometryKey: string;
 }
 export declare class PowerAuthError {
     code?: PowerAuthErrorCode;

@@ -106,7 +106,7 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             auth.userPassword = pass;
             auth.useBiometry = true;
-            auth.biometryPrompt = "tadaaa";
+            auth.biometryMessage = "tadaaa";
             try {
               await PowerAuth.commitActivation(auth)
               alert(`Commited!`);
@@ -123,7 +123,7 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             auth.userPassword = pass;
             auth.useBiometry = false;
-            auth.biometryPrompt = "tadaaa";
+            auth.biometryMessage = "tadaaa";
             try {
               await PowerAuth.removeActivationWithAuthentication(auth);
               alert(`Removed`);
@@ -136,8 +136,8 @@ export default class App extends Component<any, State> {
           <Button title="Remove activation with biometry" onPress={ async _ => { 
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
-            auth.useBiometry = false;
-            auth.biometryPrompt = "tadaaa";
+            auth.useBiometry = true;
+            auth.biometryMessage = "tadaaa";
             try {
               await PowerAuth.removeActivationWithAuthentication(auth);
               alert(`Removed`);
@@ -224,7 +224,7 @@ export default class App extends Component<any, State> {
                 auth.usePossession = true;
                 auth.userPassword = pass;
                 auth.useBiometry = false;
-                auth.biometryPrompt = "tadaaa";
+                auth.biometryMessage = "tadaaa";
                 const result = await PowerAuth.activationRecoveryData(auth);
                 alert(`Code: ${result.recoveryCode}\nPUK: ${result.puk}`);
               } catch (e) {
@@ -241,7 +241,7 @@ export default class App extends Component<any, State> {
                 auth.usePossession = true;
                 auth.userPassword = pass;
                 auth.useBiometry = false;
-                auth.biometryPrompt = "tadaaa";
+                auth.biometryMessage = "tadaaa";
                 try {
                   const r = await PowerAuth.fetchEncryptionKey(auth,0);
                   alert(`Key: ${r}`);
@@ -257,7 +257,7 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             auth.userPassword = pass;
             auth.useBiometry = false;
-            auth.biometryPrompt = "tadaaa";
+            auth.biometryMessage = "tadaaa";
             try {
               // TODO: solve this differently, this failes for now as we pass nonsense data
               const r = await PowerAuth.offlineSignature(auth, "test", "body", "nonce");
@@ -283,7 +283,7 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             auth.userPassword = pass;
             auth.useBiometry = false;
-            auth.biometryPrompt = "tadaaa";
+            auth.biometryMessage = "tadaaa";
             try {
               const r = await PowerAuth.requestGetSignature(auth, "test", { testParam: "testvalue" });
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
@@ -298,7 +298,7 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             auth.userPassword = pass;
             auth.useBiometry = false;
-            auth.biometryPrompt = "tadaaa";
+            auth.biometryMessage = "tadaaa";
             try {
               const r = await PowerAuth.requestSignature(auth, "POST", "tada", "{jsonbody: \"yes\"}")
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);

@@ -5,7 +5,8 @@
     "removeComments": false,
     "declaration": true,
     "target": "ES5",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": ["ES2015"]
   },
   "exclude": [ "node_modules" ],
   "include": [ "PowerAuth.ts" ]

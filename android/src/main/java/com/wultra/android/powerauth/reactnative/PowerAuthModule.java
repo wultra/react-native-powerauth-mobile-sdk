@@ -19,6 +19,7 @@ import java.lang.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.*;
 import io.getlime.security.powerauth.networking.response.*;
@@ -397,6 +398,41 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         });
     }
 
+    @ReactMethod
+    public void authenticateWithBiometry(String title, String description, final Promise promise) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                this.powerAuth.authenticateUsingBiometry(
+                        this.context,
+                        ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(),
+                        title,
+                        description,
+                        new IBiometricAuthenticationCallback() {
+                            @Override
+                            public void onBiometricDialogCancelled(boolean userCancel) {
+                                promise.reject("PA2ReactNativeError_BiometryCanceled", "Biometry dialog was canceled");
+                            }
+
+                            @Override
+                            public void onBiometricDialogSuccess(@NonNull byte[] biometricKeyEncrypted) {
+                                String base64 = new String(Base64.encode(biometricKeyEncrypted, Base64.DEFAULT));
+                                promise.resolve(base64);
+                            }
+
+                            @Override
+                            public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
+                                promise.reject("PA2ReactNativeError_BiometryFailed", "Biometry dialog failed");
+                            }
+                        }
+                );
+            } catch (Exception e) {
+                promise.reject(PowerAuthModule.getErrorCodeFromThrowable(e) ,e);
+            }
+        } else {
+            promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+        }
+    }
+
     static Map<String, String> getStringMap(ReadableMap rm) {
         Map<String, String> map = new HashMap<>();
         for (Map.Entry<String, Object> entry : rm.toHashMap().entrySet()) {
@@ -422,7 +458,11 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     static PowerAuthAuthentication constructAuthentication(ReadableMap map) {
         PowerAuthAuthentication auth = new PowerAuthAuthentication();
         auth.usePossession = map.getBoolean("usePossession");
-        //auth.useBiometry = map.getBoolean("useBiometry");
+        String biometryKey = map.getString("biometryKey");
+        if (biometryKey != null) {
+            byte[] key = Base64.decode(biometryKey, Base64.DEFAULT);
+            auth.useBiometry = key;
+        }
         auth.usePassword = map.getString("userPassword");
         return auth;
     }
