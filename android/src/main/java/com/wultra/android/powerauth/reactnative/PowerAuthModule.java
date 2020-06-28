@@ -55,8 +55,10 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
 
         PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
 
-        paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
-        paClientConfigBuilder.allowUnsecuredConnection(true);
+        if (enableUnsecureTraffic) {
+            paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
+            paClientConfigBuilder.allowUnsecuredConnection(true);
+        }
         
         this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
 
