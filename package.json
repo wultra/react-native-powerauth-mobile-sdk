@@ -1,21 +1,21 @@
 {
   "name": "react-native-powerauth-mobile-sdk",
   "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "0.9.0",
+  "version": "1.4.0",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
   "main": "PowerAuth.js",
   "files": [
     "README.md",
-    "android",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthModule.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthPackage.java",
+    "android/build.gradle",
     "PowerAuth.js",
     "PowerAuth.d.ts",
     "ios/PowerAuth/PowerAuth.m",
     "ios/PowerAuth/PowerAuth.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://https://github.com/wultra/react-native-powerauth-mobile-sdk.git",
