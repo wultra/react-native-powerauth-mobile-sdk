@@ -219,8 +219,8 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-powerauth-mobile-sdk (0.9.0):
-    - PowerAuth2
+  - react-native-powerauth-mobile-sdk (1.4.0):
+    - PowerAuth2 (= 1.4.1)
     - React
   - React-RCTActionSheet (0.61.5):
     - React-Core/RCTActionSheetHeaders (= 0.61.5)
@@ -489,7 +489,7 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-powerauth-mobile-sdk: 91123ee092fd945beb52abe1b9a51e6df88f7e01
+  react-native-powerauth-mobile-sdk: b12eceb4ac020fc3e196923282b4b81d9d12bb45
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
