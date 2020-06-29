@@ -16,10 +16,10 @@
     "ios/PowerAuth/PowerAuth.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
+  "homepage": "https://github.com/wultra/malwarelytics-cordova-plugin",
   "repository": {
     "type": "git",
-    "url": "git+https://https://github.com/wultra/react-native-powerauth-mobile-sdk.git",
-    "baseUrl": "https://github.com/wultra/react-native-powerauth-mobile-sdk"
+    "url": "https://https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
   },
   "keywords": [
     "react-native",

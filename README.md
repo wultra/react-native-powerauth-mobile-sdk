@@ -1,6 +1,6 @@
 # PowerAuth SDK for React Native Mobile Apps
 
-In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
+In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
 
 > ### Note that this library is under development.
 > More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).
