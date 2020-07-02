@@ -32,7 +32,7 @@ PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRE
 
 ## API reference
 
-For API reference, visit [PowerAuth.d.ts definition file](PowerAuth.d.ts) where you can browse all documented available methods.
+For API reference, visit [PowerAuth.d.ts definition file](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/master/PowerAuth.d.ts) where you can browse all documented available methods.
 
 *More detailed documentation will be added later. For now, you can visit the [native PowerAuth SDK for Mobile Apps](https://github.com/wultra/powerauth-mobile-sdk) as this library acts as a bridge between the Javascript environment and the native module.*
 

@@ -1,7 +1,7 @@
 {
   "name": "react-native-powerauth-mobile-sdk",
   "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
   "main": "PowerAuth.js",
   "files": [
@@ -16,10 +16,10 @@
     "ios/PowerAuth/PowerAuth.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
-  "homepage": "https://github.com/wultra/malwarelytics-cordova-plugin",
+  "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
     "type": "git",
-    "url": "https://https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
+    "url": "https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
   },
   "keywords": [
     "react-native",
