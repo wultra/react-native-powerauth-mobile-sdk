@@ -9,6 +9,10 @@ demoapp/node_modules
 android/.gradle/
 android/.project
 android/.settings
+android/.idea
+android/gradle
+android/local.properties
+/android/.classpath
 demoapp/android/.gradle/
 demoapp/android/.project
 demoapp/android/.settings
@@ -21,3 +25,6 @@ demoapp/android/app/.settings
 *.xcuserstate
 ios/Pods/*
 demoapp/ios/Pods/*
+
+# artifacts
+*.tgz
