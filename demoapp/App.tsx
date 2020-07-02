@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Button, Text, ScrollView } from 'react-native';
 import Prompt from 'rn-prompt';
-import PowerAuth, { PowerAuthActivation, PowerAuthAuthentication, PowerAuthError } from 'react-native-powerauth-mobile-sdk';
+import PowerAuth, { PowerAuthActivation, PowerAuthAuthentication, PowerAuthError, PowerAuthOtpUtil } from 'react-native-powerauth-mobile-sdk';
 
 interface State {
   // activation status
@@ -12,10 +12,13 @@ interface State {
   activationFingerprint?: string;
   activationStatus?: string;
   // prompts
-  actWithCodePromptVisible: boolean;
-  passPromptVisible: boolean;
-  passPromptLabel: string;
-  passPromptCallback: (password: string) => void;
+  promptVisible: boolean;
+  promptLabel: string;
+  promptCallback: (password: string) => void;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default class App extends Component<any, State> {
@@ -24,10 +27,9 @@ export default class App extends Component<any, State> {
     super(props);
 
     this.state = {
-      actWithCodePromptVisible: false,
-      passPromptVisible: false,
-      passPromptLabel: "Enter password",
-      passPromptCallback: _ => {}
+      promptVisible: false,
+      promptLabel: "Enter password",
+      promptCallback: _ => {}
     };
 
     PowerAuth.configure("react-nantive-init", "TBA", "TBA", "TBA", "TBA", true)
@@ -68,18 +70,6 @@ export default class App extends Component<any, State> {
     })
   }
 
-  async runCreateActivationWithCode(activationCode: string) {
-    const activation = PowerAuthActivation.createWithActivationCode(activationCode, "ReactNativeTest");
-    try {
-      await PowerAuth.createActivation(activation);
-      alert(`Activation created`);
-    } catch (e) {
-      alert(`Activation failed: ${e.code}`);
-      console.log(JSON.stringify(e));
-    }
-    await this.refreshActivationInfo();
-  }
-
   render() {
     return (
       <ScrollView>
@@ -100,8 +90,18 @@ export default class App extends Component<any, State> {
           <Button title="Refresh data" onPress={_ => { this.refreshActivationInfo() }} />
 
           <Text style={styles.titleText}>Create activation</Text>
-          <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ actWithCodePromptVisible: true}) }} />
-          <Button title="Commit activation with password" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Commit activation", passPromptCallback: async pass => {
+          <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
+            const activation = PowerAuthActivation.createWithActivationCode(activationCode, "ReactNativeTest");
+            try {
+              await PowerAuth.createActivation(activation);
+              alert(`Activation created`);
+            } catch (e) {
+              alert(`Activation failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+            await this.refreshActivationInfo();
+          } }) }} />
+          <Button title="Commit activation with password" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Commit activation", promptCallback: async pass => {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
@@ -118,7 +118,7 @@ export default class App extends Component<any, State> {
           } }) }} />
 
           <Text style={styles.titleText}>Remove activation</Text>
-          <Button title="Remove activation with password" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Remove activation", passPromptCallback: async pass => {
+          <Button title="Remove activation with password" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Remove activation", promptCallback: async pass => {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
@@ -155,7 +155,7 @@ export default class App extends Component<any, State> {
 
           <Text style={styles.titleText}>Password ops</Text>
           <Button title="Validate password" onPress={e => {
-            this.setState({ passPromptVisible: true, passPromptLabel: "Password", passPromptCallback: async pass => {
+            this.setState({ promptVisible: true, promptLabel: "Password", promptCallback: async pass => {
               try {
                 const result = await PowerAuth.validatePassword(pass);
                 alert(`Password valid`);
@@ -165,9 +165,9 @@ export default class App extends Component<any, State> {
               }
             }});
           }} />
-          <Button title="Changed password (online)" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter old password", passPromptCallback: async oldPassword => {
+          <Button title="Changed password (online)" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter old password", promptCallback: async oldPassword => {
             setTimeout(async () => {
-              this.setState({ passPromptVisible: true, passPromptLabel: "Enter new password", passPromptCallback: async newPassword => {
+              this.setState({ promptVisible: true, promptLabel: "Enter new password", promptCallback: async newPassword => {
                 try {
                   await PowerAuth.changePassword(oldPassword, newPassword);
                   alert("Password changed");
@@ -178,9 +178,9 @@ export default class App extends Component<any, State> {
               } })
             }, 200);
           }})}}/>
-          <Button title="Changed password (offline - unsafe)" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter old password", passPromptCallback: async oldPassword => {
+          <Button title="Changed password (offline - unsafe)" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter old password", promptCallback: async oldPassword => {
             setTimeout(async () => {
-              this.setState({ passPromptVisible: true, passPromptLabel: "Enter new password", passPromptCallback: async newPassword => {
+              this.setState({ promptVisible: true, promptLabel: "Enter new password", promptCallback: async newPassword => {
                 try {
                   await PowerAuth.unsafeChangePassword(oldPassword, newPassword);
                   alert("Password changed");
@@ -198,7 +198,7 @@ export default class App extends Component<any, State> {
             alert(`Biometry factor present: ${hasRecovery}`);
           }} />
           <Button title="Add biometry factor" onPress={ async _ => {
-            this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
+            this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
               try {
                 const r = await PowerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
                 alert(`Biometry factor added`);
@@ -218,7 +218,7 @@ export default class App extends Component<any, State> {
             alert(`Recovery data present: ${hasRecovery}`);
           }} />
           <Button title="Show recovery data" onPress={e => {
-            this.setState({ passPromptVisible: true, passPromptLabel: "Password", passPromptCallback: async pass => {
+            this.setState({ promptVisible: true, promptLabel: "Password", promptCallback: async pass => {
               try {
                 const auth = new PowerAuthAuthentication();
                 auth.usePossession = true;
@@ -236,7 +236,7 @@ export default class App extends Component<any, State> {
 
           <Text style={styles.titleText}>Other</Text>
           <Button title="Fetch encryption key" onPress={ _ => {
-              this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
+              this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
                 const auth = new PowerAuthAuthentication();
                 auth.usePossession = true;
                 auth.userPassword = pass;
@@ -252,7 +252,7 @@ export default class App extends Component<any, State> {
                 await this.refreshActivationInfo();
               } })
           }} />
-          <Button title="Test offlineSignature" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
+          <Button title="Test offlineSignature" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
@@ -278,7 +278,7 @@ export default class App extends Component<any, State> {
               console.log(JSON.stringify(e));
             }
            }} />
-          <Button title="Test requestGetSignature" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
+          <Button title="Test requestGetSignature" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
@@ -293,7 +293,7 @@ export default class App extends Component<any, State> {
             }
             await this.refreshActivationInfo();
           } }) }} />
-          <Button title="Test requestSignature" onPress={ _ => { this.setState({ passPromptVisible: true, passPromptLabel: "Enter password", passPromptCallback: async pass => {
+          <Button title="Test requestSignature" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
@@ -306,37 +306,73 @@ export default class App extends Component<any, State> {
               alert(`Remove failed: ${e.code}`);
               console.log(JSON.stringify(e));
             }
-            await this.refreshActivationInfo();
+          } }) }} />
+
+          <Text style={styles.titleText}>Validation</Text>
+          <Button title="Parse activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
+            await sleep(100);
+            try {
+              let otp = await PowerAuthOtpUtil.parseActivationCode(code);
+              alert(`OTP\nCODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+            } catch(e) {
+              alert(`Not valid: ${e.code}`);
+              console.log(e.code);
+            }
+          } }) }} />
+          <Button title="Parse recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
+            await sleep(100);
+            try {
+              let otp = await PowerAuthOtpUtil.parseRecoveryCode(code);
+              alert(`OTP\nCODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+            } catch(e) {
+              alert(`Not valid: ${e.code}`);
+              console.log(e.code);
+            }
+          } }) }} />
+          <Button title="Validate activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
+            await sleep(100);
+            let valid = await PowerAuthOtpUtil.validateActivationCode(code);
+            alert(`IsValid: ${valid}`);
+          } }) }} />
+          <Button title="Validate recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
+            await sleep(100);
+            let valid = await PowerAuthOtpUtil.validateRecoveryCode(code);
+            alert(`IsValid: ${valid}`);
+          } }) }} />
+          <Button title="Validate recovery PUK" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery PUK", promptCallback: async code => {
+            await sleep(100);
+            let valid = await PowerAuthOtpUtil.validateRecoveryPuk(code);
+            alert(`IsValid: ${valid}`);
+          } }) }} />
+          <Button title="Validate activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
+            await sleep(100);
+            let valid = await PowerAuthOtpUtil.validateTypedCharacter(code.charCodeAt(0));
+            alert(`IsValid: ${valid}`);
+          } }) }} />
+          <Button title="Correct activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
+            await sleep(100);
+            try {
+              let corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(0));
+              alert(`Corrected: ${String.fromCharCode(corrected)}`);
+            } catch (e) {
+              alert("Invalid character");
+            }
           } }) }} />
 
           <Prompt
-              title="Activation"
-              placeholder="activation code"
+              title={this.state.promptLabel}
+              placeholder=""
               defaultValue=""
-              visible={ this.state.actWithCodePromptVisible }
+              visible={ this.state.promptVisible }
               onCancel={ () => this.setState({
-                actWithCodePromptVisible: false
+                promptVisible: false
               }) }
               onSubmit={ (value: string) => {
                 this.setState({
-                  actWithCodePromptVisible: false
-                  });
-                this.runCreateActivationWithCode(value);
-              }}
-          />
-          <Prompt
-              title={this.state.passPromptLabel}
-              placeholder="password"
-              defaultValue=""
-              visible={ this.state.passPromptVisible }
-              onCancel={ () => this.setState({
-                passPromptVisible: false
-              }) }
-              onSubmit={ (value: string) => {
-                this.setState({
-                  passPromptVisible: false
-                  });
-                this.state.passPromptCallback(value);
+                  promptVisible: false
+                }, () => {
+                  this.state.promptCallback(value);
+                });
               }}
           />
         </View>

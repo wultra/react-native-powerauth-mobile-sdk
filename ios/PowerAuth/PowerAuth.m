@@ -190,7 +190,6 @@ RCT_EXPORT_METHOD(removeActivationWithAuthentication:(NSDictionary*)authDict
         } else {
             resolve(@YES);
         }
-        
     }];
     
 }
@@ -400,6 +399,70 @@ RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
             resolve(@YES);
         }
     }];
+}
+
+RCT_EXPORT_METHOD(parseActivationCode:(NSString*)activationCode
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    
+    PA2Otp *otp = [PA2OtpUtil parseFromActivationCode:activationCode];
+    if (otp) {
+        resolve(@{
+            @"activationCode": otp.activationCode,
+            @"activationSignature": otp.activationSignature ? otp.activationSignature : [NSNull null]
+        });
+    } else {
+        reject(@"PA2RNInvalidActivationCode", @"Invalid activation code.", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(validateActivationCode:(NSString*)activationCode
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    resolve([PA2OtpUtil validateActivationCode:activationCode] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(parseRecoveryCode:(NSString*)recoveryCode
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    PA2Otp *otp = [PA2OtpUtil parseFromRecoveryCode:recoveryCode];
+    if (otp) {
+        resolve(@{
+            @"activationCode": otp.activationCode,
+            @"activationSignature": otp.activationSignature ? otp.activationSignature : [NSNull null]
+        });
+    } else {
+        reject(@"PA2RNInvalidRecoveryCode", @"Invalid recovery code.", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(validateRecoveryCode:(NSString*)recoveryCode
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    resolve([PA2OtpUtil validateRecoveryCode:recoveryCode] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(validateRecoveryPuk:(NSString*)recoveryPuk
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    resolve([PA2OtpUtil validateRecoveryPuk:recoveryPuk] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(validateTypedCharacter:(nonnull NSNumber*)utfCodepoint
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    resolve([PA2OtpUtil validateTypedCharacter:utfCodepoint.unsignedIntValue] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    UInt32 corrected = [PA2OtpUtil validateAndCorrectTypedCharacter:utfCodepoint.unsignedIntValue];
+    if (corrected == 0) {
+        reject(@"PA2RNInvalidCharacter", @"Invalid character cannot be corrected.", nil);
+    } else {
+        resolve([[NSNumber alloc] initWithInt:corrected]);
+    }
 }
 
 #pragma mark HELPER METHODS
