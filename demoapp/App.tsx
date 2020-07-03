@@ -32,14 +32,23 @@ export default class App extends Component<any, State> {
       promptCallback: _ => {}
     };
 
-    PowerAuth.configure("react-nantive-init", "TBA", "TBA", "TBA", "TBA", true)
-      .catch(e => {
-        console.log(e);
-      }).then(r => {
-        console.log("PowerAuth configured");
-    });
+    this.setupPowerAuth();
+  }
 
-    this.refreshActivationInfo();
+  async setupPowerAuth() {
+    const isConfigured = await PowerAuth.isConfigured();
+    if (isConfigured) {
+      console.log("PowerAuth was already configured.");
+    } else {
+      console.log("PowerAuth isn't configured, configuring...");
+      try {
+        await PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+        console.log("PowerAuth configuration successfull.");
+        await this.refreshActivationInfo();
+      } catch(e) {
+          console.log(`PowerAuth failed to configure: ${e.code}`);
+      }
+    }
   }
 
   async refreshActivationInfo() {

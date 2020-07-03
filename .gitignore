@@ -13,8 +13,10 @@ android/.idea
 android/gradle
 android/local.properties
 /android/.classpath
+demoapp/android/local.properties
 demoapp/android/.gradle/
 demoapp/android/.project
+demoapp/android/.idea
 demoapp/android/.settings
 demoapp/android/app/.gradle/
 demoapp/android/app/.project

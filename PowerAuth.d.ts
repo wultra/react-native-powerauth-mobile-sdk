@@ -3,6 +3,8 @@
  */
 declare class PowerAuth {
     private nativeModule;
+    /** If the PowerAuth module was configured. */
+    isConfigured(): Promise<boolean>;
     /**
      * Prepares the PowerAuth instance. This method needs to be called before before any other method.
      *
@@ -12,7 +14,7 @@ declare class PowerAuth {
      * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
      * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
-     * @returns Promise that with result of the configuration.
+     * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
     configure(instanceId: string, appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>;
     /**

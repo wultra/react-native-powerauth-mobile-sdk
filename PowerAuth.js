@@ -42,6 +42,10 @@ var PowerAuth = /** @class */ (function () {
     function PowerAuth() {
         this.nativeModule = NativeModules.PowerAuth;
     }
+    /** If the PowerAuth module was configured. */
+    PowerAuth.prototype.isConfigured = function () {
+        return this.nativeModule.isConfigured();
+    };
     /**
      * Prepares the PowerAuth instance. This method needs to be called before before any other method.
      *
@@ -51,7 +55,7 @@ var PowerAuth = /** @class */ (function () {
      * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
      * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
-     * @returns Promise that with result of the configuration.
+     * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
     PowerAuth.prototype.configure = function (instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic) {
         return this.nativeModule.configure(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
