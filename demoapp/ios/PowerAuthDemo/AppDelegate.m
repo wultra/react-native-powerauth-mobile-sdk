@@ -13,6 +13,7 @@
 #import <UMCore/UMModuleRegistry.h>
 #import <UMReactNativeAdapter/UMNativeModulesProxy.h>
 #import <UMReactNativeAdapter/UMModuleRegistryAdapter.h>
+#import <PowerAuth.h>
 
 @interface AppDelegate ()
 
@@ -53,6 +54,13 @@
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
+  
+  PowerAuth *pa = [bridge moduleForClass:PowerAuth.class];
+  if (pa) {
+    //[pa configureWithInstanceId:@"your-app-activation" appKey:@"APPLICATION_KEY" appSecret:@"APPLICATION_SECRET" masterServerPublicKey:@"KEY_SERVER_MASTER_PUBLIC" baseEndpointUrl:@"https://your-powerauth-endpoint.com/" enableUnsecureTraffic:NO];
+  } else {
+    NSLog(@"PowerAuth module not found");
+  }
 
   return bridge;
 }

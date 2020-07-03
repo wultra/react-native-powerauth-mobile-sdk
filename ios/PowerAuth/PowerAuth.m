@@ -28,6 +28,49 @@
 
 RCT_EXPORT_MODULE(PowerAuth);
 
+RCT_REMAP_METHOD(isConfigured,
+                 isConfiguredResolve:(RCTPromiseResolveBlock)resolve
+                 isConfiguredReject:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        [PowerAuthSDK sharedInstance];
+        resolve(@YES); // when sharedInstance goes through, it means that it was already configured
+    } @catch (NSException *exception) {
+        resolve(@NO);
+    }
+}
+
+- (BOOL)configureWithInstanceId:(NSString *)instanceId
+                         appKey:(NSString *)appKey
+                      appSecret:(NSString *)appSecret
+          masterServerPublicKey:(NSString *)masterServerPublicKey
+                baseEndpointUrl:(NSString *)baseEndpointUrl
+          enableUnsecureTraffic:(BOOL)enableUnsecureTraffic
+{
+    @try {
+        [PowerAuthSDK sharedInstance];
+        return NO; // when sharedInstance goes through, it means that it was already configured
+    } @catch (NSException *exception) {
+        PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
+        config.instanceId = instanceId;
+        config.appKey = appKey;
+        config.appSecret = appSecret;
+        config.masterServerPublicKey = masterServerPublicKey;
+        config.baseEndpointUrl = baseEndpointUrl;
+
+        if (enableUnsecureTraffic) {
+            [[PA2ClientConfiguration sharedInstance] setSslValidationStrategy:[[PA2ClientSslNoValidationStrategy alloc] init]];
+        }
+
+        if ([config validateConfiguration]) {
+            [PowerAuthSDK initSharedInstance:config];
+            return YES;
+        } else {
+            return NO;
+        }
+    }
+}
+
 RCT_REMAP_METHOD(configure,
                  instanceId:(NSString*)instanceId
                  appKey:(NSString*)appKey
@@ -36,8 +79,8 @@ RCT_REMAP_METHOD(configure,
                  baseEndpointUrl:(NSString*)baseEndpointUrl
                  enableUnsecureTraffic:(BOOL)enableUnsecureTraffic
                  configureResolve:(RCTPromiseResolveBlock)resolve
-                 configureReject:(RCTPromiseRejectBlock)reject) {
-    
+                 configureReject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
     config.instanceId = instanceId;
     config.appKey = appKey;
@@ -59,26 +102,29 @@ RCT_REMAP_METHOD(configure,
 
 RCT_REMAP_METHOD(hasValidActivation,
                  hasValidActivationResolve:(RCTPromiseResolveBlock)resolve
-                 hasValidActivationReject:(RCTPromiseRejectBlock)reject) {
+                 hasValidActivationReject:(RCTPromiseRejectBlock)reject)
+{
     resolve(@([[PowerAuthSDK sharedInstance] hasValidActivation]));
 }
 
 RCT_REMAP_METHOD(canStartActivation,
                  canStartActivationResolve:(RCTPromiseResolveBlock)resolve
-                 canStartActivationReject:(RCTPromiseRejectBlock)reject) {
+                 canStartActivationReject:(RCTPromiseRejectBlock)reject)
+{
     resolve(@([[PowerAuthSDK sharedInstance] canStartActivation]));
 }
 
 RCT_REMAP_METHOD(hasPendingActivation,
                  hasPendingActivationResolve:(RCTPromiseResolveBlock)resolve
-                 hasPendingActivationReject:(RCTPromiseRejectBlock)reject) {
+                 hasPendingActivationReject:(RCTPromiseRejectBlock)reject)
+{
     resolve(@([[PowerAuthSDK sharedInstance] hasPendingActivation]));
 }
 
 RCT_REMAP_METHOD(fetchActivationStatus,
                  fetchActivationStatusResolve:(RCTPromiseResolveBlock)resolve
-                 fetchActivationStatusReject:(RCTPromiseRejectBlock)reject) {
-    
+                 fetchActivationStatusReject:(RCTPromiseRejectBlock)reject)
+{
     [[PowerAuthSDK sharedInstance] fetchActivationStatusWithCallback:^(PA2ActivationStatus * _Nullable status, NSDictionary * _Nullable customObject, NSError * _Nullable error) {
         
         if (error == nil) {
@@ -98,8 +144,8 @@ RCT_REMAP_METHOD(fetchActivationStatus,
 
 RCT_EXPORT_METHOD(createActivation:(NSDictionary*)activation
                   createActivationResolver:(RCTPromiseResolveBlock)resolve
-                  createActivationRejecter:(RCTPromiseRejectBlock)reject) {
-    
+                  createActivationRejecter:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthActivation * paActivation;
     
     NSString* name = activation[@"activationName"];
@@ -151,8 +197,8 @@ RCT_EXPORT_METHOD(createActivation:(NSDictionary*)activation
 
 RCT_EXPORT_METHOD(commitActivation:(NSDictionary*)authDict
                   commitActivationResolver:(RCTPromiseResolveBlock)resolve
-                  commitActivationRejecter:(RCTPromiseRejectBlock)reject) {
-    
+                  commitActivationRejecter:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     
     NSError* error = nil;
@@ -168,20 +214,22 @@ RCT_EXPORT_METHOD(commitActivation:(NSDictionary*)authDict
 
 RCT_REMAP_METHOD(activationIdentifier,
                  activationIdentifierResolve:(RCTPromiseResolveBlock)resolve
-                 activationIdentifierReject:(RCTPromiseRejectBlock)reject) {
+                 activationIdentifierReject:(RCTPromiseRejectBlock)reject)
+{
     resolve([[PowerAuthSDK sharedInstance] activationIdentifier]);
 }
 
 RCT_REMAP_METHOD(activationFingerprint,
                  activationFingerprintResolve:(RCTPromiseResolveBlock)resolve
-                 activationFingerprintReject:(RCTPromiseRejectBlock)reject) {
+                 activationFingerprintReject:(RCTPromiseRejectBlock)reject)
+{
     resolve([[PowerAuthSDK sharedInstance] activationFingerprint]);
 }
 
 RCT_EXPORT_METHOD(removeActivationWithAuthentication:(NSDictionary*)authDict
                   removeActivationResolver:(RCTPromiseResolveBlock)resolve
-                  removeActivationRejecter:(RCTPromiseRejectBlock)reject) {
-    
+                  removeActivationRejecter:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
         
@@ -194,7 +242,8 @@ RCT_EXPORT_METHOD(removeActivationWithAuthentication:(NSDictionary*)authDict
     
 }
 
-RCT_EXPORT_METHOD(removeActivationLocal) {
+RCT_EXPORT_METHOD(removeActivationLocal)
+{
     [[PowerAuthSDK sharedInstance] removeActivationLocal];
 }
 
@@ -203,8 +252,8 @@ RCT_REMAP_METHOD(requestGetSignature,
                  uriId:(NSString*)uriId
                  params:(nullable NSDictionary*)params
                  requestSignatureResolver:(RCTPromiseResolveBlock)resolve
-                 requestSignatureReject:(RCTPromiseRejectBlock)reject) {
-    
+                 requestSignatureReject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     
     NSError* error = nil;
@@ -227,8 +276,8 @@ RCT_REMAP_METHOD(requestSignature,
                  uriId:(nonnull NSString*)uriId
                  body:(nullable NSString*)body
                  requestSignatureResolver:(RCTPromiseResolveBlock)resolve
-                 requestSignatureReject:(RCTPromiseRejectBlock)reject) {
-    
+                 requestSignatureReject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     
     NSError* error = nil;
@@ -251,8 +300,8 @@ RCT_REMAP_METHOD(offlineSignature,
                  body:(nullable NSString*)body
                  nonce:(nonnull NSString*)nonce
                  offlineSignatureResolver:(RCTPromiseResolveBlock)resolve
-                 offlineSignatureReject:(RCTPromiseRejectBlock)reject) {
-    
+                 offlineSignatureReject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     NSError* error = nil;
     NSString* signature = [[PowerAuthSDK sharedInstance] offlineSignatureWithAuthentication:auth uriId:uriId body:[RCTConvert NSData:body] nonce:nonce error:&error];
@@ -268,8 +317,8 @@ RCT_EXPORT_METHOD(verifyServerSignedData:(nonnull NSString*)data
                   signature:(nonnull NSString*)signature
                   masterKey:(BOOL)masterKey
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     BOOL result = [[PowerAuthSDK sharedInstance] verifyServerSignedData:[RCTConvert NSData:data] signature:signature masterKey:masterKey];
     resolve([[NSNumber alloc] initWithBool:result]);
 }
@@ -277,8 +326,8 @@ RCT_EXPORT_METHOD(verifyServerSignedData:(nonnull NSString*)data
 RCT_EXPORT_METHOD(unsafeChangePassword:(nonnull NSString*)oldPassword
                  to:(nonnull NSString*)newPassword
                  resolve:(RCTPromiseResolveBlock)resolve
-                 reject:(RCTPromiseRejectBlock)reject) {
-    
+                 reject:(RCTPromiseRejectBlock)reject)
+{
     BOOL result = [[PowerAuthSDK sharedInstance] unsafeChangePasswordFrom:oldPassword to:newPassword];
     resolve([[NSNumber alloc] initWithBool:result]);
 }
@@ -286,8 +335,8 @@ RCT_EXPORT_METHOD(unsafeChangePassword:(nonnull NSString*)oldPassword
 RCT_EXPORT_METHOD(changePassword:(nonnull NSString*)oldPassword
                  to:(nonnull NSString*)newPassword
                  resolve:(RCTPromiseResolveBlock)resolve
-                 reject:(RCTPromiseRejectBlock)reject) {
-    
+                 reject:(RCTPromiseRejectBlock)reject)
+{
     [[PowerAuthSDK sharedInstance] changePasswordFrom:oldPassword to:newPassword callback:^(NSError * error) {
         if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -299,8 +348,8 @@ RCT_EXPORT_METHOD(changePassword:(nonnull NSString*)oldPassword
 
 RCT_EXPORT_METHOD(addBiometryFactor:(NSString*)password
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     [[PowerAuthSDK sharedInstance] addBiometryFactor:password callback:^(NSError * error) {
         if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -311,20 +360,22 @@ RCT_EXPORT_METHOD(addBiometryFactor:(NSString*)password
 }
 
 RCT_EXPORT_METHOD(hasBiometryFactor:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([[NSNumber alloc] initWithBool:[[PowerAuthSDK sharedInstance] hasBiometryFactor]]);
 }
 
 RCT_EXPORT_METHOD(removeBiometryFactor:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([[NSNumber alloc] initWithBool:[[PowerAuthSDK sharedInstance] removeBiometryFactor]]);
 }
 
 RCT_EXPORT_METHOD(fetchEncryptionKey:(NSDictionary*)authDict
                   index:(NSInteger)index
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] fetchEncryptionKey:auth index:index  callback:^(NSData * encryptionKey, NSError * error) {
         if (encryptionKey) {
@@ -338,8 +389,8 @@ RCT_EXPORT_METHOD(fetchEncryptionKey:(NSDictionary*)authDict
 RCT_EXPORT_METHOD(signDataWithDevicePrivateKey:(NSDictionary*)authDict
                   data:(NSData*)data
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] signDataWithDevicePrivateKey:auth data:[RCTConvert NSData:data] callback:^(NSData * signature, NSError * error) {
         if (signature) {
@@ -352,8 +403,8 @@ RCT_EXPORT_METHOD(signDataWithDevicePrivateKey:(NSDictionary*)authDict
 
 RCT_EXPORT_METHOD(validatePassword:(NSString*)password
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     [[PowerAuthSDK sharedInstance] validatePasswordCorrect:password callback:^(NSError * error) {
         if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -364,14 +415,15 @@ RCT_EXPORT_METHOD(validatePassword:(NSString*)password
 }
 
 RCT_EXPORT_METHOD(hasActivationRecoveryData:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([[NSNumber alloc] initWithBool:[[PowerAuthSDK sharedInstance] hasActivationRecoveryData]]);
 }
 
 RCT_EXPORT_METHOD(activationRecoveryData:(NSDictionary*)authDict
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] activationRecoveryData:auth callback:^(PA2ActivationRecoveryData * data, NSError * error) {
         if (error) {
@@ -389,8 +441,8 @@ RCT_EXPORT_METHOD(activationRecoveryData:(NSDictionary*)authDict
 RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
                   authentication:(NSDictionary*)authDict
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[PowerAuthSDK sharedInstance] confirmRecoveryCode:recoveryCode authentication:auth callback:^(BOOL alreadyConfirmed, NSError * error) {
         if (error) {
@@ -403,8 +455,8 @@ RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
 
 RCT_EXPORT_METHOD(parseActivationCode:(NSString*)activationCode
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-    
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PA2Otp *otp = [PA2OtpUtil parseFromActivationCode:activationCode];
     if (otp) {
         resolve(@{
@@ -418,13 +470,15 @@ RCT_EXPORT_METHOD(parseActivationCode:(NSString*)activationCode
 
 RCT_EXPORT_METHOD(validateActivationCode:(NSString*)activationCode
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([PA2OtpUtil validateActivationCode:activationCode] ? @YES : @NO);
 }
 
 RCT_EXPORT_METHOD(parseRecoveryCode:(NSString*)recoveryCode
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     PA2Otp *otp = [PA2OtpUtil parseFromRecoveryCode:recoveryCode];
     if (otp) {
         resolve(@{
@@ -438,19 +492,22 @@ RCT_EXPORT_METHOD(parseRecoveryCode:(NSString*)recoveryCode
 
 RCT_EXPORT_METHOD(validateRecoveryCode:(NSString*)recoveryCode
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([PA2OtpUtil validateRecoveryCode:recoveryCode] ? @YES : @NO);
 }
 
 RCT_EXPORT_METHOD(validateRecoveryPuk:(NSString*)recoveryPuk
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([PA2OtpUtil validateRecoveryPuk:recoveryPuk] ? @YES : @NO);
 }
 
 RCT_EXPORT_METHOD(validateTypedCharacter:(nonnull NSNumber*)utfCodepoint
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
+                  reject:(RCTPromiseRejectBlock)reject)
+{
     resolve([PA2OtpUtil validateTypedCharacter:utfCodepoint.unsignedIntValue] ? @YES : @NO);
 }
 
@@ -467,7 +524,8 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
 
 #pragma mark HELPER METHODS
 
-- (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict {
+- (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict
+{
     PowerAuthAuthentication *auth = [[PowerAuthAuthentication alloc] init];
     auth.usePossession = [RCTConvert BOOL:dict[@"usePossession"]];
     auth.useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
@@ -482,8 +540,8 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
 
 #define ENUM_CASE_TO_STR(x, enumValue) if (x == enumValue) return @#enumValue;
 
-- (NSString*)getErrorCodeFromError:(NSError*)paError {
-
+- (NSString*)getErrorCodeFromError:(NSError*)paError
+{
     ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeNetworkError);
     ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeSignatureError);
     ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeInvalidActivationState);
@@ -502,8 +560,8 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
     return [[NSString alloc] initWithFormat:@"PA2UnknownCode%li", paError.code];
 }
 
-- (NSString*)getStatusCode:(PA2ActivationState)status {
-
+- (NSString*)getStatusCode:(PA2ActivationState)status
+{
     ENUM_CASE_TO_STR(status, PA2ActivationState_Created);
     ENUM_CASE_TO_STR(status, PA2ActivationState_PendingCommit);
     ENUM_CASE_TO_STR(status, PA2ActivationState_Active);

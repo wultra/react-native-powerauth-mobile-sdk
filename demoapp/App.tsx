@@ -39,6 +39,7 @@ export default class App extends Component<any, State> {
     const isConfigured = await PowerAuth.isConfigured();
     if (isConfigured) {
       console.log("PowerAuth was already configured.");
+      await this.refreshActivationInfo();
     } else {
       console.log("PowerAuth isn't configured, configuring...");
       try {
