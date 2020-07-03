@@ -1,9 +1,7 @@
 # PowerAuth SDK for React Native Mobile Apps
+[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk)
 
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
-
-> ### Note that this library is under development.
-> More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).
 
 ## Support and Compatibility
 
@@ -14,11 +12,23 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 ## How to install
 
 ### 1. Install package via `npm`
-```
-npm i react-native-powerauth-mobile-sdk
+```sh
+npm i react-native-powerauth-mobile-sdk --save
 ```
 
-### 2. Configure the instance
+### 2. Link your native dependencies
+
+```sh
+npx react-native link
+```
+
+For iOS, don't dorget to install the pods:
+
+```sh
+cd ios
+pod install
+```
+### 3. Configure the instance
 
 Before you call any PowerAuth method, you need to configure it first. The `configure` method will need the following parameters:
 
@@ -44,7 +54,7 @@ PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRE
 });
 ```
 
-#### Configuration from Java/Objective-C
+#### Configuration from native code
 
 In some cases (for example when you don't want to leave the configuration info in your `.js` files) you might want to configure the PowerAuth directly from the platform native code.
 
@@ -133,7 +143,9 @@ __OBJECTIVE-C__
 
 For API reference, visit [PowerAuth.d.ts definition file](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/master/PowerAuth.d.ts) where you can browse all documented available methods.
 
-*More detailed documentation will be added later. For now, you can visit the [native PowerAuth SDK for Mobile Apps](https://github.com/wultra/powerauth-mobile-sdk) as this library acts as a bridge between the Javascript environment and the native module.*
+> More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).  
+> 
+> For information, you can visit the [native PowerAuth SDK for Mobile Apps](https://github.com/wultra/powerauth-mobile-sdk) as this library acts as a bridge between the Javascript environment and the native module.*
 
 ## Demo application
 
