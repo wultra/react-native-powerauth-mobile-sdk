@@ -186,7 +186,10 @@ RCT_EXPORT_METHOD(createActivation:(NSDictionary*)activation
         if (error == nil) {
             NSDictionary *response = @{
                 @"activationFingerprint": result.activationFingerprint,
-                @"activationRecovery": result.activationRecovery
+                @"activationRecovery": result.activationRecovery ? @{
+                    @"recoveryCode": result.activationRecovery.recoveryCode,
+                    @"puk": result.activationRecovery.puk
+                } : [NSNull null]
             };
             resolve(response);
         } else {
