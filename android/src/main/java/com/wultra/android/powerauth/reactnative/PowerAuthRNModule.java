@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
+import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.*;
 import io.getlime.security.powerauth.networking.response.*;
@@ -210,13 +211,45 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void commitActivation(ReadableMap authMap, Promise promise) {
+    public void commitActivation(ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        int result = this.powerAuth.commitActivationWithAuthentication(this.context, auth);
-        if (result == PowerAuthErrorCodes.PA2Succeed) {
-            promise.resolve(null);
+        if (auth.usePassword == null) {
+            promise.reject("PA2ReactNativeErrorPasswordNotSet", "Password is not set.");
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("useBiometry")) {
+            String title = authMap.getString("biometryTitle");
+            if (title == null) {
+                title = " "; // to prevent crash
+            }
+            String message = authMap.getString("biometryMessage");
+            if (message == null) {
+                message = " "; // to prevent crash
+            }
+            this.powerAuth.commitActivation(this.context, ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
+
+                @Override
+                public void onBiometricDialogCancelled() {
+                    promise.reject("PA2ReactNativeError_BiometryCanceled", "Biometry dialog was canceled");
+                }
+
+                @Override
+                public void onBiometricDialogSuccess() {
+                    promise.resolve(null);
+                }
+
+                @Override
+                public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
+                    promise.reject("PA2ReactNativeError_BiometryFailed", "Biometry dialog failed");
+                }
+            });
         } else {
-            promise.reject(PowerAuthRNModule.getErrorCodeFromError(result), "Commit failed.");
+            int result = this.powerAuth.commitActivationWithPassword(this.context, auth.usePassword);
+            if (result == PowerAuthErrorCodes.PA2Succeed) {
+                promise.resolve(null);
+            } else {
+                promise.reject(PowerAuthRNModule.getErrorCodeFromError(result), "Commit failed.");
+            }
         }
     }
 

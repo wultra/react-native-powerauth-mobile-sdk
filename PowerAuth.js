@@ -106,17 +106,7 @@ var PowerAuth = /** @class */ (function () {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     PowerAuth.prototype.commitActivation = function (authentication) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        _b = (_a = this.nativeModule).commitActivation;
-                        return [4 /*yield*/, this.processAuthentication(authentication)];
-                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent()])];
-                }
-            });
-        });
+        return this.nativeModule.commitActivation(authentication);
     };
     /**
      * Activation identifier or null if object has no valid activation.

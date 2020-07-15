@@ -77,8 +77,8 @@ class PowerAuth {
      * 
      * @param authentication An authentication instance specifying what factors should be stored.
      */
-    async  commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.commitActivation(await this.processAuthentication(authentication))
+    commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
+        return this.nativeModule.commitActivation(authentication)
     }
 
     /**
