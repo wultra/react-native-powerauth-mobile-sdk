@@ -115,7 +115,7 @@ export default class App extends Component<any, State> {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.userPassword = pass;
-            auth.useBiometry = true;
+            auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
               await PowerAuth.commitActivation(auth)
@@ -270,7 +270,7 @@ export default class App extends Component<any, State> {
             auth.biometryMessage = "tadaaa";
             try {
               // TODO: solve this differently, this failes for now as we pass nonsense data
-              const r = await PowerAuth.offlineSignature(auth, "test", "body", "nonce");
+              const r = await PowerAuth.offlineSignature(auth, "/pa/signature/validate", "body", "nonce");
               alert(`Signature: ${r}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
@@ -295,8 +295,9 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              const r = await PowerAuth.requestGetSignature(auth, "test", { testParam: "testvalue" });
+              const r = await PowerAuth.requestGetSignature(auth, "/pa/signature/validate", { testParam: "testvalue" });
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
+              console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
               console.log(JSON.stringify(e));
@@ -310,8 +311,9 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              const r = await PowerAuth.requestSignature(auth, "POST", "tada", "{jsonbody: \"yes\"}")
+              const r = await PowerAuth.requestSignature(auth, "POST", "/pa/signature/validate", "{jsonbody: \"yes\"}");
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
+              console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch(e) {
               alert(`Remove failed: ${e.code}`);
               console.log(JSON.stringify(e));
