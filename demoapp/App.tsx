@@ -103,7 +103,8 @@ export default class App extends Component<any, State> {
           <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
             const activation = PowerAuthActivation.createWithActivationCode(activationCode, "ReactNativeTest");
             try {
-              await PowerAuth.createActivation(activation);
+              let result = await PowerAuth.createActivation(activation);
+              console.log(result);
               alert(`Activation created`);
             } catch (e) {
               alert(`Activation failed: ${e.code}`);
