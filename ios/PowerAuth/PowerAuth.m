@@ -189,7 +189,8 @@ RCT_EXPORT_METHOD(createActivation:(NSDictionary*)activation
                 @"activationRecovery": result.activationRecovery ? @{
                     @"recoveryCode": result.activationRecovery.recoveryCode,
                     @"puk": result.activationRecovery.puk
-                } : [NSNull null]
+                } : [NSNull null],
+                @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null]
             };
             resolve(response);
         } else {

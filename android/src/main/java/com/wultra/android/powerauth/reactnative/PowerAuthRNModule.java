@@ -196,7 +196,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         recoveryMap.putString("recoveryCode", rData.recoveryCode);
                         recoveryMap.putString("puk", rData.puk);
                         map.putMap("activationRecovery", recoveryMap);
+                    } else {
+                        map.putMap("activationRecovery", null);
                     }
+                    Map<String, Object> customAttributes = result.getCustomActivationAttributes();
+                    map.putMap("customAttributes", customAttributes == null ? null : Arguments.makeNativeMap(customAttributes));
                     promise.resolve(map);
                 }
 

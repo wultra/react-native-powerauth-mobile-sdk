@@ -307,6 +307,7 @@ class PowerAuth {
 export interface PowerAuthCreateActivationResult {
     activationFingerprint: string;
     activationRecovery?: PowerAuthRecoveryActivationData;
+    customAttributes?: any; // when available, contents of this object depends of your enrollment server configuration
 }
 
 export interface PowerAuthRecoveryActivationData {
