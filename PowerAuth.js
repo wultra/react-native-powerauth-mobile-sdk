@@ -184,7 +184,7 @@ var PowerAuth = /** @class */ (function () {
                     case 0:
                         _b = (_a = this.nativeModule).requestSignature;
                         return [4 /*yield*/, this.processAuthentication(authentication)];
-                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), method, uriId, body ? toBase64(body) : null])];
+                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), method, uriId, body])];
                 }
             });
         });
@@ -206,7 +206,7 @@ var PowerAuth = /** @class */ (function () {
                     case 0:
                         _b = (_a = this.nativeModule).offlineSignature;
                         return [4 /*yield*/, this.processAuthentication(authentication)];
-                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), uriId, body ? toBase64(body) : null, nonce])];
+                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), uriId, body, nonce])];
                 }
             });
         });
@@ -219,7 +219,7 @@ var PowerAuth = /** @class */ (function () {
      * @param masterKey If true, then master server public key is used for validation, otherwise personalized server's public key.
      */
     PowerAuth.prototype.verifyServerSignedData = function (data, signature, masterKey) {
-        return this.nativeModule.verifyServerSignedData(toBase64(data), signature, masterKey);
+        return this.nativeModule.verifyServerSignedData(data, signature, masterKey);
     };
     /**
      * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint '/pa/vault/unlock'.
@@ -311,7 +311,7 @@ var PowerAuth = /** @class */ (function () {
                     case 0:
                         _b = (_a = this.nativeModule).signDataWithDevicePrivateKey;
                         return [4 /*yield*/, this.processAuthentication(authentication)];
-                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), toBase64(data)])];
+                    case 1: return [2 /*return*/, _b.apply(_a, [_c.sent(), data])];
                 }
             });
         });
@@ -650,18 +650,4 @@ var PowerAuthOtpUtil = /** @class */ (function () {
     return PowerAuthOtpUtil;
 }());
 export { PowerAuthOtpUtil };
-// HELPER METHODS
-function toBase64(input) {
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-    var str = input;
-    var output = '';
-    for (var block = 0, charCode = void 0, i = 0, map = chars; str.charAt(i | 0) || (map = '=', i % 1); output += map.charAt(63 & block >> 8 - i % 1 * 8)) {
-        charCode = str.charCodeAt(i += 3 / 4);
-        if (charCode > 0xFF) {
-            throw new Error("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
-        }
-        block = block << 8 | charCode;
-    }
-    return output;
-}
 export default new PowerAuth();

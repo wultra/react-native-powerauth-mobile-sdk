@@ -210,6 +210,7 @@ declare class PowerAuth {
 export interface PowerAuthCreateActivationResult {
     activationFingerprint: string;
     activationRecovery?: PowerAuthRecoveryActivationData;
+    customAttributes?: any;
 }
 export interface PowerAuthRecoveryActivationData {
     recoveryCode: string;

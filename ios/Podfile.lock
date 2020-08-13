@@ -250,7 +250,7 @@ DEPENDENCIES:
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
   - Folly (from `../node_modules/react-native/third-party-podspecs/Folly.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - PowerAuth2 (~> 1.4.1)
+  - PowerAuth2 (= 1.4.1)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
   - React (from `../node_modules/react-native/`)
@@ -361,6 +361,6 @@ SPEC CHECKSUMS:
   ReactCommon: ed4e11d27609d571e7eee8b65548efc191116eb3
   Yoga: 3ebccbdd559724312790e7742142d062476b698e
 
-PODFILE CHECKSUM: 999c0e50a75e0341a54749584ad2e97581ca2490
+PODFILE CHECKSUM: 9a975d1d20c63000a336649e4fcd34f0a3665669
 
-COCOAPODS: 1.9.1
+COCOAPODS: 1.9.3
