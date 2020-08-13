@@ -16,6 +16,8 @@
 
 package com.wultra.android.powerauth.reactnative;
 
+import android.util.Log;
+
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -40,7 +42,11 @@ public class PowerAuthRNPackage implements ReactPackage {
         List<NativeModule> modules = new ArrayList<>();
         mPowerAuthModule = new PowerAuthRNModule(reactContext);
         if (mConfig != null) {
-            mPowerAuthModule.configure(mConfig);
+            try {
+                mPowerAuthModule.configure(mConfig);
+            } catch (Exception e) {
+                Log.e("PA-RN", "PowerAuth module failed to configure.", e);
+            }
             mConfig = null;
         }
         modules.add(mPowerAuthModule);
@@ -58,7 +64,7 @@ public class PowerAuthRNPackage implements ReactPackage {
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @throws IllegalStateException When the module was already configured.
      */
-    public void configure(String instanceId, String appKey, String appSecret, String masterServerPublicKey, String baseEndpointUrl, boolean enableUnsecureTraffic) throws IllegalStateException {
+    public void configure(String instanceId, String appKey, String appSecret, String masterServerPublicKey, String baseEndpointUrl, boolean enableUnsecureTraffic) throws IllegalStateException, IllegalArgumentException {
         PowerAuthRNConfiguration config = new PowerAuthRNConfiguration(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
 
         if (mPowerAuthModule != null) {

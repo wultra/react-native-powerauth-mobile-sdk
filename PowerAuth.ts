@@ -135,7 +135,7 @@ class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature.
      */
     async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.nativeModule.requestSignature(await this.processAuthentication(authentication), method, uriId, body ? toBase64(body) : null);
+        return this.nativeModule.requestSignature(await this.processAuthentication(authentication), method, uriId, body);
     }
 
     /**
@@ -148,7 +148,7 @@ class PowerAuth {
      * @return String representing a calculated signature for all involved factors.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return this.nativeModule.offlineSignature(await this.processAuthentication(authentication), uriId, body ? toBase64(body) : null, nonce);
+        return this.nativeModule.offlineSignature(await this.processAuthentication(authentication), uriId, body, nonce);
     }
 
     /**
@@ -159,7 +159,7 @@ class PowerAuth {
      * @param masterKey If true, then master server public key is used for validation, otherwise personalized server's public key.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
-        return this.nativeModule.verifyServerSignedData(toBase64(data), signature, masterKey);
+        return this.nativeModule.verifyServerSignedData(data, signature, masterKey);
     }
 
     /**
@@ -240,7 +240,7 @@ class PowerAuth {
      * @param data Data to be signed with the private key.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return this.nativeModule.signDataWithDevicePrivateKey(await this.processAuthentication(authentication), toBase64(data));
+        return this.nativeModule.signDataWithDevicePrivateKey(await this.processAuthentication(authentication), data);
     }
 
     /** 
@@ -644,29 +644,6 @@ interface PowerAuthOtp {
      */
     activationSignature: string;
 }
-
-// HELPER METHODS
-
-function toBase64(input: string) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-    let str = input;
-    let output = '';
-
-    for (let block = 0, charCode, i = 0, map = chars;
-    str.charAt(i | 0) || (map = '=', i % 1);
-    output += map.charAt(63 & block >> 8 - i % 1 * 8)) {
-
-      charCode = str.charCodeAt(i += 3/4);
-
-      if (charCode > 0xFF) {
-        throw new Error("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
-      }
-
-      block = block << 8 | charCode;
-    }
-
-    return output;
-  }
 
 export default new PowerAuth();
 

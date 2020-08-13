@@ -285,7 +285,7 @@ RCT_REMAP_METHOD(requestSignature,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     
     NSError* error = nil;
-    PA2AuthorizationHttpHeader* signature = [[PowerAuthSDK sharedInstance] requestSignatureWithAuthentication:auth method:method uriId:uriId body:[[NSData alloc] initWithBase64EncodedString:body options:0] error:&error];
+    PA2AuthorizationHttpHeader* signature = [[PowerAuthSDK sharedInstance] requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
     
     if (error) {
         reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -308,7 +308,7 @@ RCT_REMAP_METHOD(offlineSignature,
 {
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     NSError* error = nil;
-    NSString* signature = [[PowerAuthSDK sharedInstance] offlineSignatureWithAuthentication:auth uriId:uriId body:[[NSData alloc] initWithBase64EncodedString:body options:0] nonce:nonce error:&error];
+    NSString* signature = [[PowerAuthSDK sharedInstance] offlineSignatureWithAuthentication:auth uriId:uriId body:[RCTConvert NSData:body] nonce:nonce error:&error];
     
     if (error) {
         reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -323,7 +323,7 @@ RCT_EXPORT_METHOD(verifyServerSignedData:(nonnull NSString*)data
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
-    BOOL result = [[PowerAuthSDK sharedInstance] verifyServerSignedData:[[NSData alloc] initWithBase64EncodedString:data options:0] signature:signature masterKey:masterKey];
+    BOOL result = [[PowerAuthSDK sharedInstance] verifyServerSignedData:[RCTConvert NSData:data] signature:signature masterKey:masterKey];
     resolve([[NSNumber alloc] initWithBool:result]);
 }
 
@@ -396,7 +396,7 @@ RCT_EXPORT_METHOD(signDataWithDevicePrivateKey:(NSDictionary*)authDict
                   reject:(RCTPromiseRejectBlock)reject)
 {
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
-    [[PowerAuthSDK sharedInstance] signDataWithDevicePrivateKey:auth data:[[NSData alloc] initWithBase64EncodedString:data options:0] callback:^(NSData * signature, NSError * error) {
+    [[PowerAuthSDK sharedInstance] signDataWithDevicePrivateKey:auth data:[RCTConvert NSData:data] callback:^(NSData * signature, NSError * error) {
         if (signature) {
             resolve([RCTConvert NSString:signature]);
         } else {

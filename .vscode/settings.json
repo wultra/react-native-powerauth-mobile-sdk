@@ -1,6 +1,3 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "files.exclude": {
-        "demoapp": true
-    }
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

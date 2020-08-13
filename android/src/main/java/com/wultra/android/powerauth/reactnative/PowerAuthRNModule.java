@@ -32,6 +32,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 
 import java.lang.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         promise.resolve(this.powerAuth != null);
     }
 
-    void configure(@NonNull PowerAuthRNConfiguration config) throws IllegalStateException {
+    void configure(@NonNull PowerAuthRNConfiguration config) throws IllegalStateException, IllegalArgumentException {
         if (powerAuth != null) {
             throw new IllegalStateException("PowerAuth module was already configured.");
         }
@@ -84,8 +85,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
             paClientConfigBuilder.allowUnsecuredConnection(true);
         }
-
-        this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
+        try {
+            this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
+        } catch (PowerAuthErrorException e) {
+            throw new IllegalArgumentException("Unable to configure with provided data", e);
+        }
     }
 
     @ReactMethod
@@ -137,12 +141,12 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 map.putInt("remainingAttempts", status.getRemainingAttempts());
                 promise.resolve(map);
             }
-      
+
             @Override
             public void onActivationStatusFailed(Throwable t) {
                 promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
             }
-          });
+        });
     }
 
     @ReactMethod
@@ -297,7 +301,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void requestSignature(ReadableMap authMap, String method, String uriId, @Nullable String body, Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        byte[] decodedBody = body == null ? null : Base64.decode(body, Base64.DEFAULT);
+        byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
         PowerAuthAuthorizationHttpHeader header = this.powerAuth.requestSignatureWithAuthentication(this.context, auth, method, uriId, decodedBody);
         if (header.powerAuthErrorCode == PowerAuthErrorCodes.PA2Succeed) {
             WritableMap returnMap = Arguments.createMap();
@@ -312,7 +316,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void offlineSignature(ReadableMap authMap, String uriId, @Nullable String body, String nonce, Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        byte[] decodedBody = body == null ? null : Base64.decode(body, Base64.DEFAULT);
+        byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
         String signature = this.powerAuth.offlineSignatureWithAuthentication(this.context, auth, uriId, decodedBody, nonce);
         if (signature != null) {
             promise.resolve(signature);
@@ -324,7 +328,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void verifyServerSignedData(String data, String signature, boolean masterKey, Promise promise) {
         try {
-            byte[] decodedData = Base64.decode(data, Base64.DEFAULT);
+            byte[] decodedData = data.getBytes(StandardCharsets.UTF_8);
             byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
             promise.resolve(this.powerAuth.verifyServerSignedData(decodedData, decodedSignature, masterKey));
         } catch (Exception e) {
@@ -410,6 +414,22 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onFetchEncryptionKeyFailed(Throwable t) {
+                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+            }
+        });
+    }
+
+    @ReactMethod
+    public void signDataWithDevicePrivateKey(ReadableMap authMap, String data, final Promise promise) {
+        PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
+        powerAuth.signDataWithDevicePrivateKey(this.context, auth, data.getBytes(StandardCharsets.UTF_8), new IDataSignatureListener() {
+            @Override
+            public void onDataSignedSucceed(byte[] signature) {
+                promise.resolve(Base64.encodeToString(signature, Base64.DEFAULT));
+            }
+
+            @Override
+            public void onDataSignedFailed(Throwable t) {
                 promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
             }
         });
