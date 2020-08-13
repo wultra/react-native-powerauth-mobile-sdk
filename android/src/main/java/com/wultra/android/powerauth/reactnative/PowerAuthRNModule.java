@@ -67,7 +67,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         promise.resolve(this.powerAuth != null);
     }
 
-    void configure(@NonNull PowerAuthRNConfiguration config) throws IllegalStateException {
+    void configure(@NonNull PowerAuthRNConfiguration config) throws IllegalStateException, IllegalArgumentException {
         if (powerAuth != null) {
             throw new IllegalStateException("PowerAuth module was already configured.");
         }
@@ -85,8 +85,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
             paClientConfigBuilder.allowUnsecuredConnection(true);
         }
-
-        this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
+        try {
+            this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
+        } catch (PowerAuthErrorException e) {
+            throw new IllegalArgumentException("Unable to configure with provided data", e);
+        }
     }
 
     @ReactMethod

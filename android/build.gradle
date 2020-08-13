@@ -58,5 +58,5 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    implementation "io.getlime.security.powerauth:powerauth-android-sdk:1.4.1"
+    implementation "io.getlime.security.powerauth:powerauth-android-sdk:1.4.2"
 }
