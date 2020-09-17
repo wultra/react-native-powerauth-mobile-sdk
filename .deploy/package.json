@@ -1,0 +1,45 @@
+{
+  "name": "react-native-powerauth-mobile-sdk",
+  "title": "PowerAuth SDK for React Native Mobile Apps",
+  "version": "%DEPLOY_VERSION%",
+  "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
+  "main": "PowerAuth.js",
+  "files": [
+    "README.md",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNModule.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNPackage.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNConfiguration.java",
+    "android/build.gradle",
+    "PowerAuth.js",
+    "PowerAuth.d.ts",
+    "ios/PowerAuth/PowerAuth.m",
+    "ios/PowerAuth/PowerAuth.h",
+    "react-native-powerauth-mobile-sdk.podspec"
+  ],
+  "homepage": "https://www.wultra.com/mobile-security-suite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
+  },
+  "keywords": [
+    "react-native",
+    "powerauth",
+    "security"
+  ],
+  "author": {
+    "name": "Wultra s.r.o.",
+    "email": "support@wultra.com"
+  },
+  "license": "Apache 2.0",
+  "licenseFilename": "LICENSE",
+  "readmeFilename": "README.md",
+  "peerDependencies": {
+    "react-native": "^0.62.2"
+  },
+  "devDependencies": {
+    "@types/react-native": "^0.62.18",
+    "lodash": "^4.17.19",
+    "react-native": "^0.62.2"
+  }
+}

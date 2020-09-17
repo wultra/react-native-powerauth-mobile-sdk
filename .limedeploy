@@ -1,0 +1,2 @@
+DEPLOY_VERSIONING_FILES=( ".deploy/package.json,package.json" )
+DEPLOY_MODE='npm'
