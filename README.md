@@ -58,7 +58,7 @@ PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRE
 
 #### Configuration from native code
 
-In some cases (for example when you don't want to leave the configuration info in your `.js` files) you might want to configure the PowerAuth directly from the platform native code.
+In some cases (for example when you don't want to leave the configuration info in your `.js` files or when you need more advanced configuration) you might want to configure the PowerAuth directly from the platform native code.
 
 __JAVA__
 
@@ -67,6 +67,10 @@ _Your implementation might differ._
 
 ```java
 import com.wultra.android.powerauth.reactnative.PowerAuthRNPackage;
+import io.getlime.security.powerauth.networking.ssl.PA2ClientSslNoValidationStrategy;
+import io.getlime.security.powerauth.sdk.PowerAuthClientConfiguration;
+import io.getlime.security.powerauth.sdk.PowerAuthConfiguration;
+import io.getlime.security.powerauth.sdk.PowerAuthSDK;
 
 public class MainApplication extends Application implements ReactApplication {
 		
@@ -80,7 +84,16 @@ public class MainApplication extends Application implements ReactApplication {
     for (ReactPackage pkg : this.getReactNativeHost().getReactInstanceManager().getPackages()) {
       if (pkg instanceof PowerAuthRNPackage) {
         try {
-          ((PowerAuthRNPackage) pkg).configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+          PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
+                 new PowerAuthConfiguration.Builder("your-app-activation", "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
+         );
+         PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
+         // allowing unsecure (http) connections. Use only in non-production builds!
+         paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
+         paClientConfigBuilder.allowUnsecuredConnection(true);
+
+         builder.clientConfiguration(paClientConfigBuilder.build());
+         ((PowerAuthRNPackage) pkg).configure(builder);
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -89,6 +102,8 @@ public class MainApplication extends Application implements ReactApplication {
   }
 }
 ```
+
+For more information about the native configuration, you can visit [official documentation of the native SDK](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/PowerAuth-SDK-for-Android.md#configuration).
 
 __OBJECTIVE-C__
 
@@ -113,7 +128,15 @@ _Your implementation might differ._
   // POWERAUTH CONFIGURATION
   PowerAuth *pa = [bridge moduleForClass:PowerAuth.class];
   if (pa) {
-    [pa configureWithInstanceId:@"react-native-init" appKey:@"QdGi0mefDLSauL2tiQwSOw==" appSecret:@"Ec1RlAr6B3Il6wEg9OQLXA==" masterServerPublicKey:@"BGyETh1n9W20nHaxj9n2Fm72N/0/i7gKcBSyL4nCqLAqsD/tkrzPA3dibvmYXGL2NPTusUhFISu2a03PtLijtFs=" baseEndpointUrl:@"http://85.160.68.59:8080/powerauth-webflow" enableUnsecureTraffic:YES];
+    PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
+    config.instanceId = @"your-instance-id";
+    config.appKey = @"APPLICATION_KEY";
+    config.appSecret = @"APPLICATION_SECRET";
+    config.masterServerPublicKey = @"KEY_SERVER_MASTER_PUBLIC";
+    config.baseEndpointUrl = @"https://your-powerauth-endpoint.com/";
+    if(![pa configureWithConfig:config keychainConfig:nil clientConfig:nil]) {
+      NSLog(@"Failed to configure PowerAuth module");
+    }
   } else {
     NSLog(@"PowerAuth module not found");
   }
@@ -138,6 +161,8 @@ _Your implementation might differ._
 
 @end
 ```
+
+For more information about the native configuration, you can visit [official documentation of the native SDK](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/PowerAuth-SDK-for-iOS.md#configuration).
 
 ## API reference
 
