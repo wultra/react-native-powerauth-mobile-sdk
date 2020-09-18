@@ -87,12 +87,6 @@ public class MainApplication extends Application implements ReactApplication {
           PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
                  new PowerAuthConfiguration.Builder("your-app-activation", "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
          );
-         PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
-         // allowing unsecure (http) connections. Use only in non-production builds!
-         paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
-         paClientConfigBuilder.allowUnsecuredConnection(true);
-
-         builder.clientConfiguration(paClientConfigBuilder.build());
          ((PowerAuthRNPackage) pkg).configure(builder);
         } catch (Exception e) {
           e.printStackTrace();
