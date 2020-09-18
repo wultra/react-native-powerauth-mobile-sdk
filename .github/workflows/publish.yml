@@ -1,0 +1,29 @@
+name: Release a new version from master
+
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version of the library'
+        required: true
+      command:
+        description: 'Library deploy command'
+        required: false
+        default: prepare push deploy -v2 --any-branch 
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Make sure we're on master branch
+        run: |
+          [[ $GITHUB_REF == "refs/heads/master" ]] || exit 1
+      - name: Publish the library
+        uses: kober32/library-deploy@develop
+        with:
+          script-parameters: ${{ github.event.inputs.version }} ${{ github.event.inputs.command }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

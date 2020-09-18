@@ -67,26 +67,13 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         promise.resolve(this.powerAuth != null);
     }
 
-    void configure(@NonNull PowerAuthRNConfiguration config) throws IllegalStateException, IllegalArgumentException {
+    void configure(@NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
         if (powerAuth != null) {
             throw new IllegalStateException("PowerAuth module was already configured.");
         }
-        PowerAuthConfiguration paConfig = new PowerAuthConfiguration.Builder(
-                config.getInstanceId(),
-                config.getBaseEndpointUrl(),
-                config.getAppKey(),
-                config.getAppSecret(),
-                config.getMasterServerPublicKey()
-        ).build();
 
-        PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
-
-        if (config.isEnableUnsecureTraffic()) {
-            paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
-            paClientConfigBuilder.allowUnsecuredConnection(true);
-        }
         try {
-            this.powerAuth = new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()).build(this.context);
+            this.powerAuth = builder.build(this.context);
         } catch (PowerAuthErrorException e) {
             throw new IllegalArgumentException("Unable to configure with provided data", e);
         }
@@ -94,9 +81,22 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void configure(String instanceId, String appKey, String appSecret, String masterServerPublicKey, String baseEndpointUrl, boolean enableUnsecureTraffic, Promise promise) {
-        PowerAuthRNConfiguration config = new PowerAuthRNConfiguration(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
+        PowerAuthConfiguration paConfig = new PowerAuthConfiguration.Builder(
+                instanceId,
+                baseEndpointUrl,
+                appKey,
+                appSecret,
+                masterServerPublicKey
+        ).build();
+
+        PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
+
+        if (enableUnsecureTraffic) {
+            paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
+            paClientConfigBuilder.allowUnsecuredConnection(true);
+        }
         try {
-            configure(config);
+            configure(new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
             promise.resolve(true);
         } catch (Exception e) {
             promise.reject("PA2ReactNativeError", "Failed to configure");

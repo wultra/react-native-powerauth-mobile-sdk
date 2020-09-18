@@ -14,6 +14,10 @@ import com.wultra.android.reactnativedemo.generated.BasePackageList;
 import org.unimodules.adapters.react.ModuleRegistryAdapter;
 import org.unimodules.adapters.react.ReactModuleRegistryProvider;
 import expo.modules.updates.UpdatesController;
+import io.getlime.security.powerauth.networking.ssl.PA2ClientSslNoValidationStrategy;
+import io.getlime.security.powerauth.sdk.PowerAuthClientConfiguration;
+import io.getlime.security.powerauth.sdk.PowerAuthConfiguration;
+import io.getlime.security.powerauth.sdk.PowerAuthSDK;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -82,7 +86,14 @@ public class MainApplication extends Application implements ReactApplication {
     for (ReactPackage pkg : this.getReactNativeHost().getReactInstanceManager().getPackages()) {
       if (pkg instanceof PowerAuthRNPackage) {
         try {
-          //((PowerAuthRNPackage) pkg).configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+//          PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
+//                  new PowerAuthConfiguration.Builder("your-app-activation", "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
+//          );
+//          PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
+//          paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
+//          paClientConfigBuilder.allowUnsecuredConnection(true);
+//          builder.clientConfiguration(paClientConfigBuilder.build());
+//          ((PowerAuthRNPackage) pkg).configure(builder);
         } catch (Exception e) {
           e.printStackTrace();
         }
