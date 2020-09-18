@@ -9,7 +9,6 @@
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNModule.java",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNPackage.java",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNConfiguration.java",
     "android/build.gradle",
     "PowerAuth.js",
     "PowerAuth.d.ts",
