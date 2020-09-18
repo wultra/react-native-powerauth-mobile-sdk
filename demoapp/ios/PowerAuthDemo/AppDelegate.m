@@ -57,7 +57,16 @@
   
   PowerAuth *pa = [bridge moduleForClass:PowerAuth.class];
   if (pa) {
-    //[pa configureWithInstanceId:@"your-app-activation" appKey:@"APPLICATION_KEY" appSecret:@"APPLICATION_SECRET" masterServerPublicKey:@"KEY_SERVER_MASTER_PUBLIC" baseEndpointUrl:@"https://your-powerauth-endpoint.com/" enableUnsecureTraffic:NO];
+    // DEMO USAGE OF NATIVE CONFIGURATION
+//    PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
+//    config.instanceId = @"your-instance-id";
+//    config.appKey = @"APPLICATION_KEY";
+//    config.appSecret = @"APPLICATION_SECRET";
+//    config.masterServerPublicKey = @"KEY_SERVER_MASTER_PUBLIC";
+//    config.baseEndpointUrl = @"https://your-powerauth-endpoint.com/";
+//    if(![pa configureWithConfig:config keychainConfig:nil clientConfig:nil]) {
+//      NSLog(@"Failed to configure PowerAuth module");
+//    }
   } else {
     NSLog(@"PowerAuth module not found");
   }

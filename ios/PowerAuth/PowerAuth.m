@@ -21,7 +21,6 @@
 
 #import <PowerAuth2/PowerAuthSDK.h>
 #import <PowerAuth2/PA2ErrorConstants.h>
-#import <PowerAuth2/PA2ClientConfiguration.h>
 #import <PowerAuth2/PA2ClientSslNoValidationStrategy.h>
 
 @implementation PowerAuth
@@ -40,32 +39,22 @@ RCT_REMAP_METHOD(isConfigured,
     }
 }
 
-- (BOOL)configureWithInstanceId:(NSString *)instanceId
-                         appKey:(NSString *)appKey
-                      appSecret:(NSString *)appSecret
-          masterServerPublicKey:(NSString *)masterServerPublicKey
-                baseEndpointUrl:(NSString *)baseEndpointUrl
-          enableUnsecureTraffic:(BOOL)enableUnsecureTraffic
+- (BOOL)configureWithConfig:(nonnull PowerAuthConfiguration *)config
+             keychainConfig:(nullable PA2KeychainConfiguration *)keychainConfig
+               clientConfig:(nullable PA2ClientConfiguration *)clientConfig
 {
     @try {
         [PowerAuthSDK sharedInstance];
         return NO; // when sharedInstance goes through, it means that it was already configured
     } @catch (NSException *exception) {
-        PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
-        config.instanceId = instanceId;
-        config.appKey = appKey;
-        config.appSecret = appSecret;
-        config.masterServerPublicKey = masterServerPublicKey;
-        config.baseEndpointUrl = baseEndpointUrl;
-
-        if (enableUnsecureTraffic) {
-            [[PA2ClientConfiguration sharedInstance] setSslValidationStrategy:[[PA2ClientSslNoValidationStrategy alloc] init]];
-        }
-
-        if ([config validateConfiguration]) {
-            [PowerAuthSDK initSharedInstance:config];
-            return YES;
-        } else {
+        @try {
+            if ([config validateConfiguration]) {
+                [PowerAuthSDK initSharedInstance:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
+                return YES;
+            } else {
+                return NO;
+            }
+        } @catch (NSException *exception) {
             return NO;
         }
     }
@@ -88,12 +77,13 @@ RCT_REMAP_METHOD(configure,
     config.masterServerPublicKey = masterServerPublicKey;
     config.baseEndpointUrl = baseEndpointUrl;
 
+    PA2ClientConfiguration * clientConfig = [[PA2ClientConfiguration sharedInstance] copy];
+    
     if (enableUnsecureTraffic) {
-        [[PA2ClientConfiguration sharedInstance] setSslValidationStrategy:[[PA2ClientSslNoValidationStrategy alloc] init]];
+        [clientConfig setSslValidationStrategy:[[PA2ClientSslNoValidationStrategy alloc] init]];
     }
-
-    if ([config validateConfiguration]) {
-        [PowerAuthSDK initSharedInstance:config];
+    
+    if ([self configureWithConfig:config keychainConfig:nil clientConfig:clientConfig]) {
         resolve(@YES);
     } else {
         resolve(@NO);
