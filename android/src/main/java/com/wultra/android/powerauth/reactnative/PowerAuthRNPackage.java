@@ -18,6 +18,8 @@ package com.wultra.android.powerauth.reactnative;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -27,18 +29,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.getlime.security.powerauth.sdk.PowerAuthSDK;
+
 public class PowerAuthRNPackage implements ReactPackage {
 
     private PowerAuthRNModule mPowerAuthModule;
-    private PowerAuthRNConfiguration mConfig;
+    private PowerAuthSDK.Builder mConfig;
 
     @Override
-    public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+    public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }
 
     @Override
-    public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
+    public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         mPowerAuthModule = new PowerAuthRNModule(reactContext);
         if (mConfig != null) {
@@ -56,23 +60,17 @@ public class PowerAuthRNPackage implements ReactPackage {
     /**
      * Prepares the PowerAuth instance.
      *
-     * @param instanceId Identifier of the PowerAuthSDK instance. The package name is recommended.
-     * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
-     * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
-     * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
-     * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
-     * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
+     * @param builder configuration for the PowerAuth instance
      * @throws IllegalStateException When the module was already configured.
      */
-    public void configure(String instanceId, String appKey, String appSecret, String masterServerPublicKey, String baseEndpointUrl, boolean enableUnsecureTraffic) throws IllegalStateException, IllegalArgumentException {
-        PowerAuthRNConfiguration config = new PowerAuthRNConfiguration(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
+    public void configure(@NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
 
         if (mPowerAuthModule != null) {
             // Module was already created, configure it right away.
-            mPowerAuthModule.configure(config);
+            mPowerAuthModule.configure(builder);
         } else {
             // Keep the config until the module is created
-            mConfig = config;
+            mConfig = builder;
         }
     }
 }
