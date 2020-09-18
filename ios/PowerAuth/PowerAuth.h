@@ -15,26 +15,21 @@
  */
 
 #import <React/RCTBridgeModule.h>
-
+#import <PowerAuth2/PA2ClientConfiguration.h>
+#import <PowerAuth2/PA2KeychainConfiguration.h>
+#import <PowerAuth2/PowerAuthConfiguration.h>
 
 @interface PowerAuth: NSObject<RCTBridgeModule>
 
 /**
  * Prepares the PowerAuth instance.
  *
- * @param instanceId Identifier of the PowerAuthSDK instance. The package name is recommended.
- * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
- * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
- * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
- * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
- * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
+ * @param config PowerAuth configuration
+ * @param keychainConfig PowerAuth Keychain configuration
+ * @param clientConfig PowerAuth HTTP client configuration
  * @return If the configuration was successful.
 */
-- (BOOL) configureWithInstanceId:(NSString*)instanceId
-                          appKey:(NSString*)appKey
-                       appSecret:(NSString*)appSecret
-           masterServerPublicKey:(NSString*)masterServerPublicKey
-                 baseEndpointUrl:(NSString*)baseEndpointUrl
-           enableUnsecureTraffic:(BOOL)enableUnsecureTraffic;
-
+- (BOOL) configureWithConfig:(nonnull PowerAuthConfiguration *)config
+             keychainConfig:(nullable PA2KeychainConfiguration *)keychainConfig
+               clientConfig:(nullable PA2ClientConfiguration *)clientConfig;
 @end
