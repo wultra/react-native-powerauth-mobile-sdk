@@ -33,12 +33,15 @@
   "license": "Apache 2.0",
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
+  "dependencies": {
+    "node-fetch": ">=2.6.1"
+  },
   "peerDependencies": {
     "react-native": "^0.62.2"
   },
   "devDependencies": {
     "@types/react-native": "^0.62.18",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.20",
     "react-native": "^0.62.2"
   }
 }
