@@ -36,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.getlime.security.powerauth.biometry.BiometricKeyData;
+import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
 import io.getlime.security.powerauth.sdk.*;
@@ -57,6 +59,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         this.context = context;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return "PowerAuth";
@@ -373,8 +376,8 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                             }
 
                             @Override
-                            public void onAddBiometryFactorFailed(Throwable t) {
-                                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t), t);
+                            public void onAddBiometryFactorFailed(@NonNull PowerAuthErrorException error) {
+                                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(error), error);
                             }
                         });
             } catch (Exception e) {
@@ -506,8 +509,8 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                             }
 
                             @Override
-                            public void onBiometricDialogSuccess(@NonNull byte[] biometricKeyEncrypted) {
-                                String base64 = new String(Base64.encode(biometricKeyEncrypted, Base64.DEFAULT));
+                            public void onBiometricDialogSuccess(@NonNull BiometricKeyData biometricKeyData) {
+                                String base64 = new String(Base64.encode(biometricKeyData.getDerivedData(), Base64.DEFAULT));
                                 promise.resolve(base64);
                             }
 

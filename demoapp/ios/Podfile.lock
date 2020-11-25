@@ -32,7 +32,7 @@ PODS:
   - EXSQLite (8.1.0):
     - UMCore
     - UMFileSystemInterface
-  - EXUpdates (0.2.9):
+  - EXUpdates (0.2.14):
     - React
     - UMCore
   - EXWebBrowser (8.2.1):
@@ -55,7 +55,7 @@ PODS:
     - DoubleConversion
     - glog
   - glog (0.3.5)
-  - PowerAuth2 (1.4.2)
+  - PowerAuth2 (1.5.1)
   - RCTRequired (0.61.5)
   - RCTTypeSafety (0.61.5):
     - FBLazyVector (= 0.61.5)
@@ -219,8 +219,8 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-powerauth-mobile-sdk (1.4.10):
-    - PowerAuth2 (= 1.4.2)
+  - react-native-powerauth-mobile-sdk (1.5.0):
+    - PowerAuth2 (= 1.5.1)
     - React
   - React-RCTActionSheet (0.61.5):
     - React-Core/RCTActionSheetHeaders (= 0.61.5)
@@ -473,13 +473,13 @@ SPEC CHECKSUMS:
   EXPermissions: d2cafee9c72578ecc9ca121481e6c4a04a798861
   EXSplashScreen: 6888f24a847a2cdbf5ca4d996300adf9cc2726b4
   EXSQLite: 15268ec49f859e4594fe5b0a1c7a47913da0b67e
-  EXUpdates: ea5bf562a1694b917bdceb269e84dfa084783efb
+  EXUpdates: 8c4570807f9435337769850d9976d63a407cecfc
   EXWebBrowser: 6364e9e1ea73f6c3c2e6e3cc0ac17259a260e3a8
   FBLazyVector: aaeaf388755e4f29cd74acbc9e3b8da6d807c37f
   FBReactNativeSpec: 118d0d177724c2d67f08a59136eb29ef5943ec75
   Folly: 30e7936e1c45c08d884aa59369ed951a8e68cf51
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
-  PowerAuth2: ba8826182782a939d2727188a7e8cbd0d2902e4e
+  PowerAuth2: 06db339d4776cc3c73d41f24f85506709c167c67
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
   React: b6a59ef847b2b40bb6e0180a97d0ca716969ac78
@@ -489,7 +489,7 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-powerauth-mobile-sdk: c1aa9903f1ade3cc3493b3a9a3068c94decdbcf1
+  react-native-powerauth-mobile-sdk: 01318451a4a9873866a235cca1a96e8e7ac2495c
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
@@ -520,4 +520,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 14a6ee0328e5683c3c8e1a620f77b71b89e66d1c
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.0
