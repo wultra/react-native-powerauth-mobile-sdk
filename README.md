@@ -31,6 +31,12 @@ For iOS, don't dorget to install the pods:
 cd ios
 pod install
 ```
+
+or
+
+```sh
+npx pod-install
+```
 ### 3. Configure the instance
 
 Before you call any PowerAuth method, you need to configure it first. The `configure` method will need the following parameters:
