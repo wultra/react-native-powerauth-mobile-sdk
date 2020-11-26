@@ -9,7 +9,8 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 |React Native SDK| Mobile SDK | Protocol | PowerAuth Server    | Support Status                    |
 |----------------|------------|----------|---------------------|-----------------------------------|
-|`1.4.x`         | `1.4.x`    | `V3.1`   | `0.24+`             | Fully supported                   |
+|`1.5.x`         | `1.5.x`    | `V3.1`   | `0.24+`             | Fully supported                   |
+|`1.4.x`         | `1.4.x`    | `V3.1`   | `0.24+`             | Security & Functionality bugfixes |
 
 ## How to install
 
@@ -29,6 +30,12 @@ For iOS, don't dorget to install the pods:
 ```sh
 cd ios
 pod install
+```
+
+or
+
+```sh
+npx pod-install
 ```
 ### 3. Configure the instance
 
