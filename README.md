@@ -25,7 +25,7 @@ npm i react-native-powerauth-mobile-sdk --save
 npx react-native link
 ```
 
-For iOS, don't dorget to install the pods:
+For iOS, don't forget to install the pods:
 
 ```sh
 cd ios
