@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
   s.license      = package["license "]
-  s.authors      = { "Wultra s.r.o" => "support@wultra.com" }
+  s.authors      = { package["author"]["name"] => package["author"]["email"] }
   s.platforms    = { :ios => "8.0" }
   s.source       = { :git => "https://github.com/wultra/react-native-powerauth-mobile-sdk.git", :tag => "#{s.version}" }
 

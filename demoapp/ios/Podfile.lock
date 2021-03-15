@@ -240,7 +240,7 @@ PODS:
     - React-jsi (= 0.64.0)
     - React-perflogger (= 0.64.0)
   - React-jsinspector (0.64.0)
-  - react-native-powerauth-mobile-sdk (1.5.0):
+  - react-native-powerauth-mobile-sdk (1.5.2):
     - PowerAuth2 (= 1.5.2)
     - React
   - React-perflogger (0.64.0)
@@ -548,7 +548,7 @@ SPEC CHECKSUMS:
   React-jsi: 74341196d9547cbcbcfa4b3bbbf03af56431d5a1
   React-jsiexecutor: 06a9c77b56902ae7ffcdd7a4905f664adc5d237b
   React-jsinspector: 0ae35a37b20d5e031eb020a69cc5afdbd6406301
-  react-native-powerauth-mobile-sdk: c862af2988e11e2d3afb9f768c99c8fb7de3036e
+  react-native-powerauth-mobile-sdk: 88a5a3b737b233861750fe5318175776d03469d9
   React-perflogger: 9c547d8f06b9bf00cb447f2b75e8d7f19b7e02af
   React-RCTActionSheet: 3080b6e12e0e1a5b313c8c0050699b5c794a1b11
   React-RCTAnimation: 3f96f21a497ae7dabf4d2f150ee43f906aaf516f
@@ -579,6 +579,6 @@ SPEC CHECKSUMS:
   UMTaskManagerInterface: 4e6c4c34a89512e2225d336154df1cb689226a29
   Yoga: 8c8436d4171c87504c648ae23b1d81242bdf3bbf
 
-PODFILE CHECKSUM: 643c8a2811e77f102a56b99298c9c8bf2f9acdb1
+PODFILE CHECKSUM: caca96ef220f47d2f984552e32125f1e0dda676a
 
 COCOAPODS: 1.10.1

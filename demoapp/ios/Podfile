@@ -9,7 +9,7 @@ target 'PowerAuthDemo' do
   use_unimodules!
   use_react_native!(:path => config["reactNativePath"])
 
-  pod 'react-native-powerauth-mobile-sdk', :path => '../node_modules/react-native-powerauth-mobile-sdk'
+  #pod 'react-native-powerauth-mobile-sdk', :path => '../node_modules/react-native-powerauth-mobile-sdk'
 
   # Enables Flipper.
   #
