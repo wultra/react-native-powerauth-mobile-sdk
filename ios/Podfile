@@ -5,7 +5,7 @@ project 'PowerAuth'
 target 'PowerAuth' do
   use_frameworks!
   
-  pod 'PowerAuth2', '1.5.1'
+  pod 'PowerAuth2', '1.5.2'
 
   # react stuff
   rnPrefix = "../node_modules/react-native"
