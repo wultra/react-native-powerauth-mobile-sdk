@@ -1,6 +1,6 @@
 # PowerAuth SDK for React Native Mobile Apps
 <!-- begin remove -->
-[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk)
+[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
 <!-- end -->
 
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
@@ -12,18 +12,14 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 |`1.5.x`         | `1.5.x`    | `V3.1`   | `0.24+`             | Fully supported                   |
 |`1.4.x`         | `1.4.x`    | `V3.1`   | `0.24+`             | Security & Functionality bugfixes |
 
-## How to install
+## How to install (RN > 0.60.0)
 
 ### 1. Install package via `npm`
 ```sh
 npm i react-native-powerauth-mobile-sdk --save
 ```
 
-### 2. Link your native dependencies
-
-```sh
-npx react-native link
-```
+### 2. Install pods for iOS
 
 For iOS, don't forget to install the pods:
 
