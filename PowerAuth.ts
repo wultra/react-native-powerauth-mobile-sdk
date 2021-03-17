@@ -220,6 +220,15 @@ class PowerAuth {
         return this.nativeModule.removeBiometryFactor();
     }
 
+    /**
+     * Returns biometry info data.
+     * 
+     * @returns object with information data about biometry
+     */
+    getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
+        return this.nativeModule.getBiometryInfo();
+    }
+
     /** 
      * Generate a derived encryption key with given index.
      * The key is returned in form of base64 encoded string.
@@ -630,7 +639,7 @@ export class PowerAuthOtpUtil {
  The `PowerAuthOtp` object contains parsed components from user-provided activation, or recovery
  code. You can use methods from `PowerAuthOtpUtil` class to fill this object with valid data.
  */
-interface PowerAuthOtp {
+export interface PowerAuthOtp {
     /**
      * If object is constructed from an activation code, then property contains just a code, without a signature part.
      * If object is constructed from a recovery code, then property contains just a code, without an optional "R:" prefix.
@@ -643,6 +652,72 @@ interface PowerAuthOtp {
      * If object is constructed from a recovery code, then the activation signature part is always empty.
      */
     activationSignature: string;
+}
+
+export interface PowerAuthBiometryInfo {
+    /** Evaluate whether the biometric authentication is supported on the system. */
+    isAvailable: boolean;
+    /** Return type of biometry supported on the system. */
+    biometryType: PowerAuthBiometryType;
+    /**  */
+    canAuthenticate: PowerAuthBiometryStatus;
+}
+
+/**
+ * The PowerAuthBiometryType interface provides constants that defines biometry types, supported
+ * on the system. In case that device supports multiple biometry types, then GENERIC type
+ * is returned.
+ */
+export enum PowerAuthBiometryType {
+    /** 
+     * There's no biometry support on the device. 
+     */
+    NONE = "NONE",
+    /**
+     * It's not possible to determine exact type of biometry. This happens on Android 10+ systems,
+     * when the device supports more than one type of biometric authentication. In this case,
+     * you should use generic terms, like "Authenticate with biometry" for your UI.
+     */
+    GENERIC = "GENERIC",
+    /** 
+     * Fingerprint scanner/TouchID is present on the device. 
+     */
+    FINGERPRINT = "FINGERPRINT",
+    /** 
+     * Face scanner/FaceID is present on the device. 
+     */
+    FACE = "FACE",
+    /** 
+     * Iris scanner is present on the device. 
+     */
+    IRIS = "IRIS"
+}
+
+/**
+ * The PowerAuthBiometryStatus interface defines constants defining various states of biometric
+ * authentication support on the system. The status may change during the application lifetime,
+ * unless it's NOT_SUPPORTED}.
+ */
+export enum PowerAuthBiometryStatus {
+    /** 
+     * The biometric authentication can be used right now. 
+     */
+    OK = "OK",
+    /**
+     * The biometric authentication is not supported on the device, due to missing hardware or
+     * missing support in the operating system.
+     */
+    NOT_SUPPORTED = "NOT_SUPPORTED",
+    /**
+     * The biometric authentication is supported, but there's no biometric image enrolled in the
+     * system. User has to add at least one fingerprint, or another type of biometry in the device's
+     * settings.
+     */
+    NOT_ENROLLED = "NOT_ENROLLED",
+    /**
+     * The biometric authentication is not available at this time. You can retry the operation later.
+     */
+    NOT_AVAILABLE = "NOT_AVAILABLE"
 }
 
 export default new PowerAuth();

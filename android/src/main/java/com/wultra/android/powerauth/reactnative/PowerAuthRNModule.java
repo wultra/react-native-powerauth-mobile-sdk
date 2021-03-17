@@ -37,6 +37,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.getlime.security.powerauth.biometry.BiometricKeyData;
+import io.getlime.security.powerauth.biometry.BiometricAuthentication;
+import io.getlime.security.powerauth.biometry.BiometricStatus;
+import io.getlime.security.powerauth.biometry.BiometryType;
 import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
@@ -404,6 +407,49 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         } else {
             promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
         }
+    }
+
+    @ReactMethod
+    public void getBiometryInfo(Promise promise) {
+        boolean isAvailable = BiometricAuthentication.isBiometricAuthenticationAvailable(this.context);
+        String biometryType;
+        String canAuthenticate;
+        switch (BiometricAuthentication.getBiometryType(this.context)) {
+            case BiometryType.NONE:
+                biometryType = "NONE";
+                break;
+            case BiometryType.FINGERPRINT:
+                biometryType = "FINGERPRINT";
+                break;
+            case BiometryType.FACE:
+                biometryType = "FACE";
+                break;
+            case BiometryType.IRIS:
+                biometryType = "IRIS";
+                break;
+            default: // forward compatibility
+                biometryType = "GENERIC";
+                break;
+        }
+        switch (BiometricAuthentication.canAuthenticate(this.context)) {
+            case BiometricStatus.OK:
+                canAuthenticate = "OK";
+                break;
+            case BiometricStatus.NOT_ENROLLED:
+                canAuthenticate = "NOT_ENROLLED";
+                break;
+            case BiometricStatus.NOT_AVAILABLE:
+                canAuthenticate = "NOT_AVAILABLE";
+                break;
+            default: // forward compatibility
+                canAuthenticate = "NOT_SUPPORTED";
+                break;
+        }
+        WritableMap map = Arguments.createMap();
+        map.putBoolean("isAvailable", isAvailable);
+        map.putString("biometryType", biometryType);
+        map.putString("canAuthenticate", canAuthenticate);
+        promise.resolve(map);
     }
 
     @ReactMethod
