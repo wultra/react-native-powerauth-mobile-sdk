@@ -21,6 +21,7 @@
 
 #import <PowerAuth2/PowerAuthSDK.h>
 #import <PowerAuth2/PA2ErrorConstants.h>
+#import <PowerAuth2/PA2Keychain.h>
 #import <PowerAuth2/PA2ClientSslNoValidationStrategy.h>
 
 @implementation PowerAuth
@@ -363,6 +364,49 @@ RCT_EXPORT_METHOD(removeBiometryFactor:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
     resolve([[NSNumber alloc] initWithBool:[[PowerAuthSDK sharedInstance] removeBiometryFactor]]);
+}
+
+RCT_EXPORT_METHOD(getBiometryInfo:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    NSString *biometryType;
+    NSString *canAuthenticate;
+    switch ([PA2Keychain biometricAuthenticationInfo].biometryType) {
+        case PA2BiometricAuthenticationType_TouchID:
+            biometryType = @"FINGERPRINT";
+            break;
+        case PA2BiometricAuthenticationType_FaceID:
+            biometryType = @"FACE";
+            break;
+        case PA2BiometricAuthenticationType_None:
+        default:
+            biometryType = @"NONE";
+            break;
+    }
+    switch ([PA2Keychain biometricAuthenticationInfo].currentStatus) {
+        case PA2BiometricAuthenticationStatus_Available:
+            canAuthenticate = @"OK";
+            break;
+        case PA2BiometricAuthenticationStatus_NotEnrolled:
+            canAuthenticate = @"NOT_ENROLLED";
+            break;
+        case PA2BiometricAuthenticationStatus_NotAvailable:
+            canAuthenticate = @"NOT_AVAILABLE";
+            break;
+        case PA2BiometricAuthenticationStatus_NotSupported:
+            canAuthenticate = @"NOT_SUPPORTED";
+            break;
+        case PA2BiometricAuthenticationStatus_Lockout:
+            canAuthenticate = @"LOCKOUT";
+            break;
+    }
+    bool canUse = [PA2Keychain canUseBiometricAuthentication];
+    NSDictionary *response = @{
+        @"isAvailable": canUse ? @YES : @NO,
+        @"biometryType": biometryType,
+        @"canAuthenticate": canAuthenticate
+    };
+    resolve(response);
 }
 
 RCT_EXPORT_METHOD(fetchEncryptionKey:(NSDictionary*)authDict

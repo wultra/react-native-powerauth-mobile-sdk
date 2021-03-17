@@ -714,5 +714,10 @@ export var PowerAuthBiometryStatus;
      * The biometric authentication is not available at this time. You can retry the operation later.
      */
     PowerAuthBiometryStatus["NOT_AVAILABLE"] = "NOT_AVAILABLE";
+    /**
+     * Biometric authentication is supported, but too many failed attempts caused its lockout.
+     * User has to authenticate with the password or passcode. (iOS only)
+     */
+    PowerAuthBiometryStatus["LOCKOUT"] = "LOCKOUT";
 })(PowerAuthBiometryStatus || (PowerAuthBiometryStatus = {}));
 export default new PowerAuth();

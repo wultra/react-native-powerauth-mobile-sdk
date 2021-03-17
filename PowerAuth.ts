@@ -655,11 +655,21 @@ export interface PowerAuthOtp {
 }
 
 export interface PowerAuthBiometryInfo {
-    /** Evaluate whether the biometric authentication is supported on the system. */
+    /** 
+     * Evaluate whether the biometric authentication is supported on the system. 
+     * 
+     * Note that the property contains "false" on iOS if biometry is not enrolled or if it has been locked down. 
+     * To distinguish between an availability and lockdown you can use `biometryType` and `canAuthenticate`.
+     */
     isAvailable: boolean;
-    /** Return type of biometry supported on the system. */
+    /** 
+     * Return type of biometry supported on the system. 
+     */
     biometryType: PowerAuthBiometryType;
-    /**  */
+    /** 
+     * Check whether biometric authentication is available on this authenticator and biometric data
+     * are enrolled on the system. 
+     */
     canAuthenticate: PowerAuthBiometryStatus;
 }
 
@@ -717,7 +727,12 @@ export enum PowerAuthBiometryStatus {
     /**
      * The biometric authentication is not available at this time. You can retry the operation later.
      */
-    NOT_AVAILABLE = "NOT_AVAILABLE"
+    NOT_AVAILABLE = "NOT_AVAILABLE",
+    /**
+     * Biometric authentication is supported, but too many failed attempts caused its lockout.
+     * User has to authenticate with the password or passcode. (iOS only)
+	 */
+     LOCKOUT = "LOCKOUT"
 }
 
 export default new PowerAuth();
