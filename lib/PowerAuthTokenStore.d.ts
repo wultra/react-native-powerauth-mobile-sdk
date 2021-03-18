@@ -9,6 +9,13 @@ export declare class PowerAuthTokenStore {
      */
     static hasLocalToken(tokenName: string): Promise<boolean>;
     /**
+     * Returns token if the token is already in local database
+     *
+     * @param tokenName Name of access token to be returned
+     * @return token object if in the local database (or throws)
+     */
+    static getLocalToken(tokenName: string): Promise<PowerAuthToken>;
+    /**
      * Remove token from local database. This method doesn't issue a HTTP request to the server.
      *
      * @param tokenName token to be removed
@@ -40,6 +47,13 @@ export declare class PowerAuthTokenStore {
      * @param tokenName Name of token to be removed
      */
     static removeAccessToken(tokenName: string): Promise<void>;
+    /**
+     * Generates a http header for the token in local storage.
+     *
+     * @param tokenName Name of token in the local storage that will be used for generating
+     * @returns header or throws
+     */
+    static generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader>;
 }
 export interface PowerAuthToken {
     /**
@@ -58,9 +72,7 @@ export interface PowerAuthToken {
      */
     tokenIdentifier?: string;
     /**
-     * Generated HTTP header for token based authorization.
-     *
-     * Null if token containns an invalid data or if the header failed to generate.
+     * True if header can be generated.
      */
-    httpHeader?: PowerAuthAuthorizationHttpHeader;
+    canGenerateHeader: boolean;
 }

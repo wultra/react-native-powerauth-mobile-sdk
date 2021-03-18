@@ -635,12 +635,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             @Override
             public void onGetTokenSucceeded(@NonNull PowerAuthToken token) {
                 WritableMap response = Arguments.createMap();
-                PowerAuthAuthorizationHttpHeader header = token.generateHeader();
-                ReadableMap headerObject = PowerAuthRNModule.getHttpHeaderObject(header);
                 response.putBoolean("isValid", token.isValid());
+                response.putBoolean("canGenerateHeader", token.canGenerateHeader());
                 response.putString("tokenName", token.getTokenName());
                 response.putString("tokenIdentifier", token.getTokenIdentifier());
-                response.putMap("httpHeader", PowerAuthRNModule.getHttpHeaderObject(header));
                 promise.resolve(response);
             }
             @Override
@@ -666,6 +664,21 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void getLocalToken(String tokenName, final Promise promise) {
+        PowerAuthToken token = this.powerAuth.getTokenStore().getLocalToken(this.context, tokenName);
+        if (token != null) {
+            WritableMap response = Arguments.createMap();
+            response.putBoolean("isValid", token.isValid());
+            response.putBoolean("canGenerateHeader", token.canGenerateHeader());
+            response.putString("tokenName", token.getTokenName());
+            response.putString("tokenIdentifier", token.getTokenIdentifier());
+            promise.resolve(response);
+        } else {
+            promise.reject("PA2RNLocalTokenNotAvailable", "Token with this name is not in the local store.");
+        }
+    }
+
+    @ReactMethod
     public void hasLocalToken(String tokenName, final Promise promise) {
         promise.resolve(this.powerAuth.getTokenStore().hasLocalToken(this.context, tokenName));
     }
@@ -680,6 +693,19 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     public void removeAllLocalTokens(final Promise promise) {
         this.powerAuth.getTokenStore().removeAllLocalTokens(this.context);
         promise.resolve(null);
+    }
+
+    @ReactMethod
+    public void generateHeaderForToken(String tokenName, final Promise promise) {
+        PowerAuthToken token = this.powerAuth.getTokenStore().getLocalToken(this.context, tokenName);
+        if (token == null) {
+            promise.reject("PA2RNTokenNotAvailable", "This token is no longer available in the local store.");
+        }
+        else if (token.canGenerateHeader()) {
+            promise.resolve(PowerAuthRNModule.getHttpHeaderObject(token.generateHeader()));
+        } else {
+            promise.reject("PA2RNCannotGenerateHeader", "Cannot generate header for this token.");
+        }
     }
 
     static Map<String, String> getStringMap(ReadableMap rm) {

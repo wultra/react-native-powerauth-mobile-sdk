@@ -570,15 +570,11 @@ RCT_EXPORT_METHOD(requestAccessToken:(nonnull NSString*)tokenName
         if (error || token == nil) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
-            PA2AuthorizationHttpHeader* header = [token generateHeader];
             resolve(@{
                 @"isValid": token.isValid ? @YES : @NO,
+                @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
                 @"tokenName": token.tokenName,
-                @"tokenIdentifier": token.tokenIdentifier,
-                @"httpHeader": header ? @{
-                    @"key": header.key,
-                    @"value": header.value
-                } : [NSNull null]
+                @"tokenIdentifier": token.tokenIdentifier
             });
         }
     }];
@@ -606,6 +602,23 @@ RCT_EXPORT_METHOD(hasLocalToken:(nonnull NSString*)tokenName
     resolve([[[PowerAuthSDK sharedInstance] tokenStore] hasLocalTokenWithName:tokenName] ? @YES : @NO);
 }
 
+RCT_EXPORT_METHOD(getLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token) {
+        resolve(@{
+            @"isValid": token.isValid ? @YES : @NO,
+            @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
+            @"tokenName": token.tokenName,
+            @"tokenIdentifier": token.tokenIdentifier
+        });
+    } else {
+        reject(@"PA2RNLocalTokenNotAvailable", @"Token with this name is not in the local store.", nil);
+    }
+}
+
 RCT_EXPORT_METHOD(removeLocalToken:(nonnull NSString*)tokenName
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
@@ -619,6 +632,29 @@ RCT_EXPORT_METHOD(removeAllLocalTokens:(RCTPromiseResolveBlock)resolve
 {
     [[[PowerAuthSDK sharedInstance] tokenStore] removeAllLocalTokens];
     resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(generateHeaderForToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token == nil) {
+        reject(@"PA2RNTokenNotAvailable", @"This token is no longer available in the local store.", nil);
+    }
+    else if ([token canGenerateHeader]) {
+        PA2AuthorizationHttpHeader* header = [token generateHeader];
+        if (header) {
+            resolve(@{
+                @"key": header.key,
+                @"value": header.value
+            });
+        } else {
+            reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+        }
+    } else {
+        reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+    }
 }
 
 #pragma mark HELPER METHODS

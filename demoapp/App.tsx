@@ -266,7 +266,8 @@ export default class App extends Component<any, State> {
             auth.usePossession = true;
             try {
               const t = await PowerAuthTokenStore.requestAccessToken(this.tokenName, auth);
-              alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\nhttpHeader:${t.httpHeader?.key}:${t.httpHeader?.value}`);
+              const h = await PowerAuthTokenStore.generateHeaderForToken(this.tokenName);
+              alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`requestAccessToken failed: ${e.code}`);
               console.log(JSON.stringify(e));
@@ -285,6 +286,16 @@ export default class App extends Component<any, State> {
             try {
               const r = await PowerAuthTokenStore.hasLocalToken(this.tokenName);
               alert(`Has token: ${r}`);
+            } catch (e) {
+              alert(`hasLocalToken failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
+           <Button title="Get local token" onPress={ async _ => {
+            try {
+              const t = await PowerAuthTokenStore.getLocalToken(this.tokenName);
+              const h = await PowerAuthTokenStore.generateHeaderForToken(this.tokenName);
+              alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`hasLocalToken failed: ${e.code}`);
               console.log(JSON.stringify(e));
