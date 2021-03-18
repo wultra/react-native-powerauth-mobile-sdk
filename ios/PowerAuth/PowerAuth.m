@@ -560,6 +560,67 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
     }
 }
 
+RCT_EXPORT_METHOD(requestAccessToken:(nonnull NSString*)tokenName
+                  authentication:(NSDictionary*)authDict
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    [[[PowerAuthSDK sharedInstance] tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
+        if (error || token == nil) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            PA2AuthorizationHttpHeader* header = [token generateHeader];
+            resolve(@{
+                @"isValid": token.isValid ? @YES : @NO,
+                @"tokenName": token.tokenName,
+                @"tokenIdentifier": token.tokenIdentifier,
+                @"httpHeader": header ? @{
+                    @"key": header.key,
+                    @"value": header.value
+                } : [NSNull null]
+            });
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(removeAccessToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAccessTokenWithName:tokenName completion:^(BOOL removed, NSError * error) {
+        if (removed) {
+            resolve([NSNull null]);
+        } else if (error) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            reject(@"PA2RNFail", @"Unknown error", nil);
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(hasLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    resolve([[[PowerAuthSDK sharedInstance] tokenStore] hasLocalTokenWithName:tokenName] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(removeLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeLocalTokenWithName:tokenName];
+    resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(removeAllLocalTokens:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAllLocalTokens];
+    resolve([NSNull null]);
+}
+
 #pragma mark HELPER METHODS
 
 - (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict

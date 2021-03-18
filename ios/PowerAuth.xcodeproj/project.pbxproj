@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		38737B594EDE9DCC39905E27 /* Pods_PowerAuth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 878C6A700DAD3988E1067DEF /* Pods_PowerAuth.framework */; };
+		CAC0BE336028DD00272CEB09 /* libPods-PowerAuth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */; };
 		DCEDF08B249E59EF00918481 /* PowerAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEDF089249E59EF00918481 /* PowerAuth.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DCEDF092249E5A8600918481 /* PowerAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEDF091249E5A8600918481 /* PowerAuth.m */; };
 /* End PBXBuildFile section */
@@ -15,7 +15,7 @@
 /* Begin PBXFileReference section */
 		04AE46321019BF22569F5B81 /* Pods-PowerAuth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PowerAuth.debug.xcconfig"; path = "Target Support Files/Pods-PowerAuth/Pods-PowerAuth.debug.xcconfig"; sourceTree = "<group>"; };
 		2893562A68484B27897BACFB /* Pods-PowerAuth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PowerAuth.release.xcconfig"; path = "Target Support Files/Pods-PowerAuth/Pods-PowerAuth.release.xcconfig"; sourceTree = "<group>"; };
-		878C6A700DAD3988E1067DEF /* Pods_PowerAuth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PowerAuth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PowerAuth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCEDF086249E59EF00918481 /* PowerAuth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PowerAuth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCEDF089249E59EF00918481 /* PowerAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuth.h; sourceTree = "<group>"; };
 		DCEDF08A249E59EF00918481 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38737B594EDE9DCC39905E27 /* Pods_PowerAuth.framework in Frameworks */,
+				CAC0BE336028DD00272CEB09 /* libPods-PowerAuth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,7 +46,7 @@
 		B4BFD9C01CBD07A418E8ABA2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				878C6A700DAD3988E1067DEF /* Pods_PowerAuth.framework */,
+				D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -102,6 +102,7 @@
 				DCEDF082249E59EF00918481 /* Sources */,
 				DCEDF083249E59EF00918481 /* Frameworks */,
 				DCEDF084249E59EF00918481 /* Resources */,
+				7392CF716574235D6897C5DB /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -175,6 +176,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7392CF716574235D6897C5DB /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PowerAuth/Pods-PowerAuth-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PowerAuth/Pods-PowerAuth-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PowerAuth/Pods-PowerAuth-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
