@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Button, Text, ScrollView } from 'react-native';
 import Prompt from 'rn-prompt';
-import PowerAuth, { PowerAuthActivation, PowerAuthAuthentication, PowerAuthError, PowerAuthOtpUtil, PowerAuthBiometryInfo } from 'react-native-powerauth-mobile-sdk';
+import PowerAuth from 'react-native-powerauth-mobile-sdk';
+import {PowerAuthOtpUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
+import {PowerAuthTokenStore} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthTokenStore';
+import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
+import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
+import {PowerAuthError} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthError';
 
 interface State {
   // activation status
@@ -24,6 +30,8 @@ function sleep(ms: number): Promise<void> {
 }
 
 export default class App extends Component<any, State> {
+
+  tokenName = "possession_universal";
 
   constructor(props: any) {
     super(props);
@@ -252,6 +260,54 @@ export default class App extends Component<any, State> {
               }
             }});
           }} />
+          <Text style={styles.titleText}>Token based authentication</Text>
+          <Button title="Get token from server" onPress={ async _ => {
+            const auth = new PowerAuthAuthentication();
+            auth.usePossession = true;
+            try {
+              const t = await PowerAuthTokenStore.requestAccessToken(this.tokenName, auth);
+              alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\nhttpHeader:${t.httpHeader?.key}:${t.httpHeader?.value}`);
+            } catch (e) {
+              alert(`requestAccessToken failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
+           <Button title="Remove token from server" onPress={ async _ => {
+            try {
+              await PowerAuthTokenStore.removeAccessToken(this.tokenName);
+              alert(`Removed`);
+            } catch (e) {
+              alert(`removeAccessToken failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
+           <Button title="Has local token" onPress={ async _ => {
+            try {
+              const r = await PowerAuthTokenStore.hasLocalToken(this.tokenName);
+              alert(`Has token: ${r}`);
+            } catch (e) {
+              alert(`hasLocalToken failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
+           <Button title="Remove local token" onPress={ async _ => {
+            try {
+              await PowerAuthTokenStore.removeLocalToken(this.tokenName);
+              alert(`Removed`);
+            } catch (e) {
+              alert(`removeLocalToken failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
+          <Button title="Remove all local tokens" onPress={ async _ => {
+            try {
+              await PowerAuthTokenStore.removeAllLocalTokens();
+              alert(`Removed`);
+            } catch (e) {
+              alert(`removeAllLocalTokens failed: ${e.code}`);
+              console.log(JSON.stringify(e));
+            }
+           }} />
 
           <Text style={styles.titleText}>Other</Text>
           <Button title="Fetch encryption key" onPress={ _ => {

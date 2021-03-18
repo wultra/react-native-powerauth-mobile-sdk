@@ -163,7 +163,7 @@ For more information about the native configuration, you can visit [official doc
 
 ## API reference
 
-For API reference, visit [PowerAuth.d.ts definition file](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/master/PowerAuth.d.ts) where you can browse all documented available methods.
+For API reference, visit [folder with definition files](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/lib/) where you can browse all documented available methods.
 
 > More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).  
 > 
