@@ -1,0 +1,20 @@
+name: build
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+
+jobs:
+  buildnrun:
+    name: Build iOS and Android library
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Setup NPM tools
+        run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
+      - name: Build native libraries
+        run: sh scripts/build-library.sh
