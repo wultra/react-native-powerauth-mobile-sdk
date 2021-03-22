@@ -1,31 +1,27 @@
 # PowerAuth SDK for React Native Mobile Apps
 <!-- begin remove -->
-[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk)
+[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
 <!-- end -->
 
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
 
 ## Support and Compatibility
 
-|React Native SDK| Mobile SDK | Protocol | PowerAuth Server    | Support Status                    |
-|----------------|------------|----------|---------------------|-----------------------------------|
-|`1.5.x`         | `1.5.x`    | `V3.1`   | `0.24+`             | Fully supported                   |
-|`1.4.x`         | `1.4.x`    | `V3.1`   | `0.24+`             | Security & Functionality bugfixes |
+|React Native SDK| Mobile SDK | Protocol | PowerAuth Server    |
+|----------------|------------|----------|---------------------|
+|`1.5.x`         | `1.5.x`    | `V3.1`   | `0.24+`             |
+|`1.4.x`         | `1.4.x`    | `V3.1`   | `0.24+`             |
 
-## How to install
+## How to install (RN > 0.60.0)
 
 ### 1. Install package via `npm`
 ```sh
 npm i react-native-powerauth-mobile-sdk --save
 ```
 
-### 2. Link your native dependencies
+### 2. Install pods for iOS
 
-```sh
-npx react-native link
-```
-
-For iOS, don't dorget to install the pods:
+For iOS, don't forget to install the pods:
 
 ```sh
 cd ios
@@ -41,12 +37,12 @@ npx pod-install
 
 Before you call any PowerAuth method, you need to configure it first. The `configure` method will need the following parameters:
 
-- **instanceId** Identifier of the PowerAuthSDK instance. The aplication package name/identifier is recommended.  
-- **appKey** APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
-- **appSecret** APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.  
-- **masterServerPublicKey** KEY\_SERVER\_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.  
-- **baseEndpointUrl** Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").  
-- **enableUnsecureTraffic** If HTTP and invalid HTTPS communication should be enabled (do not set true in production).  
+- **instanceId** - Identifier of the PowerAuthSDK instance. The aplication package name/identifier is recommended.  
+- **appKey** - APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
+- **appSecret** - APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.  
+- **masterServerPublicKey** - KEY\_SERVER\_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.  
+- **baseEndpointUrl** - Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").  
+- **enableUnsecureTraffic** - If HTTP and invalid HTTPS communication should be enabled (do not set true in production).  
 
 #### Configuration from JavaScript
 
@@ -167,15 +163,18 @@ For more information about the native configuration, you can visit [official doc
 
 ## API reference
 
-For API reference, visit [PowerAuth.d.ts definition file](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/master/PowerAuth.d.ts) where you can browse all documented available methods.
+For API reference, visit [folder with definition files](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/lib/) where you can browse all documented available methods.
 
 > More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).  
 > 
 > For information, you can visit the [native PowerAuth SDK for Mobile Apps](https://github.com/wultra/powerauth-mobile-sdk) as this library acts as a bridge between the Javascript environment and the native module.*
+```
 
-## Demo application
+## Demo application & example usage
 
 Demo application with the integration of the PowerAuth React Native SDK can be found inside the `demoapp` folder.
+
+Visit [App.tsx](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/demoapp/App.tsx) for example usage of every available API method.
 
 ## License
 

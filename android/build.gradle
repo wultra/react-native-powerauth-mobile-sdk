@@ -10,9 +10,11 @@ def safeExtGet(prop, fallback) {
 apply plugin: 'com.android.library'
 
 buildscript {
-    // ext {
-    //     androidToolsVersion = "3.5.3"
-    // }
+    if (project.hasProperty('includeAndroidToolsVersion') && project.getProperty('includeAndroidToolsVersion') == 'true') {
+        ext {
+            androidToolsVersion = "3.5.3"
+        }
+    }
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.

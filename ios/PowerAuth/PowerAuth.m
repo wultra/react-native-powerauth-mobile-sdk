@@ -21,6 +21,7 @@
 
 #import <PowerAuth2/PowerAuthSDK.h>
 #import <PowerAuth2/PA2ErrorConstants.h>
+#import <PowerAuth2/PA2Keychain.h>
 #import <PowerAuth2/PA2ClientSslNoValidationStrategy.h>
 
 @implementation PowerAuth
@@ -365,6 +366,49 @@ RCT_EXPORT_METHOD(removeBiometryFactor:(RCTPromiseResolveBlock)resolve
     resolve([[NSNumber alloc] initWithBool:[[PowerAuthSDK sharedInstance] removeBiometryFactor]]);
 }
 
+RCT_EXPORT_METHOD(getBiometryInfo:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    NSString *biometryType;
+    NSString *canAuthenticate;
+    switch ([PA2Keychain biometricAuthenticationInfo].biometryType) {
+        case PA2BiometricAuthenticationType_TouchID:
+            biometryType = @"FINGERPRINT";
+            break;
+        case PA2BiometricAuthenticationType_FaceID:
+            biometryType = @"FACE";
+            break;
+        case PA2BiometricAuthenticationType_None:
+        default:
+            biometryType = @"NONE";
+            break;
+    }
+    switch ([PA2Keychain biometricAuthenticationInfo].currentStatus) {
+        case PA2BiometricAuthenticationStatus_Available:
+            canAuthenticate = @"OK";
+            break;
+        case PA2BiometricAuthenticationStatus_NotEnrolled:
+            canAuthenticate = @"NOT_ENROLLED";
+            break;
+        case PA2BiometricAuthenticationStatus_NotAvailable:
+            canAuthenticate = @"NOT_AVAILABLE";
+            break;
+        case PA2BiometricAuthenticationStatus_NotSupported:
+            canAuthenticate = @"NOT_SUPPORTED";
+            break;
+        case PA2BiometricAuthenticationStatus_Lockout:
+            canAuthenticate = @"LOCKOUT";
+            break;
+    }
+    bool canUse = [PA2Keychain canUseBiometricAuthentication];
+    NSDictionary *response = @{
+        @"isAvailable": canUse ? @YES : @NO,
+        @"biometryType": biometryType,
+        @"canAuthenticate": canAuthenticate
+    };
+    resolve(response);
+}
+
 RCT_EXPORT_METHOD(fetchEncryptionKey:(NSDictionary*)authDict
                   index:(NSInteger)index
                   resolve:(RCTPromiseResolveBlock)resolve
@@ -513,6 +557,103 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
         reject(@"PA2RNInvalidCharacter", @"Invalid character cannot be corrected.", nil);
     } else {
         resolve([[NSNumber alloc] initWithInt:corrected]);
+    }
+}
+
+RCT_EXPORT_METHOD(requestAccessToken:(nonnull NSString*)tokenName
+                  authentication:(NSDictionary*)authDict
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    [[[PowerAuthSDK sharedInstance] tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
+        if (error || token == nil) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            resolve(@{
+                @"isValid": token.isValid ? @YES : @NO,
+                @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
+                @"tokenName": token.tokenName,
+                @"tokenIdentifier": token.tokenIdentifier
+            });
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(removeAccessToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAccessTokenWithName:tokenName completion:^(BOOL removed, NSError * error) {
+        if (removed) {
+            resolve([NSNull null]);
+        } else if (error) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            reject(@"PA2RNFail", @"Unknown error", nil);
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(hasLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    resolve([[[PowerAuthSDK sharedInstance] tokenStore] hasLocalTokenWithName:tokenName] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(getLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token) {
+        resolve(@{
+            @"isValid": token.isValid ? @YES : @NO,
+            @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
+            @"tokenName": token.tokenName,
+            @"tokenIdentifier": token.tokenIdentifier
+        });
+    } else {
+        reject(@"PA2RNLocalTokenNotAvailable", @"Token with this name is not in the local store.", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(removeLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeLocalTokenWithName:tokenName];
+    resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(removeAllLocalTokens:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAllLocalTokens];
+    resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(generateHeaderForToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token == nil) {
+        reject(@"PA2RNTokenNotAvailable", @"This token is no longer available in the local store.", nil);
+    }
+    else if ([token canGenerateHeader]) {
+        PA2AuthorizationHttpHeader* header = [token generateHeader];
+        if (header) {
+            resolve(@{
+                @"key": header.key,
+                @"value": header.value
+            });
+        } else {
+            reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+        }
+    } else {
+        reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
     }
 }
 
