@@ -560,6 +560,103 @@ RCT_EXPORT_METHOD(correctTypedCharacter:(nonnull NSNumber*)utfCodepoint
     }
 }
 
+RCT_EXPORT_METHOD(requestAccessToken:(nonnull NSString*)tokenName
+                  authentication:(NSDictionary*)authDict
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    [[[PowerAuthSDK sharedInstance] tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
+        if (error || token == nil) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            resolve(@{
+                @"isValid": token.isValid ? @YES : @NO,
+                @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
+                @"tokenName": token.tokenName,
+                @"tokenIdentifier": token.tokenIdentifier
+            });
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(removeAccessToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAccessTokenWithName:tokenName completion:^(BOOL removed, NSError * error) {
+        if (removed) {
+            resolve([NSNull null]);
+        } else if (error) {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        } else {
+            reject(@"PA2RNFail", @"Unknown error", nil);
+        }
+    }];
+}
+
+RCT_EXPORT_METHOD(hasLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    resolve([[[PowerAuthSDK sharedInstance] tokenStore] hasLocalTokenWithName:tokenName] ? @YES : @NO);
+}
+
+RCT_EXPORT_METHOD(getLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token) {
+        resolve(@{
+            @"isValid": token.isValid ? @YES : @NO,
+            @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
+            @"tokenName": token.tokenName,
+            @"tokenIdentifier": token.tokenIdentifier
+        });
+    } else {
+        reject(@"PA2RNLocalTokenNotAvailable", @"Token with this name is not in the local store.", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(removeLocalToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeLocalTokenWithName:tokenName];
+    resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(removeAllLocalTokens:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[[PowerAuthSDK sharedInstance] tokenStore] removeAllLocalTokens];
+    resolve([NSNull null]);
+}
+
+RCT_EXPORT_METHOD(generateHeaderForToken:(nonnull NSString*)tokenName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PowerAuthToken* token = [[[PowerAuthSDK sharedInstance] tokenStore] localTokenWithName:tokenName];
+    if (token == nil) {
+        reject(@"PA2RNTokenNotAvailable", @"This token is no longer available in the local store.", nil);
+    }
+    else if ([token canGenerateHeader]) {
+        PA2AuthorizationHttpHeader* header = [token generateHeader];
+        if (header) {
+            resolve(@{
+                @"key": header.key,
+                @"value": header.value
+            });
+        } else {
+            reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+        }
+    } else {
+        reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+    }
+}
+
 #pragma mark HELPER METHODS
 
 - (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict
