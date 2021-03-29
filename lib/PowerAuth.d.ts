@@ -79,7 +79,7 @@ declare class PowerAuth {
      * Unlike the `removeActivationWithAuthentication`, this method doesn't inform server about activation removal. In this case
      * user has to remove the activation by using another channel (typically internet banking, or similar web management console)
      */
-    removeActivationLocal(): void;
+    removeActivationLocal(): Promise<void>;
     /**
      * Compute the HTTP signature header for GET HTTP method, URI identifier and HTTP query parameters using provided authentication information.
      *
@@ -209,6 +209,7 @@ declare class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    private wrapNativeCall;
 }
 declare const _default: PowerAuth;
 export default _default;

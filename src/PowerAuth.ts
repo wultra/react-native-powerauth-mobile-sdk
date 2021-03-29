@@ -22,6 +22,7 @@ import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivati
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
+import { PowerAuthError } from './model/PowerAuthError';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -31,8 +32,8 @@ class PowerAuth {
     private nativeModule = NativeModules.PowerAuth;
 
     /** If the PowerAuth module was configured. */
-    isConfigured(): Promise<boolean> {
-        return this.nativeModule.isConfigured();
+    async isConfigured(): Promise<boolean> {
+        return this.wrapNativeCall(this.nativeModule.isConfigured());
     }
 
     /**
@@ -47,7 +48,7 @@ class PowerAuth {
      * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
     configure(instanceId: string, appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>  {
-        return this.nativeModule.configure(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
+        return this.wrapNativeCall(this.nativeModule.configure(instanceId, appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic));
     }
 
     /**
@@ -56,7 +57,7 @@ class PowerAuth {
      * @returns true if there is a valid activation, false otherwise.
      */
     hasValidActivation(): Promise<boolean> {
-        return this.nativeModule.hasValidActivation();
+        return this.wrapNativeCall(this.nativeModule.hasValidActivation());
     }
 
     /**
@@ -65,7 +66,7 @@ class PowerAuth {
      * @return true if activation process can be started, false otherwise.
      */
     canStartActivation(): Promise<boolean> {
-        return this.nativeModule.canStartActivation();
+        return this.wrapNativeCall(this.nativeModule.canStartActivation());
     }
 
     /**
@@ -74,7 +75,7 @@ class PowerAuth {
      * @return true if there is a pending activation, false otherwise.
      */
     hasPendingActivation(): Promise<boolean> {
-        return this.nativeModule.hasPendingActivation();
+        return this.wrapNativeCall(this.nativeModule.hasPendingActivation());
     }
 
     /**
@@ -83,7 +84,7 @@ class PowerAuth {
      * @return A promise with activation status result - it contains status information in case of success and error in case of failure.
      */
     fetchActivationStatus(): Promise<PowerAuthActivationStatus> {
-        return this.nativeModule.fetchActivationStatus();
+        return this.wrapNativeCall(this.nativeModule.fetchActivationStatus());
     }
 
     /**
@@ -92,7 +93,7 @@ class PowerAuth {
      * @param activation A PowerAuthActivation object containg all information required for the activation creation.
      */
     createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
-        return this.nativeModule.createActivation(activation);
+        return this.wrapNativeCall(this.nativeModule.createActivation(activation));
     }
 
     /**
@@ -101,21 +102,21 @@ class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.commitActivation(authentication)
+        return this.wrapNativeCall(this.nativeModule.commitActivation(authentication));
     }
 
     /**
      * Activation identifier or null if object has no valid activation.
      */
     getActivationIdentifier(): Promise<string> {
-        return this.nativeModule.activationIdentifier();
+        return this.wrapNativeCall(this.nativeModule.activationIdentifier());
     }
 
     /**
      * Fingerprint calculated from device's public key or null if object has no valid activation.
      */
     getActivationFingerprint(): Promise<string> {
-        return this.nativeModule.activationFingerprint();
+        return this.wrapNativeCall(this.nativeModule.activationFingerprint());
     }
 
     /**
@@ -124,7 +125,7 @@ class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
     async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.removeActivationWithAuthentication(await authentication.process());
+        return this.wrapNativeCall(this.nativeModule.removeActivationWithAuthentication(await authentication.process()));
     }
 
     /**
@@ -132,8 +133,8 @@ class PowerAuth {
      * Unlike the `removeActivationWithAuthentication`, this method doesn't inform server about activation removal. In this case
      * user has to remove the activation by using another channel (typically internet banking, or similar web management console)
      */
-    removeActivationLocal(): void {
-        return this.nativeModule.removeActivationLocal();
+    removeActivationLocal(): Promise<void> {
+        return this.wrapNativeCall(this.nativeModule.removeActivationLocal());
     }
 
     /**
@@ -145,7 +146,7 @@ class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature
      */
     async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.nativeModule.requestGetSignature(await authentication.process(), uriId, params ?? null);
+        return this.wrapNativeCall(this.nativeModule.requestGetSignature(await authentication.process(), uriId, params ?? null));
     }
 
     /**
@@ -158,7 +159,7 @@ class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature.
      */
     async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.nativeModule.requestSignature(await authentication.process(), method, uriId, body);
+        return this.wrapNativeCall(this.nativeModule.requestSignature(await authentication.process(), method, uriId, body));
     }
 
     /**
@@ -171,7 +172,7 @@ class PowerAuth {
      * @return String representing a calculated signature for all involved factors.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return this.nativeModule.offlineSignature(await authentication.process(), uriId, body, nonce);
+        return this.wrapNativeCall(this.nativeModule.offlineSignature(await authentication.process(), uriId, body, nonce));
     }
 
     /**
@@ -182,7 +183,7 @@ class PowerAuth {
      * @param masterKey If true, then master server public key is used for validation, otherwise personalized server's public key.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
-        return this.nativeModule.verifyServerSignedData(data, signature, masterKey);
+        return this.wrapNativeCall(this.nativeModule.verifyServerSignedData(data, signature, masterKey));
     }
 
     /**
@@ -192,7 +193,7 @@ class PowerAuth {
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
     changePassword(oldPassword: string, newPassword: string): Promise<void> {
-        return this.nativeModule.changePassword(oldPassword, newPassword);
+        return this.wrapNativeCall(this.nativeModule.changePassword(oldPassword, newPassword));
     }
 
     /**
@@ -207,7 +208,7 @@ class PowerAuth {
      @return Returns true in case password was changed without error, NO otherwise.
      */
     unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
-        return this.nativeModule.unsafeChangePassword(oldPassword, newPassword);
+        return this.wrapNativeCall(this.nativeModule.unsafeChangePassword(oldPassword, newPassword));
     }
 
     /**
@@ -220,9 +221,9 @@ class PowerAuth {
      */
     addBiometryFactor(password: string, title: string, description: string): Promise<void> {
         if (Platform.OS == "android") {
-            return this.nativeModule.addBiometryFactor(password, title, description);
+            return this.wrapNativeCall(this.nativeModule.addBiometryFactor(password, title, description));
         } else {
-            return this.nativeModule.addBiometryFactor(password);
+            return this.wrapNativeCall(this.nativeModule.addBiometryFactor(password));
         }
     }
 
@@ -231,7 +232,7 @@ class PowerAuth {
      * This method returns the information about the key value being present in keychain.
      */
     hasBiometryFactor(): Promise<boolean> {
-        return this.nativeModule.hasBiometryFactor();
+        return this.wrapNativeCall(this.nativeModule.hasBiometryFactor());
     }
 
     /**
@@ -240,7 +241,7 @@ class PowerAuth {
      * @return true if the key was successfully removed, NO otherwise.
      */
     removeBiometryFactor(): Promise<boolean> {
-        return this.nativeModule.removeBiometryFactor();
+        return this.wrapNativeCall(this.nativeModule.removeBiometryFactor());
     }
 
     /**
@@ -249,7 +250,7 @@ class PowerAuth {
      * @returns object with information data about biometry
      */
     getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
-        return this.nativeModule.getBiometryInfo();
+        return this.wrapNativeCall(this.nativeModule.getBiometryInfo());
     }
 
     /** 
@@ -261,7 +262,7 @@ class PowerAuth {
      * @param index Index of the derived key using KDF. 
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return this.nativeModule.fetchEncryptionKey(await authentication.process(), index);
+        return this.wrapNativeCall(this.nativeModule.fetchEncryptionKey(await authentication.process(), index));
     }
 
     /**
@@ -272,7 +273,7 @@ class PowerAuth {
      * @param data Data to be signed with the private key.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return this.nativeModule.signDataWithDevicePrivateKey(await authentication.process(), data);
+        return this.wrapNativeCall(this.nativeModule.signDataWithDevicePrivateKey(await authentication.process(), data));
     }
 
     /** 
@@ -282,14 +283,14 @@ class PowerAuth {
      * @param password Password to be verified.
      */
     validatePassword(password: string): Promise<void> {
-        return this.nativeModule.validatePassword(password);
+        return this.wrapNativeCall(this.nativeModule.validatePassword(password));
     }
 
     /**
      * Returns YES if underlying session contains an activation recovery data.
      */
     hasActivationRecoveryData(): Promise<boolean> {
-        return this.nativeModule.hasActivationRecoveryData();
+        return this.wrapNativeCall(this.nativeModule.hasActivationRecoveryData());
     }
 
     /**
@@ -299,7 +300,7 @@ class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      */
     async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
-        return this.nativeModule.activationRecoveryData(await authentication.process());
+        return this.wrapNativeCall(this.nativeModule.activationRecoveryData(await authentication.process()));
     }
 
     /**
@@ -314,7 +315,15 @@ class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
-        return this.nativeModule.confirmRecoveryCode(recoveryCode, await authentication.process());
+        return this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await authentication.process()));
+    }
+
+    private async wrapNativeCall(nativePromise: Promise<any>) {
+        try {
+            return await nativePromise;
+        } catch (e) {
+            throw new PowerAuthError(e);
+        }
     }
 }
 

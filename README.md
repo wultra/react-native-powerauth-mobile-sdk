@@ -168,7 +168,6 @@ For API reference, visit [folder with definition files](https://github.com/wultr
 > More detailed documentation will be added later. If you need any information regarding the status of this library, don't hesitate to [contact us](#contact).  
 > 
 > For information, you can visit the [native PowerAuth SDK for Mobile Apps](https://github.com/wultra/powerauth-mobile-sdk) as this library acts as a bridge between the Javascript environment and the native module.*
-```
 
 ## Demo application & example usage
 

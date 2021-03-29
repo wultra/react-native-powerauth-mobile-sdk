@@ -16,6 +16,7 @@
 
 package com.wultra.android.powerauth.reactnative;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +37,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import io.getlime.security.powerauth.biometry.BiometricKeyData;
 import io.getlime.security.powerauth.biometry.BiometricAuthentication;
 import io.getlime.security.powerauth.biometry.BiometricStatus;
@@ -43,6 +46,7 @@ import io.getlime.security.powerauth.biometry.BiometryType;
 import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
+import io.getlime.security.powerauth.networking.exceptions.FailedApiException;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.*;
 import io.getlime.security.powerauth.networking.response.*;
@@ -54,7 +58,7 @@ import io.getlime.security.powerauth.util.otp.OtpUtil;
 @SuppressWarnings("unused")
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
-    private ReactApplicationContext context;
+    private final ReactApplicationContext context;
     private PowerAuthSDK powerAuth;
 
     public PowerAuthRNModule(ReactApplicationContext context) {
@@ -150,7 +154,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onActivationStatusFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -216,11 +220,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onActivationCreateFailed(@NonNull Throwable t) {
-                    promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                    PowerAuthRNModule.rejectPromise(promise, t);
                 }
             });
         } catch (Exception e) {
-            promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(e) ,e);
+            PowerAuthRNModule.rejectPromise(promise, e);
         }
     }
 
@@ -278,14 +282,19 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onActivationRemoveFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
 
     @ReactMethod
-    public void removeActivationLocal() {
-        this.powerAuth.removeActivationLocal(this.context);
+    public void removeActivationLocal(Promise promise) {
+        try {
+            this.powerAuth.removeActivationLocal(this.context);
+            promise.resolve(null);
+        } catch (Throwable t) {
+            PowerAuthRNModule.rejectPromise(promise, t);
+        }
     }
 
     @ReactMethod
@@ -355,7 +364,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onPasswordChangeFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -378,11 +387,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onAddBiometryFactorFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(error), error);
+                                PowerAuthRNModule.rejectPromise(promise, error);
                             }
                         });
             } catch (Exception e) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(e) ,e);
+                PowerAuthRNModule.rejectPromise(promise, e);
             }
         } else {
             promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
@@ -425,6 +434,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             case BiometryType.IRIS:
                 biometryType = "IRIS";
                 break;
+            case BiometryType.GENERIC:
             default: // forward compatibility
                 biometryType = "GENERIC";
                 break;
@@ -439,6 +449,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             case BiometricStatus.NOT_AVAILABLE:
                 canAuthenticate = "NOT_AVAILABLE";
                 break;
+            case BiometricStatus.NOT_SUPPORTED:
             default: // forward compatibility
                 canAuthenticate = "NOT_SUPPORTED";
                 break;
@@ -461,7 +472,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onFetchEncryptionKeyFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -477,7 +488,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onDataSignedFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -492,7 +503,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onPasswordValidationFailed(Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -516,7 +527,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onGetRecoveryDataFailed(@NonNull Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -532,7 +543,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onRecoveryCodeConfirmFailed(@NonNull Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -565,7 +576,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         }
                 );
             } catch (Exception e) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(e) ,e);
+                PowerAuthRNModule.rejectPromise(promise, e);
             }
         } else {
             promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
@@ -643,7 +654,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             }
             @Override
             public void onGetTokenFailed(@NonNull Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -658,7 +669,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
             @Override
             public void onRemoveTokenFailed(@NonNull Throwable t) {
-                promise.reject(PowerAuthRNModule.getErrorCodeFromThrowable(t) ,t);
+                PowerAuthRNModule.rejectPromise(promise, t);
             }
         });
     }
@@ -729,6 +740,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @SuppressLint("DefaultLocale")
     static String getStatusCode(int state) {
         switch (state) {
             case ActivationStatus.State_Created: return "PA2ActivationState_Created";
@@ -746,23 +758,40 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         auth.usePossession = map.getBoolean("usePossession");
         String biometryKey = map.getString("biometryKey");
         if (biometryKey != null) {
-            byte[] key = Base64.decode(biometryKey, Base64.DEFAULT);
-            auth.useBiometry = key;
+            auth.useBiometry = Base64.decode(biometryKey, Base64.DEFAULT);
         }
         auth.usePassword = map.getString("userPassword");
         return auth;
     }
 
-    static String getErrorCodeFromThrowable(Throwable t) {
+    static void rejectPromise(Promise promise, Throwable t) {
 
-        PowerAuthErrorException paEx = (t instanceof PowerAuthErrorException ? (PowerAuthErrorException)t : null);
-        if (paEx == null) {
-            return "PA2ReactNativeError";
+        @Nonnull  String code = "PA2ReactNativeError"; // fallback code
+        String message = t.getMessage();
+        WritableMap userInfo = null;
+
+        if (t instanceof PowerAuthErrorException) {
+            code = getErrorCodeFromError(((PowerAuthErrorException)t).getPowerAuthErrorCode());
+        } else if (t instanceof FailedApiException) {
+            FailedApiException farEx = (FailedApiException)t;
+            code = "PA2ErrorResponseException";
+            userInfo = Arguments.createMap();
+            userInfo.putInt("responseCode", farEx.getResponseCode());
+            userInfo.putString("responseBody", farEx.getResponseBody());
         }
 
-        return getErrorCodeFromError(paEx.getPowerAuthErrorCode());
+        if (message != null && userInfo != null) {
+            promise.reject(code, message, t, userInfo);
+        } else if (message != null) {
+            promise.reject(code, message, t);
+        } else if (userInfo != null) {
+            promise.reject(code, t, userInfo);
+        } else {
+            promise.reject(code, t);
+        }
     }
 
+    @SuppressLint("DefaultLocale")
     static String getErrorCodeFromError(int error) {
         switch (error) {
             case PowerAuthErrorCodes.PA2Succeed: return "PA2Succeed";
