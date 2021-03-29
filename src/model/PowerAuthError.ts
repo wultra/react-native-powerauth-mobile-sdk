@@ -14,20 +14,31 @@
  * limitations under the License.
  */
 
+/**
+ * PowerAuthError is a wrapper error that is thrown by every API in this module.
+ */
 export class PowerAuthError {
 
-    code?: PowerAuthErrorCode;
-    message?: string;
-    domain?: string;
-    description?: string;
-
+    /** Original exception thrown by the native layer (iOS or Android) */
     originalException: any;
+
+    /** Code of the error. */
+    code?: PowerAuthErrorCode;
+    /** Message of the error. */
+    message?: string;
+    /** Additional error data. */
+    errorData?: Map<string, any>;
+    /** Domain of the error (iOS only). */
+    domain?: string;
+    /** Description of the error (iOS only). */
+    description?: string;
 
     constructor(exception: any) {
         this.originalException = exception;
         this.code = exception?.code ?? null;
         this.message = exception?.message ?? null;
         this.domain = exception?.domain ?? null;
+        this.errorData = exception?.userInfo ?? null;
         this.description = exception?.userInfo?.NSLocalizedDescription ?? null;
     }
 
@@ -96,6 +107,9 @@ export enum PowerAuthErrorCode {
 
     /** The biometric authentication is temporarily unavailable. */
     PA2ErrorCodeBiometryNotAvailable = "PA2ErrorCodeBiometryNotAvailable",
+
+    /** Network communication returned an error. See more information in the message of the exception. */
+    PA2ErrorResponseException = "PA2ErrorResponseException",
 
     /** The biometric authentication did not recognize the biometric image (fingerprint, face, etc...) */
     PA2ErrorCodeBiometryNotRecognized = "PA2ErrorCodeBiometryNotRecognized",

@@ -124,7 +124,7 @@ export default class App extends Component<any, State> {
               alert(`Activation created`);
             } catch (e) {
               alert(`Activation failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           } }) }} />
@@ -139,7 +139,7 @@ export default class App extends Component<any, State> {
               alert(`Commited!`);
             } catch (e) {
               alert(`Commit failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           } }) }} />
@@ -156,7 +156,7 @@ export default class App extends Component<any, State> {
               alert(`Removed`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           } }) }} />
@@ -170,7 +170,7 @@ export default class App extends Component<any, State> {
               alert(`Removed`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           }} />
@@ -188,7 +188,7 @@ export default class App extends Component<any, State> {
                 alert(`Password valid`);
               } catch (e) {
                 alert(`Not valid: ${e.code}`);
-                console.log(JSON.stringify(e));
+                this.printPAException(e);
               }
             }});
           }} />
@@ -200,7 +200,7 @@ export default class App extends Component<any, State> {
                   alert("Password changed");
                 } catch (e) {
                   alert(`Change failed: ${e.code}`);
-                  console.log(JSON.stringify(e));
+                  this.printPAException(e);
                 }
               } })
             }, 200);
@@ -213,7 +213,7 @@ export default class App extends Component<any, State> {
                   alert("Password changed");
                 } catch (e) {
                   alert(`Change failed: ${e.code}`);
-                  console.log(JSON.stringify(e));
+                  this.printPAException(e);
                 }
               } })
             }, 200);
@@ -231,7 +231,7 @@ export default class App extends Component<any, State> {
                 alert(`Biometry factor added`);
               } catch (e) {
                 alert(`Failed: ${e.code}`);
-                console.log(JSON.stringify(e));
+                this.printPAException(e);
               }
             }})}} />
           <Button title="Remove biometry factor" onPress={ async _ => {
@@ -270,7 +270,7 @@ export default class App extends Component<any, State> {
               alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`requestAccessToken failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
            <Button title="Remove token from server" onPress={ async _ => {
@@ -279,7 +279,7 @@ export default class App extends Component<any, State> {
               alert(`Removed`);
             } catch (e) {
               alert(`removeAccessToken failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
            <Button title="Has local token" onPress={ async _ => {
@@ -288,7 +288,7 @@ export default class App extends Component<any, State> {
               alert(`Has token: ${r}`);
             } catch (e) {
               alert(`hasLocalToken failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
            <Button title="Get local token" onPress={ async _ => {
@@ -298,7 +298,7 @@ export default class App extends Component<any, State> {
               alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`hasLocalToken failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
            <Button title="Remove local token" onPress={ async _ => {
@@ -307,7 +307,7 @@ export default class App extends Component<any, State> {
               alert(`Removed`);
             } catch (e) {
               alert(`removeLocalToken failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
           <Button title="Remove all local tokens" onPress={ async _ => {
@@ -316,7 +316,7 @@ export default class App extends Component<any, State> {
               alert(`Removed`);
             } catch (e) {
               alert(`removeAllLocalTokens failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
 
@@ -333,7 +333,7 @@ export default class App extends Component<any, State> {
                   alert(`Key: ${r}`);
                 } catch (e) {
                   alert(`Failed: ${e.code}`);
-                  console.log(JSON.stringify(e));
+                  this.printPAException(e);
                 }
                 await this.refreshActivationInfo();
               } })
@@ -350,7 +350,7 @@ export default class App extends Component<any, State> {
               alert(`Signature: ${r}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           } }) }} />
@@ -361,7 +361,7 @@ export default class App extends Component<any, State> {
               alert(`Verified: ${r}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
            }} />
           <Button title="Test requestGetSignature" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
@@ -376,7 +376,7 @@ export default class App extends Component<any, State> {
               console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
             await this.refreshActivationInfo();
           } }) }} />
@@ -392,7 +392,7 @@ export default class App extends Component<any, State> {
               console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch(e) {
               alert(`Remove failed: ${e.code}`);
-              console.log(JSON.stringify(e));
+              this.printPAException(e);
             }
           } }) }} />
 
@@ -466,6 +466,17 @@ export default class App extends Component<any, State> {
         </View>
       </ScrollView>
     )
+  }
+
+  printPAException(exception: any) {
+    let pe = new PowerAuthError(exception);
+    console.log(`### PowerAuthError ####`);
+    console.log(`# CODE: ${pe.code}`);
+    console.log(`# MESSAGE: ${pe.message}`);
+    console.log(`# ERROR DATA: ${pe.errorData ? JSON.stringify(pe.errorData) : "null"}`);
+    console.log(`# DESCRIPTION: ${pe.description}`);
+    console.log(`# DOMAIN: ${pe.domain}`);
+    console.log(`# ORIGINAL EXCEPTION:\n ${JSON.stringify(pe.originalException)}`);
   }
 }
 
