@@ -9,7 +9,7 @@ export declare class PowerAuthError {
     /** Message of the error. */
     message?: string;
     /** Additional error data. */
-    errorData?: Map<string, any>;
+    errorData?: any;
     /** Domain of the error (iOS only). */
     domain?: string;
     /** Description of the error (iOS only). */

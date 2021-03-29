@@ -288,8 +288,13 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void removeActivationLocal() {
-        this.powerAuth.removeActivationLocal(this.context);
+    public void removeActivationLocal(Promise promise) {
+        try {
+            this.powerAuth.removeActivationLocal(this.context);
+            promise.resolve(null);
+        } catch (Throwable t) {
+            PowerAuthRNModule.rejectPromise(promise, t);
+        }
     }
 
     @ReactMethod

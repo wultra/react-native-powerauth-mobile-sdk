@@ -237,9 +237,11 @@ RCT_EXPORT_METHOD(removeActivationWithAuthentication:(NSDictionary*)authDict
     
 }
 
-RCT_EXPORT_METHOD(removeActivationLocal)
+RCT_EXPORT_METHOD(removeActivationLocal:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [[PowerAuthSDK sharedInstance] removeActivationLocal];
+    resolve([NSNull null]);
 }
 
 RCT_REMAP_METHOD(requestGetSignature,

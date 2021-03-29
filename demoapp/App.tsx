@@ -468,8 +468,7 @@ export default class App extends Component<any, State> {
     )
   }
 
-  printPAException(exception: any) {
-    let pe = new PowerAuthError(exception);
+  printPAException(pe: PowerAuthError) {
     console.log(`### PowerAuthError ####`);
     console.log(`# CODE: ${pe.code}`);
     console.log(`# MESSAGE: ${pe.message}`);
