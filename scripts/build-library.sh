@@ -32,7 +32,7 @@ popd
 # build android
 pushd android
 
-gradle clean build -PincludeAndroidToolsVersion=true
+./gradlew clean build -PincludeAndroidToolsVersion=true
 
 # build Typescript
 popd
