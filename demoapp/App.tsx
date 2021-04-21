@@ -396,6 +396,38 @@ export default class App extends Component<any, State> {
             }
           } }) }} />
 
+          <Text style={styles.titleText}>Grouped biometry authentication</Text>
+          <Button title="Test grouped biometry action" onPress={ async _ => {
+            
+            const auth = new PowerAuthAuthentication();
+            auth.usePossession = true;
+            auth.userPassword = null;
+            auth.useBiometry = true;
+            auth.biometryTitle = "Grouped authentication";
+            auth.biometryMessage = "One biometric authentication will be used for 2 operations.";
+            let ra;
+            try {
+              await PowerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
+                ra = reusableAuth;
+                console.log(ra);
+                try {
+                  const r1 = await PowerAuth.requestSignature(reusableAuth, "POST", "/pa/signature/validate", "{jsonbody: \"yes\"}");
+                  console.log(`Signature:\nKEY:${r1.key}\nVAL:${r1.value}`);
+                  const r2 = await PowerAuth.requestSignature(reusableAuth, "POST", "/pa/signature/validate", "{jsonbody: \"no\"}");
+                  console.log(`Signature:\nKEY:${r2.key}\nVAL:${r2.value}`);
+                  alert("Biometry authentication was used for 2 operations")
+                } catch (e) {
+                  alert(`Failed to reuse reusableAuth: ${e.code}`);
+                  this.printPAException(e);
+                }
+              })
+              console.log(ra);
+            } catch(e) {
+              alert(`Grouped biometry failed: ${e.code}`);
+              this.printPAException(e);
+            }
+           }} />
+
           <Text style={styles.titleText}>Validation</Text>
           <Button title="Parse activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
             await sleep(100);

@@ -23,6 +23,7 @@ import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthError } from './model/PowerAuthError';
+import { __AuthenticationUtils } from "./internal/AuthenticationUtils";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -125,7 +126,7 @@ class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
     async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapNativeCall(this.nativeModule.removeActivationWithAuthentication(await authentication.process()));
+        return this.wrapNativeCall(this.nativeModule.removeActivationWithAuthentication(await __AuthenticationUtils.process(authentication)));
     }
 
     /**
@@ -146,7 +147,7 @@ class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature
      */
     async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapNativeCall(this.nativeModule.requestGetSignature(await authentication.process(), uriId, params ?? null));
+        return this.wrapNativeCall(this.nativeModule.requestGetSignature(await __AuthenticationUtils.process(authentication), uriId, params ?? null));
     }
 
     /**
@@ -159,7 +160,7 @@ class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature.
      */
     async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapNativeCall(this.nativeModule.requestSignature(await authentication.process(), method, uriId, body));
+        return this.wrapNativeCall(this.nativeModule.requestSignature(await __AuthenticationUtils.process(authentication), method, uriId, body));
     }
 
     /**
@@ -172,7 +173,7 @@ class PowerAuth {
      * @return String representing a calculated signature for all involved factors.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return this.wrapNativeCall(this.nativeModule.offlineSignature(await authentication.process(), uriId, body, nonce));
+        return this.wrapNativeCall(this.nativeModule.offlineSignature(await __AuthenticationUtils.process(authentication), uriId, body, nonce));
     }
 
     /**
@@ -262,7 +263,7 @@ class PowerAuth {
      * @param index Index of the derived key using KDF. 
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return this.wrapNativeCall(this.nativeModule.fetchEncryptionKey(await authentication.process(), index));
+        return this.wrapNativeCall(this.nativeModule.fetchEncryptionKey(await __AuthenticationUtils.process(authentication), index));
     }
 
     /**
@@ -273,7 +274,7 @@ class PowerAuth {
      * @param data Data to be signed with the private key.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return this.wrapNativeCall(this.nativeModule.signDataWithDevicePrivateKey(await authentication.process(), data));
+        return this.wrapNativeCall(this.nativeModule.signDataWithDevicePrivateKey(await __AuthenticationUtils.process(authentication), data));
     }
 
     /** 
@@ -300,7 +301,7 @@ class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      */
     async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
-        return this.wrapNativeCall(this.nativeModule.activationRecoveryData(await authentication.process()));
+        return this.wrapNativeCall(this.nativeModule.activationRecoveryData(await __AuthenticationUtils.process(authentication)));
     }
 
     /**
@@ -315,7 +316,38 @@ class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await authentication.process()));
+        return this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await __AuthenticationUtils.process(authentication)));
+    }
+
+    /**
+     * Helper method for grouping biometric authentications.
+     * 
+     * With this method, you can use 1 biometric authentication (dialog) for several operations.
+     * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
+     * 
+     * Note that after the `groupedAuthenticationCalls` is executed, the `reusableAuthentication` object is destroyed.
+     * 
+     * @param authentication authentication object
+     * @param groupedAuthenticationCalls call that will use reusable authentication object
+     */
+    async groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void> {
+        if (authentication.useBiometry == false) {
+            throw new PowerAuthError({message: "Requesting biometric authentication, but `useBiometry` is set to false."});
+        }
+        try {
+            const reusable = await __AuthenticationUtils.process(authentication, true);
+            try {
+                await groupedAuthenticationCalls(reusable);
+            } finally {
+                // Destroing the reusable object.
+                for (const prop of Object.getOwnPropertyNames(reusable)) {
+                    delete reusable[prop];
+                }
+            }
+        } catch (e) {
+            throw new PowerAuthError(e);
+        }
+        
     }
 
     private async wrapNativeCall(nativePromise: Promise<any>) {
@@ -328,4 +360,3 @@ class PowerAuth {
 }
 
 export default new PowerAuth();
-

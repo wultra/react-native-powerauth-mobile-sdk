@@ -209,6 +209,18 @@ declare class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    /**
+     * Helper method for grouping biometric authentications.
+     *
+     * With this method, you can use 1 biometric authentication (dialog) for several operations.
+     * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
+     *
+     * Note that after the `groupedAuthenticationCalls` is executed, the `reusableAuthentication` object is destroyed.
+     *
+     * @param authentication authentication object
+     * @param groupedAuthenticationCalls call that will use reusable authentication object
+     */
+    groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void>;
     private wrapNativeCall;
 }
 declare const _default: PowerAuth;

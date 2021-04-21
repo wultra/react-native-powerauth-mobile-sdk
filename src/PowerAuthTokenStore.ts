@@ -16,7 +16,8 @@
 
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
 import { NativeModules } from 'react-native';
-import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader'
+import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
+import { __AuthenticationUtils } from './internal/AuthenticationUtils';
 
 export class PowerAuthTokenStore {
 
@@ -68,7 +69,7 @@ export class PowerAuthTokenStore {
      * @return PowerAuth token with already generated header
      */
     static async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
-        return NativeModules.PowerAuth.requestAccessToken(tokenName, await authentication.process());
+        return NativeModules.PowerAuth.requestAccessToken(tokenName, await __AuthenticationUtils.process(authentication));
     }
 
     /**
