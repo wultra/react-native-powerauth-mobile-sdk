@@ -325,26 +325,27 @@ class PowerAuth {
      * With this method, you can use 1 biometric authentication (dialog) for several operations.
      * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
      * 
-     * Note that after the `groupedAuthenticationCalls` is executed, the `reusableAuthentication` object is destroyed.
+     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one 
+     * fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
      * 
      * @param authentication authentication object
      * @param groupedAuthenticationCalls call that will use reusable authentication object
      */
     async groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void> {
         if (authentication.useBiometry == false) {
-            throw new PowerAuthError({message: "Requesting biometric authentication, but `useBiometry` is set to false."});
+            throw new PowerAuthError(null, "Requesting biometric authentication, but `useBiometry` is set to false.");
         }
         try {
-            const reusable = await __AuthenticationUtils.process(authentication, true);
+            let reusable = await __AuthenticationUtils.process(authentication, true);
             try {
+                // integrator defined chain of authorization calls with reusable authentication
                 await groupedAuthenticationCalls(reusable);
-            } finally {
-                // Destroing the reusable object.
-                for (const prop of Object.getOwnPropertyNames(reusable)) {
-                    delete reusable[prop];
-                }
+            } catch (e) {
+                // rethrow the error with information that the integrator should handle errors by himself
+                throw new PowerAuthError(e, "Your 'groupedAuthenticationCalls' function threw an exception. Please make sure that you catch errors yourself.");
             }
         } catch (e) {
+            // catching biometry authentication error and rethrowing it as PowerAuthError
             throw new PowerAuthError(e);
         }
         

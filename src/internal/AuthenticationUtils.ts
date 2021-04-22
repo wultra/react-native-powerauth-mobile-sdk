@@ -23,26 +23,26 @@ import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication'
 export class __AuthenticationUtils {
 
     /**
-     * Method will process `PowerAuthAuthentication` object are will return object according 
-     * to its usage and platform.
+     * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
      * 
      * @param authentication authentication configuration
-     * @param makeReusable if the object should be reusable (for multiple authorizations)
+     * @param makeReusable if the object should be forced to be reusable
      * @returns configured authorization object
      */
-    static async process(authentication: PowerAuthAuthentication, makeBiometryReusable: boolean = false): Promise<PowerAuthAuthentication> {
+    static async process(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
 
-        // Setup reusable authentication object from given `authentication`. 
-        // BiometryKey property wil be preserved if the `authentication` object is already reusable.
         let obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
 
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
-        if (Platform.OS == "android" && authentication.useBiometry && obj.biometryKey == null) {
+        if ((Platform.OS == "android" && authentication.useBiometry && (obj.biometryKey == null || makeReusable)) || (Platform.OS == "ios" && makeReusable)) {
             const key = await NativeModules.PowerAuth.authenticateWithBiometry(authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??");
             obj.biometryKey = key;
+            return obj;
         }
-        return obj;
+        
+        // no need for processing, just return original object
+        return authentication;
     }
 }
 

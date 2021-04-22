@@ -215,7 +215,8 @@ declare class PowerAuth {
      * With this method, you can use 1 biometric authentication (dialog) for several operations.
      * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
      *
-     * Note that after the `groupedAuthenticationCalls` is executed, the `reusableAuthentication` object is destroyed.
+     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one
+     * fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
      *
      * @param authentication authentication object
      * @param groupedAuthenticationCalls call that will use reusable authentication object

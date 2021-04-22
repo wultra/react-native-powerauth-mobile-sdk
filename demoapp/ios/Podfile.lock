@@ -46,7 +46,7 @@ PODS:
     - React-jsi (= 0.64.0)
     - ReactCommon/turbomodule/core (= 0.64.0)
   - glog (0.3.5)
-  - PowerAuth2 (1.5.2)
+  - PowerAuth2 (1.5.3)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -241,7 +241,7 @@ PODS:
     - React-perflogger (= 0.64.0)
   - React-jsinspector (0.64.0)
   - react-native-powerauth-mobile-sdk (1.5.2):
-    - PowerAuth2 (= 1.5.2)
+    - PowerAuth2 (= 1.5.3)
     - React
   - React-perflogger (0.64.0)
   - React-RCTActionSheet (0.64.0):
@@ -350,6 +350,7 @@ DEPENDENCIES:
   - FBLazyVector (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - PowerAuth2 (from `https://github.com/wultra/powerauth-mobile-sdk.git`, branch `release/1.5.x`)
   - RCT-Folly (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/TypeSafety`)
@@ -397,7 +398,6 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
-    - PowerAuth2
 
 EXTERNAL SOURCES:
   DoubleConversion:
@@ -434,6 +434,10 @@ EXTERNAL SOURCES:
     :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/glog.podspec"
+  PowerAuth2:
+    :branch: release/1.5.x
+    :git: https://github.com/wultra/powerauth-mobile-sdk.git
+    :submodules: true
   RCT-Folly:
     :podspec: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -517,6 +521,12 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  PowerAuth2:
+    :commit: 06b618d8bb94ad0f0422df8993cdb7acc93d8ac3
+    :git: https://github.com/wultra/powerauth-mobile-sdk.git
+    :submodules: true
+
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
@@ -536,7 +546,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 49cbe4b43e445b06bf29199b6ad2057649e4c8f5
   FBReactNativeSpec: 3d94589b80f946dbf29c7eb503c1230e69246c02
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: c6b221617d79b750fc22411232a79484f078827c
+  PowerAuth2: 1e700bf01f707d199e723dffedeacd86528b5a9d
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: 2f8cb5b7533219bf4218a045f92768129cf7050a
   RCTTypeSafety: 512728b73549e72ad7330b92f3d42936f2a4de5b
@@ -548,7 +558,7 @@ SPEC CHECKSUMS:
   React-jsi: 74341196d9547cbcbcfa4b3bbbf03af56431d5a1
   React-jsiexecutor: 06a9c77b56902ae7ffcdd7a4905f664adc5d237b
   React-jsinspector: 0ae35a37b20d5e031eb020a69cc5afdbd6406301
-  react-native-powerauth-mobile-sdk: 88a5a3b737b233861750fe5318175776d03469d9
+  react-native-powerauth-mobile-sdk: 200183aec9237da1620c6ea4ff13d6ec807ce484
   React-perflogger: 9c547d8f06b9bf00cb447f2b75e8d7f19b7e02af
   React-RCTActionSheet: 3080b6e12e0e1a5b313c8c0050699b5c794a1b11
   React-RCTAnimation: 3f96f21a497ae7dabf4d2f150ee43f906aaf516f
@@ -579,6 +589,6 @@ SPEC CHECKSUMS:
   UMTaskManagerInterface: 4e6c4c34a89512e2225d336154df1cb689226a29
   Yoga: 8c8436d4171c87504c648ae23b1d81242bdf3bbf
 
-PODFILE CHECKSUM: caca96ef220f47d2f984552e32125f1e0dda676a
+PODFILE CHECKSUM: 474071e2b8b6133e28d31b4b20d73cce5a2a7683
 
 COCOAPODS: 1.10.1
