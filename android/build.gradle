@@ -61,5 +61,5 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    api "com.wultra.android.powerauth:powerauth-sdk:1.5.3"
+    api "com.wultra.android.powerauth:powerauth-sdk:1.5.4"
 }

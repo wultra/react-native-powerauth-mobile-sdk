@@ -7,7 +7,6 @@ platform :ios, '10.0'
 target 'PowerAuthDemo' do
   config = use_native_modules!
   use_unimodules!
-  pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'release/1.5.x', :submodules => true # TODO REMOVE ME BEFORE PRODUCTION!
   use_react_native!(:path => config["reactNativePath"])
 
   #pod 'react-native-powerauth-mobile-sdk', :path => '../node_modules/react-native-powerauth-mobile-sdk'
