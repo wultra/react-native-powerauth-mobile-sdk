@@ -4,15 +4,15 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 
 ## Supported Platforms
 
-The library is available for the following React Native (0.64.0+) platforms:
+The library is available for the following __React Native (0.64.0+)__ platforms:
 
 - __Android 5.0 (API 21)__ and newer
 - __iOS 11.0__ and newer
 
 ## Integration Tutorials
 
-- [Installation](Installation.md)
-- [SDK Configuration](Configuration.md)
+- [Integration](SDK-Integration.md)
+- [Configuration](Configuration.md)
 - [Device Activation](Device-Activation.md)
 - [Requesting Device Activation Status](Requesting-Device-Activation-Status.md)
 - [Data Signing](Data-Signing.md)
@@ -28,6 +28,12 @@ The library is available for the following React Native (0.64.0+) platforms:
 ## Native Library
 
 This React Native library is a wrapper for the native Android and iOS [PowerAuth SDK library](https://github.com/wultra/powerauth-mobile-sdk), which is a dependency of this project.
+
+## Demo application & example usage
+
+Demo application with the integration of the PowerAuth React Native SDK can be found inside the `demoapp` folder.
+
+Visit [App.tsx](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/demoapp/App.tsx) for example usage of every available API method.
 
 ## License
 
