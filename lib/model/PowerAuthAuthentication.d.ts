@@ -14,7 +14,4 @@ export declare class PowerAuthAuthentication {
     biometryMessage: string;
     /** (Android only) Title of biometric prompt */
     biometryTitle: string;
-    /** Filled by the SDK. */
-    biometryKey: string;
-    process(): Promise<PowerAuthAuthentication>;
 }
