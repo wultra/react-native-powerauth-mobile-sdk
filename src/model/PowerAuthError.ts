@@ -33,10 +33,10 @@ export class PowerAuthError {
     /** Description of the error (iOS only). */
     description?: string;
 
-    constructor(exception: any) {
+    constructor(exception: any, message: string = null) {
         this.originalException = exception;
         this.code = exception?.code ?? null;
-        this.message = exception?.message ?? null;
+        this.message = message ?? exception?.message ?? null;
         this.domain = exception?.domain ?? null;
         this.errorData = exception?.userInfo ?? null;
         this.description = exception?.userInfo?.NSLocalizedDescription ?? null;

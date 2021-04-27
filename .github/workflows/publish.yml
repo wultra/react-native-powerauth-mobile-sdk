@@ -1,4 +1,4 @@
-name: Release a new version from master
+name: Release a new version
 
 on: 
   workflow_dispatch:
@@ -9,7 +9,10 @@ on:
       command:
         description: 'Library deploy command'
         required: false
-        default: prepare push deploy -v2 --any-branch 
+        default: prepare push deploy -v2 --any-branch
+      confirmBranch:
+        description: 'Confirm release branch'
+        required: true
 
 jobs:
   publish:
@@ -18,9 +21,9 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
-      - name: Make sure we're on master branch
+      - name: Make sure we're on the proper branch
         run: |
-          [[ $GITHUB_REF == "refs/heads/master" ]] || exit 1
+          [[ $GITHUB_REF == refs/heads/${{ github.event.inputs.confirmBranch }} ]] || exit 1
       - name: Publish the library
         uses: kober32/library-deploy@develop
         with:

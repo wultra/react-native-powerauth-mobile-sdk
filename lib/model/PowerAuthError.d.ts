@@ -14,7 +14,7 @@ export declare class PowerAuthError {
     domain?: string;
     /** Description of the error (iOS only). */
     description?: string;
-    constructor(exception: any);
+    constructor(exception: any, message?: string);
     print(): string;
 }
 export declare enum PowerAuthErrorCode {

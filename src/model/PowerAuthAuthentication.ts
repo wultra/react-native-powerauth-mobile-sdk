@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { NativeModules, Platform } from 'react-native';
-
 /**
  * Class representing a multi-factor authentication object.
  */
@@ -33,16 +31,4 @@ import { NativeModules, Platform } from 'react-native';
 
     /** (Android only) Title of biometric prompt */
     biometryTitle: string = null;
-
-    /** Filled by the SDK. */
-    biometryKey: string = null;
-
-    async process(): Promise<PowerAuthAuthentication> {
-        if (Platform.OS == "android" && this.useBiometry) {
-            const key = await NativeModules.PowerAuth.authenticateWithBiometry(this.biometryTitle ?? "??", this.biometryMessage ?? "??");
-            this.biometryKey = key;
-        }
-        
-        return this;
-    }
 };

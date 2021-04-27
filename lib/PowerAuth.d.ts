@@ -118,7 +118,7 @@ declare class PowerAuth {
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean>;
     /**
-     * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint '/pa/vault/unlock'.
+     * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint '/pa/signature/validate'.
      *
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
@@ -181,7 +181,7 @@ declare class PowerAuth {
     signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string>;
     /**
      * Validate a user password.
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to validate the signature value.
+     * This method calls PowerAuth Standard RESTful API endpoint '/pa/signature/validate' to validate the signature value.
      *
      * @param password Password to be verified.
      */
@@ -209,6 +209,19 @@ declare class PowerAuth {
      * @param authentication Authentication used for recovery code confirmation
      */
     confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    /**
+     * Helper method for grouping biometric authentications.
+     *
+     * With this method, you can use 1 biometric authentication (dialog) for several operations.
+     * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
+     *
+     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one
+     * fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
+     *
+     * @param authentication authentication object
+     * @param groupedAuthenticationCalls call that will use reusable authentication object
+     */
+    groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void>;
     private wrapNativeCall;
 }
 declare const _default: PowerAuth;

@@ -22,6 +22,7 @@ buildscript {
     if (project == rootProject) {
         repositories {
             google()
+            mavenCentral()
             jcenter()
         }
         dependencies {
@@ -60,5 +61,5 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    api "io.getlime.security.powerauth:powerauth-android-sdk:1.5.1"
+    api "com.wultra.android.powerauth:powerauth-sdk:1.5.4"
 }

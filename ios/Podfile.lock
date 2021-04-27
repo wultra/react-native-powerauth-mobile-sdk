@@ -10,7 +10,7 @@ PODS:
     - React-jsi (= 0.64.0)
     - ReactCommon/turbomodule/core (= 0.64.0)
   - glog (0.3.5)
-  - PowerAuth2 (1.5.2)
+  - PowerAuth2 (1.5.3)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -275,7 +275,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - PowerAuth2 (= 1.5.2)
+  - PowerAuth2 (from `https://github.com/wultra/powerauth-mobile-sdk.git`, branch `release/1.5.x`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -306,7 +306,6 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
-    - PowerAuth2
 
 EXTERNAL SOURCES:
   DoubleConversion:
@@ -317,6 +316,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  PowerAuth2:
+    :branch: release/1.5.x
+    :git: https://github.com/wultra/powerauth-mobile-sdk.git
+    :submodules: true
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -366,13 +369,19 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  PowerAuth2:
+    :commit: 06b618d8bb94ad0f0422df8993cdb7acc93d8ac3
+    :git: https://github.com/wultra/powerauth-mobile-sdk.git
+    :submodules: true
+
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: 49cbe4b43e445b06bf29199b6ad2057649e4c8f5
   FBReactNativeSpec: 560149046c8124f3cb16e3176d47da45a383a51f
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: c6b221617d79b750fc22411232a79484f078827c
+  PowerAuth2: 1e700bf01f707d199e723dffedeacd86528b5a9d
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: 2f8cb5b7533219bf4218a045f92768129cf7050a
   RCTTypeSafety: 512728b73549e72ad7330b92f3d42936f2a4de5b
@@ -398,6 +407,6 @@ SPEC CHECKSUMS:
   ReactCommon: cfe2b7fd20e0dbd2d1185cd7d8f99633fbc5ff05
   Yoga: 8c8436d4171c87504c648ae23b1d81242bdf3bbf
 
-PODFILE CHECKSUM: 5740113f3dc79a4c6e212e701c14a6d3ec5e6c54
+PODFILE CHECKSUM: 2e363f21ce290218e86555ad00fd7e25f89afb2a
 
 COCOAPODS: 1.10.1
