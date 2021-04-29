@@ -222,22 +222,21 @@ You can implement auto-correcting of typed characters with using `PowerAuthOtpUt
 
 Here's an example how to iterate over the string and validate it character by character:
 
-# TODO!! 👇
 
 ```javascript
-/// Returns corrected character or nil in case of error.
-validateAndCorrectCharacters(input) -> String? {
-    var result : String = ""
-    for codepoint in string.unicodeScalars {
-        let newCodepoint = PA2OtpUtil.validateAndCorrectTypedCharacter(codepoint.value)
-        if newCodepoint != 0 {
-            // Valid, or corrected character
-            result.append(Character(UnicodeScalar(newCodepoint)!))
-        } else {
-            return nil
-        }
+/// Returns corrected code
+validateAndCorrectCharacters(code) {
+    let result = "";
+    for (let i = 0; i < code.length; i++) {
+      try {
+        const corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(i));
+        result += String.fromCharCode(corrected);
+      } catch (e) {
+        console.log(`invalid character: ${code.charCodeAt(i)}`);
+      }
     }
-    return result
+    console.log(`Corrected: ${result}`);
+    return result;
 }
 ```
 
