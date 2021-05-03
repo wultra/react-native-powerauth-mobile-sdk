@@ -6,8 +6,8 @@ The recovery codes allow your users to recover their activation in case that mob
 
 To recover an activation, the user has to re-type two separate values:
 
-1. Recovery Code itself, which is very similar to an activation code. So you can detect typing errors before you submit such code to the server.
-1. PUK, which is an additional numeric value and acts as a one-time password in the scheme.
+1. **Recovery Code** itself, which is very similar to an activation code. So you can detect typing errors before you submit such code to the server.
+2. **PUK**, which is an additional numeric value and acts as a one-time password in the scheme.
 
 ## Recovery Code Scenarios
 

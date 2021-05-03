@@ -1,6 +1,8 @@
-# SDK Integration
+# Installation
 
 React Native PowerAuth Mobile SDK is distrubuted as a public [npm package](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk). React Native is supported for version `0.64.0` or higher.
+
+## How To Install
 
 ### 1. Install package via npm
 ```sh
