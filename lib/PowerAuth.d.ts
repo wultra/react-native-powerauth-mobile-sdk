@@ -5,6 +5,7 @@ import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivati
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
+import { PowerAuthConfirmRecoveryCodeDataResult } from './model/PowerAuthConfirmRecoveryCodeDataResult';
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
@@ -210,13 +211,21 @@ declare class PowerAuth {
      *
      * @returns Result of the confirmation
      */
-    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<ConfirmRecoveryCodeData>;
+    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult>;
+    /**
+     * Helper method for grouping biometric authentications.
+     *
+     * With this method, you can use 1 biometric authentication (dialog) for several operations.
+     * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
+     *
+     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one
+     * fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
+     *
+     * @param authentication authentication object
+     * @param groupedAuthenticationCalls call that will use reusable authentication object
+     */
+    groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void>;
     private wrapNativeCall;
-}
-/** Result of the confirmRecoveryCode call. */
-interface ConfirmRecoveryCodeData {
-    /** indicates that the code was already confirmed in the past */
-    alreadyConfirmed: boolean;
 }
 declare const _default: PowerAuth;
 export default _default;

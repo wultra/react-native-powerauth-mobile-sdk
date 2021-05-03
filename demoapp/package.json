@@ -3,6 +3,7 @@
     "start": "react-native start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "iosdevice": "react-native run-ios --device",
     "copymodule": "npm r react-native-powerauth-mobile-sdk && pushd .. && npm pack && file=$(ls | grep react-native-powerauth-mobile-sdk-*.tgz) && popd && npm i ../$file",
     "web": "expo start --web"
   },

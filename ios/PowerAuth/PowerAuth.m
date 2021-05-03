@@ -659,6 +659,20 @@ RCT_EXPORT_METHOD(generateHeaderForToken:(nonnull NSString*)tokenName
     }
 }
 
+RCT_EXPORT_METHOD(authenticateWithBiometry:(nonnull NSString*)title // title is here only for API compatibility with android
+                  message:(nonnull NSString*)message
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    [[PowerAuthSDK sharedInstance] authenticateUsingBiometryWithPrompt:message callback:^(PowerAuthAuthentication * authentication, NSError * error) {
+        if (authentication) {
+            resolve([authentication.overridenBiometryKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
+        } else {
+            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        }
+    }];
+}
+
 #pragma mark HELPER METHODS
 
 - (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict
@@ -671,6 +685,9 @@ RCT_EXPORT_METHOD(generateHeaderForToken:(nonnull NSString*)tokenName
     }
     if (dict[@"biometryMessage"] != [NSNull null]) {
         auth.biometryPrompt = [RCTConvert NSString:dict[@"biometryMessage"]];
+    }
+    if ([dict.allKeys containsObject:@"biometryKey"] && dict[@"biometryKey"] != [NSNull null]) {
+        auth.overridenBiometryKey = [[NSData alloc] initWithBase64EncodedString:[RCTConvert NSString:dict[@"biometryKey"]] options:NSDataBase64DecodingIgnoreUnknownCharacters];
     }
     return auth;
 }
