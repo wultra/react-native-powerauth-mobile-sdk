@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Button, Text, ScrollView } from 'react-native';
 import Prompt from 'rn-prompt';
-import PowerAuth from 'react-native-powerauth-mobile-sdk';
+import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
 import {PowerAuthOtpUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
 import {PowerAuthTokenStore} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthTokenStore';
 import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
@@ -33,6 +33,8 @@ export default class App extends Component<any, State> {
 
   tokenName = "possession_universal";
 
+  powerAuth: PowerAuth = new PowerAuth("your-app-activation");
+
   constructor(props: any) {
     super(props);
 
@@ -46,14 +48,14 @@ export default class App extends Component<any, State> {
   }
 
   async setupPowerAuth() {
-    const isConfigured = await PowerAuth.isConfigured();
+    const isConfigured = await this.powerAuth.isConfigured();
     if (isConfigured) {
       console.log("PowerAuth was already configured.");
       await this.refreshActivationInfo();
     } else {
       console.log("PowerAuth isn't configured, configuring...");
       try {
-        await PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+        await this.powerAuth.configure("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/", true);
         console.log("PowerAuth configuration successfull.");
         await this.refreshActivationInfo();
       } catch(e) {
@@ -64,12 +66,12 @@ export default class App extends Component<any, State> {
 
   async refreshActivationInfo() {
 
-    const id = await PowerAuth.getActivationIdentifier();
-    const fp = await PowerAuth.getActivationFingerprint();
-    const valid = await PowerAuth.hasValidActivation();
-    const canStart = await PowerAuth.canStartActivation();
-    const pending = await PowerAuth.hasPendingActivation();
-    const bioStatus = await PowerAuth.getBiometryInfo();
+    const id = await this.powerAuth.getActivationIdentifier();
+    const fp = await this.powerAuth.getActivationFingerprint();
+    const valid = await this.powerAuth.hasValidActivation();
+    const canStart = await this.powerAuth.canStartActivation();
+    const pending = await this.powerAuth.hasPendingActivation();
+    const bioStatus = await this.powerAuth.getBiometryInfo();
 
     this.setState({
       activationId: id,
@@ -82,7 +84,7 @@ export default class App extends Component<any, State> {
     }, async () => {
       let status = "";
       try {
-        status = (await PowerAuth.fetchActivationStatus()).state;
+        status = (await this.powerAuth.fetchActivationStatus()).state;
       } catch (e) {
         status = e.code;
       }
@@ -119,7 +121,7 @@ export default class App extends Component<any, State> {
           <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
             const activation = PowerAuthActivation.createWithActivationCode(activationCode, "ReactNativeTest");
             try {
-              let result = await PowerAuth.createActivation(activation);
+              let result = await this.powerAuth.createActivation(activation);
               console.log(result);
               alert(`Activation created`);
             } catch (e) {
@@ -135,7 +137,7 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              await PowerAuth.commitActivation(auth)
+              await this.powerAuth.commitActivation(auth)
               alert(`Commited!`);
             } catch (e) {
               alert(`Commit failed: ${e.code}`);
@@ -152,7 +154,7 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              await PowerAuth.removeActivationWithAuthentication(auth);
+              await this.powerAuth.removeActivationWithAuthentication(auth);
               alert(`Removed`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
@@ -166,7 +168,7 @@ export default class App extends Component<any, State> {
             auth.useBiometry = true;
             auth.biometryMessage = "tadaaa";
             try {
-              await PowerAuth.removeActivationWithAuthentication(auth);
+              await this.powerAuth.removeActivationWithAuthentication(auth);
               alert(`Removed`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
@@ -175,7 +177,7 @@ export default class App extends Component<any, State> {
             await this.refreshActivationInfo();
           }} />
           <Button title="Remove activation local" onPress={e => {
-            PowerAuth.removeActivationLocal();
+            this.powerAuth.removeActivationLocal();
             this.refreshActivationInfo();
             alert("Done!")
           }} />
@@ -184,7 +186,7 @@ export default class App extends Component<any, State> {
           <Button title="Validate password" onPress={e => {
             this.setState({ promptVisible: true, promptLabel: "Password", promptCallback: async pass => {
               try {
-                const result = await PowerAuth.validatePassword(pass);
+                const result = await this.powerAuth.validatePassword(pass);
                 alert(`Password valid`);
               } catch (e) {
                 alert(`Not valid: ${e.code}`);
@@ -196,7 +198,7 @@ export default class App extends Component<any, State> {
             setTimeout(async () => {
               this.setState({ promptVisible: true, promptLabel: "Enter new password", promptCallback: async newPassword => {
                 try {
-                  await PowerAuth.changePassword(oldPassword, newPassword);
+                  await this.powerAuth.changePassword(oldPassword, newPassword);
                   alert("Password changed");
                 } catch (e) {
                   alert(`Change failed: ${e.code}`);
@@ -209,7 +211,7 @@ export default class App extends Component<any, State> {
             setTimeout(async () => {
               this.setState({ promptVisible: true, promptLabel: "Enter new password", promptCallback: async newPassword => {
                 try {
-                  await PowerAuth.unsafeChangePassword(oldPassword, newPassword);
+                  await this.powerAuth.unsafeChangePassword(oldPassword, newPassword);
                   alert("Password changed");
                 } catch (e) {
                   alert(`Change failed: ${e.code}`);
@@ -221,13 +223,13 @@ export default class App extends Component<any, State> {
 
           <Text style={styles.titleText}>Biometry</Text>
           <Button title="Is biometry set" onPress={ async _ => {
-            const hasRecovery = await PowerAuth.hasBiometryFactor();
+            const hasRecovery = await this.powerAuth.hasBiometryFactor();
             alert(`Biometry factor present: ${hasRecovery}`);
           }} />
           <Button title="Add biometry factor" onPress={ async _ => {
             this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
               try {
-                const r = await PowerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
+                const r = await this.powerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
                 alert(`Biometry factor added`);
               } catch (e) {
                 alert(`Failed: ${e.code}`);
@@ -235,13 +237,13 @@ export default class App extends Component<any, State> {
               }
             }})}} />
           <Button title="Remove biometry factor" onPress={ async _ => {
-            const result =  await PowerAuth.removeBiometryFactor();
+            const result =  await this.powerAuth.removeBiometryFactor();
             alert(`Biometry factor removed: ${result}`);
           }} />
 
           <Text style={styles.titleText}>Recovery</Text>
           <Button title="Has recovery data" onPress={ async _ => {
-            const hasRecovery = await PowerAuth.hasActivationRecoveryData();
+            const hasRecovery = await this.powerAuth.hasActivationRecoveryData();
             alert(`Recovery data present: ${hasRecovery}`);
           }} />
           <Button title="Show recovery data" onPress={e => {
@@ -252,7 +254,7 @@ export default class App extends Component<any, State> {
                 auth.userPassword = pass;
                 auth.useBiometry = false;
                 auth.biometryMessage = "tadaaa";
-                const result = await PowerAuth.activationRecoveryData(auth);
+                const result = await this.powerAuth.activationRecoveryData(auth);
                 alert(`Code: ${result.recoveryCode}\nPUK: ${result.puk}`);
               } catch (e) {
                 alert(`Failed: ${e.code}`);
@@ -329,7 +331,7 @@ export default class App extends Component<any, State> {
                 auth.useBiometry = false;
                 auth.biometryMessage = "tadaaa";
                 try {
-                  const r = await PowerAuth.fetchEncryptionKey(auth,0);
+                  const r = await this.powerAuth.fetchEncryptionKey(auth,0);
                   alert(`Key: ${r}`);
                 } catch (e) {
                   alert(`Failed: ${e.code}`);
@@ -346,7 +348,7 @@ export default class App extends Component<any, State> {
             auth.biometryMessage = "tadaaa";
             try {
               // TODO: solve this differently, this failes for now as we pass nonsense data
-              const r = await PowerAuth.offlineSignature(auth, "/pa/signature/validate", "body", "nonce");
+              const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "body", "nonce");
               alert(`Signature: ${r}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
@@ -357,7 +359,7 @@ export default class App extends Component<any, State> {
           <Button title="Test verifyServerSignedData" onPress={ async _ => {
             // TODO: solve this differently, this failes for now as we pass nonsense data
             try {
-              const r = await PowerAuth.verifyServerSignedData("data", "signature", true);
+              const r = await this.powerAuth.verifyServerSignedData("data", "signature", true);
               alert(`Verified: ${r}`);
             } catch (e) {
               alert(`Remove failed: ${e.code}`);
@@ -371,7 +373,7 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              const r = await PowerAuth.requestGetSignature(auth, "/pa/signature/validate", { testParam: "testvalue" });
+              const r = await this.powerAuth.requestGetSignature(auth, "/pa/signature/validate", { testParam: "testvalue" });
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch (e) {
@@ -387,7 +389,7 @@ export default class App extends Component<any, State> {
             auth.useBiometry = false;
             auth.biometryMessage = "tadaaa";
             try {
-              const r = await PowerAuth.requestSignature(auth, "POST", "/pa/signature/validate", "{jsonbody: \"yes\"}");
+              const r = await this.powerAuth.requestSignature(auth, "POST", "/pa/signature/validate", "{jsonbody: \"yes\"}");
               alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
             } catch(e) {
@@ -395,35 +397,6 @@ export default class App extends Component<any, State> {
               this.printPAException(e);
             }
           } }) }} />
-
-          <Text style={styles.titleText}>Grouped biometry authentication</Text>
-          <Button title="Test grouped biometry action" onPress={ async _ => {
-            
-            const auth = new PowerAuthAuthentication();
-            auth.usePossession = true;
-            auth.userPassword = null;
-            auth.useBiometry = true;
-            auth.biometryTitle = "Grouped authentication";
-            auth.biometryMessage = "One biometric authentication will be used for 2 operations.";
-            
-            try {
-              await PowerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
-                try {
-                  const r1 = await PowerAuth.requestSignature(reusableAuth, "POST", "/pa/signature/validate", "{jsonbody: \"yes\"}");
-                  console.log(`r1 success`);
-                  const r2 = await PowerAuth.requestSignature(reusableAuth, "POST", "/pa/signature/validate", "{jsonbody: \"no\"}");
-                  console.log(`r2 success`);
-                  alert(`Success`);
-                } catch (e) {
-                  alert(`Failed to reuse reusableAuth: ${e.code}`);
-                  this.printPAException(e);
-                }
-              });
-            } catch(e) {
-              alert(`Grouped biometry failed: ${e.code}`);
-              this.printPAException(e);
-            }
-           }} />
 
           <Text style={styles.titleText}>Validation</Text>
           <Button title="Parse activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
@@ -446,34 +419,38 @@ export default class App extends Component<any, State> {
               console.log(e.code);
             }
           } }) }} />
-          <Button title="Validate activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
+          <Button title="Is valid activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
             await sleep(100);
             let valid = await PowerAuthOtpUtil.validateActivationCode(code);
             alert(`IsValid: ${valid}`);
           } }) }} />
-          <Button title="Validate recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
+          <Button title="Is valid recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
             await sleep(100);
             let valid = await PowerAuthOtpUtil.validateRecoveryCode(code);
             alert(`IsValid: ${valid}`);
           } }) }} />
-          <Button title="Validate recovery PUK" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery PUK", promptCallback: async code => {
+          <Button title="Is valid recovery PUK" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery PUK", promptCallback: async code => {
             await sleep(100);
             let valid = await PowerAuthOtpUtil.validateRecoveryPuk(code);
             alert(`IsValid: ${valid}`);
           } }) }} />
-          <Button title="Validate activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
+          <Button title="Is valid activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
             await sleep(100);
             let valid = await PowerAuthOtpUtil.validateTypedCharacter(code.charCodeAt(0));
             alert(`IsValid: ${valid}`);
           } }) }} />
-          <Button title="Correct activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
+          <Button title="Correct activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter code", promptCallback: async code => {
             await sleep(100);
-            try {
-              let corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(0));
-              alert(`Corrected: ${String.fromCharCode(corrected)}`);
-            } catch (e) {
-              alert("Invalid character");
+            let result = "";
+            for (let i = 0; i < code.length; i++) {
+              try {
+                const corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(i));
+                result += String.fromCharCode(corrected);
+              } catch (e) {
+                console.log(`invalid character: ${code.charCodeAt(i)}`);
+              }
             }
+            alert(`Corrected: ${result}`);
           } }) }} />
 
           <Prompt

@@ -29,14 +29,14 @@ export class __AuthenticationUtils {
      * @param makeReusable if the object should be forced to be reusable
      * @returns configured authorization object
      */
-    static async process(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
+    static async process(instanceId: string ,authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
 
         let obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
 
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
         if ((Platform.OS == "android" && authentication.useBiometry && (obj.biometryKey == null || makeReusable)) || (Platform.OS == "ios" && makeReusable)) {
-            const key = await NativeModules.PowerAuth.authenticateWithBiometry(authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??");
+            const key = await NativeModules.PowerAuth.authenticateWithBiometry(instanceId, authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??");
             obj.biometryKey = key;
             return obj;
         }

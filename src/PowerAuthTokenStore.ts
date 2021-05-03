@@ -69,7 +69,7 @@ export class PowerAuthTokenStore {
      * @return PowerAuth token with already generated header
      */
     static async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
-        return NativeModules.PowerAuth.requestAccessToken(tokenName, await __AuthenticationUtils.process(authentication));
+        return NativeModules.PowerAuth.requestAccessToken(tokenName, await __AuthenticationUtils.process("TODO", authentication));
     }
 
     /**

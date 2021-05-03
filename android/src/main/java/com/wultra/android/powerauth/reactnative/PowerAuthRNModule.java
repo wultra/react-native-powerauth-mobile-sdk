@@ -59,7 +59,7 @@ import io.getlime.security.powerauth.util.otp.OtpUtil;
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext context;
-    private PowerAuthSDK powerAuth;
+    private final HashMap<String, PowerAuthSDK> instances = new HashMap<>();
 
     public PowerAuthRNModule(ReactApplicationContext context) {
         super(context);
@@ -73,17 +73,18 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void isConfigured(Promise promise) {
-        promise.resolve(this.powerAuth != null);
+    public void isConfigured(@Nonnull String instanceId, Promise promise) {
+        promise.resolve(this.instances.containsKey(instanceId));
     }
 
-    void configure(@NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
-        if (powerAuth != null) {
-            throw new IllegalStateException("PowerAuth module was already configured.");
+    void configure(@Nonnull String instanceId, @NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
+        if (this.instances.containsKey(instanceId)) {
+            throw new IllegalStateException("PowerAuth object with this instanceId is already configured.");
         }
 
         try {
-            this.powerAuth = builder.build(this.context);
+            PowerAuthSDK powerAuth = builder.build(this.context);
+            this.instances.put(instanceId, powerAuth);
         } catch (PowerAuthErrorException e) {
             throw new IllegalArgumentException("Unable to configure with provided data", e);
         }
@@ -106,42 +107,48 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             paClientConfigBuilder.allowUnsecuredConnection(true);
         }
         try {
-            configure(new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
+            configure(instanceId, new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
             promise.resolve(true);
         } catch (Exception e) {
             promise.reject("PA2ReactNativeError", "Failed to configure");
         }
     }
-
+    
     @ReactMethod
-    public void hasValidActivation(Promise promise) {
-        promise.resolve(this.powerAuth.hasValidActivation());
+    public void deconfigure(String instanceId, Promise promise) {
+        this.instances.remove(instanceId);
+        promise.resolve(null);
     }
 
     @ReactMethod
-    public void canStartActivation(Promise promise) {
-        promise.resolve(this.powerAuth.canStartActivation());
+    public void hasValidActivation(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).hasValidActivation());
     }
 
     @ReactMethod
-    public void hasPendingActivation(Promise promise) {
-        promise.resolve(this.powerAuth.hasPendingActivation());
+    public void canStartActivation(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).canStartActivation());
     }
 
     @ReactMethod
-    public void activationIdentifier(Promise promise) {
-        promise.resolve(this.powerAuth.getActivationIdentifier());
+    public void hasPendingActivation(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).hasPendingActivation());
     }
 
     @ReactMethod
-    public  void activationFingerprint(Promise promise) {
-        promise.resolve(this.powerAuth.getActivationFingerprint());
+    public void activationIdentifier(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).getActivationIdentifier());
     }
 
     @ReactMethod
-    public void fetchActivationStatus(final Promise promise) {
+    public  void activationFingerprint(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).getActivationFingerprint());
+    }
 
-        this.powerAuth.fetchActivationStatusWithCallback(this.context, new IActivationStatusListener() {
+    @ReactMethod
+    public void fetchActivationStatus(String instanceId, final Promise promise) {
+
+        this.powerAuth(instanceId).fetchActivationStatusWithCallback(this.context, new IActivationStatusListener() {
             @Override
             public void onActivationStatusSucceed(ActivationStatus status) {
                 WritableMap map = Arguments.createMap();
@@ -160,7 +167,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void createActivation(ReadableMap activation, final Promise promise) {
+    public void createActivation(String instanceId, ReadableMap activation, final Promise promise) {
 
         PowerAuthActivation.Builder paActivation = null;
 
@@ -199,7 +206,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 paActivation.setAdditionalActivationOtp(additionalActivationOtp);
             }
 
-            this.powerAuth.createActivation(paActivation.build(), new ICreateActivationListener() {
+            this.powerAuth(instanceId).createActivation(paActivation.build(), new ICreateActivationListener() {
                 @Override
                 public void onActivationCreateSucceed(@NonNull CreateActivationResult result) {
                     WritableMap map = Arguments.createMap();
@@ -229,7 +236,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void commitActivation(ReadableMap authMap, final Promise promise) {
+    public void commitActivation(String instanceId, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
         if (auth.usePassword == null) {
             promise.reject("PA2ReactNativeErrorPasswordNotSet", "Password is not set.");
@@ -244,7 +251,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             if (message == null) {
                 message = " "; // to prevent crash
             }
-            this.powerAuth.commitActivation(this.context, ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
+            this.powerAuth(instanceId).commitActivation(this.context, ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
 
                 @Override
                 public void onBiometricDialogCancelled() {
@@ -262,7 +269,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 }
             });
         } else {
-            int result = this.powerAuth.commitActivationWithPassword(this.context, auth.usePassword);
+            int result = this.powerAuth(instanceId).commitActivationWithPassword(this.context, auth.usePassword);
             if (result == PowerAuthErrorCodes.PA2Succeed) {
                 promise.resolve(null);
             } else {
@@ -272,9 +279,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void removeActivationWithAuthentication(ReadableMap authMap, final Promise promise) {
+    public void removeActivationWithAuthentication(String instanceId, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        this.powerAuth.removeActivationWithAuthentication(this.context, auth, new IActivationRemoveListener() {
+        this.powerAuth(instanceId).removeActivationWithAuthentication(this.context, auth, new IActivationRemoveListener() {
             @Override
             public void onActivationRemoveSucceed() {
                 promise.resolve(null);
@@ -288,9 +295,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void removeActivationLocal(Promise promise) {
+    public void removeActivationLocal(String instanceId, Promise promise) {
         try {
-            this.powerAuth.removeActivationLocal(this.context);
+            this.powerAuth(instanceId).removeActivationLocal(this.context);
             promise.resolve(null);
         } catch (Throwable t) {
             PowerAuthRNModule.rejectPromise(promise, t);
@@ -298,10 +305,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void requestGetSignature(ReadableMap authMap, String uriId, @Nullable ReadableMap params, Promise promise) {
+    public void requestGetSignature(String instanceId, ReadableMap authMap, String uriId, @Nullable ReadableMap params, Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
         Map<String, String> paramMap = params == null ? null : PowerAuthRNModule.getStringMap(params);
-        PowerAuthAuthorizationHttpHeader header = this.powerAuth.requestGetSignatureWithAuthentication(this.context, auth, uriId, paramMap);
+        PowerAuthAuthorizationHttpHeader header = this.powerAuth(instanceId).requestGetSignatureWithAuthentication(this.context, auth, uriId, paramMap);
         ReadableMap headerObject = PowerAuthRNModule.getHttpHeaderObject(header);
 
         if (headerObject != null) {
@@ -312,10 +319,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void requestSignature(ReadableMap authMap, String method, String uriId, @Nullable String body, Promise promise) {
+    public void requestSignature(String instanceId, ReadableMap authMap, String method, String uriId, @Nullable String body, Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
         byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
-        PowerAuthAuthorizationHttpHeader header = this.powerAuth.requestSignatureWithAuthentication(this.context, auth, method, uriId, decodedBody);
+        PowerAuthAuthorizationHttpHeader header = this.powerAuth(instanceId).requestSignatureWithAuthentication(this.context, auth, method, uriId, decodedBody);
         if (header.powerAuthErrorCode == PowerAuthErrorCodes.PA2Succeed) {
             WritableMap returnMap = Arguments.createMap();
             returnMap.putString("key", header.key);
@@ -327,10 +334,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void offlineSignature(ReadableMap authMap, String uriId, @Nullable String body, String nonce, Promise promise) {
+    public void offlineSignature(String instanceId, ReadableMap authMap, String uriId, @Nullable String body, String nonce, Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
         byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
-        String signature = this.powerAuth.offlineSignatureWithAuthentication(this.context, auth, uriId, decodedBody, nonce);
+        String signature = this.powerAuth(instanceId).offlineSignatureWithAuthentication(this.context, auth, uriId, decodedBody, nonce);
         if (signature != null) {
             promise.resolve(signature);
         } else {
@@ -339,24 +346,24 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void verifyServerSignedData(String data, String signature, boolean masterKey, Promise promise) {
+    public void verifyServerSignedData(String instanceId, String data, String signature, boolean masterKey, Promise promise) {
         try {
             byte[] decodedData = data.getBytes(StandardCharsets.UTF_8);
             byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
-            promise.resolve(this.powerAuth.verifyServerSignedData(decodedData, decodedSignature, masterKey));
+            promise.resolve(this.powerAuth(instanceId).verifyServerSignedData(decodedData, decodedSignature, masterKey));
         } catch (Exception e) {
             promise.reject("PA2ReactNativeError", "Verify failed");
         }
     }
 
     @ReactMethod
-    public void unsafeChangePassword(String oldPassword, String newPassword, Promise promise) {
-        promise.resolve(this.powerAuth.changePasswordUnsafe(oldPassword, newPassword));
+    public void unsafeChangePassword(String instanceId, String oldPassword, String newPassword, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).changePasswordUnsafe(oldPassword, newPassword));
     }
 
     @ReactMethod
-    public void changePassword(String oldPassword, String newPassword, final Promise promise) {
-        this.powerAuth.changePassword(this.context, oldPassword, newPassword, new IChangePasswordListener() {
+    public void changePassword(String instanceId, String oldPassword, String newPassword, final Promise promise) {
+        this.powerAuth(instanceId).changePassword(this.context, oldPassword, newPassword, new IChangePasswordListener() {
             @Override
             public void onPasswordChangeSucceed() {
                 promise.resolve(null);
@@ -370,10 +377,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void addBiometryFactor(String password, String title, String description, final Promise promise) {
+    public void addBiometryFactor(String instanceId, String password, String title, String description, final Promise promise) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
-                this.powerAuth.addBiometryFactor(
+                this.powerAuth(instanceId).addBiometryFactor(
                         this.context,
                         ((FragmentActivity)getCurrentActivity()).getSupportFragmentManager(),
                         title,
@@ -399,25 +406,25 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void hasBiometryFactor(Promise promise) {
+    public void hasBiometryFactor(String instanceId, Promise promise) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            promise.resolve(this.powerAuth.hasBiometryFactor(this.context));
+            promise.resolve(this.powerAuth(instanceId).hasBiometryFactor(this.context));
         } else {
             promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
         }
     }
 
     @ReactMethod
-    public void removeBiometryFactor(Promise promise) {
+    public void removeBiometryFactor(String instanceId, Promise promise) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            promise.resolve(this.powerAuth.removeBiometryFactor(this.context));
+            promise.resolve(this.powerAuth(instanceId).removeBiometryFactor(this.context));
         } else {
             promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
         }
     }
 
     @ReactMethod
-    public void getBiometryInfo(Promise promise) {
+    public void getBiometryInfo(String instanceId, Promise promise) {
         boolean isAvailable = BiometricAuthentication.isBiometricAuthenticationAvailable(this.context);
         String biometryType;
         String canAuthenticate;
@@ -462,9 +469,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void fetchEncryptionKey(ReadableMap authMap, int index, final Promise promise) {
+    public void fetchEncryptionKey(String instanceId, ReadableMap authMap, int index, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        this.powerAuth.fetchEncryptionKey(this.context, auth, index, new IFetchEncryptionKeyListener() {
+        this.powerAuth(instanceId).fetchEncryptionKey(this.context, auth, index, new IFetchEncryptionKeyListener() {
             @Override
             public void onFetchEncryptionKeySucceed(byte[] encryptedEncryptionKey) {
                 promise.resolve(Base64.encodeToString(encryptedEncryptionKey, Base64.DEFAULT));
@@ -478,9 +485,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void signDataWithDevicePrivateKey(ReadableMap authMap, String data, final Promise promise) {
+    public void signDataWithDevicePrivateKey(String instanceId, ReadableMap authMap, String data, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        powerAuth.signDataWithDevicePrivateKey(this.context, auth, data.getBytes(StandardCharsets.UTF_8), new IDataSignatureListener() {
+        this.powerAuth(instanceId).signDataWithDevicePrivateKey(this.context, auth, data.getBytes(StandardCharsets.UTF_8), new IDataSignatureListener() {
             @Override
             public void onDataSignedSucceed(byte[] signature) {
                 promise.resolve(Base64.encodeToString(signature, Base64.DEFAULT));
@@ -494,8 +501,8 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void validatePassword(String password, final Promise promise) {
-        this.powerAuth.validatePasswordCorrect(this.context, password, new IValidatePasswordListener() {
+    public void validatePassword(String instanceId, String password, final Promise promise) {
+        this.powerAuth(instanceId).validatePasswordCorrect(this.context, password, new IValidatePasswordListener() {
             @Override
             public void onPasswordValid() {
                 promise.resolve(null);
@@ -509,14 +516,14 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void hasActivationRecoveryData(Promise promise) {
-        promise.resolve(this.powerAuth.hasActivationRecoveryData());
+    public void hasActivationRecoveryData(String instanceId, Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).hasActivationRecoveryData());
     }
 
     @ReactMethod
-    public void activationRecoveryData(ReadableMap authMap, final Promise promise) {
+    public void activationRecoveryData(String instanceId, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        this.powerAuth.getActivationRecoveryData(this.context, auth, new IGetRecoveryDataListener() {
+        this.powerAuth(instanceId).getActivationRecoveryData(this.context, auth, new IGetRecoveryDataListener() {
             @Override
             public void onGetRecoveryDataSucceeded(@NonNull RecoveryData recoveryData) {
                 WritableMap map = Arguments.createMap();
@@ -533,9 +540,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void confirmRecoveryCode(String recoveryCode, ReadableMap authMap, final Promise promise) {
+    public void confirmRecoveryCode(String instanceId, String recoveryCode, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        this.powerAuth.confirmRecoveryCode(this.context, auth, recoveryCode, new IConfirmRecoveryCodeListener() {
+        this.powerAuth(instanceId).confirmRecoveryCode(this.context, auth, recoveryCode, new IConfirmRecoveryCodeListener() {
             @Override
             public void onRecoveryCodeConfirmed(boolean alreadyConfirmed) {
                 promise.resolve(alreadyConfirmed);
@@ -549,10 +556,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void authenticateWithBiometry(String title, String description, final Promise promise) {
+    public void authenticateWithBiometry(String instanceId, String title, String description, final Promise promise) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
-                this.powerAuth.authenticateUsingBiometry(
+                this.powerAuth(instanceId).authenticateUsingBiometry(
                         this.context,
                         ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(),
                         title,
@@ -584,7 +591,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void parseActivationCode(String activationCode, Promise promise) {
+    public void parseActivationCode(String instanceId, String activationCode, Promise promise) {
         Otp otp = OtpUtil.parseFromActivationCode(activationCode);
         if (otp != null) {
             WritableMap response = Arguments.createMap();
@@ -597,12 +604,12 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void validateActivationCode(String activationCode, Promise promise) {
+    public void validateActivationCode(String instanceId, String activationCode, Promise promise) {
         promise.resolve(OtpUtil.validateActivationCode(activationCode));
     }
 
     @ReactMethod
-    public void parseRecoveryCode(String recoveryCode, Promise promise) {
+    public void parseRecoveryCode(String instanceId, String recoveryCode, Promise promise) {
         Otp otp = OtpUtil.parseFromRecoveryCode(recoveryCode);
         if (otp != null) {
             WritableMap response = Arguments.createMap();
@@ -615,22 +622,22 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void validateRecoveryCode(String recoveryCode, Promise promise) {
+    public void validateRecoveryCode(String instanceId, String recoveryCode, Promise promise) {
         promise.resolve(OtpUtil.validateRecoveryCode(recoveryCode));
     }
 
     @ReactMethod
-    public void validateRecoveryPuk(String puk, Promise promise) {
+    public void validateRecoveryPuk(String instanceId, String puk, Promise promise) {
         promise.resolve(OtpUtil.validateRecoveryPuk(puk));
     }
 
     @ReactMethod
-    public void validateTypedCharacter(int character, Promise promise) {
+    public void validateTypedCharacter(String instanceId, int character, Promise promise) {
         promise.resolve(OtpUtil.validateTypedCharacter(character));
     }
 
     @ReactMethod
-    public void correctTypedCharacter(int character, Promise promise) {
+    public void correctTypedCharacter(String instanceId, int character, Promise promise) {
         int corrected = OtpUtil.validateAndCorrectTypedCharacter(character);
         if (corrected == 0) {
             promise.reject("PA2RNInvalidCharacter", "Invalid character cannot be corrected.");
@@ -640,9 +647,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void requestAccessToken(String tokenName, ReadableMap authMap, final Promise promise) {
+    public void requestAccessToken(String instanceId, String tokenName, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
-        this.powerAuth.getTokenStore().requestAccessToken(this.context, tokenName, auth, new IGetTokenListener() {
+        this.powerAuth(instanceId).getTokenStore().requestAccessToken(this.context, tokenName, auth, new IGetTokenListener() {
             @Override
             public void onGetTokenSucceeded(@NonNull PowerAuthToken token) {
                 WritableMap response = Arguments.createMap();
@@ -660,8 +667,8 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void removeAccessToken(String tokenName, final Promise promise) {
-        this.powerAuth.getTokenStore().removeAccessToken(this.context, tokenName, new IRemoveTokenListener() {
+    public void removeAccessToken(String instanceId, String tokenName, final Promise promise) {
+        this.powerAuth(instanceId).getTokenStore().removeAccessToken(this.context, tokenName, new IRemoveTokenListener() {
             @Override
             public void onRemoveTokenSucceeded() {
                 promise.resolve(null);
@@ -675,8 +682,8 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getLocalToken(String tokenName, final Promise promise) {
-        PowerAuthToken token = this.powerAuth.getTokenStore().getLocalToken(this.context, tokenName);
+    public void getLocalToken(String instanceId, String tokenName, final Promise promise) {
+        PowerAuthToken token = this.powerAuth(instanceId).getTokenStore().getLocalToken(this.context, tokenName);
         if (token != null) {
             WritableMap response = Arguments.createMap();
             response.putBoolean("isValid", token.isValid());
@@ -690,25 +697,25 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void hasLocalToken(String tokenName, final Promise promise) {
-        promise.resolve(this.powerAuth.getTokenStore().hasLocalToken(this.context, tokenName));
+    public void hasLocalToken(String instanceId, String tokenName, final Promise promise) {
+        promise.resolve(this.powerAuth(instanceId).getTokenStore().hasLocalToken(this.context, tokenName));
     }
 
     @ReactMethod
-    public void removeLocalToken(String tokenName, final Promise promise) {
-        this.powerAuth.getTokenStore().removeLocalToken(this.context, tokenName);
+    public void removeLocalToken(String instanceId, String tokenName, final Promise promise) {
+        this.powerAuth(instanceId).getTokenStore().removeLocalToken(this.context, tokenName);
         promise.resolve(null);
     }
 
     @ReactMethod
-    public void removeAllLocalTokens(final Promise promise) {
-        this.powerAuth.getTokenStore().removeAllLocalTokens(this.context);
+    public void removeAllLocalTokens(String instanceId, final Promise promise) {
+        this.powerAuth(instanceId).getTokenStore().removeAllLocalTokens(this.context);
         promise.resolve(null);
     }
 
     @ReactMethod
-    public void generateHeaderForToken(String tokenName, final Promise promise) {
-        PowerAuthToken token = this.powerAuth.getTokenStore().getLocalToken(this.context, tokenName);
+    public void generateHeaderForToken(String instanceId, String tokenName, final Promise promise) {
+        PowerAuthToken token = this.powerAuth(instanceId).getTokenStore().getLocalToken(this.context, tokenName);
         if (token == null) {
             promise.reject("PA2RNTokenNotAvailable", "This token is no longer available in the local store.");
         }
@@ -719,7 +726,14 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         }
     }
 
-    static Map<String, String> getStringMap(ReadableMap rm) {
+    private PowerAuthSDK powerAuth(@Nonnull String instanceId) {
+        if (!this.instances.containsKey(instanceId)) {
+            throw new IllegalStateException("This PowerAuth instance is not configured.");
+        }
+        return this.instances.get(instanceId);
+    }
+
+    private static Map<String, String> getStringMap(ReadableMap rm) {
         Map<String, String> map = new HashMap<>();
         for (Map.Entry<String, Object> entry : rm.toHashMap().entrySet()) {
             if (entry.getValue() instanceof String) {
@@ -729,7 +743,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         return map;
     }
 
-    static @Nullable ReadableMap getHttpHeaderObject(@NonNull PowerAuthAuthorizationHttpHeader header) {
+    private static @Nullable ReadableMap getHttpHeaderObject(@NonNull PowerAuthAuthorizationHttpHeader header) {
         if (header.powerAuthErrorCode == PowerAuthErrorCodes.PA2Succeed) {
             WritableMap map = Arguments.createMap();
             map.putString("key", header.key);
@@ -741,7 +755,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @SuppressLint("DefaultLocale")
-    static String getStatusCode(int state) {
+    private static String getStatusCode(int state) {
         switch (state) {
             case ActivationStatus.State_Created: return "PA2ActivationState_Created";
             case ActivationStatus.State_Pending_Commit: return "PA2ActivationState_PendingCommit";
@@ -753,7 +767,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         }
     }
 
-    static PowerAuthAuthentication constructAuthentication(ReadableMap map) {
+    private static PowerAuthAuthentication constructAuthentication(ReadableMap map) {
         PowerAuthAuthentication auth = new PowerAuthAuthentication();
         auth.usePossession = map.getBoolean("usePossession");
         String biometryKey = map.getString("biometryKey");
@@ -764,9 +778,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         return auth;
     }
 
-    static void rejectPromise(Promise promise, Throwable t) {
+    private static void rejectPromise(Promise promise, Throwable t) {
 
-        @Nonnull  String code = "PA2ReactNativeError"; // fallback code
+        @Nonnull String code = "PA2ReactNativeError"; // fallback code
         String message = t.getMessage();
         WritableMap userInfo = null;
 
@@ -792,7 +806,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @SuppressLint("DefaultLocale")
-    static String getErrorCodeFromError(int error) {
+    private static String getErrorCodeFromError(int error) {
         switch (error) {
             case PowerAuthErrorCodes.PA2Succeed: return "PA2Succeed";
             case PowerAuthErrorCodes.PA2ErrorCodeNetworkError: return "PA2ErrorCodeNetworkError";
