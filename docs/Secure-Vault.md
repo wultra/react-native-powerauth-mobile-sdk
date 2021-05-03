@@ -5,7 +5,7 @@ PowerAuth SDK has basic support for an encrypted secure vault. At this moment, t
 On a server-side, all secure vault-related work is concentrated in a `/pa/v3/vault/unlock` endpoint of PowerAuth Standard RESTful API. In order to receive data from this response, the call must be authenticated with at least 2FA (using password or PIN).
 
 <!-- begin box warning -->
-Secure vault mechanism does not support biometry by default. Use PIN code or password based authentication for unlocking the secure vault, or ask your server developers to enable biometry for vault unlock call by configuring PowerAuth Server instance.
+The secure vault mechanism does not support biometry by default. Use PIN code or password-based authentication for unlocking the secure vault, or ask your server developers to enable biometry for vault unlock call by configuring PowerAuth Server instance.
 <!-- end -->
 
 ## Obtaining Encryption Key

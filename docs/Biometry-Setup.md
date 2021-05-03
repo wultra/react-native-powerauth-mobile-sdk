@@ -6,9 +6,9 @@ PowerAuth SDK provides an abstraction on top of the base biometry (on Android) a
 
 You have to check for biometry on three levels:
 
-- **System Availability**: If biometric scanner (for example Touch ID on iOS or Fingerprint reader on Android) is present on the system/device.
+- **System Availability**: If a biometric scanner (for example Touch ID on iOS or Fingerprint reader on Android) is present on the system/device.
 - **Activation Availability**: If biometry factor data are available for given activation.
-- **Application Availability**: If user decided to use biometry for given app. _(optional)_
+- **Application Availability**: If the user decided to use biometry for the given app. _(optional)_
 
 PowerAuth SDK provides code for the first two of these checks.
 
@@ -19,7 +19,7 @@ const biometryStatus = await PowerAuth.getBiometryInfo();
 
 // Is biometric authentication is supported on the system?
 // Note that the property contains "false" on iOS if biometry is not enrolled or if it has been locked down. 
-// To distinguish between an availability and lockdown you can use `biometryType` and `canAuthenticate`.
+// To distinguish between availability and lockdown you can use `biometryType` and `canAuthenticate`.
 const isAvailable = biometryStatus.isAvailable;
 
 // Type of biometry supported on the system.

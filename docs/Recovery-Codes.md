@@ -20,14 +20,14 @@ PowerAuth currently supports two basic types of recovery codes:
 
 2. Recovery Code delivered via OOB channel, typically in the form of a securely printed postcard, delivered by the post service.
    - This type of code has typically more than one PUK associated with the code, so it can be used multiple times.
-   - The user has to keep that postcard in safe and secure place, and mark already used PUKs.
+   - The user has to keep that postcard in a safe and secure place, and mark already used PUKs.
    - The code delivery must be confirmed by the user before the code can be used for a recovery operation.
 
 The feature is not automatically available. It must be enabled and configured on PowerAuth Server. If it's so, then your mobile application can use several methods related to this feature.
 
 ## Getting Recovery Data
 
-If the recovery data was received during the activation process, then you can later display that information to the user. To check existence of recovery data and get that information, use the following code:
+If the recovery data was received during the activation process, then you can later display that information to the user. To check the existence of recovery data and get that information, use the following code:
 
 ```javascript
 const hasRecovery = await PowerAuth.hasActivationRecoveryData();
@@ -59,7 +59,7 @@ The obtained information is very sensitive, so you should be very careful how yo
 - You should never send the values over the network.
 - You should never copy the values to the clipboard.
 - You should require PIN code every time to display the values on the screen.
-- You should warn user that taking screenshot of the values is not recommended.
+- You should warn users that taking screenshots of the values is not recommended.
 - Do not cache the values in RAM.
 
 You should inform the user that:

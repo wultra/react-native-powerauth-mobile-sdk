@@ -16,7 +16,7 @@ The tokens are simple, locally cached objects, producing timestamp-based authori
 - Once the parent `PowerAuth` instance loses its activation, all its tokens are removed from the local database.
 
 <!-- begin box info -->
-React Native PowerAuth SDK currently doesn't support multiple instance scenario and both `PowerAuth` and `PowerAuthTokenStore` acts as a singleton.
+React Native PowerAuth SDK currently doesn't support multiple instance scenarios and both `PowerAuth` and `PowerAuthTokenStore` act as a singleton.
 <!-- end -->
 
 ## Getting Token
@@ -36,7 +36,7 @@ try {
 }
 ```
 
-Token can be locally cached on the device. You can test this situation by calling `await PowerAuthTokenStore.hasLocalToken("MyToken")`.
+The token can be locally cached on the device. You can test this situation by calling `await PowerAuthTokenStore.hasLocalToken("MyToken")`.
 
 ## Generating Authorization Header
 

@@ -12,7 +12,7 @@ The main feature of the PowerAuth protocol is data signing. PowerAuth has three 
 To sign request data, you need to first obtain user credentials (password, PIN code, Touch ID scan) from the user. The task of obtaining the user credentials is used in more use-cases covered by the SDK. The core class is `PowerAuthAuthentication` that holds information about the used authentication factors:
 
 ```javascript
-// 2FA signature, uses device related key and user PIN code
+// 2FA signature, uses device-related key and user PIN code
 const auth = new PowerAuthAuthentication();
 auth.usePossession = true;
 auth.userPassword = "1234";
@@ -64,7 +64,7 @@ try {
 
 ### Request Synchronization
 
-It is recommended that your application executes only one signed request at the time. The reason for that is that our signature scheme is using a counter as a representation of logical time. In other words, the order of request validation on the server is very important. If you issue more that one signed request at the same time, then the order is not guaranteed and therefore one from the requests may fail.
+It is recommended that your application executes only one signed request at the time. The reason for that is that our signature scheme is using a counter as a representation of logical time. In other words, the order of request validation on the server is very important. If you issue more than one signed request at the same time, then the order is not guaranteed and therefore one from the requests may fail.
 
 ## Asymmetric Private Key Signature
 
@@ -73,7 +73,7 @@ Asymmetric Private Key Signature uses a private key stored in the PowerAuth secu
 This process is completely transparent on the SDK level. To compute an asymmetric private key signature, request user credentials (password, PIN) and use the following code:
 
 ```javascript
-// 2FA signature, uses device related key and user PIN code
+// 2FA signature, uses device-related key and user PIN code
 const auth = new PowerAuthAuthentication();
 auth.usePossession = true;
 auth.userPassword = "1234";

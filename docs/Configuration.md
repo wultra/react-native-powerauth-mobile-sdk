@@ -17,7 +17,7 @@ The `configure` method will need the following parameters:
 
 ### Configuration from JavaScript
 
-You can configure the PowerAuth singleton directly in the JavaScript. Simply import the module and use the following snippet.
+You can configure the PowerAuth singleton directly in JavaScript. Simply import the module and use the following snippet.
 
 ```javascript
 import PowerAuth from 'react-native-powerauth-mobile-sdk';
