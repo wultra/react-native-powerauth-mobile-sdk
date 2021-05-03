@@ -12,4 +12,3 @@
 - [Secure Vault](Secure-Vault.md)
 - [Recovery Codes](Recovery-Codes.md)
 - [Token Based Authentication](Token-Based-Authentication.md)
-<!-- - [Common SDK Tasks](Common-SDK-Tasks.md) -->

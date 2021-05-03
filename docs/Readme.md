@@ -35,7 +35,7 @@ This React Native library is a wrapper for the native Android and iOS [PowerAuth
 
 Demo application with the integration of the PowerAuth React Native SDK can be found inside the `demoapp` folder.
 
-Visit [App.tsx](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/demoapp/App.tsx) for example usage of every available API method.
+Visit [App.tsx](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/demoapp/App.tsx#docucheck-keep-link) for example usage of every available API method.
 
 ## License
 
