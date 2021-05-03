@@ -12,7 +12,6 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 - [Password Change](Password-Change.md)
 - [Biometry Setup](Biometry-Setup.md)
 - [Device Activation Removal](Device-Activation-Removal.md)
-<!-- - [End-To-End Encryption](End-To-End-Encryption.md) -->
 - [Secure Vault](Secure-Vault.md)
 - [Recovery Codes](Recovery-Codes.md)
 - [Token Based Authentication](Token-Based-Authentication.md)
