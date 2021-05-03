@@ -1,8 +1,10 @@
 # Configuration
 
+Before you call any `PowerAuth` method, you need to configure it first. Unconfigured instance will throw exceptions. Use `await PowerAuth.isConfigured()` to check if configured.
+
 ## 1. Parameters
 
-Before you call any `PowerAuth` method, you need to configure its singleton first. The `configure` method will need the following parameters:
+The `configure` method will need the following parameters:
 
 - **instanceId** - Identifier of the app - the aplication package name/identifier is recommended.  
 - **appKey** - APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
@@ -21,7 +23,7 @@ You can configure the PowerAuth singleton directly in the JavaScript. Simply imp
 import PowerAuth from 'react-native-powerauth-mobile-sdk';
 
 async setupPowerAuth() {
-// powerauth instance can be configured only once
+    // powerauth instance can be configured only once
     const isConfigured = await PowerAuth.isConfigured();
     if (isConfigured) {
         console.log("PowerAuth was already configured.");
@@ -38,7 +40,7 @@ async setupPowerAuth() {
 
 --
 
-### Configuration from native code
+### Configuration from Native Code
 
 In some cases (for example when you don't want to leave the configuration info in your `.js` files or when you need more advanced configuration) you might want to configure the PowerAuth directly from the platform native code.
 

@@ -1,6 +1,6 @@
 # Device Activation
 
-After you configure the SDK singleton, you are ready to make your first activation.
+After you configure the SDK, you are ready to make your first activation.
 
 ## Activation via Activation Code
 

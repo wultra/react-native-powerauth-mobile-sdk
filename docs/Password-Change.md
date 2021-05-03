@@ -2,6 +2,8 @@
 
 Since the device does not know the password and is unable to verify the password without the help of the server-side, you need to first call an endpoint that verifies a signature computed with the password. SDK offers two ways to do that.
 
+## Change With an Automatic Validation
+
 The safe but typically slower way is to use the following code:
 
 ```javascript
@@ -14,6 +16,8 @@ try {
 ```
 
 This method calls `/pa/v3/signature/validate` under the hood with a 2FA signature with provided original password to verify the password correctness.
+
+## Change With a Manual Validation
 
 However, using this method does not usually fit the typical UI workflow of a password change. The method may be used in cases where an old password and a new password are on a single screen, and therefore are both available at the same time. In most mobile apps, however, the user first visits a screen to enter an old password, and then (if the password is OK), the user proceeds to the two-screen flow of a new password setup (select password, confirm password). In other words, the workflow works like this:
 

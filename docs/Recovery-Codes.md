@@ -2,10 +2,14 @@
 
 The recovery codes allow your users to recover their activation in case that mobile device is lost or stolen. Before you start, please read the [Activation Recovery](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Recovery.md) document, available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 
+## Recovery Code Data
+
 To recover an activation, the user has to re-type two separate values:
 
 1. Recovery Code itself, which is very similar to an activation code. So you can detect typing errors before you submit such code to the server.
 1. PUK, which is an additional numeric value and acts as a one-time password in the scheme.
+
+## Recovery Code Scenarios
 
 PowerAuth currently supports two basic types of recovery codes:
 
@@ -21,7 +25,7 @@ PowerAuth currently supports two basic types of recovery codes:
 
 The feature is not automatically available. It must be enabled and configured on PowerAuth Server. If it's so, then your mobile application can use several methods related to this feature.
 
-### Getting Recovery Data
+## Getting Recovery Data
 
 If the recovery data was received during the activation process, then you can later display that information to the user. To check existence of recovery data and get that information, use the following code:
 
@@ -65,7 +69,7 @@ You should inform the user that:
 <!-- end -->
 
 
-### Confirm Recovery Postcard
+## Confirm Recovery Postcard
 
 The recovery postcard can contain the recovery code and multiple PUK values on one printed card. Due to security reasons, this kind of recovery code cannot be used for the recovery operation before the user confirms its physical delivery. To confirm such recovery code, use the following code:
 

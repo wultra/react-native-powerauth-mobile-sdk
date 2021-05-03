@@ -102,7 +102,7 @@ try {
 
 ## Biometry Factor-Related Key Lifetime
 
-By default, the biometry factor-related key is **NOT** invalidated after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation. To change this behavior, you have to initialize the SDK [in the native layer](Configuration.md#Configuration-from-native-code). 
+By default, the biometry factor-related key is **NOT** invalidated after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation. To change this behavior, you have to initialize the SDK [in the native layer](Configuration.md#configuration-from-native-code). 
 
 Be aware that the configuration below is effective only for the new keys. So, if your application is already using the biometry factor-related key with a different configuration, then the configuration change doesn't change the existing key. You have to [disable](#disable-biometry) and [enable](#enable-biometry) biometry to apply the change.
 

@@ -1,6 +1,6 @@
 **Integration Tutorials**
 
-- [Integration](SDK-Integration.md)
+- [Installation](Installation.md)
 - [Configuration](Configuration.md)
 - [Device Activation](Device-Activation.md)
 - [Requesting Device Activation Status](Requesting-Device-Activation-Status.md)
@@ -12,3 +12,7 @@
 - [Secure Vault](Secure-Vault.md)
 - [Recovery Codes](Recovery-Codes.md)
 - [Token Based Authentication](Token-Based-Authentication.md)
+
+**Additional Topics**
+
+- [Sample Integration](Sample-Integration.md)

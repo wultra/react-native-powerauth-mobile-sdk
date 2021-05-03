@@ -12,7 +12,7 @@ The library is available for the following __React Native (0.64.0+)__ platforms:
 <!-- begin remove -->
 ## Integration Tutorials
 
-- [Integration](SDK-Integration.md)
+- [Installation](Installation.md)
 - [Configuration](Configuration.md)
 - [Device Activation](Device-Activation.md)
 - [Requesting Device Activation Status](Requesting-Device-Activation-Status.md)
@@ -31,11 +31,13 @@ The library is available for the following __React Native (0.64.0+)__ platforms:
 
 This React Native library is a wrapper for the native Android and iOS [PowerAuth SDK library](https://github.com/wultra/powerauth-mobile-sdk), which is a dependency of this project.
 
+<!-- begin remove -->
 ## Demo application & example usage
 
 Demo application with the integration of the PowerAuth React Native SDK can be found inside the `demoapp` folder.
 
 Visit [App.tsx](https://github.com/wultra/react-native-powerauth-mobile-sdk/blob/develop/demoapp/App.tsx#docucheck-keep-link) for example usage of every available API method.
+<!-- end -->
 
 ## License
 
