@@ -2,7 +2,7 @@
 
 After you configure the SDK singleton, you are ready to make your first activation.
 
-### Activation via Activation Code
+## Activation via Activation Code
 
 The original activation method uses a one-time activation code generated in PowerAuth Server. To create an activation using this method, some external application (Internet banking, ATM application, branch / kiosk application) must generate an activation code for you and display it (as a text or in a QR code).
 
@@ -26,7 +26,7 @@ try {
 
 If the received activation result also contains recovery data, then you should display that values to the user. To do that, please read the [Recovery Code](Recovery-Codes.md) document, which describes how to treat that sensitive information. This is relevant for all types of activation you use.
 
-#### Additional Activation OTP
+### Additional Activation OTP
 
 If an [additional activation OTP](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Additional-Activation-OTP.md) is required to complete the activation, then use the following code to configure the `PowerAuthActivation` object:
 
@@ -45,7 +45,7 @@ activation.additionalActivationOtp = activationOtp;
 Be aware that OTP can be used only if the activation is configured for ON\_KEY\_EXCHANGE validation on the PowerAuth server. See our [crypto documentation for details](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Additional-Activation-OTP.md#regular-activation-with-otp).
 <!-- end -->
 
-### Activation via Custom Credentials
+## Activation via Custom Credentials
 
 You may also create an activation using any custom login data - it can be anything that the server can use to obtain the user ID to associate with a new activation. Since the credentials are custom, the server's implementation must be able to process such a request. The custom activation no longer requires a custom activation endpoint.
 
@@ -76,7 +76,7 @@ try {
 Note that by using weak identity attributes to create an activation, the resulting activation is confirming a "blurry identity". This may greatly limit the legal weight and usability of a signature. We recommend using a strong identity verification before activation can actually be created.
 
 
-### Activation via Recovery Code
+## Activation via Recovery Code
 
 If PowerAuth Server is configured to support [Recovery Codes](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Recovery.md), then also you can create an activation via the recovery code and PUK.
 
@@ -101,7 +101,7 @@ try {
 }
 ```
 
-### Customize Activation
+## Customize Activation
 
 You can set an additional properties to `PowerAuthActivation` object, before any type of activation is created. For example:
 
@@ -131,7 +131,7 @@ try {
     .
 ```  
 
-### Committing Activation Data
+## Committing Activation Data
 
 After you create an activation using one of the methods mentioned above, you need to commit the activation - to use provided user credentials to store the activation data on the device. 
 
@@ -149,7 +149,7 @@ try {
 ```
 
 
-### Validating User Inputs
+## Validating User Inputs
 
 The mobile SDK is providing a couple of functions in `PowerAuthOtpUtil` interface, helping with user input validation. You can:
 
@@ -158,7 +158,7 @@ The mobile SDK is providing a couple of functions in `PowerAuthOtpUtil` interfac
 - Validate recovery code or PUK
 - Auto-correct characters typed on the fly
 
-#### Validating Scanned QR Code
+### Validating Scanned QR Code
 
 To validate an activation code scanned from QR code, you can use `PowerAuthOtpUtil.parseActivationCode(code)` function. You have to provide the code with or without the signature part. For example:
 
@@ -190,7 +190,7 @@ try {
 }
 ```
 
-#### Validating Entered Activation Code
+### Validating Entered Activation Code
 
 To validate an activation code at once, you can call `PowerAuthOtpUtil.validateActivationCode()` function. You have to provide the code without the signature part. For example:
 
@@ -201,7 +201,7 @@ const isInvalid = await PowerAuthOtpUtil.validateActivationCode("VVVVV-VVVVV-VVV
 
 If your application is using your own validation, then you should switch to functions provided by SDK. All activation codes contain a checksum, so it's possible to detect mistyped characters before you start the activation. Check our [Activation Code](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Code.md) documentation for more details.
 
-#### Validating Recovery Code and PUK
+### Validating Recovery Code and PUK
 
 To validate a recovery code at once, you can call `PowerAuthOtpUtil.validateRecoveryCode()` function. You can provide the whole code, which may or may not contain `"R:"` prefix. So, you can validate manually entered codes, but also codes scanned from QR. For example:
 
@@ -216,7 +216,7 @@ To validate PUK at once, you can call `PowerAuthOtpUtil.validateRecoveryPuk()` f
 const isValid = await PowerAuthOtpUtil.validateRecoveryPuk("0123456789");
 ```
 
-#### Auto-Correcting Typed Characters
+### Auto-Correcting Typed Characters
 
 You can implement auto-correcting of typed characters with using `PowerAuthOtpUtil.correctTypedCharacter()` function in screens, where user is supposed to enter an activation or recovery code. This technique is possible due to the fact that Base32 is constructed so that it doesn't contain visually confusing characters. For example, `1` (number one) and `I` (capital I) are confusing, so only `I` is allowed. The benefit is that the provided function can correct typed `1` and translate it to `I`.
 

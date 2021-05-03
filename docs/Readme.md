@@ -9,6 +9,7 @@ The library is available for the following __React Native (0.64.0+)__ platforms:
 - __Android 5.0 (API 21)__ and newer
 - __iOS 11.0__ and newer
 
+<!-- begin remove -->
 ## Integration Tutorials
 
 - [Integration](SDK-Integration.md)
@@ -23,7 +24,8 @@ The library is available for the following __React Native (0.64.0+)__ platforms:
 - [Secure Vault](Secure-Vault.md)
 - [Recovery Codes](Recovery-Codes.md)
 - [Token Based Authentication](Token-Based-Authentication.md)
-- [Common SDK Tasks](Common-SDK-Tasks.md)
+<!-- - [Common SDK Tasks](Common-SDK-Tasks.md) -->
+<!-- end -->
 
 ## Native Library
 

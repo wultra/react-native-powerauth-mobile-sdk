@@ -2,7 +2,7 @@
 
 PowerAuth SDK provides an abstraction on top of the base biometry (on Android) and Touch and Face ID (on iOS) support. While the authentication / data signing itself is nicely and transparently embedded in the `PowerAuthAuthentication` object used in [regular request signing](Data-Signing.md), other biometry-related processes require their own API.
 
-### Check Biometry Status
+## Check Biometry Status
 
 You have to check for biometry on three levels:
 
@@ -40,7 +40,7 @@ const hasBiometryFactor = await PowerAuth.hasBiometryFactor();
 
 The last check (Application Availability) is fully under your control. By keeping the biometry settings flag, for example, a `boolean` in `NSUserDefaults`/`SharedPreferences`, you are able to show expected user biometry status (in a disabled state, though) even in the case biometry is not enabled or when no finger or face is enrolled on the device.
 
-### Enable Biometry
+## Enable Biometry
 
 In case an activation does not yet have biometry-related factor data, and you would like to enable it, the device must first retrieve the original private key from the secure vault for the purpose of key derivation. As a result, you have to use a successful 2FA with a password to enable biometry support.
 
@@ -57,7 +57,7 @@ try {
 }
 ```
 
-### Disable Biometry
+## Disable Biometry
 
 You can remove biometry related factor data by simply removing the related key locally, using this one-liner:
 
@@ -66,7 +66,7 @@ You can remove biometry related factor data by simply removing the related key l
 const result =  await PowerAuth.removeBiometryFactor();
 ```
 
-### Fetch Biometry Credentials In Advance
+## Fetch Biometry Credentials In Advance
 
 You can acquire biometry credentials in advance in case that business processes require computing two or more different PowerAuth biometry signatures in one interaction with the user. To achieve this, the application must acquire the custom-created `PowerAuthAuthentication` object first and then use it for the required signature calculations. It's recommended to keep this instance referenced only for a limited time, required for all future signature calculations.
 
@@ -100,13 +100,13 @@ try {
 }
 ```
 
-### Biometry Factor-Related Key Lifetime
+## Biometry Factor-Related Key Lifetime
 
-By default, the biometry factor-related key is **NOT** invalidated after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation. To change this behavior, you have to initialize the SDK [in the native layer](Configuration.md#Configuration#from#native#code). 
+By default, the biometry factor-related key is **NOT** invalidated after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation. To change this behavior, you have to initialize the SDK [in the native layer](Configuration.md#Configuration-from-native-code). 
 
 Be aware that the configuration below is effective only for the new keys. So, if your application is already using the biometry factor-related key with a different configuration, then the configuration change doesn't change the existing key. You have to [disable](#disable-biometry) and [enable](#enable-biometry) biometry to apply the change.
 
-#### iOS
+### iOS
 
 On iOS, you have to provide `PA2KeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `YES` and use that configuration for the `PowerAuth` object configuration:
 
@@ -126,7 +126,7 @@ keychainConfiguration.linkBiometricItemsToCurrentSet = YES;
 [pa configureWithConfig:config keychainConfig:keychainConfiguration clientConfig:nil];
 ```
 
-#### Android
+### Android
 
 On Android, you have to provide `PowerAuthKeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `true` and use that configuration for the `PowerAuthRNPackage` object configuration:
 

@@ -2,7 +2,7 @@
 
 You can remove activation using several ways - the choice depends on the desired behavior.
 
-### Simple Device-Only Removal
+## Simple Device-Only Removal
 
 You can clear activation data anytime from the Keychain. The benefit of this method is that it does not require help from the server, and the user does not have to be logged in. The issue with this removal method is simple: The activation still remains active on the server-side. This, however, does not have to be an issue in your case.
 
@@ -12,7 +12,7 @@ To remove only data related to PowerAuth, use:
 PowerAuth.removeActivationLocal();
 ```
 
-### Removal via Authenticated Session
+## Removal via Authenticated Session
 
 Suppose your server uses an authenticated session for keeping the users logged in. In that case, you can combine the previous method with calling your proprietary endpoint to remove activation for the currently logged-in user. The advantage of this method is that activation does not remain active on the server. The issue is that the user has to be logged in (the session must be active and must have activation ID stored) and that you have to publish your own method to handle this use case.
 
@@ -32,7 +32,7 @@ httpClient.post(null, "/custom/activation/remove", function(error) {
 
 ```
 
-### Removal via Signed Request
+## Removal via Signed Request
 
 PowerAuth Standard RESTful API has a default endpoint `/pa/v3/activation/remove` for an activation removal. This endpoint uses a signature verification for looking up the activation to be removed. The benefit of this method is that it is already present in both PowerAuth React Native SDK and PowerAuth Standard RESTful API - nothing has to be programmed. Also, the user does not have to be logged in to use it. However, the user has to authenticate using 2FA with either password or biometry.
 

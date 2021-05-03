@@ -22,6 +22,10 @@ pod install
 import PowerAuth from 'react-native-powerauth-mobile-sdk';
 ```
 
+<!-- begin box info -->
+React Native PowerAuth SDK currently doesn't support multiple instance scenario `PowerAuth` acts as a singleton.
+<!-- end -->
+
 ## Read Next
 
 - [Configuration](./Configuration.md)

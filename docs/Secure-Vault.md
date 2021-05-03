@@ -8,7 +8,7 @@ On a server-side, all secure vault-related work is concentrated in a `/pa/v3/vau
 Secure vault mechanism does not support biometry by default. Use PIN code or password based authentication for unlocking the secure vault, or ask your server developers to enable biometry for vault unlock call by configuring PowerAuth Server instance.
 <!-- end -->
 
-### Obtaining Encryption Key
+## Obtaining Encryption Key
 
 In order to obtain an encryption key with a given index, use the following code:
 
