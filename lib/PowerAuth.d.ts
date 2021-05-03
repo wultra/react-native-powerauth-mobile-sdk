@@ -207,9 +207,16 @@ declare class PowerAuth {
      *
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
+     *
+     * @returns Result of the confirmation
      */
-    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<ConfirmRecoveryCodeData>;
     private wrapNativeCall;
+}
+/** Result of the confirmRecoveryCode call. */
+interface ConfirmRecoveryCodeData {
+    /** indicates that the code was already confirmed in the past */
+    alreadyConfirmed: boolean;
 }
 declare const _default: PowerAuth;
 export default _default;

@@ -313,9 +313,11 @@ class PowerAuth {
      * 
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
+     * 
+     * @returns Result of the confirmation
      */
-    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await authentication.process()));
+    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<ConfirmRecoveryCodeData> {
+        return { alreadyConfirmed: await this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await authentication.process()))};
     }
 
     private async wrapNativeCall(nativePromise: Promise<any>) {
@@ -325,6 +327,12 @@ class PowerAuth {
             throw new PowerAuthError(e);
         }
     }
+}
+
+/** Result of the confirmRecoveryCode call. */
+interface ConfirmRecoveryCodeData {
+    /** indicates that the code was already confirmed in the past */
+    alreadyConfirmed: boolean;
 }
 
 export default new PowerAuth();

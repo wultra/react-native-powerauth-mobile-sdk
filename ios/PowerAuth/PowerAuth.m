@@ -488,7 +488,7 @@ RCT_EXPORT_METHOD(confirmRecoveryCode:(NSString*)recoveryCode
         if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
-            resolve(@YES);
+            resolve(alreadyConfirmed ? @YES : @NO);
         }
     }];
 }
