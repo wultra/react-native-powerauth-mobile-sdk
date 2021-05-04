@@ -6,11 +6,15 @@ import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthConfirmRecoveryCodeDataResult } from './model/PowerAuthConfirmRecoveryCodeDataResult';
+import { PowerAuthTokenStore } from "./core/PowerAuthTokenStore";
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
 export declare class PowerAuth {
-    private instanceId;
+    /**
+     * Object for managing access tokens.
+     */
+    tokenStore: PowerAuthTokenStore;
     /**
      * Prepares the PowerAuth instance.
      *
@@ -238,5 +242,5 @@ export declare class PowerAuth {
      * @param groupedAuthenticationCalls call that will use reusable authentication object
      */
     groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void>;
-    private native;
+    private wrapper;
 }

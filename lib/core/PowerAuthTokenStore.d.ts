@@ -1,30 +1,37 @@
-import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
-import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
+import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication';
+import { PowerAuthAuthorizationHttpHeader } from '../model/PowerAuthAuthorizationHttpHeader';
+/**
+ * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as
+ * underlying storage for received data. Note that the whole store's interface is thread safe, but it's
+ * not recommended to query for the same token in overlapping asynchronous requests. This usage may lead
+ * to leaking tokens on the PowerAuth server.
+ */
 export declare class PowerAuthTokenStore {
+    constructor(instanceId: string);
     /**
      * Quick check whether the token with name is in local database.
      *
      * @param tokenName Name of access token to be checked.
      * @return true if token exists in local database.
      */
-    static hasLocalToken(tokenName: string): Promise<boolean>;
+    hasLocalToken(tokenName: string): Promise<boolean>;
     /**
      * Returns token if the token is already in local database
      *
      * @param tokenName Name of access token to be returned
      * @return token object if in the local database (or throws)
      */
-    static getLocalToken(tokenName: string): Promise<PowerAuthToken>;
+    getLocalToken(tokenName: string): Promise<PowerAuthToken>;
     /**
      * Remove token from local database. This method doesn't issue a HTTP request to the server.
      *
      * @param tokenName token to be removed
      */
-    static removeLocalToken(tokenName: string): Promise<void>;
+    removeLocalToken(tokenName: string): Promise<void>;
     /**
      * Remove all tokens from local database. This method doesn't issue a HTTP request to the server.
      */
-    static removeAllLocalTokens(): Promise<void>;
+    removeAllLocalTokens(): Promise<void>;
     /**
      * Create a new access token with given name for requested signature factors.
      *
@@ -36,7 +43,7 @@ export declare class PowerAuthTokenStore {
      * @param authentication An authentication instance specifying what factors should be used for token creation.
      * @return PowerAuth token with already generated header
      */
-    static requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken>;
+    requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken>;
     /**
      * Remove previously created access token from the server and from local database.
      *
@@ -46,14 +53,15 @@ export declare class PowerAuthTokenStore {
      *
      * @param tokenName Name of token to be removed
      */
-    static removeAccessToken(tokenName: string): Promise<void>;
+    removeAccessToken(tokenName: string): Promise<void>;
     /**
      * Generates a http header for the token in local storage.
      *
      * @param tokenName Name of token in the local storage that will be used for generating
      * @returns header or throws
      */
-    static generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader>;
+    generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader>;
+    private wrapper;
 }
 export interface PowerAuthToken {
     /**

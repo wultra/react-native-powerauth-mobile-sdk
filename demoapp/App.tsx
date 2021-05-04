@@ -3,7 +3,6 @@ import { StyleSheet, View, Button, Text, ScrollView } from 'react-native';
 import Prompt from 'rn-prompt';
 import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
 import {PowerAuthOtpUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
-import {PowerAuthTokenStore} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthTokenStore';
 import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
 import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
 import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
@@ -166,7 +165,8 @@ export default class App extends Component<any, State> {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             auth.useBiometry = true;
-            auth.biometryMessage = "tadaaa";
+            auth.biometryMessage = "Do you want to remove activation?";
+            auth.biometryTitle = "Remove activation"
             try {
               await this.powerAuth.removeActivationWithAuthentication(auth);
               alert(`Removed`);
@@ -267,8 +267,8 @@ export default class App extends Component<any, State> {
             const auth = new PowerAuthAuthentication();
             auth.usePossession = true;
             try {
-              const t = await PowerAuthTokenStore.requestAccessToken(this.tokenName, auth);
-              const h = await PowerAuthTokenStore.generateHeaderForToken(this.tokenName);
+              const t = await this.powerAuth.tokenStore.requestAccessToken(this.tokenName, auth);
+              const h = await this.powerAuth.tokenStore.generateHeaderForToken(this.tokenName);
               alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`requestAccessToken failed: ${e.code}`);
@@ -277,7 +277,7 @@ export default class App extends Component<any, State> {
            }} />
            <Button title="Remove token from server" onPress={ async _ => {
             try {
-              await PowerAuthTokenStore.removeAccessToken(this.tokenName);
+              await this.powerAuth.tokenStore.removeAccessToken(this.tokenName);
               alert(`Removed`);
             } catch (e) {
               alert(`removeAccessToken failed: ${e.code}`);
@@ -286,7 +286,7 @@ export default class App extends Component<any, State> {
            }} />
            <Button title="Has local token" onPress={ async _ => {
             try {
-              const r = await PowerAuthTokenStore.hasLocalToken(this.tokenName);
+              const r = await this.powerAuth.tokenStore.hasLocalToken(this.tokenName);
               alert(`Has token: ${r}`);
             } catch (e) {
               alert(`hasLocalToken failed: ${e.code}`);
@@ -295,8 +295,8 @@ export default class App extends Component<any, State> {
            }} />
            <Button title="Get local token" onPress={ async _ => {
             try {
-              const t = await PowerAuthTokenStore.getLocalToken(this.tokenName);
-              const h = await PowerAuthTokenStore.generateHeaderForToken(this.tokenName);
+              const t = await this.powerAuth.tokenStore.getLocalToken(this.tokenName);
+              const h = await this.powerAuth.tokenStore.generateHeaderForToken(this.tokenName);
               alert(`isValid: ${t.isValid}\ntokenName:${t.tokenName}\nidentifier:${t.tokenIdentifier}\ncanGenerateHeader:${t.canGenerateHeader}\nhttpHeader:${h?.key}:${h?.value}`);
             } catch (e) {
               alert(`hasLocalToken failed: ${e.code}`);
@@ -305,7 +305,7 @@ export default class App extends Component<any, State> {
            }} />
            <Button title="Remove local token" onPress={ async _ => {
             try {
-              await PowerAuthTokenStore.removeLocalToken(this.tokenName);
+              await this.powerAuth.tokenStore.removeLocalToken(this.tokenName);
               alert(`Removed`);
             } catch (e) {
               alert(`removeLocalToken failed: ${e.code}`);
@@ -314,7 +314,7 @@ export default class App extends Component<any, State> {
            }} />
           <Button title="Remove all local tokens" onPress={ async _ => {
             try {
-              await PowerAuthTokenStore.removeAllLocalTokens();
+              await this.powerAuth.tokenStore.removeAllLocalTokens();
               alert(`Removed`);
             } catch (e) {
               alert(`removeAllLocalTokens failed: ${e.code}`);
@@ -403,7 +403,7 @@ export default class App extends Component<any, State> {
             await sleep(100);
             try {
               let otp = await PowerAuthOtpUtil.parseActivationCode(code);
-              alert(`OTP\nCODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+              alert(`CODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
             } catch(e) {
               alert(`Not valid: ${e.code}`);
               console.log(e.code);
@@ -413,7 +413,7 @@ export default class App extends Component<any, State> {
             await sleep(100);
             try {
               let otp = await PowerAuthOtpUtil.parseRecoveryCode(code);
-              alert(`OTP\nCODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+              alert(`CODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
             } catch(e) {
               alert(`Not valid: ${e.code}`);
               console.log(e.code);

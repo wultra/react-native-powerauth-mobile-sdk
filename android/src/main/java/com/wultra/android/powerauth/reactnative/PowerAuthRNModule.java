@@ -590,61 +590,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void parseActivationCode(String instanceId, String activationCode, Promise promise) {
-        Otp otp = OtpUtil.parseFromActivationCode(activationCode);
-        if (otp != null) {
-            WritableMap response = Arguments.createMap();
-            response.putString("activationCode", otp.activationCode);
-            response.putString("activationSignature", otp.activationSignature);
-            promise.resolve(response);
-        } else {
-            promise.reject("PA2RNInvalidActivationCode", "Invalid activation code.");
-        }
-    }
-
-    @ReactMethod
-    public void validateActivationCode(String instanceId, String activationCode, Promise promise) {
-        promise.resolve(OtpUtil.validateActivationCode(activationCode));
-    }
-
-    @ReactMethod
-    public void parseRecoveryCode(String instanceId, String recoveryCode, Promise promise) {
-        Otp otp = OtpUtil.parseFromRecoveryCode(recoveryCode);
-        if (otp != null) {
-            WritableMap response = Arguments.createMap();
-            response.putString("activationCode", otp.activationCode);
-            response.putString("activationSignature", otp.activationSignature);
-            promise.resolve(response);
-        } else {
-            promise.reject("PA2RNInvalidRecoveryCode", "Invalid recovery code.");
-        }
-    }
-
-    @ReactMethod
-    public void validateRecoveryCode(String instanceId, String recoveryCode, Promise promise) {
-        promise.resolve(OtpUtil.validateRecoveryCode(recoveryCode));
-    }
-
-    @ReactMethod
-    public void validateRecoveryPuk(String instanceId, String puk, Promise promise) {
-        promise.resolve(OtpUtil.validateRecoveryPuk(puk));
-    }
-
-    @ReactMethod
-    public void validateTypedCharacter(String instanceId, int character, Promise promise) {
-        promise.resolve(OtpUtil.validateTypedCharacter(character));
-    }
-
-    @ReactMethod
-    public void correctTypedCharacter(String instanceId, int character, Promise promise) {
-        int corrected = OtpUtil.validateAndCorrectTypedCharacter(character);
-        if (corrected == 0) {
-            promise.reject("PA2RNInvalidCharacter", "Invalid character cannot be corrected.");
-        } else {
-            promise.resolve(corrected);
-        }
-    }
+    /** TOKEN BASED AUTHENTICATION  */
 
     @ReactMethod
     public void requestAccessToken(String instanceId, String tokenName, ReadableMap authMap, final Promise promise) {
@@ -725,6 +671,66 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             promise.reject("PA2RNCannotGenerateHeader", "Cannot generate header for this token.");
         }
     }
+
+    /** OTP UTIL METHODS */
+
+    @ReactMethod
+    public void parseActivationCode(String activationCode, Promise promise) {
+        Otp otp = OtpUtil.parseFromActivationCode(activationCode);
+        if (otp != null) {
+            WritableMap response = Arguments.createMap();
+            response.putString("activationCode", otp.activationCode);
+            response.putString("activationSignature", otp.activationSignature);
+            promise.resolve(response);
+        } else {
+            promise.reject("PA2RNInvalidActivationCode", "Invalid activation code.");
+        }
+    }
+
+    @ReactMethod
+    public void validateActivationCode(String activationCode, Promise promise) {
+        promise.resolve(OtpUtil.validateActivationCode(activationCode));
+    }
+
+    @ReactMethod
+    public void parseRecoveryCode(String recoveryCode, Promise promise) {
+        Otp otp = OtpUtil.parseFromRecoveryCode(recoveryCode);
+        if (otp != null) {
+            WritableMap response = Arguments.createMap();
+            response.putString("activationCode", otp.activationCode);
+            response.putString("activationSignature", otp.activationSignature);
+            promise.resolve(response);
+        } else {
+            promise.reject("PA2RNInvalidRecoveryCode", "Invalid recovery code.");
+        }
+    }
+
+    @ReactMethod
+    public void validateRecoveryCode(String recoveryCode, Promise promise) {
+        promise.resolve(OtpUtil.validateRecoveryCode(recoveryCode));
+    }
+
+    @ReactMethod
+    public void validateRecoveryPuk(String puk, Promise promise) {
+        promise.resolve(OtpUtil.validateRecoveryPuk(puk));
+    }
+
+    @ReactMethod
+    public void validateTypedCharacter(int character, Promise promise) {
+        promise.resolve(OtpUtil.validateTypedCharacter(character));
+    }
+
+    @ReactMethod
+    public void correctTypedCharacter(int character, Promise promise) {
+        int corrected = OtpUtil.validateAndCorrectTypedCharacter(character);
+        if (corrected == 0) {
+            promise.reject("PA2RNInvalidCharacter", "Invalid character cannot be corrected.");
+        } else {
+            promise.resolve(corrected);
+        }
+    }
+
+    /** HELPER METHODS */
 
     private PowerAuthSDK powerAuth(@Nonnull String instanceId) {
         if (!this.instances.containsKey(instanceId)) {
