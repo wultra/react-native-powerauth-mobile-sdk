@@ -15,7 +15,7 @@ PowerAuth SDK provides code for the first two of these checks.
 To check if you can use biometry on the system, use the following code:
 
 ```javascript
-const biometryStatus = await PowerAuth.getBiometryInfo();
+const biometryStatus = await powerAuth.getBiometryInfo();
 
 // Is biometric authentication is supported on the system?
 // Note that the property contains "false" on iOS if biometry is not enrolled or if it has been locked down. 
@@ -35,7 +35,7 @@ To check if a given activation has biometry factor-related data available, use t
 
 ```javascript
 // Does activation have biometric factor-related data in place?
-const hasBiometryFactor = await PowerAuth.hasBiometryFactor();
+const hasBiometryFactor = await powerAuth.hasBiometryFactor();
 ```
 
 The last check (Application Availability) is fully under your control. By keeping the biometry settings flag, for example, a `boolean` in `NSUserDefaults`/`SharedPreferences`, you are able to show expected user biometry status (in a disabled state, though) even in the case biometry is not enabled or when no finger or face is enrolled on the device.
@@ -50,7 +50,7 @@ Use the following code to enable biometric authentication:
 const password = "1234";
 try {
     // Establish biometric data using provided password
-    await PowerAuth.addBiometryFactor(password, "Add biometry", "Allow biometry factor");
+    await powerAuth.addBiometryFactor(password, "Add biometry", "Allow biometry factor");
     // success
 } catch (e) {
     //failed
@@ -63,7 +63,7 @@ You can remove biometry related factor data by simply removing the related key l
 
 ```javascript
 // Remove biometric data
-const result =  await PowerAuth.removeBiometryFactor();
+const result =  await powerAuth.removeBiometryFactor();
 ```
 
 ## Fetch Biometry Credentials In Advance
@@ -84,11 +84,11 @@ auth.biometryTitle = "Grouped authentication";
 auth.biometryMessage = "One biometric authentication will be used for 2 operations.";
     
 try {
-    await PowerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
+    await powerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
         try {
-            const r1 = await PowerAuth.requestSignature(reusableAuth, "POST", "/operation/test", "{jsonbody: \"test1\"}");
+            const r1 = await powerAuth.requestSignature(reusableAuth, "POST", "/operation/test", "{jsonbody: \"test1\"}");
             console.log(`r1 success`);
-            const r2 = await PowerAuth.requestSignature(reusableAuth, "POST", "/operation/test2", "{jsonbody: \"test2\"}");
+            const r2 = await powerAuth.requestSignature(reusableAuth, "POST", "/operation/test2", "{jsonbody: \"test2\"}");
             console.log(`r2 success`);
             // success
         } catch (e) {
@@ -134,13 +134,14 @@ On Android, you have to provide `PowerAuthKeychainConfiguration` object with `li
 for (ReactPackage pkg : this.getReactNativeHost().getReactInstanceManager().getPackages()) {
     if (pkg instanceof PowerAuthRNPackage) {
         try {
+            String instanceId = "your-app-activation";
             PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
-              new PowerAuthConfiguration.Builder("your-app-activation", "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
+              new PowerAuthConfiguration.Builder(instanceId, "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
             );
             PowerAuthKeychainConfiguration.Builder keychainConfiguration = new PowerAuthKeychainConfiguration.Builder();
             keychainConfiguration.linkBiometricItemsToCurrentSet(true);
             builder.keychainConfiguration(keychainConfiguration.build());
-            ((PowerAuthRNPackage) pkg).configure(builder);
+            ((PowerAuthRNPackage) pkg).configure(instanceId, builder);
         } catch (Exception e) {
             // error
         }

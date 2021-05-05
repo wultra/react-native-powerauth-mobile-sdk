@@ -9,7 +9,7 @@ You can clear activation data anytime from the Keychain. The benefit of this met
 To remove only data related to PowerAuth, use:
 
 ```javascript
-PowerAuth.removeActivationLocal();
+powerAuth.removeActivationLocal();
 ```
 
 ## Removal via Authenticated Session
@@ -24,7 +24,7 @@ The code for this activation removal method is as follows:
 // associated activation ID
 httpClient.post(null, "/custom/activation/remove", function(error) {
     if (error == null) {
-        PowerAuth.removeActivationLocal();
+        powerAuth.removeActivationLocal();
     } else {
         // Report error
     }
@@ -46,7 +46,7 @@ auth.userPassword ="1234";
 auth.useBiometry = false;
 
 try {
-    await PowerAuth.removeActivationWithAuthentication(auth);
+    await powerAuth.removeActivationWithAuthentication(auth);
     // activation removed
 } catch (e) {
     // failed to remove

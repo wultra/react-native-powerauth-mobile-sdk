@@ -23,7 +23,7 @@ const index = 1000;
 
 try {
     // Fetch encryption key with given index
-    const r = await PowerAuth.fetchEncryptionKey(auth, index);
+    const r = await powerAuth.fetchEncryptionKey(auth, index);
     // ... use encryption key to encrypt or decrypt data
 } catch (e) {
     // Report error

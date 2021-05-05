@@ -30,7 +30,7 @@ auth.useBiometry = false;
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
 try {
-    const signature = await PowerAuth.requestSignature(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
+    const signature = await powerAuth.requestSignature(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
     const httpHeaderKey = signature.key;
     const httpHeaderValue = signature.value;
 } catch(e) {
@@ -54,7 +54,7 @@ const params = {
 };
 
 try {
-    const signature = await PowerAuth.requestGetSignature(auth, "/payment/create", params);
+    const signature = await powerAuth.requestGetSignature(auth, "/payment/create", params);
     const httpHeaderKey = signature.key;
     const httpHeaderValue = signature.value;
 } catch(e) {
@@ -81,7 +81,7 @@ auth.useBiometry = false;
 
 // Unlock the secure vault, fetch the private key and perform data signing
 try {
-    const signature = await PowerAuth.signDataWithDevicePrivateKey(auth, data);
+    const signature = await powerAuth.signDataWithDevicePrivateKey(auth, data);
     // Send data and signature to the server
 } catch(e) {
     // Authentication or network error
@@ -100,7 +100,7 @@ auth.userPassword = "1234";
 auth.useBiometry = false;
 
 try {
-    const signature = await PowerAuth.offlineSignature(auth, "/confirm/offline/operation", data, nonce);
+    const signature = await powerAuth.offlineSignature(auth, "/confirm/offline/operation", data, nonce);
     console.log("Signature is " + signature)
 } catch (e) {
     // In case of invalid configuration, invalid activation state or other error
@@ -116,7 +116,7 @@ This task is useful whenever you need to receive arbitrary data from the server 
 ```javascript
 // Validate data signed with the master server key
 try {
-    const isVerified = await PowerAuth.verifyServerSignedData(data, signature, true);
+    const isVerified = await powerAuth.verifyServerSignedData(data, signature, true);
     console.log(`Verified: ${isVerified}`);
 } catch (e) {
     // API error
@@ -124,7 +124,7 @@ try {
 
 // Validate data signed with the personalized server key
 try {
-    const isVerified = await PowerAuth.verifyServerSignedData(data, signature, false);
+    const isVerified = await powerAuth.verifyServerSignedData(data, signature, false);
     console.log(`Verified: ${isVerified}`);
 } catch (e) {
     // API error

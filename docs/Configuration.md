@@ -1,10 +1,10 @@
 # Configuration
 
-Before you call any `PowerAuth` method, you need to configure it first. Unconfigured instance will throw exceptions. Use `await PowerAuth.isConfigured()` to check if configured.
+Before you call any method on the newly created `const powerAuth = new PowerAuth(instanceId)` object, you need to configure it first. Unconfigured instance will throw exceptions. Use `await powerAuth.isConfigured()` to check if configured.
 
 ## 1. Parameters
 
-The `configure` method will need the following parameters:
+You will need the following parameters to prepare and configure a PowerAuth instance:
 
 - **instanceId** - Identifier of the app - the aplication package name/identifier is recommended.  
 - **appKey** - APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
@@ -17,22 +17,29 @@ The `configure` method will need the following parameters:
 
 ### Configuration from JavaScript
 
-You can configure the PowerAuth singleton directly in JavaScript. Simply import the module and use the following snippet.
+You can configure the PowerAuth instance directly in JavaScript. Simply import it from the module and use the following snippet.
 
 ```javascript
-import PowerAuth from 'react-native-powerauth-mobile-sdk';
+import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
+import { Component } from 'react';
 
-async setupPowerAuth() {
-    // powerauth instance can be configured only once
-    const isConfigured = await PowerAuth.isConfigured();
-    if (isConfigured) {
-        console.log("PowerAuth was already configured.");
-    } else {
-        try {
-            await PowerAuth.configure("your-app-activation", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
-            console.log("PowerAuth configuration successfull.");
-        } catch(e) {
-            console.log(`PowerAuth failed to configure: ${e.code}`);
+export default class AppMyApplication extends Component {
+
+    private powerAuth = new PowerAuth("your-app-instance-id");
+    
+    async setupPowerAuth() {
+        // already configured instance will throw an
+        // exception when you'll try to configure it again
+        const isConfigured = this.powerAuth.isConfigured();
+        if (isConfigured) {
+            console.log("PowerAuth was already configured.");
+        } else {
+            try {
+                await this.powerAuth.configure("APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+                console.log("PowerAuth configuration successfull.");
+            } catch(e) {
+                console.log(`PowerAuth failed to configure: ${e.code}`);
+            }
         }
     }
 }
@@ -70,10 +77,11 @@ public class MainApplication extends Application implements ReactApplication {
     for (ReactPackage pkg : this.getReactNativeHost().getReactInstanceManager().getPackages()) {
       if (pkg instanceof PowerAuthRNPackage) {
         try {
+          String instanceId = "your-app-activation";
           PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
-                 new PowerAuthConfiguration.Builder("your-app-activation", "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
+                 new PowerAuthConfiguration.Builder(instanceId, "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
          );
-         ((PowerAuthRNPackage) pkg).configure(builder);
+         ((PowerAuthRNPackage) pkg).configure(instanceId, builder);
         } catch (Exception e) {
           e.printStackTrace();
         }
