@@ -126,9 +126,10 @@ activation.customAttributes = customAttributes;
 // Create a new activation as usual
 try {
     let result = await PowerAuth.createActivation(activation);
-    .
-    .
-    .
+    // continue with the flow
+} catch (e) {
+    // process eror
+}
 ```  
 
 ## Committing Activation Data
