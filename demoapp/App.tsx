@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Button, Text, ScrollView, Picker } from 'react-native';
+import { StyleSheet, View, Button, Text, ScrollView, Picker, Platform } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Prompt from 'rn-prompt';
 import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
@@ -107,12 +107,14 @@ export default class App extends Component<any, State> {
 
   render() {
     return (
-      <View>
+      <View style={{zIndex: 1000}}>
         <View style={styles.container}>
           <Text style={styles.titleText}>Activation Selector</Text>
 
           {/* !!! current DropDownPicker contains definition errors, but the app will run OK */}
           <DropDownPicker
+            dropDownDirection={"BOTTOM"}
+            listMode={Platform.OS == "android" ? "MODAL" : "FLATLIST"} // hack for android, the componennt is stupid
             searchable={false}
             showTickIcon={false}
             open={this.state.isActivationDropdownOpen}
@@ -138,7 +140,7 @@ export default class App extends Component<any, State> {
             }}
           />
         </View>
-        <ScrollView>
+        <ScrollView style={{zIndex: 900}}>
           <View style={styles.scrollContainer}>
             <Text style={styles.titleText}>Activation status</Text>
             <Text style={styles.actLabel}>Has valid activation</Text>
@@ -552,6 +554,7 @@ const styles = StyleSheet.create({
     zIndex: 1000
   },
   scrollContainer: {
+    zIndex: 900,
     marginTop: 10,
     marginBottom: 160,
     backgroundColor: '#fff',
