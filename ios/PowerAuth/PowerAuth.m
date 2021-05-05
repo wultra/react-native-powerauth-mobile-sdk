@@ -736,7 +736,7 @@ RCT_REMAP_METHOD(removeAccessToken,
         } else if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
-            reject(@"PA2RNFail", @"Unknown error", nil);
+            reject(@"PA2ReactNativeError", @"Unknown error", nil);
         }
     }];
     PA_BLOCK_END

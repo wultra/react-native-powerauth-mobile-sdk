@@ -49,8 +49,7 @@ export class PowerAuthError {
 
 export enum PowerAuthErrorCode {
 
-    /** When the error is not originating from the native module */
-    PA2ReactNativeError = "PA2ReactNativeError",
+    // ---- PowerAuth native errors ----
 
     /** Code returned, or reported, when operation succeeds. */
     PA2Succeed = "PA2Succeed",
@@ -115,5 +114,45 @@ export enum PowerAuthErrorCode {
     PA2ErrorCodeBiometryNotRecognized = "PA2ErrorCodeBiometryNotRecognized",
 
     /** Error code for a general error related to WatchConnectivity (iOS only) */
-    PA2ErrorCodeWatchConnectivity = "PA2ErrorCodeWatchConnectivity"
+    PA2ErrorCodeWatchConnectivity = "PA2ErrorCodeWatchConnectivity",
+
+
+
+    // ---- React Native layer errors ----
+
+    /** When the error is not originating from the native module */
+    PA2ReactNativeError = "PA2ReactNativeError",
+
+    /** Instance of the PowerAuth object is not configured */
+    PA2RNInstanceNotConfigured = "PA2RNInstanceNotConfigured",
+
+    /** Error in `correctTypedCharacter` */
+    PA2RNInvalidCharacter = "PA2RNInvalidCharacter",
+
+    /** Used invalid recovery code in parseRecoveryCode */
+    PA2RNInvalidRecoveryCode = "PA2RNInvalidRecoveryCode",
+
+    /** Used invalid recovery code in parseActivationCode */
+    PA2RNInvalidActivationCode = "PA2RNInvalidActivationCode",
+
+    /** Error when generating a token */
+    PA2RNTokenNotAvailable = "PA2RNTokenNotAvailable",
+
+    /** Error when generating a token */
+    PA2RNCannotGenerateHeader = "PA2RNTokenNotAvailable",
+
+    /** Error when requesting local token */
+    PA2RNLocalTokenNotAvailable = "PA2RNLocalTokenNotAvailable",
+
+    /** Biometric authentication failed */
+    PA2RNBiometryFailed = "PA2RNBiometryFailed",
+
+    /** When users cancel biometry dialog  */
+    PA2RNBiometryCanceled = "PA2RNBiometryCanceled",
+
+    /** When password is not set during activatio ncommit */
+    PA2RNPasswordNotSet = "PA2RNPasswordNotSet",
+
+    /** Error when invalid activatio object is provided during activation */
+    PA2RNInvalidActivationObject = "PA2RNInvalidActivationObject",
 }

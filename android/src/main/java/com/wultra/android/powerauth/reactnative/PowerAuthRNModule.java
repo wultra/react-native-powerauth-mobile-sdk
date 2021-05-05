@@ -239,7 +239,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     public void commitActivation(String instanceId, ReadableMap authMap, final Promise promise) {
         PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
         if (auth.usePassword == null) {
-            promise.reject("PA2ReactNativeErrorPasswordNotSet", "Password is not set.");
+            promise.reject("PA2RNPasswordNotSet", "Password is not set.");
             return;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("useBiometry")) {
@@ -255,7 +255,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onBiometricDialogCancelled() {
-                    promise.reject("PA2ReactNativeError_BiometryCanceled", "Biometry dialog was canceled");
+                    promise.reject("PA2RNBiometryCanceled", "Biometry dialog was canceled");
                 }
 
                 @Override
@@ -265,7 +265,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                    promise.reject("PA2ReactNativeError_BiometryFailed", "Biometry dialog failed");
+                    promise.reject("PA2RNBiometryFailed", "Biometry dialog failed");
                 }
             });
         } else {
@@ -567,7 +567,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         new IBiometricAuthenticationCallback() {
                             @Override
                             public void onBiometricDialogCancelled(boolean userCancel) {
-                                promise.reject("PA2ReactNativeError_BiometryCanceled", "Biometry dialog was canceled");
+                                promise.reject("PA2RNBiometryCanceled", "Biometry dialog was canceled");
                             }
 
                             @Override
@@ -578,7 +578,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject("PA2ReactNativeError_BiometryFailed", "Biometry dialog failed");
+                                promise.reject("PA2RNBiometryFailed", "Biometry dialog failed");
                             }
                         }
                 );
