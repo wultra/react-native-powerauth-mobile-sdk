@@ -51,7 +51,6 @@ try {
 }
 ```
 
-<!-- begin box warning -->
 The obtained information is very sensitive, so you should be very careful how your application manipulates the received values:
 
 - You should never store `recoveryCode` or `puk` on the device.
@@ -66,7 +65,6 @@ You should inform the user that:
 
 - Making a screenshot when values are displayed on the screen is dangerous.
 - The user should write down that values on paper and keep it as much safe as possible for future use.
-<!-- end -->
 
 
 ## Confirm Recovery Postcard
