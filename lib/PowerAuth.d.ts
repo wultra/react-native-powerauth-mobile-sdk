@@ -5,6 +5,7 @@ import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivati
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
+import { PowerAuthConfirmRecoveryCodeDataResult } from './model/PowerAuthConfirmRecoveryCodeDataResult';
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
@@ -207,8 +208,10 @@ declare class PowerAuth {
      *
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
+     *
+     * @returns Result of the confirmation
      */
-    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult>;
     /**
      * Helper method for grouping biometric authentications.
      *

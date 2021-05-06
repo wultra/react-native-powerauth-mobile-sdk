@@ -538,7 +538,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         this.powerAuth.confirmRecoveryCode(this.context, auth, recoveryCode, new IConfirmRecoveryCodeListener() {
             @Override
             public void onRecoveryCodeConfirmed(boolean alreadyConfirmed) {
-                promise.resolve(null);
+                promise.resolve(alreadyConfirmed);
             }
 
             @Override
