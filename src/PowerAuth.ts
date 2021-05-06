@@ -23,6 +23,7 @@ import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthError } from './model/PowerAuthError';
+import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { __AuthenticationUtils } from "./internal/AuthenticationUtils";
 
 /**
@@ -314,11 +315,12 @@ class PowerAuth {
      * 
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
+     * 
+     * @returns Result of the confirmation
      */
-    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await __AuthenticationUtils.process(authentication)));
+    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult> {
+        return { alreadyConfirmed: await this.wrapNativeCall(this.nativeModule.confirmRecoveryCode(recoveryCode, await __AuthenticationUtils.process(authentication))) };
     }
-
     /**
      * Helper method for grouping biometric authentications.
      * 
