@@ -15,10 +15,6 @@ The tokens are simple, locally cached objects, producing timestamp-based authori
 - Tokens are persisted in the keychain and cached in the memory.
 - Once the parent `PowerAuth` instance loses its activation, all its tokens are removed from the local database.
 
-<!-- begin box info -->
-React Native PowerAuth SDK currently doesn't support multiple instance scenarios and both `PowerAuth` and `PowerAuthTokenStore` act as a singleton.
-<!-- end -->
-
 ## Getting Token
 
 To get an access token, you can use the following code:
@@ -29,14 +25,14 @@ const auth = new PowerAuthAuthentication();
 auth.usePossession = true;
 
 try {
-    const token = await PowerAuthTokenStore.requestAccessToken("MyToken", auth);
+    const token = await powerAuth.tokenStore.requestAccessToken("MyToken", auth);
     // now you can generate header
 } catch (e) {
     // handle error
 }
 ```
 
-The token can be locally cached on the device. You can test this situation by calling `await PowerAuthTokenStore.hasLocalToken("MyToken")`.
+The token can be locally cached on the device. You can test this situation by calling `await powerAuth.tokenStore.hasLocalToken("MyToken")`.
 
 ## Generating Authorization Header
 
@@ -44,7 +40,7 @@ Once you have a `PowerAuthToken` object, use the following code to generate an a
 
 ```javascript
 try {
-    const header = await PowerAuthTokenStore.generateHeaderForToken(token.tokenName);
+    const header = await powerAuth.tokenStore.generateHeaderForToken(token.tokenName);
     // now you can attach that header to your HTTP request
 } catch (e) {
     // token is no longer valid
@@ -57,7 +53,7 @@ To remove the token from the server, you can use the following code:
 
 ```javascript
 try {
-    await PowerAuthTokenStore.removeAccessToken("MyToken");
+    await powerAuth.tokenStore.removeAccessToken("MyToken");
     // token has been removed
 } catch (e) {
     // handle error
@@ -71,9 +67,9 @@ To remove token locally, you can simply use the following code:
 ```javascript
 try {
     // Remove just one token
-    await PowerAuthTokenStore.removeLocalToken("MyToken");
+    await powerAuth.tokenStore.removeLocalToken("MyToken");
     // Remove all local tokens
-    await PowerAuthTokenStore.removeAllLocalTokens();
+    await powerAuth.tokenStore.removeAllLocalTokens();
 } catch (e) {
     // handle error
 }

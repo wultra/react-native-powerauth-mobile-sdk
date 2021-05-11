@@ -30,7 +30,7 @@ The feature is not automatically available. It must be enabled and configured on
 If the recovery data was received during the activation process, then you can later display that information to the user. To check the existence of recovery data and get that information, use the following code:
 
 ```javascript
-const hasRecovery = await PowerAuth.hasActivationRecoveryData();
+const hasRecovery = await powerAuth.hasActivationRecoveryData();
 if (!hasRecovery) {
     // Recovery information is not available
     return;
@@ -42,7 +42,7 @@ auth.usePossession = true;
 auth.userPassword = "1234";
 
 try {
-    const recoveryData = await PowerAuth.activationRecoveryData(auth);
+    const recoveryData = await powerAuth.activationRecoveryData(auth);
     const recoveryCode = recoveryData.recoveryCode;
     const puk = recoveryData.puk;
     // Show values on the screen
@@ -79,7 +79,7 @@ auth.userPassword = "1234";
 
 const recoveryCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // You can also use code scanned from QR
 try {
-    const result = await PowerAuth.confirmRecoveryCode(recoveryCode, auth);
+    const result = await powerAuth.confirmRecoveryCode(recoveryCode, auth);
     if (result.alreadyConfirmed) {
         console.log("Recovery code has been already confirmed. This is not an error, just information.");
     } else {

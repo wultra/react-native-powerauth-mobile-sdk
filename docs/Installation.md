@@ -28,12 +28,8 @@ pod install
 ### 3. Import PowerAuth in your js/ts files
 
 ```typescript
-import PowerAuth from 'react-native-powerauth-mobile-sdk';
+import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
 ```
-
-<!-- begin box info -->
-React Native PowerAuth SDK currently doesn't support multiple instance scenarios.
-<!-- end -->
 
 ## Read Next
 

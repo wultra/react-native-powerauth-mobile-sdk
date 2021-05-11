@@ -9,7 +9,7 @@ The safe but typically slower way is to use the following code:
 ```javascript
 // Change password from "oldPassword" to "newPassword".
 try {
-    await PowerAuth.changePassword("oldPassword", "newPassword");
+    await powerAuth.changePassword("oldPassword", "newPassword");
 } catch (e) {
     console.log(`Change failed: ${e.code}`);
 }
@@ -34,7 +34,7 @@ const oldPassword = "1234";
 
 // Validate password on the server
 try {
-    const isValid = await PowerAuth.validatePassword(pass);
+    const isValid = await powerAuth.validatePassword(pass);
     // Proceed to the new password setup
 } catch (e) {
     // Retry entering an old password
@@ -48,7 +48,7 @@ const newPassword = "2468";
 
 // Change the password locally
 try {
-    await PowerAuth.unsafeChangePassword(oldPassword, newPassword);
+    await powerAuth.unsafeChangePassword(oldPassword, newPassword);
     // password is changed
 } catch (e) {
     // error

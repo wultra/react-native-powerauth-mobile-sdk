@@ -9,11 +9,11 @@ To obtain a detailed activation status information, use the following code:
 
 ```javascript
 // Check if there is some activation on the device
-if (await PowerAuth.hasValidActivation()) {
+if (await powerAuth.hasValidActivation()) {
 
     try {
         // If there is an activation on the device, check the status with the server
-        const status = await PowerAuth.fetchActivationStatus();
+        const status = await powerAuth.fetchActivationStatus();
 
         switch (status.state) {
             case PA2ActivationState.PA2ActivationState_PendingCommit:
@@ -29,13 +29,13 @@ if (await PowerAuth.hasValidActivation()) {
             case PA2ActivationState.PA2ActivationState_Removed:
                 // Activation is no longer valid on the server.
                 // You can inform user about this situation and remove
-                // activation locally via "await PowerAuth.removeActivationLocal()"
+                // activation locally via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is no longer valid");
             case PA2ActivationState.PA2ActivationState_Deadlock:
                 // Local activation is technically blocked and no longer
                 // can be used for the signature calculations. You can inform
                 // user about this situation and remove activation locally
-                // via "await PowerAuth.removeActivationLocal()"
+                // via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is technically blocked");
             case PA2ActivationState.PA2ActivationState_Created:
                 // Activation is just created. This is the internal
