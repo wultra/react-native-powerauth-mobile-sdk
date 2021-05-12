@@ -232,8 +232,8 @@ export default class App extends Component<any, State> {
               }
               await this.refreshActivationInfo();
             }} />
-            <Button title="Remove activation local" onPress={e => {
-              this.powerAuth.removeActivationLocal();
+            <Button title="Remove activation local" onPress={async e => {
+              await this.powerAuth.removeActivationLocal();
               this.refreshActivationInfo();
               alert("Done!")
             }} />
