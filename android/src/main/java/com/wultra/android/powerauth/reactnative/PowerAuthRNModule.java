@@ -53,8 +53,6 @@ import io.getlime.security.powerauth.networking.ssl.*;
 import io.getlime.security.powerauth.networking.response.*;
 import io.getlime.security.powerauth.core.*;
 import io.getlime.security.powerauth.exception.*;
-import io.getlime.security.powerauth.util.otp.Otp;
-import io.getlime.security.powerauth.util.otp.OtpUtil;
 
 @SuppressWarnings("unused")
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
@@ -108,14 +106,14 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
 
         if (enableUnsecureTraffic) {
-            paClientConfigBuilder.clientValidationStrategy(new PA2ClientSslNoValidationStrategy());
+            paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
             paClientConfigBuilder.allowUnsecuredConnection(true);
         }
         try {
             configure(instanceId, new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
             promise.resolve(true);
         } catch (Exception e) {
-            promise.reject("PA2ReactNativeError", "Failed to configure");
+            promise.reject("REACT_NATIVE_ERROR", "Failed to configure");
         }
     }
     
@@ -228,7 +226,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     }
 
                     if (paActivation == null) {
-                        promise.reject("PA2RNInvalidActivationObject", "Activation object is invalid.");
+                        promise.reject("INVALID_ACTIVATION_OBJECT", "Activation object is invalid.");
                         return;
                     }
 
@@ -283,7 +281,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
                 if (auth.usePassword == null) {
-                    promise.reject("PA2RNPasswordNotSet", "Password is not set.");
+                    promise.reject("PASSWORD_NOT_SET", "Password is not set.");
                     return;
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("useBiometry")) {
@@ -296,12 +294,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         message = " "; // to prevent crash
                     }
                     try {
-                        //noinspection ConstantConditions
-                        sdk.commitActivation(context, ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
+                        sdk.commitActivation(context, (FragmentActivity) getCurrentActivity(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
 
                             @Override
                             public void onBiometricDialogCancelled() {
-                                promise.reject("PA2RNBiometryCanceled", "Biometry dialog was canceled");
+                                promise.reject("BIOMETRY_CANCEL", "Biometry dialog was canceled");
                             }
 
                             @Override
@@ -311,7 +308,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject("PA2RNBiometryFailed", "Biometry dialog failed");
+                                promise.reject("BIOMETRY_FAILED", "Biometry dialog failed");
                             }
                         });
                     } catch (Throwable t) {
@@ -319,7 +316,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     }
                 } else {
                     int result = sdk.commitActivationWithPassword(context, auth.usePassword);
-                    if (result == PowerAuthErrorCodes.PA2Succeed) {
+                    if (result == PowerAuthErrorCodes.SUCCEED) {
                         promise.resolve(null);
                     } else {
                         promise.reject(PowerAuthRNModule.getErrorCodeFromError(result), "Commit failed.");
@@ -396,7 +393,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
                 byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
                 PowerAuthAuthorizationHttpHeader header = sdk.requestSignatureWithAuthentication(context, auth, method, uriId, decodedBody);
-                if (header.powerAuthErrorCode == PowerAuthErrorCodes.PA2Succeed) {
+                if (header.powerAuthErrorCode == PowerAuthErrorCodes.SUCCEED) {
                     WritableMap returnMap = Arguments.createMap();
                     returnMap.putString("key", header.key);
                     returnMap.putString("value", header.value);
@@ -420,7 +417,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (signature != null) {
                     promise.resolve(signature);
                 } else {
-                    promise.reject("PA2ReactNativeError", "Signature failed");
+                    promise.reject("REACT_NATIVE_ERROR", "Signature failed");
                 }
             }
         });
@@ -436,7 +433,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
                     promise.resolve(sdk.verifyServerSignedData(decodedData, decodedSignature, masterKey));
                 } catch (Exception e) {
-                    promise.reject("PA2ReactNativeError", "Verify failed");
+                    promise.reject("REACT_NATIVE_ERROR", "Verify failed");
                 }
             }
         });
@@ -481,10 +478,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     try {
-                        //noinspection ConstantConditions
                         sdk.addBiometryFactor(
                                 context,
-                                ((FragmentActivity)getCurrentActivity()).getSupportFragmentManager(),
+                                (FragmentActivity)getCurrentActivity(),
                                 title,
                                 description,
                                 password,
@@ -503,7 +499,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
                 }
             }
         });
@@ -518,7 +514,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.hasBiometryFactor(context));
                 } else {
-                    promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
                 }
             }
         });
@@ -533,7 +529,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.removeBiometryFactor(context));
                 } else {
-                    promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
                 }
             }
         });
@@ -714,16 +710,15 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     try {
-                        //noinspection ConstantConditions
                         sdk.authenticateUsingBiometry(
                             context,
-                            ((FragmentActivity) getCurrentActivity()).getSupportFragmentManager(),
+                            (FragmentActivity) getCurrentActivity(),
                             title,
                             description,
                             new IBiometricAuthenticationCallback() {
                                 @Override
                                 public void onBiometricDialogCancelled(boolean userCancel) {
-                                    promise.reject("PA2RNBiometryCanceled", "Biometry dialog was canceled");
+                                    promise.reject("BIOMETRY_CANCEL", "Biometry dialog was canceled");
                                 }
 
                                 @Override
@@ -734,7 +729,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                                 @Override
                                 public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                    promise.reject("PA2RNBiometryFailed", "Biometry dialog failed");
+                                    promise.reject("BIOMETRY_FAILED", "Biometry dialog failed");
                                 }
                             }
                         );
@@ -742,7 +737,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject("PA2ReactNativeError", "Biometry not supported on this android version.");
+                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
                 }
             }
         });
@@ -812,7 +807,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     response.putString("tokenIdentifier", token.getTokenIdentifier());
                     promise.resolve(response);
                 } else {
-                    promise.reject("PA2RNLocalTokenNotAvailable", "Token with this name is not in the local store.");
+                    promise.reject("LOCAL_TOKEN_NOT_AVAILABLE", "Token with this name is not in the local store.");
                 }
             }
         });
@@ -861,70 +856,70 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 PowerAuthToken token = sdk.getTokenStore().getLocalToken(context, tokenName);
                 if (token == null) {
-                    promise.reject("PA2RNTokenNotAvailable", "This token is no longer available in the local store.");
+                    promise.reject("LOCAL_TOKEN_ONT_AVAILABLE", "This token is no longer available in the local store.");
                 }
                 else if (token.canGenerateHeader()) {
                     promise.resolve(PowerAuthRNModule.getHttpHeaderObject(token.generateHeader()));
                 } else {
-                    promise.reject("PA2RNCannotGenerateHeader", "Cannot generate header for this token.");
+                    promise.reject("CANNOT_GENERATE_TOKEN", "Cannot generate header for this token.");
                 }
             }
         });
     }
 
-    /** OTP UTIL METHODS */
+    /** ACTIVATION CODE UTIL METHODS */
 
     @ReactMethod
     public void parseActivationCode(String activationCode, final Promise promise) {
-        Otp otp = OtpUtil.parseFromActivationCode(activationCode);
-        if (otp != null) {
+        ActivationCode ac = ActivationCodeUtil.parseFromActivationCode(activationCode);
+        if (ac != null) {
             WritableMap response = Arguments.createMap();
-            response.putString("activationCode", otp.activationCode);
-            response.putString("activationSignature", otp.activationSignature);
+            response.putString("activationCode", ac.activationCode);
+            response.putString("activationSignature", ac.activationSignature);
             promise.resolve(response);
         } else {
-            promise.reject("PA2RNInvalidActivationCode", "Invalid activation code.");
+            promise.reject("INVALID_ACTIVATION_CODE", "Invalid activation code.");
         }
     }
 
     @ReactMethod
     public void validateActivationCode(String activationCode, final Promise promise) {
-        promise.resolve(OtpUtil.validateActivationCode(activationCode));
+        promise.resolve(ActivationCodeUtil.validateActivationCode(activationCode));
     }
 
     @ReactMethod
     public void parseRecoveryCode(String recoveryCode, final Promise promise) {
-        Otp otp = OtpUtil.parseFromRecoveryCode(recoveryCode);
-        if (otp != null) {
+        ActivationCode ac = ActivationCodeUtil.parseFromRecoveryCode(recoveryCode);
+        if (ac != null) {
             WritableMap response = Arguments.createMap();
-            response.putString("activationCode", otp.activationCode);
-            response.putString("activationSignature", otp.activationSignature);
+            response.putString("activationCode", ac.activationCode);
+            response.putString("activationSignature", ac.activationSignature);
             promise.resolve(response);
         } else {
-            promise.reject("PA2RNInvalidRecoveryCode", "Invalid recovery code.");
+            promise.reject("INVALID_RECOVERY_CODE", "Invalid recovery code.");
         }
     }
 
     @ReactMethod
     public void validateRecoveryCode(String recoveryCode, final Promise promise) {
-        promise.resolve(OtpUtil.validateRecoveryCode(recoveryCode));
+        promise.resolve(ActivationCodeUtil.validateRecoveryCode(recoveryCode));
     }
 
     @ReactMethod
     public void validateRecoveryPuk(String puk, final Promise promise) {
-        promise.resolve(OtpUtil.validateRecoveryPuk(puk));
+        promise.resolve(ActivationCodeUtil.validateRecoveryPuk(puk));
     }
 
     @ReactMethod
     public void validateTypedCharacter(int character, final Promise promise) {
-        promise.resolve(OtpUtil.validateTypedCharacter(character));
+        promise.resolve(ActivationCodeUtil.validateTypedCharacter(character));
     }
 
     @ReactMethod
     public void correctTypedCharacter(int character, final Promise promise) {
-        int corrected = OtpUtil.validateAndCorrectTypedCharacter(character);
+        int corrected = ActivationCodeUtil.validateAndCorrectTypedCharacter(character);
         if (corrected == 0) {
-            promise.reject("PA2RNInvalidCharacter", "Invalid character cannot be corrected.");
+            promise.reject("INVALID_CHARACTER", "Invalid character cannot be corrected.");
         } else {
             promise.resolve(corrected);
         }
@@ -934,7 +929,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     private void usePowerAuth(@Nonnull String instanceId, final Promise promise, PowerAuthBlock block) {
         if (!this.instances.containsKey(instanceId)) {
-            promise.reject("PA2RNInstanceNotConfigured", "This instance is not configured.");
+            promise.reject("INSTANCE_NOT_CONFIGURED", "This instance is not configured.");
             return;
         }
         block.run(this.instances.get(instanceId));
@@ -951,7 +946,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     private static @Nullable ReadableMap getHttpHeaderObject(@NonNull PowerAuthAuthorizationHttpHeader header) {
-        if (header.powerAuthErrorCode == PowerAuthErrorCodes.PA2Succeed) {
+        if (header.powerAuthErrorCode == PowerAuthErrorCodes.SUCCEED) {
             WritableMap map = Arguments.createMap();
             map.putString("key", header.key);
             map.putString("value", header.value);
@@ -964,13 +959,13 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @SuppressLint("DefaultLocale")
     private static String getStatusCode(int state) {
         switch (state) {
-            case ActivationStatus.State_Created: return "PA2ActivationState_Created";
-            case ActivationStatus.State_Pending_Commit: return "PA2ActivationState_PendingCommit";
-            case ActivationStatus.State_Active: return "PA2ActivationState_Active";
-            case ActivationStatus.State_Blocked: return "PA2ActivationState_Blocked";
-            case ActivationStatus.State_Removed: return "PA2ActivationState_Removed";
-            case ActivationStatus.State_Deadlock: return "PA2ActivationState_Deadlock";
-            default: return String.format("PA2ActivationState_Unknown%d", state);
+            case ActivationStatus.State_Created: return "CREATED";
+            case ActivationStatus.State_Pending_Commit: return "PENDING_COMMIT";
+            case ActivationStatus.State_Active: return "ACTIVE";
+            case ActivationStatus.State_Blocked: return "BLOCKED";
+            case ActivationStatus.State_Removed: return "REMOVED";
+            case ActivationStatus.State_Deadlock: return "DEADLOCK";
+            default: return String.format("STATE_UNKNOWN_%d", state);
         }
     }
 
@@ -987,7 +982,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     private static void rejectPromise(Promise promise, Throwable t) {
 
-        @Nonnull String code = "PA2ReactNativeError"; // fallback code
+        @Nonnull String code = "REACT_NATIVE_ERROR"; // fallback code
         String message = t.getMessage();
         WritableMap userInfo = null;
 
@@ -995,7 +990,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             code = getErrorCodeFromError(((PowerAuthErrorException)t).getPowerAuthErrorCode());
         } else if (t instanceof FailedApiException) {
             FailedApiException farEx = (FailedApiException)t;
-            code = "PA2ErrorResponseException";
+            code = "RESPONSE_ERROR";
             userInfo = Arguments.createMap();
             userInfo.putInt("responseCode", farEx.getResponseCode());
             userInfo.putString("responseBody", farEx.getResponseBody());
@@ -1015,25 +1010,27 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @SuppressLint("DefaultLocale")
     private static String getErrorCodeFromError(int error) {
         switch (error) {
-            case PowerAuthErrorCodes.PA2Succeed: return "PA2Succeed";
-            case PowerAuthErrorCodes.PA2ErrorCodeNetworkError: return "PA2ErrorCodeNetworkError";
-            case PowerAuthErrorCodes.PA2ErrorCodeSignatureError: return "PA2ErrorCodeSignatureError";
-            case PowerAuthErrorCodes.PA2ErrorCodeInvalidActivationState: return "PA2ErrorCodeInvalidActivationState";
-            case PowerAuthErrorCodes.PA2ErrorCodeInvalidActivationData: return "PA2ErrorCodeInvalidActivationData";
-            case PowerAuthErrorCodes.PA2ErrorCodeMissingActivation: return "PA2ErrorCodeMissingActivation";
-            case PowerAuthErrorCodes.PA2ErrorCodeActivationPending: return "PA2ErrorCodeActivationPending";
-            case PowerAuthErrorCodes.PA2ErrorCodeBiometryCancel: return "PA2ErrorCodeBiometryCancel";
-            case PowerAuthErrorCodes.PA2ErrorCodeOperationCancelled: return "PA2ErrorCodeOperationCancelled";
-            case PowerAuthErrorCodes.PA2ErrorCodeInvalidActivationCode: return "PA2ErrorCodeInvalidActivationCode";
-            case PowerAuthErrorCodes.PA2ErrorCodeInvalidToken: return "PA2ErrorCodeInvalidToken";
-            case PowerAuthErrorCodes.PA2ErrorCodeEncryptionError: return "PA2ErrorCodeEncryption"; // different string to be consistent with iOS where this case is named differently
-            case PowerAuthErrorCodes.PA2ErrorCodeWrongParameter: return "PA2ErrorCodeWrongParameter";
-            case PowerAuthErrorCodes.PA2ErrorCodeProtocolUpgrade: return "PA2ErrorCodeProtocolUpgrade";
-            case PowerAuthErrorCodes.PA2ErrorCodePendingProtocolUpgrade: return "PA2ErrorCodePendingProtocolUpgrade";
-            case PowerAuthErrorCodes.PA2ErrorCodeBiometryNotSupported: return "PA2ErrorCodeBiometryNotSupported";
-            case PowerAuthErrorCodes.PA2ErrorCodeBiometryNotAvailable: return "PA2ErrorCodeBiometryNotAvailable";
-            case PowerAuthErrorCodes.PA2ErrorCodeBiometryNotRecognized: return "PA2ErrorCodeBiometryNotRecognized";
-            default: return String.format("PA2UnknownCode%d", error);
+            case PowerAuthErrorCodes.SUCCEED: return "SUCCEED";
+            case PowerAuthErrorCodes.NETWORK_ERROR: return "NETWORK_ERROR";
+            case PowerAuthErrorCodes.SIGNATURE_ERROR: return "SIGNATURE_ERROR";
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_STATE: return "INVALID_ACTIVATION_STATE";
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_DATA: return "INVALID_ACTIVATION_DATA";
+            case PowerAuthErrorCodes.MISSING_ACTIVATION: return "MISSING_ACTIVATION";
+            case PowerAuthErrorCodes.PENDING_ACTIVATION: return "PENDING_ACTIVATION";
+            case PowerAuthErrorCodes.BIOMETRY_CANCEL: return "BIOMETRY_CANCEL";
+            case PowerAuthErrorCodes.OPERATION_CANCELED: return "OPERATION_CANCELED";
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_CODE: return "INVALID_ACTIVATION_CODE";
+            case PowerAuthErrorCodes.INVALID_TOKEN: return "INVALID_TOKEN";
+            case PowerAuthErrorCodes.ENCRYPTION_ERROR: return "ENCRYPTION_ERROR";
+            case PowerAuthErrorCodes.WRONG_PARAMETER: return "WRONG_PARAMETER";
+            case PowerAuthErrorCodes.PROTOCOL_UPGRADE: return "PROTOCOL_UPGRADE";
+            case PowerAuthErrorCodes.PENDING_PROTOCOL_UPGRADE: return "PENDING_PROTOCOL_UPGRADE";
+            case PowerAuthErrorCodes.BIOMETRY_NOT_SUPPORTED: return "BIOMETRY_NOT_SUPPORTED";
+            case PowerAuthErrorCodes.BIOMETRY_NOT_AVAILABLE: return "BIOMETRY_NOT_AVAILABLE";
+            case PowerAuthErrorCodes.BIOMETRY_NOT_RECOGNIZED: return "BIOMETRY_NOT_RECOGNIZED";
+            case PowerAuthErrorCodes.INSUFFICIENT_KEYCHAIN_PROTECTION: return "INSUFFICIENT_KEYCHAIN_PROTECTION";
+            case PowerAuthErrorCodes.BIOMETRY_LOCKOUT: return "BIOMETRY_LOCKOUT";
+            default: return String.format("UNKNOWN_%d", error);
         }
     }
 }

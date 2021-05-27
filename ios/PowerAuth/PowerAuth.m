@@ -20,9 +20,9 @@
 #import <React/RCTConvert.h>
 
 #import <PowerAuth2/PowerAuthSDK.h>
-#import <PowerAuth2/PA2ErrorConstants.h>
-#import <PowerAuth2/PA2Keychain.h>
-#import <PowerAuth2/PA2ClientSslNoValidationStrategy.h>
+#import <PowerAuth2/PowerAuthErrorConstants.h>
+#import <PowerAuth2/PowerAuthKeychain.h>
+#import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
 
 @interface PowerAuth ()
  
@@ -55,8 +55,8 @@ RCT_REMAP_METHOD(isConfigured,
 }
 
 - (BOOL)configureWithConfig:(nonnull PowerAuthConfiguration *)config
-             keychainConfig:(nullable PA2KeychainConfiguration *)keychainConfig
-               clientConfig:(nullable PA2ClientConfiguration *)clientConfig
+             keychainConfig:(nullable PowerAuthKeychainConfiguration *)keychainConfig
+               clientConfig:(nullable PowerAuthClientConfiguration *)clientConfig
 {
     if ([self powerAuthForInstanceId: [config instanceId]]) {
         // powerAuth instance for this instanceId already exists
@@ -89,10 +89,10 @@ RCT_REMAP_METHOD(configure,
     config.masterServerPublicKey = masterServerPublicKey;
     config.baseEndpointUrl = baseEndpointUrl;
 
-    PA2ClientConfiguration * clientConfig = [[PA2ClientConfiguration sharedInstance] copy];
+    PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
     
     if (enableUnsecureTraffic) {
-        [clientConfig setSslValidationStrategy:[[PA2ClientSslNoValidationStrategy alloc] init]];
+        [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
     }
     
     if ([self configureWithConfig:config keychainConfig:nil clientConfig:clientConfig]) {
@@ -146,7 +146,7 @@ RCT_REMAP_METHOD(fetchActivationStatus,
                  fetchActivationStatusReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    [powerAuth fetchActivationStatusWithCallback:^(PA2ActivationStatus * _Nullable status, NSDictionary * _Nullable customObject, NSError * _Nullable error) {
+    [powerAuth fetchActivationStatusWithCallback:^(PowerAuthActivationStatus * _Nullable status, NSDictionary * _Nullable customObject, NSError * _Nullable error) {
         
         if (error == nil) {
             
@@ -183,15 +183,15 @@ RCT_REMAP_METHOD(createActivation,
     NSString* additionalActivationOtp = activation[@"additionalActivationOtp"];
     
     if (activationCode) {
-        paActivation = [PowerAuthActivation activationWithActivationCode:activationCode name:name];
+        paActivation = [PowerAuthActivation activationWithActivationCode:activationCode name:name error:nil];
     } else if (recoveryCode && recoveryPuk) {
-        paActivation = [PowerAuthActivation activationWithRecoveryCode:recoveryCode recoveryPuk:recoveryPuk name:name];
+        paActivation = [PowerAuthActivation activationWithRecoveryCode:recoveryCode recoveryPuk:recoveryPuk name:name error:nil];
     } else if (identityAttributes) {
-        paActivation = [PowerAuthActivation activationWithIdentityAttributes:identityAttributes name:name];
+        paActivation = [PowerAuthActivation activationWithIdentityAttributes:identityAttributes name:name error:nil];
     }
     
     if (!paActivation) {
-        reject(@"PA2RNInvalidActivationObject", @"Activation object is invalid.", nil);
+        reject(@"INVALID_ACTIVATION_OBJECT", @"Activation object is invalid.", nil);
         return;
     }
     
@@ -207,7 +207,7 @@ RCT_REMAP_METHOD(createActivation,
         [paActivation withAdditionalActivationOtp:additionalActivationOtp];
     }
     
-    [powerAuth createActivation:paActivation callback:^(PA2ActivationResult * _Nullable result, NSError * _Nullable error) {
+    [powerAuth createActivation:paActivation callback:^(PowerAuthActivationResult * _Nullable result, NSError * _Nullable error) {
         if (error == nil) {
             NSDictionary *response = @{
                 @"activationFingerprint": result.activationFingerprint,
@@ -306,7 +306,7 @@ RCT_REMAP_METHOD(requestGetSignature,
     PA_BLOCK_START
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     NSError* error = nil;
-    PA2AuthorizationHttpHeader* signature = [powerAuth requestGetSignatureWithAuthentication:auth uriId:uriId params:params error: &error];
+    PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestGetSignatureWithAuthentication:auth uriId:uriId params:params error: &error];
     
     if (error) {
         reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -333,7 +333,7 @@ RCT_REMAP_METHOD(requestSignature,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     
     NSError* error = nil;
-    PA2AuthorizationHttpHeader* signature = [powerAuth requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
+    PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
     
     if (error) {
         reject([self getErrorCodeFromError:error], error.localizedDescription, error);
@@ -458,36 +458,36 @@ RCT_REMAP_METHOD(getBiometryInfo,
 {
     NSString *biometryType;
     NSString *canAuthenticate;
-    switch ([PA2Keychain biometricAuthenticationInfo].biometryType) {
-        case PA2BiometricAuthenticationType_TouchID:
+    switch ([PowerAuthKeychain biometricAuthenticationInfo].biometryType) {
+        case PowerAuthBiometricAuthenticationType_TouchID:
             biometryType = @"FINGERPRINT";
             break;
-        case PA2BiometricAuthenticationType_FaceID:
+        case PowerAuthBiometricAuthenticationType_FaceID:
             biometryType = @"FACE";
             break;
-        case PA2BiometricAuthenticationType_None:
+        case PowerAuthBiometricAuthenticationType_None:
         default:
             biometryType = @"NONE";
             break;
     }
-    switch ([PA2Keychain biometricAuthenticationInfo].currentStatus) {
-        case PA2BiometricAuthenticationStatus_Available:
+    switch ([PowerAuthKeychain biometricAuthenticationInfo].currentStatus) {
+        case PowerAuthBiometricAuthenticationStatus_Available:
             canAuthenticate = @"OK";
             break;
-        case PA2BiometricAuthenticationStatus_NotEnrolled:
+        case PowerAuthBiometricAuthenticationStatus_NotEnrolled:
             canAuthenticate = @"NOT_ENROLLED";
             break;
-        case PA2BiometricAuthenticationStatus_NotAvailable:
+        case PowerAuthBiometricAuthenticationStatus_NotAvailable:
             canAuthenticate = @"NOT_AVAILABLE";
             break;
-        case PA2BiometricAuthenticationStatus_NotSupported:
+        case PowerAuthBiometricAuthenticationStatus_NotSupported:
             canAuthenticate = @"NOT_SUPPORTED";
             break;
-        case PA2BiometricAuthenticationStatus_Lockout:
+        case PowerAuthBiometricAuthenticationStatus_Lockout:
             canAuthenticate = @"LOCKOUT";
             break;
     }
-    bool canUse = [PA2Keychain canUseBiometricAuthentication];
+    bool canUse = [PowerAuthKeychain canUseBiometricAuthentication];
     NSDictionary *response = @{
         @"isAvailable": canUse ? @YES : @NO,
         @"biometryType": biometryType,
@@ -569,7 +569,7 @@ RCT_REMAP_METHOD(activationRecoveryData,
 {
     PA_BLOCK_START
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
-    [powerAuth activationRecoveryData:auth callback:^(PA2ActivationRecoveryData * data, NSError * error) {
+    [powerAuth activationRecoveryData:auth callback:^(PowerAuthActivationRecoveryData * data, NSError * error) {
         if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
@@ -627,14 +627,14 @@ RCT_REMAP_METHOD(parseActivationCode,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
-    PA2Otp *otp = [PA2OtpUtil parseFromActivationCode:activationCode];
-    if (otp) {
+    PowerAuthActivationCode *ac = [PowerAuthActivationCodeUtil parseFromActivationCode:activationCode];
+    if (ac) {
         resolve(@{
-            @"activationCode": otp.activationCode,
-            @"activationSignature": otp.activationSignature ? otp.activationSignature : [NSNull null]
+            @"activationCode": ac.activationCode,
+            @"activationSignature": ac.activationSignature ? ac.activationSignature : [NSNull null]
         });
     } else {
-        reject(@"PA2RNInvalidActivationCode", @"Invalid activation code.", nil);
+        reject(@"INVALID_ACTIVATION_CODE", @"Invalid activation code.", nil);
     }
 }
 
@@ -643,7 +643,7 @@ RCT_REMAP_METHOD(validateActivationCode,
                  validateActivationCodeResolve:(RCTPromiseResolveBlock)resolve
                  validateActivationCodeReject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([PA2OtpUtil validateActivationCode:activationCode] ? @YES : @NO);
+    resolve([PowerAuthActivationCodeUtil validateActivationCode:activationCode] ? @YES : @NO);
 }
 
 RCT_REMAP_METHOD(parseRecoveryCode,
@@ -651,14 +651,14 @@ RCT_REMAP_METHOD(parseRecoveryCode,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
-    PA2Otp *otp = [PA2OtpUtil parseFromRecoveryCode:recoveryCode];
-    if (otp) {
+    PowerAuthActivationCode *ac = [PowerAuthActivationCodeUtil parseFromRecoveryCode:recoveryCode];
+    if (ac) {
         resolve(@{
-            @"activationCode": otp.activationCode,
-            @"activationSignature": otp.activationSignature ? otp.activationSignature : [NSNull null]
+            @"activationCode": ac.activationCode,
+            @"activationSignature": ac.activationSignature ? ac.activationSignature : [NSNull null]
         });
     } else {
-        reject(@"PA2RNInvalidRecoveryCode", @"Invalid recovery code.", nil);
+        reject(@"INVALID_RECOVERY_CODE", @"Invalid recovery code.", nil);
     }
 }
 
@@ -667,7 +667,7 @@ RCT_REMAP_METHOD(validateRecoveryCode,
                  validateRecoveryCodeResolve:(RCTPromiseResolveBlock)resolve
                  validateRecoveryCodeReject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([PA2OtpUtil validateRecoveryCode:recoveryCode] ? @YES : @NO);
+    resolve([PowerAuthActivationCodeUtil validateRecoveryCode:recoveryCode] ? @YES : @NO);
 }
 
 RCT_REMAP_METHOD(validateRecoveryPuk,
@@ -675,7 +675,7 @@ RCT_REMAP_METHOD(validateRecoveryPuk,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([PA2OtpUtil validateRecoveryPuk:recoveryPuk] ? @YES : @NO);
+    resolve([PowerAuthActivationCodeUtil validateRecoveryPuk:recoveryPuk] ? @YES : @NO);
 }
 
 RCT_REMAP_METHOD(validateTypedCharacter,
@@ -683,7 +683,7 @@ RCT_REMAP_METHOD(validateTypedCharacter,
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([PA2OtpUtil validateTypedCharacter:utfCodepoint.unsignedIntValue] ? @YES : @NO);
+    resolve([PowerAuthActivationCodeUtil validateTypedCharacter:utfCodepoint.unsignedIntValue] ? @YES : @NO);
 }
 
 RCT_REMAP_METHOD(correctTypedCharacter,
@@ -691,9 +691,9 @@ RCT_REMAP_METHOD(correctTypedCharacter,
                  correctTypedCharacterResolve:(RCTPromiseResolveBlock)resolve
                  correctTypedCharacterReject:(RCTPromiseRejectBlock)reject)
 {
-    UInt32 corrected = [PA2OtpUtil validateAndCorrectTypedCharacter:utfCodepoint.unsignedIntValue];
+    UInt32 corrected = [PowerAuthActivationCodeUtil validateAndCorrectTypedCharacter:utfCodepoint.unsignedIntValue];
     if (corrected == 0) {
-        reject(@"PA2RNInvalidCharacter", @"Invalid character cannot be corrected.", nil);
+        reject(@"INVALID_CHARACTER", @"Invalid character cannot be corrected.", nil);
     } else {
         resolve([[NSNumber alloc] initWithInt:corrected]);
     }
@@ -736,7 +736,7 @@ RCT_REMAP_METHOD(removeAccessToken,
         } else if (error) {
             reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
-            reject(@"PA2ReactNativeError", @"Unknown error", nil);
+            reject(@"PowerAuthReactNativeError", @"Unknown error", nil);
         }
     }];
     PA_BLOCK_END
@@ -769,7 +769,7 @@ RCT_REMAP_METHOD(getLocalToken,
             @"tokenIdentifier": token.tokenIdentifier
         });
     } else {
-        reject(@"PA2RNLocalTokenNotAvailable", @"Token with this name is not in the local store.", nil);
+        reject(@"LOCAL_TOKEN_NOT_AVAILABLE", @"Token with this name is not in the local store.", nil);
     }
     PA_BLOCK_END
 }
@@ -806,20 +806,20 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     PA_BLOCK_START
     PowerAuthToken* token = [[powerAuth tokenStore] localTokenWithName:tokenName];
     if (token == nil) {
-        reject(@"PA2RNTokenNotAvailable", @"This token is no longer available in the local store.", nil);
+        reject(@"LOCAL_TOKEN_NOT_AVAILABLE", @"This token is no longer available in the local store.", nil);
     }
     else if ([token canGenerateHeader]) {
-        PA2AuthorizationHttpHeader* header = [token generateHeader];
+        PowerAuthAuthorizationHttpHeader* header = [token generateHeader];
         if (header) {
             resolve(@{
                 @"key": header.key,
                 @"value": header.value
             });
         } else {
-            reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+            reject(@"CANNOT_GENERATE_TOKEN", @"Cannot generate header for this token.", nil);
         }
     } else {
-        reject(@"PA2RNCannotGenerateHeader", @"Cannot generate header for this token.", nil);
+        reject(@"CANNOT_GENERATE_TOKEN", @"Cannot generate header for this token.", nil);
     }
     PA_BLOCK_END
 }
@@ -834,7 +834,7 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     if (sdk) {
         callback(sdk);
     } else {
-        reject(@"PA2RNInstanceNotConfigured", @"This instance is not configured.", nil);
+        reject(@"INSTANCE_NOT_CONFIGURED", @"This instance is not configured.", nil);
     }
 }
 
@@ -860,39 +860,42 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     return auth;
 }
 
-#define ENUM_CASE_TO_STR(x, enumValue) if (x == enumValue) return @#enumValue;
-
 - (NSString*)getErrorCodeFromError:(NSError*)paError
 {
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeNetworkError);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeSignatureError);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeInvalidActivationState);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeInvalidActivationData);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeMissingActivation);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeActivationPending);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeBiometryCancel);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeOperationCancelled);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeInvalidToken);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeEncryption);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeWrongParameter);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeProtocolUpgrade);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodePendingProtocolUpgrade);
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeWatchConnectivity)
-    ENUM_CASE_TO_STR(paError.code, PA2ErrorCodeBiometryNotAvailable);
-    return [[NSString alloc] initWithFormat:@"PA2UnknownCode%li", paError.code];
+    switch (paError.code) {
+        case PowerAuthErrorCode_NetworkError: return @"NETWORK_ERROR";
+        case PowerAuthErrorCode_SignatureError: return @"SIGNATURE_ERROR";
+        case PowerAuthErrorCode_InvalidActivationState: return @"INVALID_ACTIVATION_STATE";
+        case PowerAuthErrorCode_InvalidActivationData: return @"INVALID_ACTIVATION_DATA";
+        case PowerAuthErrorCode_MissingActivation: return @"MISSING_ACTIVATION";
+        case PowerAuthErrorCode_ActivationPending: return @"PENDING_ACTIVATION";
+        case PowerAuthErrorCode_BiometryCancel: return @"BIOMETRY_CANCEL";
+        case PowerAuthErrorCode_OperationCancelled: return @"OPERATION_CANCELED";
+        case PowerAuthErrorCode_InvalidActivationCode: return @"INVALID_ACTIVATION_CODE";
+        case PowerAuthErrorCode_InvalidToken: return @"INVALID_TOKEN";
+        case PowerAuthErrorCode_Encryption: return @"ENCRYPTION_ERROR";
+        case PowerAuthErrorCode_WrongParameter: return @"WRONG_PARAMETER";
+        case PowerAuthErrorCode_ProtocolUpgrade: return @"PROTOCOL_UPGRADE";
+        case PowerAuthErrorCode_PendingProtocolUpgrade: return @"PENDING_PROTOCOL_UPGRADE";
+        case PowerAuthErrorCode_BiometryNotAvailable: return @"BIOMETRY_NOT_AVAILABLE";
+        case PowerAuthErrorCode_WatchConnectivity: return @"WATCH_CONNECTIVITY";
+        case PowerAuthErrorCode_BiometryFailed: return @"BIOMETRY_FAILED";
+        default: return [[NSString alloc] initWithFormat:@"UNKNOWN_%li", paError.code];
+    }
+    return [[NSString alloc] initWithFormat:@"PowerAuthUnknownCode%li", paError.code];
 }
 
-- (NSString*)getStatusCode:(PA2ActivationState)status
+- (NSString*)getStatusCode:(PowerAuthActivationState)status
 {
-    ENUM_CASE_TO_STR(status, PA2ActivationState_Created);
-    ENUM_CASE_TO_STR(status, PA2ActivationState_PendingCommit);
-    ENUM_CASE_TO_STR(status, PA2ActivationState_Active);
-    ENUM_CASE_TO_STR(status, PA2ActivationState_Blocked);
-    ENUM_CASE_TO_STR(status, PA2ActivationState_Removed);
-    ENUM_CASE_TO_STR(status, PA2ActivationState_Deadlock);
-    return [[NSString alloc] initWithFormat:@"PA2ActivationState_Unknown%i", status];
+    switch (status) {
+        case PowerAuthActivationState_Created: return @"CREATED";
+        case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
+        case PowerAuthActivationState_Active: return @"ACTIVE";
+        case PowerAuthActivationState_Blocked: return @"BLOCKED";
+        case PowerAuthActivationState_Removed: return @"REMOVED";
+        case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
+        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+    }
 }
-
-#undef ENUM_CASE_TO_STR
 
 @end

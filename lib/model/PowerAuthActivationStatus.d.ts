@@ -1,6 +1,6 @@
-import { PA2ActivationState } from './PA2ActivationState';
+import { PowerAuthActivationState } from './PowerAuthActivationState';
 export interface PowerAuthActivationStatus {
-    state: PA2ActivationState;
+    state: PowerAuthActivationState;
     failCount: number;
     maxFailCount: number;
     remainingAttempts: number;
