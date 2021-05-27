@@ -60,7 +60,6 @@ Your implementation might differ.
 
 ```java
 import com.wultra.android.powerauth.reactnative.PowerAuthRNPackage;
-import io.getlime.security.powerauth.networking.ssl.PA2ClientSslNoValidationStrategy;
 import io.getlime.security.powerauth.sdk.PowerAuthClientConfiguration;
 import io.getlime.security.powerauth.sdk.PowerAuthConfiguration;
 import io.getlime.security.powerauth.sdk.PowerAuthSDK;

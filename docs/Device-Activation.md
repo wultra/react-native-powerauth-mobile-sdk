@@ -164,7 +164,7 @@ try {
 
 ## Validating User Inputs
 
-The mobile SDK is providing a couple of functions in `PowerAuthOtpUtil` interface, helping with user input validation. You can:
+The mobile SDK is providing a couple of functions in `PowerAuthActivationCodeUtil` interface, helping with user input validation. You can:
 
 - Parse activation code when it's scanned from QR code
 - Validate a whole code at once
@@ -173,14 +173,14 @@ The mobile SDK is providing a couple of functions in `PowerAuthOtpUtil` interfac
 
 ### Validating Scanned QR Code
 
-To validate an activation code scanned from QR code, you can use `PowerAuthOtpUtil.parseActivationCode(code)` function. You have to provide the code with or without the signature part. For example:
+To validate an activation code scanned from QR code, you can use `PowerAuthActivationCodeUtil.parseActivationCode(code)` function. You have to provide the code with or without the signature part. For example:
 
 ```javascript
-import { PowerAuthOtpUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
-  let otp = await PowerAuthOtpUtil.parseActivationCode(scannedCode);
+  let otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
   if (otp.activationSignature == null) {
      // QR code should contain a signature
      return
@@ -193,11 +193,11 @@ try {
 Note that the signature is only formally validated in the function above. The actual signature verification is performed in the activation process, or you can do it on your own:
 
 ```javascript
-import { PowerAuthOtpUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
-  let otp = await PowerAuthOtpUtil.parseActivationCode(scannedCode);
+  let otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
   if (otp.activationSignature) {
      await powerAuth.verifyServerSignedData(otp.activationCode, otp.activationSignature, true);
      // valid
@@ -209,46 +209,46 @@ try {
 
 ### Validating Entered Activation Code
 
-To validate an activation code at once, you can call `PowerAuthOtpUtil.validateActivationCode()` function. You have to provide the code without the signature part. For example:
+To validate an activation code at once, you can call `PowerAuthActivationCodeUtil.validateActivationCode()` function. You have to provide the code without the signature part. For example:
 
 ```javascript
-const isValid = await PowerAuthOtpUtil.validateActivationCode("VVVVV-VVVVV-VVVVV-VTFVA");
-const isInvalid = await PowerAuthOtpUtil.validateActivationCode("VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8gd29ybGQ=");
+const isValid = await PowerAuthActivationCodeUtil.validateActivationCode("VVVVV-VVVVV-VVVVV-VTFVA");
+const isInvalid = await PowerAuthActivationCodeUtil.validateActivationCode("VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8gd29ybGQ=");
 ```
 
 If your application is using your own validation, then you should switch to functions provided by SDK. All activation codes contain a checksum, so it's possible to detect mistyped characters before you start the activation. Check our [Activation Code](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Code.md) documentation for more details.
 
 ### Validating Recovery Code and PUK
 
-To validate a recovery code at once, you can call `PowerAuthOtpUtil.validateRecoveryCode()` function. You can provide the whole code, which may or may not contain `"R:"` prefix. So, you can validate manually entered codes, but also codes scanned from QR. For example:
+To validate a recovery code at once, you can call `PowerAuthActivationCodeUtil.validateRecoveryCode()` function. You can provide the whole code, which may or may not contain `"R:"` prefix. So, you can validate manually entered codes, but also codes scanned from QR. For example:
 
 ```javascript
-const isValid1 = await PowerAuthOtpUtil.validateRecoveryCode("VVVVV-VVVVV-VVVVV-VTFVA");
-const isValid2 = await PowerAuthOtpUtil.validateRecoveryCode("R:VVVVV-VVVVV-VVVVV-VTFVA");
+const isValid1 = await PowerAuthActivationCodeUtil.validateRecoveryCode("VVVVV-VVVVV-VVVVV-VTFVA");
+const isValid2 = await PowerAuthActivationCodeUtil.validateRecoveryCode("R:VVVVV-VVVVV-VVVVV-VTFVA");
 ```
 
-To validate PUK at once, you can call `PowerAuthOtpUtil.validateRecoveryPuk()` function:
+To validate PUK at once, you can call `PowerAuthActivationCodeUtil.validateRecoveryPuk()` function:
 
 ```javascript
-const isValid = await PowerAuthOtpUtil.validateRecoveryPuk("0123456789");
+const isValid = await PowerAuthActivationCodeUtil.validateRecoveryPuk("0123456789");
 ```
 
 ### Auto-Correcting Typed Characters
 
-You can implement auto-correcting of typed characters with using `PowerAuthOtpUtil.correctTypedCharacter()` function in screens, where user is supposed to enter an activation or recovery code. This technique is possible due to the fact that Base32 is constructed so that it doesn't contain visually confusing characters. For example, `1` (number one) and `I` (capital I) are confusing, so only `I` is allowed. The benefit is that the provided function can correct typed `1` and translate it to `I`.
+You can implement auto-correcting of typed characters with using `PowerAuthActivationCodeUtil.correctTypedCharacter()` function in screens, where user is supposed to enter an activation or recovery code. This technique is possible due to the fact that Base32 is constructed so that it doesn't contain visually confusing characters. For example, `1` (number one) and `I` (capital I) are confusing, so only `I` is allowed. The benefit is that the provided function can correct typed `1` and translate it to `I`.
 
 Here's an example how to iterate over the string and validate it character by character:
 
 
 ```javascript
-import { PowerAuthOtpUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
 
 /// Returns corrected code
 validateAndCorrectCharacters(code) {
     let result = "";
     for (let i = 0; i < code.length; i++) {
       try {
-        const corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(i));
+        const corrected = await PowerAuthActivationCodeUtil.correctTypedCharacter(code.charCodeAt(i));
         result += String.fromCharCode(corrected);
       } catch (e) {
         console.log(`invalid character: ${code.charCodeAt(i)}`);

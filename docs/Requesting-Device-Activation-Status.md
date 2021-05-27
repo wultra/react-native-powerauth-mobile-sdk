@@ -16,28 +16,28 @@ if (await powerAuth.hasValidActivation()) {
         const status = await powerAuth.fetchActivationStatus();
 
         switch (status.state) {
-            case PA2ActivationState.PA2ActivationState_PendingCommit:
+            case PowerAuthActivationState.PENDING_COMMIT:
                 // Activation is awaiting commit on the server.
                 console.log("Waiting for commit");
-            case PA2ActivationState.PA2ActivationState_Active:
+            case PowerAuthActivationState.ACTIVE:
                 // Activation is valid and active.
                 console.log("Activation is active");
-            case PA2ActivationState.PA2ActivationState_Blocked:
+            case PowerAuthActivationState.BLOCKED:
                 // Activation is blocked. You can display unblock
                 // instructions to the user.
                 console.log("Activation is blocked");
-            case PA2ActivationState.PA2ActivationState_Removed:
+            case PowerAuthActivationState.REMOVED:
                 // Activation is no longer valid on the server.
                 // You can inform user about this situation and remove
                 // activation locally via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is no longer valid");
-            case PA2ActivationState.PA2ActivationState_Deadlock:
+            case PowerAuthActivationState.DEADLOCK:
                 // Local activation is technically blocked and no longer
                 // can be used for the signature calculations. You can inform
                 // user about this situation and remove activation locally
                 // via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is technically blocked");
-            case PA2ActivationState.PA2ActivationState_Created:
+            case PowerAuthActivationState.CREATED:
                 // Activation is just created. This is the internal
                 // state on the server and therefore can be ignored
                 // on the mobile application.
@@ -58,7 +58,7 @@ if (await powerAuth.hasValidActivation()) {
 }
 ```
 
-Note that the status fetch may fail at an unrecoverable error `PA2ErrorCodeProtocolUpgrade`, meaning that it's not possible to upgrade the PowerAuth protocol to a newer version. In this case, it's recommended to [remove the activation locally](Device-Activation-Removal.md).
+Note that the status fetch may fail at an unrecoverable error `PowerAuthErrorCode.PROTOCOL_UPGRADE`, meaning that it's not possible to upgrade the PowerAuth protocol to a newer version. In this case, it's recommended to [remove the activation locally](Device-Activation-Removal.md).
 
 To get more information about activation states, check the [Activation States](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation.md#activation-states) chapter available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 

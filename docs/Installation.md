@@ -4,7 +4,7 @@ React Native PowerAuth Mobile SDK is distributed as a public [npm package](https
 
 ## Supported Platforms
 
-The library is available for the following __React Native (0.64.0+)__ platforms:
+The library is available for the following __React Native (0.64.1+)__ platforms:
 
 - __Android 5.0 (API 21)__ and newer
 - __iOS 11.0__ and newer
