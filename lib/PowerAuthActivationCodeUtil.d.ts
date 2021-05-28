@@ -1,5 +1,5 @@
 /**
- * The `PowerAuthOtpUtil` provides various set of methods for parsing and validating
+ * The `PowerAuthActivationCodeUtil` provides various set of methods for parsing and validating
  activation or recovery codes.
  
  Current format:
@@ -21,23 +21,23 @@
  As you can see, both activation and recovery codes, shares the same basic principle (like CRC16
  checksum). That's why parser returns the same `PowerAuthOtp` object for both scenarios.
  */
-export declare class PowerAuthOtpUtil {
+export declare class PowerAuthActivationCodeUtil {
     /**
      * Parses an input |activationCode| (which may or may not contain an optional signature) and returns PowerAuthOtp
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      *
-     * @return OTP object
+     * @return Activation code object
      * @throws error when not valid
      */
-    static parseActivationCode(activationCode: string): Promise<PowerAuthOtp>;
+    static parseActivationCode(activationCode: string): Promise<PowerAuthActivationCode>;
     /**
      * Parses an input |recoveryCode| (which may or may not contain an optional "R:" prefix) and returns PowerAuthOtp
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      *
-     * @return OTP object
+     * @return Activation code object
      * @throws error when not valid
      */
-    static parseRecoveryCode(recoveryCode: string): Promise<PowerAuthOtp>;
+    static parseRecoveryCode(recoveryCode: string): Promise<PowerAuthActivationCode>;
     /**
      * Returns true if |activationCode| is a valid activation code. The input code must not contain a signature part.
      * You can use this method to validate a whole user-typed activation code at once.
@@ -71,10 +71,10 @@ export declare class PowerAuthOtpUtil {
     static correctTypedCharacter(character: number): Promise<number>;
 }
 /**
- The `PowerAuthOtp` object contains parsed components from user-provided activation, or recovery
- code. You can use methods from `PowerAuthOtpUtil` class to fill this object with valid data.
+ The `PowerAuthActivationCode` object contains parsed components from user-provided activation, or recovery
+ code. You can use methods from `PowerAuthActivationCodeUtil` class to fill this object with valid data.
  */
-export interface PowerAuthOtp {
+export interface PowerAuthActivationCode {
     /**
      * If object is constructed from an activation code, then property contains just a code, without a signature part.
      * If object is constructed from a recovery code, then property contains just a code, without an optional "R:" prefix.

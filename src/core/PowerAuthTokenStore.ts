@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
-import { NativeModules } from 'react-native';
-import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
-import { __AuthenticationUtils } from './internal/AuthenticationUtils';
+import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication';
+import { PowerAuthAuthorizationHttpHeader } from '../model/PowerAuthAuthorizationHttpHeader';
+import { __NativeWrapper } from "../internal/NativeWrapper";
 
+/**
+ * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as 
+ * underlying storage for received data. Note that the whole store's interface is thread safe, but it's 
+ * not recommended to query for the same token in overlapping asynchronous requests. This usage may lead 
+ * to leaking tokens on the PowerAuth server.
+ */
 export class PowerAuthTokenStore {
+
+    constructor(instanceId: string) {
+        this.wrapper = new __NativeWrapper(instanceId);
+    }
 
     /**
      * Quick check whether the token with name is in local database.
@@ -27,8 +36,8 @@ export class PowerAuthTokenStore {
      * @param tokenName Name of access token to be checked.
      * @return true if token exists in local database.
      */
-    static hasLocalToken(tokenName: string): Promise<boolean> {
-        return NativeModules.PowerAuth.hasLocalToken(tokenName);
+    hasLocalToken(tokenName: string): Promise<boolean> {
+        return this.wrapper.call("hasLocalToken", tokenName);
     }
 
     /**
@@ -37,8 +46,8 @@ export class PowerAuthTokenStore {
      * @param tokenName Name of access token to be returned
      * @return token object if in the local database (or throws)
      */
-     static async getLocalToken(tokenName: string): Promise<PowerAuthToken> {
-        return NativeModules.PowerAuth.getLocalToken(tokenName);
+     getLocalToken(tokenName: string): Promise<PowerAuthToken> {
+        return this.wrapper.call("getLocalToken", tokenName);
     }
 
     /**
@@ -46,15 +55,15 @@ export class PowerAuthTokenStore {
      *
      * @param tokenName token to be removed
      */
-    static removeLocalToken(tokenName: string): Promise<void> {
-        return NativeModules.PowerAuth.removeLocalToken(tokenName);
+    removeLocalToken(tokenName: string): Promise<void> {
+        return this.wrapper.call("removeLocalToken", tokenName);
     }
 
     /**
      * Remove all tokens from local database. This method doesn't issue a HTTP request to the server.
      */
-    static removeAllLocalTokens(): Promise<void> {
-        return NativeModules.PowerAuth.removeAllLocalTokens();
+    removeAllLocalTokens(): Promise<void> {
+        return this.wrapper.call("removeAllLocalTokens");
     }
 
     /**
@@ -68,8 +77,8 @@ export class PowerAuthTokenStore {
      * @param authentication An authentication instance specifying what factors should be used for token creation.
      * @return PowerAuth token with already generated header
      */
-    static async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
-        return NativeModules.PowerAuth.requestAccessToken(tokenName, await __AuthenticationUtils.process(authentication));
+    async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
+        return this.wrapper.call("requestAccessToken", tokenName, await this.wrapper.authenticate(authentication));
     }
 
     /**
@@ -81,8 +90,8 @@ export class PowerAuthTokenStore {
      *
      * @param tokenName Name of token to be removed
      */
-    static removeAccessToken(tokenName: string): Promise<void> {
-        return NativeModules.PowerAuth.removeAccessToken(tokenName);
+    removeAccessToken(tokenName: string): Promise<void> {
+        return this.wrapper.call("removeAccessToken", tokenName);
     }
 
     /**
@@ -91,9 +100,11 @@ export class PowerAuthTokenStore {
      * @param tokenName Name of token in the local storage that will be used for generating
      * @returns header or throws
      */
-    static generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return NativeModules.PowerAuth.generateHeaderForToken(tokenName ?? "");
+    generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader> {
+        return this.wrapper.call("generateHeaderForToken", tokenName ?? "");
     }
+
+    private wrapper: __NativeWrapper;
 }
 
 export interface PowerAuthToken {

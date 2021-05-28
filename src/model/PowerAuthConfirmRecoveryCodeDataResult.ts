@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import { PowerAuthActivationState } from './PowerAuthActivationState';
-
-export interface PowerAuthActivationStatus {
-    state: PowerAuthActivationState;
-    failCount: number;
-    maxFailCount: number;
-    remainingAttempts: number;
+/** 
+ * Result of the confirmRecoveryCode PowerAuth method. 
+ */
+export interface PowerAuthConfirmRecoveryCodeDataResult {
+    /** 
+     * Indicates that the code was already confirmed in the past 
+     */
+    alreadyConfirmed: boolean;
 }

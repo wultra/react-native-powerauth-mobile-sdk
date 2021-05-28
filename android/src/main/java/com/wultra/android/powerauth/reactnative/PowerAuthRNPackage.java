@@ -29,29 +29,35 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import io.getlime.security.powerauth.sdk.PowerAuthSDK;
 
 public class PowerAuthRNPackage implements ReactPackage {
 
     private PowerAuthRNModule mPowerAuthModule;
     private PowerAuthSDK.Builder mConfig;
+    private String mInstanceId;
 
+    @NonNull
     @Override
     public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }
 
+    @NonNull
     @Override
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         mPowerAuthModule = new PowerAuthRNModule(reactContext);
-        if (mConfig != null) {
+        if (mConfig != null && mInstanceId != null) {
             try {
-                mPowerAuthModule.configure(mConfig);
+                mPowerAuthModule.configure(mInstanceId, mConfig);
             } catch (Exception e) {
                 Log.e("PA-RN", "PowerAuth module failed to configure.", e);
             }
             mConfig = null;
+            mInstanceId = null;
         }
         modules.add(mPowerAuthModule);
         return modules;
@@ -63,14 +69,15 @@ public class PowerAuthRNPackage implements ReactPackage {
      * @param builder configuration for the PowerAuth instance
      * @throws IllegalStateException When the module was already configured.
      */
-    public void configure(@NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
+    public void configure(@Nonnull String instanceId, @NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
 
         if (mPowerAuthModule != null) {
             // Module was already created, configure it right away.
-            mPowerAuthModule.configure(builder);
+            mPowerAuthModule.configure(instanceId, builder);
         } else {
             // Keep the config until the module is created
             mConfig = builder;
+            mInstanceId = instanceId;
         }
     }
 }

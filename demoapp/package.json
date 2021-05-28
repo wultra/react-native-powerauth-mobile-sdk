@@ -14,6 +14,7 @@
     "react": "17.0.1",
     "react-dom": "~16.9.0",
     "react-native": "0.64.0",
+    "react-native-dropdown-picker": "^5.0.0",
     "react-native-gesture-handler": "~1.10.3",
     "react-native-powerauth-mobile-sdk": "file:../react-native-powerauth-mobile-sdk-1.5.2.tgz",
     "react-native-reanimated": "~1.7.0",

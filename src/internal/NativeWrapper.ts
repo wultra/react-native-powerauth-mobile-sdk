@@ -15,12 +15,30 @@
  */
 
 import { NativeModules, Platform } from 'react-native';
+import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication'
 
-/**
- * Internal authentication utility functions
- */
-export class __AuthenticationUtils {
+export class __NativeWrapper {
+
+    constructor(private powerAuthInstanceId: string) {
+
+    }
+
+    async call<T>(name: string, ...args): Promise<T> {
+        try {
+            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [this.powerAuthInstanceId, ...args]));
+        } catch (e) {
+            throw new PowerAuthError(e);
+        }
+    }
+
+    static async call<T>(name: string, ...args): Promise<T> {
+        try {
+            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [...args]));
+        } catch (e) {
+            throw new PowerAuthError(e);
+        }
+    }
 
     /**
      * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
@@ -29,14 +47,14 @@ export class __AuthenticationUtils {
      * @param makeReusable if the object should be forced to be reusable
      * @returns configured authorization object
      */
-    static async process(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
+     async authenticate(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
 
         let obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
 
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
         if ((Platform.OS == "android" && authentication.useBiometry && (obj.biometryKey == null || makeReusable)) || (Platform.OS == "ios" && makeReusable)) {
-            const key = await NativeModules.PowerAuth.authenticateWithBiometry(authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??");
+            const key = await this.call("authenticateWithBiometry", authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??") as string;
             obj.biometryKey = key;
             return obj;
         }

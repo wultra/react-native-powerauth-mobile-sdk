@@ -5,17 +5,31 @@ import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivati
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
+import { PowerAuthConfirmRecoveryCodeDataResult } from './model/PowerAuthConfirmRecoveryCodeDataResult';
+import { PowerAuthTokenStore } from "./core/PowerAuthTokenStore";
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
-declare class PowerAuth {
-    private nativeModule;
-    /** If the PowerAuth module was configured. */
+export declare class PowerAuth {
+    /**
+     * Object for managing access tokens.
+     */
+    tokenStore: PowerAuthTokenStore;
+    /**
+     * Prepares the PowerAuth instance.
+     *
+     * 2 instances with the same instanceId will be internaly the same object!
+     *
+     * @param instanceId Identifier of the PowerAuthSDK instance. The bundle identifier/packagename is recommended.
+     */
+    constructor(instanceId: string);
+    /**
+     * If this PowerAuth instance was configured.
+     */
     isConfigured(): Promise<boolean>;
     /**
      * Prepares the PowerAuth instance. This method needs to be called before before any other method.
      *
-     * @param instanceId Identifier of the PowerAuthSDK instance. The bundle identifier/packagename is recommended.
      * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
      * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
      * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
@@ -23,7 +37,11 @@ declare class PowerAuth {
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
-    configure(instanceId: string, appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>;
+    configure(appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>;
+    /**
+     * Deconfigures the instance
+     */
+    deconfigure(): Promise<boolean>;
     /**
      * Checks if there is a valid activation.
      *
@@ -207,8 +225,10 @@ declare class PowerAuth {
      *
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
+     *
+     * @returns Result of the confirmation
      */
-    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<void>;
+    confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult>;
     /**
      * Helper method for grouping biometric authentications.
      *
@@ -222,7 +242,5 @@ declare class PowerAuth {
      * @param groupedAuthenticationCalls call that will use reusable authentication object
      */
     groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void>;
-    private wrapNativeCall;
+    private wrapper;
 }
-declare const _default: PowerAuth;
-export default _default;
