@@ -15,8 +15,8 @@
  */
 
 #import <React/RCTBridgeModule.h>
-#import <PowerAuth2/PA2ClientConfiguration.h>
-#import <PowerAuth2/PA2KeychainConfiguration.h>
+#import <PowerAuth2/PowerAuthClientConfiguration.h>
+#import <PowerAuth2/PowerAuthKeychainConfiguration.h>
 #import <PowerAuth2/PowerAuthConfiguration.h>
 
 @interface PowerAuth: NSObject<RCTBridgeModule>
@@ -30,6 +30,6 @@
  * @return If the configuration was successful.
 */
 - (BOOL) configureWithConfig:(nonnull PowerAuthConfiguration *)config
-             keychainConfig:(nullable PA2KeychainConfiguration *)keychainConfig
-               clientConfig:(nullable PA2ClientConfiguration *)clientConfig;
+             keychainConfig:(nullable PowerAuthKeychainConfiguration *)keychainConfig
+               clientConfig:(nullable PowerAuthClientConfiguration *)clientConfig;
 @end

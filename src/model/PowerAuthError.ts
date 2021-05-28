@@ -49,31 +49,29 @@ export class PowerAuthError {
 
 export enum PowerAuthErrorCode {
 
-    // ---- PowerAuth native errors ----
-
     /** Code returned, or reported, when operation succeeds. */
-    PA2Succeed = "PA2Succeed",
+    SUCCEED = "SUCCEED",
 
     /** Error code for error with network connectivity or download. */
-    PA2ErrorCodeNetworkError = "PA2ErrorCodeNetworkError",
+    NETWORK_ERROR = "NETWORK_ERROR",
 
     /** Error code for error in signature calculation. */
-    PA2ErrorCodeSignatureError = "PA2ErrorCodeSignatureError",
+    SIGNATURE_ERROR = "SIGNATURE_ERROR",
 
     /** Error code for error that occurs when activation state is invalid. */
-    PA2ErrorCodeInvalidActivationState = "PA2ErrorCodeInvalidActivationState",
+    INVALID_ACTIVATION_STATE = "INVALID_ACTIVATION_STATE",
 
     /** Error code for error that occurs when activation data is invalid. */
-    PA2ErrorCodeInvalidActivationData = "PA2ErrorCodeInvalidActivationData",
+    INVALID_ACTIVATION_DATA = "INVALID_ACTIVATION_DATA",
 
     /** Error code for error that occurs when activation is required but missing. */
-    PA2ErrorCodeMissingActivation = "PA2ErrorCodeMissingActivation",
+    MISSING_ACTIVATION = "MISSING_ACTIVATION",
 
     /** Error code for error that occurs when pending activation is present and work with completed activation is required. */
-    PA2ErrorCodeActivationPending = "PA2ErrorCodeActivationPending",
+    PENDING_ACTIVATION = "PENDING_ACTIVATION",
 
     /** Error code for situation when biometric prompt is canceled by the user. */
-    PA2ErrorCodeBiometryCancel = "PA2ErrorCodeBiometryCancel",
+    BIOMETRY_CANCEL = "BIOMETRY_CANCEL",
 
     /**
      * Error code for canceled operation. This kind of error may occur in situations, when SDK
@@ -81,78 +79,82 @@ export enum PowerAuthErrorCode {
      * itself. For example, if you reset the state of {@code PowerAuthSDK} during the pending
      * fetch for activation status, then the application gets an exception, with this error code.
      */
-    PA2ErrorCodeOperationCancelled = "PA2ErrorCodeOperationCancelled",
+    OPERATION_CANCELED = "OPERATION_CANCELED",
 
     /** Error code for error that occurs when invalid activation code is provided. */
-    PA2ErrorCodeInvalidActivationCode = "PA2ErrorCodeInvalidActivationCode",
+    INVALID_ACTIVATION_CODE = "INVALID_ACTIVATION_CODE",
 
     /** Error code for accessing an unknown token. */
-    PA2ErrorCodeInvalidToken = "PA2ErrorCodeInvalidToken",
+    INVALID_TOKEN = "INVALID_TOKEN",
 
     /** Error code for errors related to end-to-end encryption. */
-    PA2ErrorCodeEncryption = "PA2ErrorCodeEncryption",
+    ENCRYPTION_ERROR = "ENCRYPTION_ERROR",
 
     /** Error code for a general API misuse. */
-    PA2ErrorCodeWrongParameter = "PA2ErrorCodeWrongParameter",
+    WRONG_PARAMETER = "WRONG_PARAMETER",
 
     /** Error code for protocol upgrade failure. The recommended action is to retry the status fetch operation, or locally remove the activation. */
-    PA2ErrorCodeProtocolUpgrade = "PA2ErrorCodeProtocolUpgrade",
+    PROTOCOL_UPGRADE = "PROTOCOL_UPGRADE",
 
     /** The requested function is not available during the protocol upgrade. You can retry the operation, after the upgrade is finished. */
-    PA2ErrorCodePendingProtocolUpgrade = "PA2ErrorCodePendingProtocolUpgrade",
+    PENDING_PROTOCOL_UPGRADE = "PENDING_PROTOCOL_UPGRADE",
 
     /** The biometric authentication cannot be processed due to lack of required hardware or due to a missing support from the operating system. */
-    PA2ErrorCodeBiometryNotSupported = "PA2ErrorCodeBiometryNotSupported",
+    BIOMETRY_NOT_SUPPORTED = "BIOMETRY_NOT_SUPPORTED",
 
     /** The biometric authentication is temporarily unavailable. */
-    PA2ErrorCodeBiometryNotAvailable = "PA2ErrorCodeBiometryNotAvailable",
+    BIOMETRY_NOT_AVAILABLE = "BIOMETRY_NOT_AVAILABLE",
 
-    /** Network communication returned an error. See more information in the message of the exception. */
-    PA2ErrorResponseException = "PA2ErrorResponseException",
+    /**
+     * The biometric authentication is locked out due to too many failed attempts.
+     * 
+     * The error is reported for the temporary and also for the permanent lockout. The temporary
+     * lockout typically occurs after 5 failed attempts, and lasts for 30 seconds. In case of permanent
+     * lockout the biometric authentication is disabled until the user unlocks the device with strong
+     * authentication (PIN, password, pattern).
+     */
+    BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT",
 
     /** The biometric authentication did not recognize the biometric image (fingerprint, face, etc...) */
-    PA2ErrorCodeBiometryNotRecognized = "PA2ErrorCodeBiometryNotRecognized",
+    BIOMETRY_NOT_RECOGNIZED = "BIOMETRY_NOT_RECOGNIZED",
+
+    /**
+     * The keychain protection is not sufficient. The exception is thrown in case that device doesn't
+     * support the minimum required level of the keychain protection.
+     * Android only.
+     */
+    INSUFFICIENT_KEYCHAIN_PROTECTION = "INSUFFICIENT_KEYCHAIN_PROTECTION",
 
     /** Error code for a general error related to WatchConnectivity (iOS only) */
-    PA2ErrorCodeWatchConnectivity = "PA2ErrorCodeWatchConnectivity",
+    WATCH_CONNECTIVITY = "WATCH_CONNECTIVITY",
 
+    /** Network communication returned an error. See more information in the message of the exception. */
+    RESPONSE_ERROR = "RESPONSE_ERROR",
 
-
-    // ---- React Native layer errors ----
-
-    /** When the error is not originating from the native module */
-    PA2ReactNativeError = "PA2ReactNativeError",
+    /** When the error is not originating from the native module. */
+    REACT_NATIVE_ERROR = "REACT_NATIVE_ERROR",
 
     /** Instance of the PowerAuth object is not configured */
-    PA2RNInstanceNotConfigured = "PA2RNInstanceNotConfigured",
+    INSTANCE_NOT_CONFIGURED = "INSTANCE_NOT_CONFIGURED",
 
     /** Error in `correctTypedCharacter` */
-    PA2RNInvalidCharacter = "PA2RNInvalidCharacter",
+    INVALID_CHARACTER = "INVALID_CHARACTER",
 
     /** Used invalid recovery code in parseRecoveryCode */
-    PA2RNInvalidRecoveryCode = "PA2RNInvalidRecoveryCode",
-
-    /** Used invalid recovery code in parseActivationCode */
-    PA2RNInvalidActivationCode = "PA2RNInvalidActivationCode",
+    INVALID_RECOVERY_CODE = "INVALID_RECOVERY_CODE",
 
     /** Error when generating a token */
-    PA2RNTokenNotAvailable = "PA2RNTokenNotAvailable",
-
-    /** Error when generating a token */
-    PA2RNCannotGenerateHeader = "PA2RNTokenNotAvailable",
+    CANNOT_GENERATE_TOKEN = "CANNOT_GENERATE_TOKEN",
 
     /** Error when requesting local token */
-    PA2RNLocalTokenNotAvailable = "PA2RNLocalTokenNotAvailable",
+    LOCAL_TOKEN_NOT_AVAILABLE = "LOCAL_TOKEN_NOT_AVAILABLE",
 
     /** Biometric authentication failed */
-    PA2RNBiometryFailed = "PA2RNBiometryFailed",
+    BIOMETRY_FAILED = "BIOMETRY_FAILED",
 
-    /** When users cancel biometry dialog  */
-    PA2RNBiometryCanceled = "PA2RNBiometryCanceled",
+    /** When password is not set during activation commit */
+    PASSWORD_NOT_SET = "PASSWORD_NOT_SET",
 
-    /** When password is not set during activatio ncommit */
-    PA2RNPasswordNotSet = "PA2RNPasswordNotSet",
-
-    /** Error when invalid activatio object is provided during activation */
-    PA2RNInvalidActivationObject = "PA2RNInvalidActivationObject",
+    /** Error when invalid activation object is provided during activation */
+    INVALID_ACTIVATION_OBJECT = "INVALID_ACTIVATION_OBJECT",
 }

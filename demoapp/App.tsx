@@ -3,7 +3,7 @@ import { StyleSheet, View, Button, Text, ScrollView, Picker, Platform } from 're
 import DropDownPicker from 'react-native-dropdown-picker';
 import Prompt from 'rn-prompt';
 import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
-import {PowerAuthOtpUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthOtpUtil';
+import {PowerAuthActivationCodeUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
 import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
 import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
 import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
@@ -133,6 +133,7 @@ export default class App extends Component<any, State> {
               await this.refreshActivationInfo();
             }}
             setItems={() => {}}
+            //@ts-expect-error
             setOpen={val => {
               this.setState({
                 isActivationDropdownOpen: val
@@ -458,8 +459,8 @@ export default class App extends Component<any, State> {
             <Button title="Parse activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
               await sleep(100);
               try {
-                let otp = await PowerAuthOtpUtil.parseActivationCode(code);
-                alert(`CODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+                let ac = await PowerAuthActivationCodeUtil.parseActivationCode(code);
+                alert(`CODE:${ac.activationCode}\nSIGNATURE:${ac.activationSignature}`);
               } catch(e) {
                 alert(`Not valid: ${e.code}`);
                 console.log(e.code);
@@ -468,8 +469,8 @@ export default class App extends Component<any, State> {
             <Button title="Parse recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
               await sleep(100);
               try {
-                let otp = await PowerAuthOtpUtil.parseRecoveryCode(code);
-                alert(`CODE:${otp.activationCode}\nSIGNATURE:${otp.activationSignature}`);
+                let ac = await PowerAuthActivationCodeUtil.parseRecoveryCode(code);
+                alert(`CODE:${ac.activationCode}\nSIGNATURE:${ac.activationSignature}`);
               } catch(e) {
                 alert(`Not valid: ${e.code}`);
                 console.log(e.code);
@@ -477,22 +478,22 @@ export default class App extends Component<any, State> {
             } }) }} />
             <Button title="Is valid activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthOtpUtil.validateActivationCode(code);
+              let valid = await PowerAuthActivationCodeUtil.validateActivationCode(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthOtpUtil.validateRecoveryCode(code);
+              let valid = await PowerAuthActivationCodeUtil.validateRecoveryCode(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid recovery PUK" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery PUK", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthOtpUtil.validateRecoveryPuk(code);
+              let valid = await PowerAuthActivationCodeUtil.validateRecoveryPuk(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthOtpUtil.validateTypedCharacter(code.charCodeAt(0));
+              let valid = await PowerAuthActivationCodeUtil.validateTypedCharacter(code.charCodeAt(0));
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Correct activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter code", promptCallback: async code => {
@@ -500,7 +501,7 @@ export default class App extends Component<any, State> {
               let result = "";
               for (let i = 0; i < code.length; i++) {
                 try {
-                  const corrected = await PowerAuthOtpUtil.correctTypedCharacter(code.charCodeAt(i));
+                  const corrected = await PowerAuthActivationCodeUtil.correctTypedCharacter(code.charCodeAt(i));
                   result += String.fromCharCode(corrected);
                 } catch (e) {
                   console.log(`invalid character: ${code.charCodeAt(i)}`);

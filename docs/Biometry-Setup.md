@@ -108,7 +108,7 @@ Be aware that the configuration below is effective only for the new keys. So, if
 
 ### iOS
 
-On iOS, you have to provide `PA2KeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `YES` and use that configuration for the `PowerAuth` object configuration:
+On iOS, you have to provide `PowerAuthKeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `YES` and use that configuration for the `PowerAuth` object configuration:
 
 ```objc
 // Get the React Native bridge module
@@ -119,7 +119,7 @@ PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
 
 // Prepare PA2KeychainConfiguration
 // Set YES to 'linkBiometricItemsToCurrentSet' property.
-PA2KeychainConfiguration *keychainConfiguration = [[PA2KeychainConfiguration alloc] init];
+PowerAuthKeychainConfiguration *keychainConfiguration = [[PowerAuthKeychainConfiguration alloc] init];
 keychainConfiguration.linkBiometricItemsToCurrentSet = YES;
 
 // Init shared PowerAuthSDK instance
