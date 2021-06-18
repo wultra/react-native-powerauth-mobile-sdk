@@ -1,7 +1,7 @@
 PODS:
   - boost-for-react-native (1.63.0)
   - DoubleConversion (1.1.6)
-  - EXConstants (9.0.0):
+  - EXConstants (9.2.0):
     - UMConstantsInterface
     - UMCore
   - EXErrorRecovery (1.1.0):
@@ -32,8 +32,11 @@ PODS:
   - EXSQLite (8.1.0):
     - UMCore
     - UMFileSystemInterface
-  - EXUpdates (0.2.14):
-    - React
+  - EXStructuredHeaders (1.0.1):
+    - UMCore
+  - EXUpdates (0.5.5):
+    - EXStructuredHeaders
+    - React-Core
     - UMCore
   - EXWebBrowser (8.2.1):
     - UMCore
@@ -335,8 +338,8 @@ PODS:
   - Yoga (1.14.0)
 
 DEPENDENCIES:
-  - DoubleConversion (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
-  - EXConstants (from `../node_modules/expo-constants/ios`)
+  - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
+  - EXConstants (from `../node_modules/expo-linking/node_modules/expo-constants/ios`)
   - EXErrorRecovery (from `../node_modules/expo-error-recovery/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
   - EXFont (from `../node_modules/expo-font/ios`)
@@ -347,37 +350,38 @@ DEPENDENCIES:
   - EXPermissions (from `../node_modules/expo-permissions/ios`)
   - EXSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - EXSQLite (from `../node_modules/expo-sqlite/ios`)
+  - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
   - EXUpdates (from `../node_modules/expo-updates/ios`)
   - EXWebBrowser (from `../node_modules/expo-web-browser/ios`)
-  - FBLazyVector (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/FBLazyVector`)
-  - FBReactNativeSpec (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/FBReactNativeSpec`)
-  - glog (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - RCT-Folly (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
-  - RCTRequired (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/RCTRequired`)
-  - RCTTypeSafety (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/TypeSafety`)
-  - React (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/`)
-  - React-callinvoker (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/callinvoker`)
-  - React-Core (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/`)
-  - React-Core/DevSupport (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/`)
-  - React-Core/RCTWebSocket (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/`)
-  - React-CoreModules (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/CoreModules`)
-  - React-cxxreact (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/cxxreact`)
-  - React-jsi (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsi`)
-  - React-jsiexecutor (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsiexecutor`)
-  - React-jsinspector (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsinspector`)
+  - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
+  - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
+  - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
+  - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
+  - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
+  - React (from `../node_modules/react-native/`)
+  - React-callinvoker (from `../node_modules/react-native/ReactCommon/callinvoker`)
+  - React-Core (from `../node_modules/react-native/`)
+  - React-Core/DevSupport (from `../node_modules/react-native/`)
+  - React-Core/RCTWebSocket (from `../node_modules/react-native/`)
+  - React-CoreModules (from `../node_modules/react-native/React/CoreModules`)
+  - React-cxxreact (from `../node_modules/react-native/ReactCommon/cxxreact`)
+  - React-jsi (from `../node_modules/react-native/ReactCommon/jsi`)
+  - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
+  - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - react-native-powerauth-mobile-sdk (from `../node_modules/react-native-powerauth-mobile-sdk`)
-  - React-perflogger (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/reactperflogger`)
-  - React-RCTActionSheet (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/ActionSheetIOS`)
-  - React-RCTAnimation (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/NativeAnimation`)
-  - React-RCTBlob (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Blob`)
-  - React-RCTImage (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Image`)
-  - React-RCTLinking (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/LinkingIOS`)
-  - React-RCTNetwork (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Network`)
-  - React-RCTSettings (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Settings`)
-  - React-RCTText (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Text`)
-  - React-RCTVibration (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Vibration`)
-  - React-runtimeexecutor (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/runtimeexecutor`)
-  - ReactCommon/turbomodule/core (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon`)
+  - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
+  - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
+  - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
+  - React-RCTBlob (from `../node_modules/react-native/Libraries/Blob`)
+  - React-RCTImage (from `../node_modules/react-native/Libraries/Image`)
+  - React-RCTLinking (from `../node_modules/react-native/Libraries/LinkingIOS`)
+  - React-RCTNetwork (from `../node_modules/react-native/Libraries/Network`)
+  - React-RCTSettings (from `../node_modules/react-native/Libraries/Settings`)
+  - React-RCTText (from `../node_modules/react-native/Libraries/Text`)
+  - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
+  - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
+  - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -394,7 +398,7 @@ DEPENDENCIES:
   - "UMReactNativeAdapter (from `../node_modules/@unimodules/react-native-adapter/ios`)"
   - UMSensorsInterface (from `../node_modules/unimodules-sensors-interface/ios`)
   - UMTaskManagerInterface (from `../node_modules/unimodules-task-manager-interface/ios`)
-  - Yoga (from `/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/yoga`)
+  - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
@@ -404,9 +408,9 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   DoubleConversion:
-    :podspec: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
+    :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   EXConstants:
-    :path: "../node_modules/expo-constants/ios"
+    :path: "../node_modules/expo-linking/node_modules/expo-constants/ios"
   EXErrorRecovery:
     :path: "../node_modules/expo-error-recovery/ios"
   EXFileSystem:
@@ -427,64 +431,66 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-splash-screen/ios"
   EXSQLite:
     :path: "../node_modules/expo-sqlite/ios"
+  EXStructuredHeaders:
+    :path: "../node_modules/expo-structured-headers/ios"
   EXUpdates:
     :path: "../node_modules/expo-updates/ios"
   EXWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
   FBLazyVector:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/FBLazyVector"
+    :path: "../node_modules/react-native/Libraries/FBLazyVector"
   FBReactNativeSpec:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/FBReactNativeSpec"
+    :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
-    :podspec: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/glog.podspec"
+    :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   RCT-Folly:
-    :podspec: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
+    :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/RCTRequired"
+    :path: "../node_modules/react-native/Libraries/RCTRequired"
   RCTTypeSafety:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/TypeSafety"
+    :path: "../node_modules/react-native/Libraries/TypeSafety"
   React:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/"
+    :path: "../node_modules/react-native/"
   React-callinvoker:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/callinvoker"
+    :path: "../node_modules/react-native/ReactCommon/callinvoker"
   React-Core:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/"
+    :path: "../node_modules/react-native/"
   React-CoreModules:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/React/CoreModules"
+    :path: "../node_modules/react-native/React/CoreModules"
   React-cxxreact:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/cxxreact"
+    :path: "../node_modules/react-native/ReactCommon/cxxreact"
   React-jsi:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsi"
+    :path: "../node_modules/react-native/ReactCommon/jsi"
   React-jsiexecutor:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsiexecutor"
+    :path: "../node_modules/react-native/ReactCommon/jsiexecutor"
   React-jsinspector:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/jsinspector"
+    :path: "../node_modules/react-native/ReactCommon/jsinspector"
   react-native-powerauth-mobile-sdk:
     :path: "../node_modules/react-native-powerauth-mobile-sdk"
   React-perflogger:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/reactperflogger"
+    :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/ActionSheetIOS"
+    :path: "../node_modules/react-native/Libraries/ActionSheetIOS"
   React-RCTAnimation:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/NativeAnimation"
+    :path: "../node_modules/react-native/Libraries/NativeAnimation"
   React-RCTBlob:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Blob"
+    :path: "../node_modules/react-native/Libraries/Blob"
   React-RCTImage:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Image"
+    :path: "../node_modules/react-native/Libraries/Image"
   React-RCTLinking:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/LinkingIOS"
+    :path: "../node_modules/react-native/Libraries/LinkingIOS"
   React-RCTNetwork:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Network"
+    :path: "../node_modules/react-native/Libraries/Network"
   React-RCTSettings:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Settings"
+    :path: "../node_modules/react-native/Libraries/Settings"
   React-RCTText:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Text"
+    :path: "../node_modules/react-native/Libraries/Text"
   React-RCTVibration:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/Libraries/Vibration"
+    :path: "../node_modules/react-native/Libraries/Vibration"
   React-runtimeexecutor:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/runtimeexecutor"
+    :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon"
+    :path: "../node_modules/react-native/ReactCommon"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
@@ -518,12 +524,12 @@ EXTERNAL SOURCES:
   UMTaskManagerInterface:
     :path: "../node_modules/unimodules-task-manager-interface/ios"
   Yoga:
-    :path: "/Users/kober/dev/wultra/repos/react-native-powerauth-mobile-sdk/demoapp/node_modules/react-native/ReactCommon/yoga"
+    :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
-  EXConstants: 9f18e9ef229706394f41735d9c7f309d479b36c0
+  EXConstants: 6ec1ea4a13ec734c7e2274bc9e5b7408d73007a1
   EXErrorRecovery: 88541714d9bbf8a823f4ee0b7078a92d3e0e42d2
   EXFileSystem: b82693d78de152efe10a77d4aac781f782e10916
   EXFont: af4c3281cac0bf6ccd8b8a534e9bce6437cc2e17
@@ -534,7 +540,8 @@ SPEC CHECKSUMS:
   EXPermissions: d2cafee9c72578ecc9ca121481e6c4a04a798861
   EXSplashScreen: 6888f24a847a2cdbf5ca4d996300adf9cc2726b4
   EXSQLite: 15268ec49f859e4594fe5b0a1c7a47913da0b67e
-  EXUpdates: 8c4570807f9435337769850d9976d63a407cecfc
+  EXStructuredHeaders: 0c3b4c8030ec5ed2c3bc0b64f5af81005b9cb5c8
+  EXUpdates: 3bcd7a0fda56c88951ff3eaa207e68dcaabe9f19
   EXWebBrowser: 6364e9e1ea73f6c3c2e6e3cc0ac17259a260e3a8
   FBLazyVector: 7b423f9e248eae65987838148c36eec1dbfe0b53
   FBReactNativeSpec: 0af6c53716817e2a045e573831bd8245bd380b86
