@@ -53,6 +53,7 @@ import io.getlime.security.powerauth.networking.ssl.*;
 import io.getlime.security.powerauth.networking.response.*;
 import io.getlime.security.powerauth.core.*;
 import io.getlime.security.powerauth.exception.*;
+import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor;
 
 @SuppressWarnings("unused")
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
@@ -276,7 +277,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void commitActivation(String instanceId, final ReadableMap authMap, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
+        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(PowerAuthSDK sdk) {
                 PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
@@ -294,7 +295,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         message = " "; // to prevent crash
                     }
                     try {
-                        sdk.commitActivation(context, (FragmentActivity) getCurrentActivity(), title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
+                        final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                        if (fragmentActivity == null) {
+                            throw new IllegalStateException("Current fragment activity is not available");
+                        }
+                        sdk.commitActivation(context, fragmentActivity, title, message, auth.usePassword, new ICommitActivationWithBiometryListener() {
 
                             @Override
                             public void onBiometricDialogCancelled() {
@@ -473,14 +478,18 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void addBiometryFactor(String instanceId, final String password, final String title, final String description, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
+        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(PowerAuthSDK sdk) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     try {
+                        final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                        if (fragmentActivity == null) {
+                            throw new IllegalStateException("Current fragment activity is not available");
+                        }
                         sdk.addBiometryFactor(
                                 context,
-                                (FragmentActivity)getCurrentActivity(),
+                                fragmentActivity,
                                 title,
                                 description,
                                 password,
@@ -705,7 +714,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void authenticateWithBiometry(String instanceId, final String title, final String description, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
+        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(PowerAuthSDK sdk) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -933,6 +942,17 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             return;
         }
         block.run(this.instances.get(instanceId));
+    }
+
+    private void usePowerAuthOnMainThread(@Nonnull final String instanceId, final Promise promise, final PowerAuthBlock block) {
+        // Note: Uses internal PowerAuth mobile SDK class, so we'll need to reimplement this in some future release.
+        //       Right now it's OK to use native SDKs class, due to tight dependency between RN wrapper and mobile SDK.
+        MainThreadExecutor.getInstance().execute(new Runnable() {
+            @Override
+            public void run() {
+                usePowerAuth(instanceId, promise, block);
+            }
+        });
     }
 
     private static Map<String, String> getStringMap(ReadableMap rm) {
