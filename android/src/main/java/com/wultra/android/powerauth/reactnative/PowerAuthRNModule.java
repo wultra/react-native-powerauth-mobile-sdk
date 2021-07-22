@@ -58,6 +58,8 @@ import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor;
 @SuppressWarnings("unused")
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
+    private static final String REACT_NATIVE_ERROR = "REACT_NATIVE_ERROR";
+
     interface PowerAuthBlock {
         void run(PowerAuthSDK sdk);
     }
@@ -114,10 +116,10 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             configure(instanceId, new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
             promise.resolve(true);
         } catch (Exception e) {
-            promise.reject("REACT_NATIVE_ERROR", "Failed to configure");
+            promise.reject(REACT_NATIVE_ERROR, "Failed to configure");
         }
     }
-    
+
     @ReactMethod
     public void deconfigure(String instanceId, final Promise promise) {
         this.instances.remove(instanceId);
@@ -422,7 +424,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (signature != null) {
                     promise.resolve(signature);
                 } else {
-                    promise.reject("REACT_NATIVE_ERROR", "Signature failed");
+                    promise.reject(REACT_NATIVE_ERROR, "Signature failed");
                 }
             }
         });
@@ -438,7 +440,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
                     promise.resolve(sdk.verifyServerSignedData(decodedData, decodedSignature, masterKey));
                 } catch (Exception e) {
-                    promise.reject("REACT_NATIVE_ERROR", "Verify failed");
+                    promise.reject(REACT_NATIVE_ERROR, "Verify failed");
                 }
             }
         });
@@ -508,7 +510,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
+                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -523,7 +525,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.hasBiometryFactor(context));
                 } else {
-                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
+                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -538,7 +540,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.removeBiometryFactor(context));
                 } else {
-                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
+                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -746,7 +748,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject("REACT_NATIVE_ERROR", "Biometry not supported on this android version.");
+                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -866,8 +868,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 PowerAuthToken token = sdk.getTokenStore().getLocalToken(context, tokenName);
                 if (token == null) {
                     promise.reject("LOCAL_TOKEN_ONT_AVAILABLE", "This token is no longer available in the local store.");
-                }
-                else if (token.canGenerateHeader()) {
+                } else if (token.canGenerateHeader()) {
                     promise.resolve(PowerAuthRNModule.getHttpHeaderObject(token.generateHeader()));
                 } else {
                     promise.reject("CANNOT_GENERATE_TOKEN", "Cannot generate header for this token.");
@@ -1001,8 +1002,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     private static void rejectPromise(Promise promise, Throwable t) {
-
-        @Nonnull String code = "REACT_NATIVE_ERROR"; // fallback code
+        @Nonnull String code = REACT_NATIVE_ERROR; // fallback code
         String message = t.getMessage();
         WritableMap userInfo = null;
 
