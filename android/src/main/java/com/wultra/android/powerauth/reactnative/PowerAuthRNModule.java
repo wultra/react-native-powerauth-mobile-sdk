@@ -33,8 +33,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 
+import java.io.IOException;
 import java.lang.*;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -1036,7 +1036,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 userInfo.putString("serverResponseCode", errorResponseApiException.getErrorResponse().getCode());
                 userInfo.putString("serverResponseMessage", errorResponseApiException.getErrorResponse().getMessage());
             }
-        } else if (t instanceof SocketException) {
+        } else if (t instanceof IOException) {
             // This is wrong, PowerAuth SDK should wrap such exception and report network related failure.
             code = "NETWORK_ERROR";
         }
