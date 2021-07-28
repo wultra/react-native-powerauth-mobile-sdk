@@ -373,7 +373,7 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: 7b423f9e248eae65987838148c36eec1dbfe0b53
-  FBReactNativeSpec: b1a5a4a7e43daf5f1ae09396d940ec492aff0828
+  FBReactNativeSpec: 64044649a7057c7b78a292eea256f0f505f77ff5
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
   PowerAuth2: 9a3ba5fe163fad011a702ece1c20bc4767ee9607
   PowerAuthCore: 0a97050bfa8c37de86e497fab3c2f41da45deddb

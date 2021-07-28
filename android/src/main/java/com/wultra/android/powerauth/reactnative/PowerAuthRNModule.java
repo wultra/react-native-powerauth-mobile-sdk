@@ -34,6 +34,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 
 import java.lang.*;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +48,7 @@ import io.getlime.security.powerauth.biometry.BiometryType;
 import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
+import io.getlime.security.powerauth.networking.exceptions.ErrorResponseApiException;
 import io.getlime.security.powerauth.networking.exceptions.FailedApiException;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.*;
@@ -1007,13 +1009,36 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         WritableMap userInfo = null;
 
         if (t instanceof PowerAuthErrorException) {
+            // Standard PowerAuthErrorException, containing enumeration with error code.
             code = getErrorCodeFromError(((PowerAuthErrorException)t).getPowerAuthErrorCode());
         } else if (t instanceof FailedApiException) {
-            FailedApiException farEx = (FailedApiException)t;
-            code = "RESPONSE_ERROR";
+            // FailedApiException or more specialized ErrorResponseApiException
+            final FailedApiException failedApiException = (FailedApiException)t;
+            final int httpStatusCode = failedApiException.getResponseCode();
+            if (httpStatusCode == 401) {
+                code = "AUTHENTICATION_ERROR";
+                message = "Unauthorized";
+            } else {
+                code = "RESPONSE_ERROR";
+            }
+            //
             userInfo = Arguments.createMap();
-            userInfo.putInt("responseCode", farEx.getResponseCode());
-            userInfo.putString("responseBody", farEx.getResponseBody());
+            userInfo.putInt("httpStatusCode", httpStatusCode);
+            userInfo.putString("responseBody", failedApiException.getResponseBody());
+            if (t instanceof ErrorResponseApiException) {
+                // ErrorResponseApiException is more specialized version of FailedApiException, containing
+                // an additional data.
+                final ErrorResponseApiException errorResponseApiException = (ErrorResponseApiException)t;
+                final int currentRecoveryPukIndex = errorResponseApiException.getCurrentRecoveryPukIndex();
+                if (currentRecoveryPukIndex > 0) {
+                    userInfo.putInt("currentRecoveryPukIndex", currentRecoveryPukIndex);
+                }
+                userInfo.putString("serverResponseCode", errorResponseApiException.getErrorResponse().getCode());
+                userInfo.putString("serverResponseMessage", errorResponseApiException.getErrorResponse().getMessage());
+            }
+        } else if (t instanceof SocketException) {
+            // This is wrong, PowerAuth SDK should wrap such exception and report network related failure.
+            code = "NETWORK_ERROR";
         }
 
         if (message != null && userInfo != null) {

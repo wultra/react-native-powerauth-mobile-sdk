@@ -15,7 +15,7 @@
  */
 
 import { NativeModules, Platform } from 'react-native';
-import { PowerAuthError } from '../model/PowerAuthError';
+import { PowerAuthError, PowerAuthErrorCode } from '../model/PowerAuthError';
 import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication'
 
 export class __NativeWrapper {
@@ -28,7 +28,7 @@ export class __NativeWrapper {
         try {
             return await ((NativeModules.PowerAuth[name] as Function).apply(null, [this.powerAuthInstanceId, ...args]));
         } catch (e) {
-            throw new PowerAuthError(e);
+            throw __NativeWrapper.processException(e);
         }
     }
 
@@ -36,8 +36,63 @@ export class __NativeWrapper {
         try {
             return await ((NativeModules.PowerAuth[name] as Function).apply(null, [...args]));
         } catch (e) {
-            throw new PowerAuthError(e);
+            throw __NativeWrapper.processException(e);
         }
+    }
+
+    /**
+     * Process any exception reported from the native module and handle platfrom specific cases.
+     * The method also validate whether exception parameter is already PowerAuthError type, to prevent
+     * double error wrapping.
+     * 
+     * @param exception Exception to process.
+     * @param message Optional message.
+     * @returns Instance of PowerAuthError.
+     */
+    static processException(exception: any, message: string = null): PowerAuthError {
+        // Initial checks:
+        // - Check if exception is null. That can happen when non-native exception is processed.
+        // - Check if the exception is already PowerAuthError type. If so, then return the same instance.
+        if (exception == null) {
+            return new PowerAuthError(null, message ?? "Operation failed with unspecified error")
+        } else if (exception as PowerAuthError) {
+            // There's no additional message, we can return exception as it is.
+            if (message == null) {
+                return exception
+            }
+            // There's additional message, so wrap PowerAuthError into another PowerAuthError
+            return new PowerAuthError(exception, message)
+        } 
+        // Otherwise handle the platform specific cases.
+        if (Platform.OS == "android") {
+            return this.processAndroidException(exception, message)
+        } else if (Platform.OS == "ios") {
+            return this.processIosException(exception, message)
+        } else {
+            return new PowerAuthError(null, "Unsupported platform")
+        }
+    }
+
+    /**
+     * Process iOS specific exception reported from the native module.
+     * 
+     * @param exception Original exception reported from iOS native module.
+     * @param message Optional message.
+     * @returns Instance of PowerAuthError.
+     */
+    private static processIosException(exception: any, message: string = null): PowerAuthError {
+        return new PowerAuthError(exception, message)
+    }
+
+    /**
+     * Process Android specific exception reported from the native module.
+     * 
+     * @param exception Original exception reported from Android native module.
+     * @param message Optional message.
+     * @returns Instance of PowerAuthError.
+     */
+    private static processAndroidException(exception: any, message: string = null): PowerAuthError {
+        return new PowerAuthError(exception, message)
     }
 
     /**
@@ -54,9 +109,13 @@ export class __NativeWrapper {
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
         if ((Platform.OS == "android" && authentication.useBiometry && (obj.biometryKey == null || makeReusable)) || (Platform.OS == "ios" && makeReusable)) {
-            const key = await this.call("authenticateWithBiometry", authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??") as string;
-            obj.biometryKey = key;
-            return obj;
+            try {
+                const key = await this.call("authenticateWithBiometry", authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??") as string;
+                obj.biometryKey = key;
+                return obj;
+            } catch (e) {
+                throw __NativeWrapper.processException(e)
+            }
         }
         
         // no need for processing, just return original object
