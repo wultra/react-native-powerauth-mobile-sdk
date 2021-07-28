@@ -93,6 +93,7 @@ export default class App extends Component<any, State> {
         try {
           status = (await this.powerAuth.fetchActivationStatus()).state;
         } catch (e) {
+          this.printPAException(e);
           status = e.code;
         }
         this.setState({
@@ -537,8 +538,6 @@ export default class App extends Component<any, State> {
     console.log(`# CODE: ${pe.code}`);
     console.log(`# MESSAGE: ${pe.message}`);
     console.log(`# ERROR DATA: ${pe.errorData ? JSON.stringify(pe.errorData) : "null"}`);
-    console.log(`# DESCRIPTION: ${pe.description}`);
-    console.log(`# DOMAIN: ${pe.domain}`);
     console.log(`# ORIGINAL EXCEPTION:\n ${JSON.stringify(pe.originalException)}`);
   }
 }
