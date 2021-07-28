@@ -373,7 +373,7 @@ export class PowerAuth {
             }
         } catch (e) {
             // catching biometry authentication error and rethrowing it as PowerAuthError
-            throw new PowerAuthError(e);
+            throw __NativeWrapper.processException(e);
         }  
     }
     

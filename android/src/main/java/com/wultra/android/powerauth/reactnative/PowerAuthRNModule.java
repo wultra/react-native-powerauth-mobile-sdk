@@ -33,6 +33,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 
+import java.io.IOException;
 import java.lang.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import io.getlime.security.powerauth.biometry.BiometryType;
 import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
+import io.getlime.security.powerauth.networking.exceptions.ErrorResponseApiException;
 import io.getlime.security.powerauth.networking.exceptions.FailedApiException;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.*;
@@ -57,8 +59,6 @@ import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor;
 
 @SuppressWarnings("unused")
 public class PowerAuthRNModule extends ReactContextBaseJavaModule {
-
-    private static final String REACT_NATIVE_ERROR = "REACT_NATIVE_ERROR";
 
     interface PowerAuthBlock {
         void run(PowerAuthSDK sdk);
@@ -116,7 +116,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             configure(instanceId, new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
             promise.resolve(true);
         } catch (Exception e) {
-            promise.reject(REACT_NATIVE_ERROR, "Failed to configure");
+            promise.reject(EC_REACT_NATIVE_ERROR, "Failed to configure");
         }
     }
 
@@ -229,7 +229,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     }
 
                     if (paActivation == null) {
-                        promise.reject("INVALID_ACTIVATION_OBJECT", "Activation object is invalid.");
+                        promise.reject(EC_INVALID_ACTIVATION_OBJECT, "Activation object is invalid.");
                         return;
                     }
 
@@ -284,7 +284,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 PowerAuthAuthentication auth = PowerAuthRNModule.constructAuthentication(authMap);
                 if (auth.usePassword == null) {
-                    promise.reject("PASSWORD_NOT_SET", "Password is not set.");
+                    promise.reject(EC_PASSWORD_NOT_SET, "Password is not set.");
                     return;
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("useBiometry")) {
@@ -305,7 +305,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onBiometricDialogCancelled() {
-                                promise.reject("BIOMETRY_CANCEL", "Biometry dialog was canceled");
+                                promise.reject(EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
                             }
 
                             @Override
@@ -315,7 +315,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject("BIOMETRY_FAILED", "Biometry dialog failed");
+                                promise.reject(EC_BIOMETRY_FAILED, "Biometry dialog failed");
                             }
                         });
                     } catch (Throwable t) {
@@ -424,7 +424,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (signature != null) {
                     promise.resolve(signature);
                 } else {
-                    promise.reject(REACT_NATIVE_ERROR, "Signature failed");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Signature failed");
                 }
             }
         });
@@ -440,7 +440,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
                     promise.resolve(sdk.verifyServerSignedData(decodedData, decodedSignature, masterKey));
                 } catch (Exception e) {
-                    promise.reject(REACT_NATIVE_ERROR, "Verify failed");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Verify failed");
                 }
             }
         });
@@ -510,7 +510,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -525,7 +525,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.hasBiometryFactor(context));
                 } else {
-                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -540,7 +540,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.removeBiometryFactor(context));
                 } else {
-                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -729,7 +729,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                             new IBiometricAuthenticationCallback() {
                                 @Override
                                 public void onBiometricDialogCancelled(boolean userCancel) {
-                                    promise.reject("BIOMETRY_CANCEL", "Biometry dialog was canceled");
+                                    promise.reject(EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
                                 }
 
                                 @Override
@@ -740,7 +740,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                                 @Override
                                 public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                    promise.reject("BIOMETRY_FAILED", "Biometry dialog failed");
+                                    promise.reject(EC_BIOMETRY_FAILED, "Biometry dialog failed");
                                 }
                             }
                         );
@@ -748,7 +748,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                         PowerAuthRNModule.rejectPromise(promise, e);
                     }
                 } else {
-                    promise.reject(REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
                 }
             }
         });
@@ -818,7 +818,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     response.putString("tokenIdentifier", token.getTokenIdentifier());
                     promise.resolve(response);
                 } else {
-                    promise.reject("LOCAL_TOKEN_NOT_AVAILABLE", "Token with this name is not in the local store.");
+                    promise.reject(EC_LOCAL_TOKEN_NOT_AVAILABLE, "Token with this name is not in the local store.");
                 }
             }
         });
@@ -867,11 +867,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(PowerAuthSDK sdk) {
                 PowerAuthToken token = sdk.getTokenStore().getLocalToken(context, tokenName);
                 if (token == null) {
-                    promise.reject("LOCAL_TOKEN_ONT_AVAILABLE", "This token is no longer available in the local store.");
+                    promise.reject(EC_LOCAL_TOKEN_NOT_AVAILABLE, "This token is no longer available in the local store.");
                 } else if (token.canGenerateHeader()) {
                     promise.resolve(PowerAuthRNModule.getHttpHeaderObject(token.generateHeader()));
                 } else {
-                    promise.reject("CANNOT_GENERATE_TOKEN", "Cannot generate header for this token.");
+                    promise.reject(EC_CANNOT_GENERATE_TOKEN, "Cannot generate header for this token.");
                 }
             }
         });
@@ -888,7 +888,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             response.putString("activationSignature", ac.activationSignature);
             promise.resolve(response);
         } else {
-            promise.reject("INVALID_ACTIVATION_CODE", "Invalid activation code.");
+            promise.reject(EC_INVALID_ACTIVATION_CODE, "Invalid activation code.");
         }
     }
 
@@ -906,7 +906,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             response.putString("activationSignature", ac.activationSignature);
             promise.resolve(response);
         } else {
-            promise.reject("INVALID_RECOVERY_CODE", "Invalid recovery code.");
+            promise.reject(EC_INVALID_RECOVERY_CODE, "Invalid recovery code.");
         }
     }
 
@@ -929,7 +929,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     public void correctTypedCharacter(int character, final Promise promise) {
         int corrected = ActivationCodeUtil.validateAndCorrectTypedCharacter(character);
         if (corrected == 0) {
-            promise.reject("INVALID_CHARACTER", "Invalid character cannot be corrected.");
+            promise.reject(EC_INVALID_CHARACTER, "Invalid character cannot be corrected.");
         } else {
             promise.resolve(corrected);
         }
@@ -939,7 +939,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     private void usePowerAuth(@Nonnull String instanceId, final Promise promise, PowerAuthBlock block) {
         if (!this.instances.containsKey(instanceId)) {
-            promise.reject("INSTANCE_NOT_CONFIGURED", "This instance is not configured.");
+            promise.reject(EC_INSTANCE_NOT_CONFIGURED, "This instance is not configured.");
             return;
         }
         block.run(this.instances.get(instanceId));
@@ -1002,18 +1002,41 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     private static void rejectPromise(Promise promise, Throwable t) {
-        @Nonnull String code = REACT_NATIVE_ERROR; // fallback code
+        @Nonnull String code = EC_REACT_NATIVE_ERROR; // fallback code
         String message = t.getMessage();
         WritableMap userInfo = null;
 
         if (t instanceof PowerAuthErrorException) {
+            // Standard PowerAuthErrorException, containing enumeration with error code.
             code = getErrorCodeFromError(((PowerAuthErrorException)t).getPowerAuthErrorCode());
         } else if (t instanceof FailedApiException) {
-            FailedApiException farEx = (FailedApiException)t;
-            code = "RESPONSE_ERROR";
+            // FailedApiException or more specialized ErrorResponseApiException
+            final FailedApiException failedApiException = (FailedApiException)t;
+            final int httpStatusCode = failedApiException.getResponseCode();
+            if (httpStatusCode == 401) {
+                code = EC_AUTHENTICATION_ERROR;
+                message = "Unauthorized";
+            } else {
+                code = EC_RESPONSE_ERROR;
+            }
+            //
             userInfo = Arguments.createMap();
-            userInfo.putInt("responseCode", farEx.getResponseCode());
-            userInfo.putString("responseBody", farEx.getResponseBody());
+            userInfo.putInt("httpStatusCode", httpStatusCode);
+            userInfo.putString("responseBody", failedApiException.getResponseBody());
+            if (t instanceof ErrorResponseApiException) {
+                // ErrorResponseApiException is more specialized version of FailedApiException, containing
+                // an additional data.
+                final ErrorResponseApiException errorResponseApiException = (ErrorResponseApiException)t;
+                final int currentRecoveryPukIndex = errorResponseApiException.getCurrentRecoveryPukIndex();
+                if (currentRecoveryPukIndex > 0) {
+                    userInfo.putInt("currentRecoveryPukIndex", currentRecoveryPukIndex);
+                }
+                userInfo.putString("serverResponseCode", errorResponseApiException.getErrorResponse().getCode());
+                userInfo.putString("serverResponseMessage", errorResponseApiException.getErrorResponse().getMessage());
+            }
+        } else if (t instanceof IOException) {
+            // This is wrong, PowerAuth SDK should wrap such exception and report network related failure.
+            code = EC_NETWORK_ERROR;
         }
 
         if (message != null && userInfo != null) {
@@ -1030,27 +1053,66 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @SuppressLint("DefaultLocale")
     private static String getErrorCodeFromError(int error) {
         switch (error) {
-            case PowerAuthErrorCodes.SUCCEED: return "SUCCEED";
-            case PowerAuthErrorCodes.NETWORK_ERROR: return "NETWORK_ERROR";
-            case PowerAuthErrorCodes.SIGNATURE_ERROR: return "SIGNATURE_ERROR";
-            case PowerAuthErrorCodes.INVALID_ACTIVATION_STATE: return "INVALID_ACTIVATION_STATE";
-            case PowerAuthErrorCodes.INVALID_ACTIVATION_DATA: return "INVALID_ACTIVATION_DATA";
-            case PowerAuthErrorCodes.MISSING_ACTIVATION: return "MISSING_ACTIVATION";
-            case PowerAuthErrorCodes.PENDING_ACTIVATION: return "PENDING_ACTIVATION";
-            case PowerAuthErrorCodes.BIOMETRY_CANCEL: return "BIOMETRY_CANCEL";
-            case PowerAuthErrorCodes.OPERATION_CANCELED: return "OPERATION_CANCELED";
-            case PowerAuthErrorCodes.INVALID_ACTIVATION_CODE: return "INVALID_ACTIVATION_CODE";
-            case PowerAuthErrorCodes.INVALID_TOKEN: return "INVALID_TOKEN";
-            case PowerAuthErrorCodes.ENCRYPTION_ERROR: return "ENCRYPTION_ERROR";
-            case PowerAuthErrorCodes.WRONG_PARAMETER: return "WRONG_PARAMETER";
-            case PowerAuthErrorCodes.PROTOCOL_UPGRADE: return "PROTOCOL_UPGRADE";
-            case PowerAuthErrorCodes.PENDING_PROTOCOL_UPGRADE: return "PENDING_PROTOCOL_UPGRADE";
-            case PowerAuthErrorCodes.BIOMETRY_NOT_SUPPORTED: return "BIOMETRY_NOT_SUPPORTED";
-            case PowerAuthErrorCodes.BIOMETRY_NOT_AVAILABLE: return "BIOMETRY_NOT_AVAILABLE";
-            case PowerAuthErrorCodes.BIOMETRY_NOT_RECOGNIZED: return "BIOMETRY_NOT_RECOGNIZED";
-            case PowerAuthErrorCodes.INSUFFICIENT_KEYCHAIN_PROTECTION: return "INSUFFICIENT_KEYCHAIN_PROTECTION";
-            case PowerAuthErrorCodes.BIOMETRY_LOCKOUT: return "BIOMETRY_LOCKOUT";
+            case PowerAuthErrorCodes.SUCCEED: return EC_SUCCEED;
+            case PowerAuthErrorCodes.NETWORK_ERROR: return EC_NETWORK_ERROR;
+            case PowerAuthErrorCodes.SIGNATURE_ERROR: return EC_SIGNATURE_ERROR;
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_STATE: return EC_INVALID_ACTIVATION_STATE;
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_DATA: return EC_INVALID_ACTIVATION_DATA;
+            case PowerAuthErrorCodes.MISSING_ACTIVATION: return EC_MISSING_ACTIVATION;
+            case PowerAuthErrorCodes.PENDING_ACTIVATION: return EC_PENDING_ACTIVATION;
+            case PowerAuthErrorCodes.BIOMETRY_CANCEL: return EC_BIOMETRY_CANCEL;
+            case PowerAuthErrorCodes.OPERATION_CANCELED: return EC_OPERATION_CANCELED;
+            case PowerAuthErrorCodes.INVALID_ACTIVATION_CODE: return EC_INVALID_ACTIVATION_CODE;
+            case PowerAuthErrorCodes.INVALID_TOKEN: return EC_INVALID_TOKEN;
+            case PowerAuthErrorCodes.ENCRYPTION_ERROR: return EC_ENCRYPTION_ERROR;
+            case PowerAuthErrorCodes.WRONG_PARAMETER: return EC_WRONG_PARAMETER;
+            case PowerAuthErrorCodes.PROTOCOL_UPGRADE: return EC_PROTOCOL_UPGRADE;
+            case PowerAuthErrorCodes.PENDING_PROTOCOL_UPGRADE: return EC_PENDING_PROTOCOL_UPGRADE;
+            case PowerAuthErrorCodes.BIOMETRY_NOT_SUPPORTED: return EC_BIOMETRY_NOT_SUPPORTED;
+            case PowerAuthErrorCodes.BIOMETRY_NOT_AVAILABLE: return EC_BIOMETRY_NOT_AVAILABLE;
+            case PowerAuthErrorCodes.BIOMETRY_NOT_RECOGNIZED: return EC_BIOMETRY_NOT_RECOGNIZED;
+            case PowerAuthErrorCodes.INSUFFICIENT_KEYCHAIN_PROTECTION: return EC_INSUFFICIENT_KEYCHAIN_PROTECTION;
+            case PowerAuthErrorCodes.BIOMETRY_LOCKOUT: return EC_BIOMETRY_LOCKOUT;
             default: return String.format("UNKNOWN_%d", error);
         }
     }
+
+    // Error constants reported back to RN
+
+    // RN specific
+
+    private static final String EC_REACT_NATIVE_ERROR = "REACT_NATIVE_ERROR";
+    private static final String EC_AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR";
+    private static final String EC_RESPONSE_ERROR = "RESPONSE_ERROR";
+    private static final String EC_INSTANCE_NOT_CONFIGURED = "INSTANCE_NOT_CONFIGURED";
+    private static final String EC_INVALID_CHARACTER = "INVALID_CHARACTER";
+    private static final String EC_INVALID_RECOVERY_CODE = "INVALID_RECOVERY_CODE";
+    private static final String EC_CANNOT_GENERATE_TOKEN = "CANNOT_GENERATE_TOKEN";
+    private static final String EC_LOCAL_TOKEN_NOT_AVAILABLE = "LOCAL_TOKEN_NOT_AVAILABLE";
+    private static final String EC_BIOMETRY_FAILED = "BIOMETRY_FAILED";
+    private static final String EC_PASSWORD_NOT_SET = "PASSWORD_NOT_SET";
+    private static final String EC_INVALID_ACTIVATION_OBJECT = "INVALID_ACTIVATION_OBJECT";
+
+    // Translated PowerAuthErrorCodes
+
+    private static final String EC_SUCCEED = "SUCCEED";
+    private static final String EC_NETWORK_ERROR = "NETWORK_ERROR";
+    private static final String EC_SIGNATURE_ERROR = "SIGNATURE_ERROR";
+    private static final String EC_INVALID_ACTIVATION_STATE = "INVALID_ACTIVATION_STATE";
+    private static final String EC_INVALID_ACTIVATION_DATA = "INVALID_ACTIVATION_DATA";
+    private static final String EC_MISSING_ACTIVATION = "MISSING_ACTIVATION";
+    private static final String EC_PENDING_ACTIVATION = "PENDING_ACTIVATION";
+    private static final String EC_BIOMETRY_CANCEL = "BIOMETRY_CANCEL";
+    private static final String EC_OPERATION_CANCELED = "OPERATION_CANCELED";
+    private static final String EC_INVALID_ACTIVATION_CODE = "INVALID_ACTIVATION_CODE";
+    private static final String EC_INVALID_TOKEN = "INVALID_TOKEN";
+    private static final String EC_ENCRYPTION_ERROR = "ENCRYPTION_ERROR";
+    private static final String EC_WRONG_PARAMETER = "WRONG_PARAMETER";
+    private static final String EC_PROTOCOL_UPGRADE = "PROTOCOL_UPGRADE";
+    private static final String EC_PENDING_PROTOCOL_UPGRADE = "PENDING_PROTOCOL_UPGRADE";
+    private static final String EC_BIOMETRY_NOT_SUPPORTED = "BIOMETRY_NOT_SUPPORTED";
+    private static final String EC_BIOMETRY_NOT_AVAILABLE = "BIOMETRY_NOT_AVAILABLE";
+    private static final String EC_BIOMETRY_NOT_RECOGNIZED = "BIOMETRY_NOT_RECOGNIZED";
+    private static final String EC_INSUFFICIENT_KEYCHAIN_PROTECTION = "INSUFFICIENT_KEYCHAIN_PROTECTION";
+    private static final String EC_BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT";
 }
