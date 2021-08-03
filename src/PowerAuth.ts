@@ -15,6 +15,10 @@
  */
 
 import { Platform } from 'react-native';
+import { PowerAuthConfiguration } from './model/PowerAuthConfiguration';
+import { PowerAuthClientConfiguration } from './model/PowerAuthClientConfiguration';
+import { PowerAuthBiometryConfiguration } from './model/PowerAuthBiometryConfiguration';
+import { PowerAuthKeychainConfiguration } from './model/PowerAuthKeychainConfiguration';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 import { PowerAuthActivationStatus } from './model/PowerAuthActivationStatus';
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
@@ -57,7 +61,18 @@ export class PowerAuth {
     }
 
     /**
-     * Prepares the PowerAuth instance. This method needs to be called before before any other method.
+     * Prepares the PowerAuth instance with an advanced configuration. The method needs to be called before before any other method.
+     * 
+     * @param configuration Configuration object with basic parameters for `PowerAuth` class.
+     * @param clientConfiguration  Configuration for internal HTTP client. If `null` is provided, then `PowerAuthClientConfiguration.default()` is used.
+     * @param biometryConfiguration Biometry configuration. If `null` is provided, then `PowerAuthBiometryConfiguration.default()` is used.
+     * @param keychainConfiguration Configuration for internal keychain storage. If `null` is provided, then `PowerAuthKeychainConfiguration.default()` is used.
+     */
+    configure(configuration: PowerAuthConfiguration, clientConfiguration?: PowerAuthClientConfiguration, biometryConfiguration?: PowerAuthBiometryConfiguration, keychainConfiguration?: PowerAuthKeychainConfiguration): Promise<boolean>;
+
+    /**
+     * Prepares the PowerAuth instance with a basic configuration. The method needs to be called before before any other method.
+     * If you have to tweak more configuration properties, then use method variant with the configuration objects as parameters.
      * 
      * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
      * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
@@ -66,14 +81,37 @@ export class PowerAuth {
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
-    configure(appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>  {
-        return this.wrapper.call("configure", appKey, appSecret, masterServerPublicKey, baseEndpointUrl, enableUnsecureTraffic);
+    configure(appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>;
+
+    configure(param1: PowerAuthConfiguration | string, ...args: Array<any>): Promise<boolean> {
+        let configuration: PowerAuthConfiguration
+        let clientConfiguration: PowerAuthClientConfiguration
+        let biometryConfiguration: PowerAuthBiometryConfiguration
+        let keychainConfiguration: PowerAuthKeychainConfiguration
+        if (param1 instanceof PowerAuthConfiguration) {
+            configuration = param1
+            clientConfiguration = args[0] as PowerAuthClientConfiguration ?? PowerAuthClientConfiguration.default()
+            biometryConfiguration = args[1] as PowerAuthBiometryConfiguration ?? PowerAuthBiometryConfiguration.default()
+            keychainConfiguration = args[2] as PowerAuthKeychainConfiguration ?? PowerAuthKeychainConfiguration.default()
+        } else {
+            let applicationKey = param1
+            let applicationSecret = args[0]
+            let masterServerPublicKey = args[1]
+            let baseEndpointUrl = args[2]
+            let enableUnsecureTraffic = args[3]
+            configuration = new PowerAuthConfiguration(baseEndpointUrl, applicationKey, applicationSecret, masterServerPublicKey)
+            clientConfiguration = PowerAuthClientConfiguration.default()
+            clientConfiguration.enableUnsecureTraffic = enableUnsecureTraffic
+            biometryConfiguration = PowerAuthBiometryConfiguration.default()
+            keychainConfiguration = PowerAuthKeychainConfiguration.default()
+        }
+        return this.wrapper.call("configure", configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
     }
 
     /** 
      * Deconfigures the instance
      */
-     deconfigure(): Promise<boolean> {
+    deconfigure(): Promise<boolean> {
         return this.wrapper.call("deconfigure");
     }
 

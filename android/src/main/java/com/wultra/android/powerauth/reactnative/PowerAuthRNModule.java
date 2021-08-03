@@ -48,6 +48,7 @@ import io.getlime.security.powerauth.biometry.BiometryType;
 import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
+import io.getlime.security.powerauth.keychain.KeychainProtection;
 import io.getlime.security.powerauth.networking.exceptions.ErrorResponseApiException;
 import io.getlime.security.powerauth.networking.exceptions.FailedApiException;
 import io.getlime.security.powerauth.sdk.*;
@@ -83,40 +84,30 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         promise.resolve(this.instances.containsKey(instanceId));
     }
 
-    void configure(@Nonnull String instanceId, @NonNull PowerAuthSDK.Builder builder) throws IllegalStateException, IllegalArgumentException {
-        if (this.instances.containsKey(instanceId)) {
-            throw new IllegalStateException("PowerAuth object with this instanceId is already configured.");
-        }
-
-        try {
-            PowerAuthSDK powerAuth = builder.build(this.context);
-            this.instances.put(instanceId, powerAuth);
-        } catch (PowerAuthErrorException e) {
-            throw new IllegalArgumentException("Unable to configure with provided data", e);
-        }
-    }
-
     @ReactMethod
-    public void configure(String instanceId, String appKey, String appSecret, String masterServerPublicKey, String baseEndpointUrl, boolean enableUnsecureTraffic, final Promise promise) {
-        PowerAuthConfiguration paConfig = new PowerAuthConfiguration.Builder(
-                instanceId,
-                baseEndpointUrl,
-                appKey,
-                appSecret,
-                masterServerPublicKey
-        ).build();
-
-        PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
-
-        if (enableUnsecureTraffic) {
-            paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
-            paClientConfigBuilder.allowUnsecuredConnection(true);
+    public void configure(String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final Promise promise) {
+        // Create configurations from maps
+        final PowerAuthConfiguration paConfig = getPowerAuthConfigurationFromMap(instanceId, configuration);
+        if (paConfig == null) {
+            promise.reject(EC_REACT_NATIVE_ERROR, "PowerAuthConfiguration parameter is wrong");
+            return;
         }
+        final PowerAuthClientConfiguration paClientConfig = getPowerAuthClientConfigurationFromMap(clientConfiguration);
+        final PowerAuthKeychainConfiguration paKeychainConfig = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration, biometryConfiguration);
+        // Configure the instance
         try {
-            configure(instanceId, new PowerAuthSDK.Builder(paConfig).clientConfiguration(paClientConfigBuilder.build()));
-            promise.resolve(true);
-        } catch (Exception e) {
-            promise.reject(EC_REACT_NATIVE_ERROR, "Failed to configure");
+            if (this.instances.containsKey(instanceId)) {
+                promise.reject(EC_REACT_NATIVE_ERROR, "PowerAuth object with this instanceId is already configured.");
+            } else {
+                final PowerAuthSDK powerAuth = new PowerAuthSDK.Builder(paConfig)
+                        .clientConfiguration(paClientConfig)
+                        .keychainConfiguration(paKeychainConfig)
+                        .build(this.context);
+                this.instances.put(instanceId, powerAuth);
+                promise.resolve(true);
+            }
+        } catch (PowerAuthErrorException e) {
+            promise.reject(EC_REACT_NATIVE_ERROR, "Failed to create native PowerAuthSDK object", e);
         }
     }
 
@@ -124,6 +115,91 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     public void deconfigure(String instanceId, final Promise promise) {
         this.instances.remove(instanceId);
         promise.resolve(null);
+    }
+
+    /**
+     * Create KeychainProtection value from given string.
+     * @param stringValue String representation of keychain protection.
+     * @return KeychainProtection converted from string value.
+     */
+    private static @KeychainProtection int getKeychainProtectionFromString(@Nullable String stringValue) {
+        if (stringValue != null) {
+            if ("NONE".equals(stringValue)) {
+                return KeychainProtection.NONE;
+            } else if ("SOFTWARE".equals(stringValue)) {
+                return KeychainProtection.SOFTWARE;
+            } else if ("HARDWARE".equals(stringValue)) {
+                return KeychainProtection.HARDWARE;
+            } else if ("STRONGBOX".equals(stringValue)) {
+                return KeychainProtection.STRONGBOX;
+            }
+        }
+        return KeychainProtection.NONE;
+    }
+
+    /**
+     * Convert ReadableMap to {@link PowerAuthConfiguration} object.
+     * @param instanceId PowerAuth instance identifier.
+     * @param map Map with configuration.
+     * @return {@link PowerAuthConfiguration} created from given map.
+     */
+    private static @Nullable PowerAuthConfiguration getPowerAuthConfigurationFromMap(final String instanceId, final ReadableMap map) {
+        // Configuration parameters
+        final String baseEndpointUrl = map.getString("baseEndpointUrl");
+        final String appKey = map.getString("applicationKey");
+        final String appSecret = map.getString("applicationSecret");
+        final String masterServerPublicKey = map.getString("masterServerPublicKey");
+        if (baseEndpointUrl == null || appKey == null || appSecret == null || masterServerPublicKey == null) {
+            return null;
+        }
+        return new PowerAuthConfiguration.Builder(
+                instanceId,
+                baseEndpointUrl,
+                appKey,
+                appSecret,
+                masterServerPublicKey
+        ).build();
+    }
+
+    /**
+     * Convert ReadableMap to {@link PowerAuthClientConfiguration} object.
+     * @param map Map with client configuration.
+     * @return {@link PowerAuthClientConfiguration} created from given map.
+     */
+    private static @NonNull PowerAuthClientConfiguration getPowerAuthClientConfigurationFromMap(final ReadableMap map) {
+        final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") && map.getBoolean("enableUnsecureTraffic");
+        final Integer connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") : null;
+        final Integer readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") : null;
+        final PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
+        if (enableUnsecureTraffic) {
+            paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
+            paClientConfigBuilder.allowUnsecuredConnection(true);
+        }
+        if (connectionTimeout != null && readTimeout != null) {
+            paClientConfigBuilder.timeouts(connectionTimeout, readTimeout);
+        }
+        return paClientConfigBuilder.build();
+    }
+
+    /**
+     * Convert ReadableMaps to {@link PowerAuthKeychainConfiguration} object.
+     * @param keychainMap Map with keychain configuration.
+     * @param biometryMap Map with biometry configuration.
+     * @return {@link PowerAuthKeychainConfiguration} created from given maps.
+     */
+    private static @NonNull PowerAuthKeychainConfiguration getPowerAuthKeychainConfigurationFromMap(final ReadableMap keychainMap, final ReadableMap biometryMap) {
+        // Biometry configuration
+        final boolean linkItemsToCurrentSet = biometryMap.hasKey("linkItemsToCurrentSet") && biometryMap.getBoolean("linkItemsToCurrentSet");
+        final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") && biometryMap.getBoolean("confirmBiometricAuthentication");
+        final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") && biometryMap.getBoolean("authenticateOnBiometricKeySetup");
+        // Keychain configuration
+        final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(biometryMap.getString("minimalRequiredKeychainProtection"));
+        return new PowerAuthKeychainConfiguration.Builder()
+                .linkBiometricItemsToCurrentSet(linkItemsToCurrentSet)
+                .confirmBiometricAuthentication(confirmBiometricAuthentication)
+                .authenticateOnBiometricKeySetup(authenticateOnBiometricKeySetup)
+                .minimalRequiredKeychainProtection(minimalRequiredKeychainProtection)
+                .build();
     }
 
     @ReactMethod

@@ -1,3 +1,7 @@
+import { PowerAuthConfiguration } from './model/PowerAuthConfiguration';
+import { PowerAuthClientConfiguration } from './model/PowerAuthClientConfiguration';
+import { PowerAuthBiometryConfiguration } from './model/PowerAuthBiometryConfiguration';
+import { PowerAuthKeychainConfiguration } from './model/PowerAuthKeychainConfiguration';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 import { PowerAuthActivationStatus } from './model/PowerAuthActivationStatus';
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
@@ -28,7 +32,17 @@ export declare class PowerAuth {
      */
     isConfigured(): Promise<boolean>;
     /**
-     * Prepares the PowerAuth instance. This method needs to be called before before any other method.
+     * Prepares the PowerAuth instance with an advanced configuration. The method needs to be called before before any other method.
+     *
+     * @param configuration Configuration object with basic parameters for `PowerAuth` class.
+     * @param clientConfiguration  Configuration for internal HTTP client. If `null` is provided, then `PowerAuthClientConfiguration.default()` is used.
+     * @param biometryConfiguration Biometry configuration. If `null` is provided, then `PowerAuthBiometryConfiguration.default()` is used.
+     * @param keychainConfiguration Configuration for internal keychain storage. If `null` is provided, then `PowerAuthKeychainConfiguration.default()` is used.
+     */
+    configure(configuration: PowerAuthConfiguration, clientConfiguration?: PowerAuthClientConfiguration, biometryConfiguration?: PowerAuthBiometryConfiguration, keychainConfiguration?: PowerAuthKeychainConfiguration): Promise<boolean>;
+    /**
+     * Prepares the PowerAuth instance with a basic configuration. The method needs to be called before before any other method.
+     * If you have to tweak more configuration properties, then use method variant with the configuration objects as parameters.
      *
      * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
      * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
