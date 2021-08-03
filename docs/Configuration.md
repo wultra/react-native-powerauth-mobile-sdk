@@ -49,6 +49,7 @@ export default class AppMyApplication extends Component {
 
 In case that you need an advanced configuration, then you can import and use the following configuration classes:
 - `PowerAuthConfiguration` - co configure instance of `PowerAuth` class. This configuration object contains almost the same parameters you provide to basic configuration.
+
 - `PowerAuthClientConfiguration` - to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
   - `connectionTimeout` - timeout in seconds. The default value is `20` seconds.

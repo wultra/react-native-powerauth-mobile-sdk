@@ -107,7 +107,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 promise.resolve(true);
             }
         } catch (PowerAuthErrorException e) {
-            promise.reject(EC_REACT_NATIVE_ERROR, "Failed to create native PowerAuthSDK object", e);
+            rejectPromise(promise, e);
         }
     }
 
@@ -168,16 +168,14 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
      */
     private static @NonNull PowerAuthClientConfiguration getPowerAuthClientConfigurationFromMap(final ReadableMap map) {
         final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") && map.getBoolean("enableUnsecureTraffic");
-        final Integer connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") : null;
-        final Integer readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") : null;
+        final int connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT;
+        final int readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT;
         final PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
         if (enableUnsecureTraffic) {
             paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
             paClientConfigBuilder.allowUnsecuredConnection(true);
         }
-        if (connectionTimeout != null && readTimeout != null) {
-            paClientConfigBuilder.timeouts(connectionTimeout, readTimeout);
-        }
+        paClientConfigBuilder.timeouts(connectionTimeout, readTimeout);
         return paClientConfigBuilder.build();
     }
 
@@ -193,7 +191,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") && biometryMap.getBoolean("confirmBiometricAuthentication");
         final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") && biometryMap.getBoolean("authenticateOnBiometricKeySetup");
         // Keychain configuration
-        final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(biometryMap.getString("minimalRequiredKeychainProtection"));
+        final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"));
         return new PowerAuthKeychainConfiguration.Builder()
                 .linkBiometricItemsToCurrentSet(linkItemsToCurrentSet)
                 .confirmBiometricAuthentication(confirmBiometricAuthentication)
@@ -271,7 +269,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onActivationStatusFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -342,11 +340,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                         @Override
                         public void onActivationCreateFailed(@NonNull Throwable t) {
-                            PowerAuthRNModule.rejectPromise(promise, t);
+                            rejectPromise(promise, t);
                         }
                     });
                 } catch (Exception e) {
-                    PowerAuthRNModule.rejectPromise(promise, e);
+                    rejectPromise(promise, e);
                 }
             }
         });
@@ -395,7 +393,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                             }
                         });
                     } catch (Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 } else {
                     int result = sdk.commitActivationWithPassword(context, auth.usePassword);
@@ -424,7 +422,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onActivationRemoveFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -441,7 +439,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     sdk.removeActivationLocal(context);
                     promise.resolve(null);
                 } catch (Throwable t) {
-                    PowerAuthRNModule.rejectPromise(promise, t);
+                    rejectPromise(promise, t);
                 }
             }
         });
@@ -546,7 +544,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onPasswordChangeFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -579,11 +577,11 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                                     @Override
                                     public void onAddBiometryFactorFailed(@NonNull PowerAuthErrorException error) {
-                                        PowerAuthRNModule.rejectPromise(promise, error);
+                                        rejectPromise(promise, error);
                                     }
                                 });
                     } catch (Exception e) {
-                        PowerAuthRNModule.rejectPromise(promise, e);
+                        rejectPromise(promise, e);
                     }
                 } else {
                     promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
@@ -682,7 +680,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onFetchEncryptionKeyFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -704,7 +702,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onDataSignedFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -725,7 +723,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onPasswordValidationFailed(Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -760,7 +758,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onGetRecoveryDataFailed(@NonNull Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -782,7 +780,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onRecoveryCodeConfirmFailed(@NonNull Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -821,7 +819,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                             }
                         );
                     } catch (Exception e) {
-                        PowerAuthRNModule.rejectPromise(promise, e);
+                        rejectPromise(promise, e);
                     }
                 } else {
                     promise.reject(EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
@@ -851,7 +849,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     }
                     @Override
                     public void onGetTokenFailed(@NonNull Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
@@ -872,7 +870,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onRemoveTokenFailed(@NonNull Throwable t) {
-                        PowerAuthRNModule.rejectPromise(promise, t);
+                        rejectPromise(promise, t);
                     }
                 });
             }
