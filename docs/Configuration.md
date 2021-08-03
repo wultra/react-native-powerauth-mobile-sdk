@@ -45,12 +45,10 @@ export default class AppMyApplication extends Component {
 }
 ```
 
---
-
 ### Advanced configuration
 
 In case that you need an advanced configuration, then you can import and use the following configuration classes:
-
+- `PowerAuthConfiguration` - co configure instance of `PowerAuth` class. This configuration object contains almost the same parameters you provide to basic configuration.
 - `PowerAuthClientConfiguration` - to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
   - `connectionTimeout` - timeout in seconds. The default value is `20` seconds.
@@ -71,7 +69,7 @@ In case that you need an advanced configuration, then you can import and use the
 
 > Note 2: You're responsible to migrate the keychain and `UserDefaults` data from non-shared storage to the shared one, before you configure the first `PowerAuth` instance. This is quite difficult to do in JavaScript, so it's recommended to do not alter `PowerAuthKeychainConfiguration` once your application is already shipped in AppStore.
 
-> Note 3: If you enforce the protection higher that `PowerAuthKeychainProtection.NONE`, then your application must target at least Android 6.0. Your application should also properly handle `"INSUFFICIENT_KEYCHAIN_PROTECTION"` error code reported when the device has insufficient capabilities to run your application. You should properly inform user about this situation.
+> Note 3: If you enforce the protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target at least Android 6.0. Your application should also properly handle `"INSUFFICIENT_KEYCHAIN_PROTECTION"` error code reported when the device has insufficient capabilities to run your application. You should properly inform user about this situation.
 
 The following code snipped shows usage of the advanced configuration:
 

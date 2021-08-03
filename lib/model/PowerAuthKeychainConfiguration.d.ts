@@ -63,7 +63,7 @@ export declare class PowerAuthKeychainConfiguration {
      * ### Android specific
      *
      * Set minimal required keychain protection level that must be supported on the current device. Note that
-     * if you enforce protection higher that `PowerAuthKeychainProtection.NONE`, then your application must target
+     * if you enforce protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target
      * at least Android 6.0.
      */
     minimalRequiredKeychainProtection: PowerAuthKeychainProtection;
