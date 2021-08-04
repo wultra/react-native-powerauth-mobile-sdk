@@ -1,0 +1,9 @@
+{
+    "powerAuth" : {
+        "appKey": "your-app-key",
+        "appSecret": "your-app-secret",
+        "masterServerPublicKey": "your-master-server-public-key",
+        "baseUrl": "htttps://base-service-url.com/",
+        "allowUnsecureConnection": false    
+    }
+}
