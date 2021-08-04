@@ -44,9 +44,9 @@ export class PowerAuthConfiguration {
      * @param baseEndpointUrl Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
      */
     public constructor(applicationKey: string, applicationSecret: string, masterServerPublicKey: string, baseEndpointUrl: string) {
-        this.baseEndpointUrl = baseEndpointUrl
         this.applicationKey = applicationKey
         this.applicationSecret = applicationSecret
         this.masterServerPublicKey = masterServerPublicKey
+        this.baseEndpointUrl = baseEndpointUrl
     }
 }

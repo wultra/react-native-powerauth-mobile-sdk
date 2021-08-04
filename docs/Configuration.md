@@ -56,7 +56,9 @@ In case that you need an advanced configuration, then you can import and use the
   - `readTimeout` - timeout in seconds, effective only on Androd platform. The default value is `20` seconds.
 
 - `PowerAuthBiometryConfiguration` - to configure biometic authentication. You can alter the following parameters:
-  - `linkItemsToCurrentSet` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value is `false`.
+  - `linkItemsToCurrentSet` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value depends on plafrom:
+    - On Android is set to `true`
+    - On iOS  is set to `false`
   - `fallbackToDevicePasscode` - iOS specific, If set to `true`, then the key protected with the biometry can be accessed also with a device passcode. If set, then `linkItemsToCurrentSet` option has no effect. The default is `false`, so fallback to device's passcode is not enabled.
   - `confirmBiometricAuthentication` - Android specific, if set to `true`, then the user's confirmation will be required after the successful biometric authentication.
   - `authenticateOnBiometricKeySetup` - Android specific, if set to `true`, then the biometric key setup always require a biometric authentication. See note<sup>1</sup> below. The default value is `false`.

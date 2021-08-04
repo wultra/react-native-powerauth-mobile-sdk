@@ -66,10 +66,10 @@ export default class App extends Component<any, State> {
     } else {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" isn't configured, configuring...`);
       try {
-        let appKey = AppConfig.powerAuth.appKey
-        let appSecret = AppConfig.powerAuth.appSecret
-        let masterServerPublicKey = AppConfig.powerAuth.masterServerPublicKey
-        let baseUrl = AppConfig.powerAuth.baseUrl
+        let appKey                  = AppConfig.powerAuth.appKey
+        let appSecret               = AppConfig.powerAuth.appSecret
+        let masterServerPublicKey   = AppConfig.powerAuth.masterServerPublicKey
+        let baseUrl                 = AppConfig.powerAuth.baseUrl
         let allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
         if (appKey == "your-app-key") {
           console.log(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
@@ -83,8 +83,9 @@ export default class App extends Component<any, State> {
           clientConfiguration.readTimeout = 10
           clientConfiguration.connectionTimeout = 5
           let biometryConfiguration = new PowerAuthBiometryConfiguration()
-          biometryConfiguration.linkItemsToCurrentSet = true
-          biometryConfiguration.authenticateOnBiometricKeySetup = false
+          biometryConfiguration.linkItemsToCurrentSet = false
+          biometryConfiguration.fallbackToDevicePasscode = true
+          biometryConfiguration.authenticateOnBiometricKeySetup = true
           biometryConfiguration.confirmBiometricAuthentication = true
           let keychainConfiguration = new PowerAuthKeychainConfiguration()
           keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
@@ -161,11 +162,10 @@ export default class App extends Component<any, State> {
                 selectedPowerAuthInstanceId: value(),
                 isActivationDropdownOpen: false
               });
-              await this.setupPowerAuth();
+              await this.setupPowerAuth(false);
               await this.refreshActivationInfo();
             }}
             setItems={() => {}}
-            //@ts-expect-error
             setOpen={val => {
               this.setState({
                 isActivationDropdownOpen: val
@@ -197,7 +197,7 @@ export default class App extends Component<any, State> {
               try { 
                 await this.powerAuth.deconfigure();
                 alert("Deconfigured");
-                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" failed was deconfigured.`)
+                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" was deconfigured.`)
               } catch (e) { 
                 this.printPAException(e); 
               } 

@@ -37,6 +37,27 @@ import { PowerAuthTokenStore } from "./core/PowerAuthTokenStore"
 export class PowerAuth {
 
     /**
+     * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
+     * stored object is useful for the debugging purposes.
+     */
+    configuration?: PowerAuthConfiguration
+    /**
+     * Client configuration used to configure this instance of class. Note that modifying this property has no effect, but the
+     * stored object is useful for the debugging purposes.
+     */
+    clientConfiguration?: PowerAuthClientConfiguration
+    /**
+     * Biometry configuration used to configure this instance of class. Note that modifying this property has no effect, but the
+     * stored object is useful for the debugging purposes.
+     */
+    biometryConfiguration?: PowerAuthBiometryConfiguration
+    /**
+     * Keychain configuration used to configure this instance of class. Note that modifying this property has no effect, but the
+     * stored object is useful for the debugging purposes.
+     */
+    keychainConfiguration?: PowerAuthKeychainConfiguration
+
+    /**
      * Object for managing access tokens.
      */
     tokenStore: PowerAuthTokenStore;
@@ -94,17 +115,16 @@ export class PowerAuth {
             biometryConfiguration = args[1] as PowerAuthBiometryConfiguration ?? PowerAuthBiometryConfiguration.default()
             keychainConfiguration = args[2] as PowerAuthKeychainConfiguration ?? PowerAuthKeychainConfiguration.default()
         } else {
-            let applicationKey = param1
-            let applicationSecret = args[0]
-            let masterServerPublicKey = args[1]
-            let baseEndpointUrl = args[2]
-            let enableUnsecureTraffic = args[3]
-            configuration = new PowerAuthConfiguration(baseEndpointUrl, applicationKey, applicationSecret, masterServerPublicKey)
+            configuration = new PowerAuthConfiguration(param1, args[0], args[1], args[2])
             clientConfiguration = PowerAuthClientConfiguration.default()
-            clientConfiguration.enableUnsecureTraffic = enableUnsecureTraffic
+            clientConfiguration.enableUnsecureTraffic = args[3]
             biometryConfiguration = PowerAuthBiometryConfiguration.default()
             keychainConfiguration = PowerAuthKeychainConfiguration.default()
         }
+        this.configuration = configuration
+        this.clientConfiguration = clientConfiguration
+        this.biometryConfiguration = biometryConfiguration
+        this.keychainConfiguration = keychainConfiguration
         return this.wrapper.call("configure", configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
     }
 
@@ -112,6 +132,10 @@ export class PowerAuth {
      * Deconfigures the instance
      */
     deconfigure(): Promise<boolean> {
+        this.configuration = null
+        this.clientConfiguration = null
+        this.biometryConfiguration = null
+        this.keychainConfiguration = null
         return this.wrapper.call("deconfigure");
     }
 

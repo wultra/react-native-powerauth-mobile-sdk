@@ -4,7 +4,9 @@
 export declare class PowerAuthBiometryConfiguration {
     /**
      * Set whether the key protected with the biometry is invalidated if fingers are added or
-     * removed, or if the user re-enrolls for face.
+     * removed, or if the user re-enrolls for face. The default value depends on plafrom:
+     * - On Android is set to `true`
+     * - On iOS  is set to `false`
      */
     linkItemsToCurrentSet: boolean;
     /**
@@ -39,6 +41,10 @@ export declare class PowerAuthBiometryConfiguration {
      * The default value is `false`.
      */
     authenticateOnBiometricKeySetup: boolean;
+    /**
+     * The default class constructor, respecting a platform specific differences.
+     */
+    constructor();
     /**
      * @returns `PowerAuthBiometryConfiguration` with default configuration.
      */

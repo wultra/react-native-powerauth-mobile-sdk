@@ -21,19 +21,18 @@ demoapp/android/app/.gradle/
 demoapp/android/app/.project
 demoapp/android/app/.settings
 *build/
-
-# iOS
-*.xcuserstate
-ios/Pods/*
-demoapp/ios/Pods/*
-
-# artifacts
-*.tgz
-
-#IntelliJ IDEA
 .idea
 *.iml
 *.ipr
 *.iws
 out
 gen-external-apklibs
+
+# iOS
+xcuserdata
+*.xcuserstate
+ios/Pods/*
+demoapp/ios/Pods/*
+
+# artifacts
+*.tgz
