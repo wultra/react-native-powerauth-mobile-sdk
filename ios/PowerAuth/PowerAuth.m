@@ -89,28 +89,37 @@ RCT_REMAP_METHOD(isConfigured,
 
 RCT_REMAP_METHOD(configure,
                  instanceId:(NSString*)instanceId
-                 appKey:(NSString*)appKey
-                 appSecret:(NSString*)appSecret
-                 masterServerPublicKey:(NSString*)masterServerPublicKey
-                 baseEndpointUrl:(NSString*)baseEndpointUrl
-                 enableUnsecureTraffic:(BOOL)enableUnsecureTraffic
+                 configuration:(NSDictionary*)configuration
+                 clientConfiguration:(NSDictionary*)clientConfiguration
+                 biometryConfiguration:(NSDictionary*)biometryConfiguration
+                 keychainConfiguration:(NSDictionary*)keychainConfiguration
                  configureResolve:(RCTPromiseResolveBlock)resolve
                  configureReject:(RCTPromiseRejectBlock)reject)
 {
+    // Instance config
     PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
     config.instanceId = instanceId;
-    config.appKey = appKey;
-    config.appSecret = appSecret;
-    config.masterServerPublicKey = masterServerPublicKey;
-    config.baseEndpointUrl = baseEndpointUrl;
+    config.appKey = CAST_TO(configuration[@"applicationKey"], NSString);
+    config.appSecret = CAST_TO(configuration[@"applicationSecret"], NSString);
+    config.masterServerPublicKey = CAST_TO(configuration[@"masterServerPublicKey"], NSString);
+    config.baseEndpointUrl = CAST_TO(configuration[@"baseEndpointUrl"], NSString);
 
+    // HTTP client config
     PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
-    
-    if (enableUnsecureTraffic) {
+    clientConfig.defaultRequestTimeout = CAST_TO(clientConfiguration[@"connectionTimeout"], NSNumber).doubleValue;
+    if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
         [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
     }
     
-    if ([self configureWithConfig:config keychainConfig:nil clientConfig:clientConfig]) {
+    PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
+    // Keychain specific
+    keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
+    keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
+    // Biometry
+    keychainConfig.linkBiometricItemsToCurrentSet = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber).boolValue;
+    keychainConfig.allowBiometricAuthenticationFallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber).boolValue;
+    
+    if ([self configureWithConfig:config keychainConfig:keychainConfig clientConfig:clientConfig]) {
         resolve(@YES);
     } else {
         resolve(@NO);

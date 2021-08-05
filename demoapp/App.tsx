@@ -8,6 +8,11 @@ import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/P
 import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
 import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
 import {PowerAuthError} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthError';
+import { PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthConfiguration';
+import { PowerAuthClientConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthClientConfiguration';
+import { PowerAuthKeychainConfiguration, PowerAuthKeychainProtection } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthKeychainConfiguration';
+import { PowerAuthBiometryConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryConfiguration';
+import * as AppConfig from './AppConfig.json';
 
 interface State {
   // activation status
@@ -50,10 +55,10 @@ export default class App extends Component<any, State> {
       promptCallback: _ => {}
     };
 
-    this.setupPowerAuth();
+    this.setupPowerAuth(false);
   }
 
-  async setupPowerAuth() {
+  async setupPowerAuth(advancedConfig: boolean) {
     const isConfigured = await this.powerAuth.isConfigured();
     if (isConfigured) {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" was already configured.`);
@@ -61,7 +66,34 @@ export default class App extends Component<any, State> {
     } else {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" isn't configured, configuring...`);
       try {
-        await this.powerAuth.configure("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/", true);
+        let appKey                  = AppConfig.powerAuth.appKey
+        let appSecret               = AppConfig.powerAuth.appSecret
+        let masterServerPublicKey   = AppConfig.powerAuth.masterServerPublicKey
+        let baseUrl                 = AppConfig.powerAuth.baseUrl
+        let allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
+        if (appKey == "your-app-key") {
+          console.log(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
+          return
+        }
+        if (advancedConfig) {
+          // Advanced config
+          let configuration = new PowerAuthConfiguration(appKey, appSecret, masterServerPublicKey, baseUrl)
+          let clientConfiguration = new PowerAuthClientConfiguration()
+          clientConfiguration.enableUnsecureTraffic = allowUnsecureConnection
+          clientConfiguration.readTimeout = 10
+          clientConfiguration.connectionTimeout = 5
+          let biometryConfiguration = new PowerAuthBiometryConfiguration()
+          biometryConfiguration.linkItemsToCurrentSet = false
+          biometryConfiguration.fallbackToDevicePasscode = true
+          biometryConfiguration.authenticateOnBiometricKeySetup = true
+          biometryConfiguration.confirmBiometricAuthentication = true
+          let keychainConfiguration = new PowerAuthKeychainConfiguration()
+          keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
+          await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+        } else {
+          // Basic config
+          await this.powerAuth.configure(appKey, appSecret, masterServerPublicKey, baseUrl, allowUnsecureConnection);
+        }
         console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" configuration successfull.`);
         await this.refreshActivationInfo();
       } catch(e) {
@@ -130,11 +162,10 @@ export default class App extends Component<any, State> {
                 selectedPowerAuthInstanceId: value(),
                 isActivationDropdownOpen: false
               });
-              await this.setupPowerAuth();
+              await this.setupPowerAuth(false);
               await this.refreshActivationInfo();
             }}
             setItems={() => {}}
-            //@ts-expect-error
             setOpen={val => {
               this.setState({
                 isActivationDropdownOpen: val
@@ -166,13 +197,16 @@ export default class App extends Component<any, State> {
               try { 
                 await this.powerAuth.deconfigure();
                 alert("Deconfigured");
-                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" failed was deconfigured.`)
+                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" was deconfigured.`)
               } catch (e) { 
                 this.printPAException(e); 
               } 
             }} />
-          <Button title="Reconfigure" onPress={ async _ => { 
-              this.setupPowerAuth(); 
+          <Button title="Reconfigure (basic)" onPress={ async _ => { 
+              this.setupPowerAuth(false); 
+            }} />
+          <Button title="Reconfigure (advanced)" onPress={ async _ => { 
+              this.setupPowerAuth(true); 
             }} />
             <Text style={styles.titleText}>Create activation</Text>
             <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
@@ -298,6 +332,21 @@ export default class App extends Component<any, State> {
               const result =  await this.powerAuth.removeBiometryFactor();
               alert(`Biometry factor removed: ${result}`);
             }} />
+            <Button title="Test offlineSignature (biometry)" onPress={ async _ => {
+              const auth = new PowerAuthAuthentication();
+              auth.usePossession = true;
+              auth.userPassword = null;
+              auth.useBiometry = true;
+              auth.biometryMessage = "tadaaa";
+              try {
+                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "VGhpcyBpcyBzZWNyZXQhIQ==", "body");
+                alert(`Signature: ${r}`);
+              } catch (e) {
+                alert(`Signature calculation failed: ${e.code}`);
+                this.printPAException(e);
+              }
+              await this.refreshActivationInfo();
+            }} />
 
             <Text style={styles.titleText}>Recovery</Text>
             <Button title="Has recovery data" onPress={ async _ => {
@@ -405,11 +454,10 @@ export default class App extends Component<any, State> {
               auth.useBiometry = false;
               auth.biometryMessage = "tadaaa";
               try {
-                // TODO: solve this differently, this failes for now as we pass nonsense data
-                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "body", "nonce");
+                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "VGhpcyBpcyBzZWNyZXQhIQ==", "body");
                 alert(`Signature: ${r}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Signature calculation failed: ${e.code}`);
                 this.printPAException(e);
               }
               await this.refreshActivationInfo();
@@ -420,7 +468,7 @@ export default class App extends Component<any, State> {
                 const r = await this.powerAuth.verifyServerSignedData("data", "signature", true);
                 alert(`Verified: ${r}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
             }} />
@@ -435,7 +483,7 @@ export default class App extends Component<any, State> {
                 alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
                 console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
               await this.refreshActivationInfo();
@@ -451,7 +499,7 @@ export default class App extends Component<any, State> {
                 alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
                 console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               } catch(e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
             } }) }} />

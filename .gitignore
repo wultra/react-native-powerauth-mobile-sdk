@@ -4,6 +4,7 @@
 # node.js
 node_modules
 demoapp/node_modules
+lib/internal/NativeWrapper.d.ts
 
 # Android
 android/.gradle/
@@ -21,8 +22,15 @@ demoapp/android/app/.gradle/
 demoapp/android/app/.project
 demoapp/android/app/.settings
 *build/
+.idea
+*.iml
+*.ipr
+*.iws
+out
+gen-external-apklibs
 
 # iOS
+xcuserdata
 *.xcuserstate
 ios/Pods/*
 demoapp/ios/Pods/*
