@@ -4,6 +4,7 @@
 # node.js
 node_modules
 demoapp/node_modules
+lib/internal/NativeWrapper.d.ts
 
 # Android
 android/.gradle/

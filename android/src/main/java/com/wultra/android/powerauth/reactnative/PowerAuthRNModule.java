@@ -167,7 +167,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
      * @return {@link PowerAuthClientConfiguration} created from given map.
      */
     private static @NonNull PowerAuthClientConfiguration getPowerAuthClientConfigurationFromMap(final ReadableMap map) {
-        final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") && map.getBoolean("enableUnsecureTraffic");
+        final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") ? map.getBoolean("enableUnsecureTraffic") : PowerAuthClientConfiguration.DEFAULT_ALLOW_UNSECURED_CONNECTION;
         final int connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT;
         final int readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT;
         final PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
@@ -187,9 +187,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
      */
     private static @NonNull PowerAuthKeychainConfiguration getPowerAuthKeychainConfigurationFromMap(final ReadableMap keychainMap, final ReadableMap biometryMap) {
         // Biometry configuration
-        final boolean linkItemsToCurrentSet = biometryMap.hasKey("linkItemsToCurrentSet") && biometryMap.getBoolean("linkItemsToCurrentSet");
-        final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") && biometryMap.getBoolean("confirmBiometricAuthentication");
-        final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") && biometryMap.getBoolean("authenticateOnBiometricKeySetup");
+        final boolean linkItemsToCurrentSet = biometryMap.hasKey("linkItemsToCurrentSet") ? biometryMap.getBoolean("linkItemsToCurrentSet") : PowerAuthKeychainConfiguration.DEFAULT_LINK_BIOMETRY_ITEMS_TO_CURRENT_SET;
+        final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") ? biometryMap.getBoolean("confirmBiometricAuthentication") : PowerAuthKeychainConfiguration.DEFAULT_CONFIRM_BIOMETRIC_AUTHENTICATION;
+        final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") ? biometryMap.getBoolean("authenticateOnBiometricKeySetup") : PowerAuthKeychainConfiguration.DEFAULT_AUTHENTICATE_ON_BIOMETRIC_KEY_SETUP;
         // Keychain configuration
         final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"));
         return new PowerAuthKeychainConfiguration.Builder()

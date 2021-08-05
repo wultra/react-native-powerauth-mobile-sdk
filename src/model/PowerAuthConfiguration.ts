@@ -33,7 +33,7 @@ export class PowerAuthConfiguration {
     /**
      * Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
      */
-     baseEndpointUrl: string
+    baseEndpointUrl: string
      
     /**
      * Construct configuration with required parameters.
