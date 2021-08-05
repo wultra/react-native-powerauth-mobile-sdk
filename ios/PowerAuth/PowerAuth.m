@@ -39,13 +39,11 @@ static inline id _CastObjectTo(id instance, Class desiredClass) {
 #define CAST_TO(object, requiredClass) ((requiredClass*)(_CastObjectTo(object, [requiredClass class])))
 
 
-@interface PowerAuth ()
- 
-@property (retain, readwrite) NSMutableDictionary* instances;
- 
-@end
-
 @implementation PowerAuth
+{
+    id<NSLocking> _mutex;
+    NSMutableDictionary<NSString*, PowerAuthSDK*>* _sdkInstances;
+}
 
 #define PA_BLOCK_START [self usePowerAuth:instanceId reject:reject callback:^(PowerAuthSDK * powerAuth) {
 #define PA_BLOCK_END }];
@@ -54,37 +52,22 @@ static inline id _CastObjectTo(id instance, Class desiredClass) {
 {
     self = [super init];
     if (self) {
-        _instances = [[NSMutableDictionary alloc] init];
+        _mutex = [[NSLock alloc] init];
+        _sdkInstances = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
 RCT_EXPORT_MODULE(PowerAuth);
 
+#pragma mark - React methods
+
 RCT_REMAP_METHOD(isConfigured,
                  instanceId:(NSString *)instanceId
                  isConfiguredResolve:(RCTPromiseResolveBlock)resolve
                  isConfiguredReject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([self powerAuthForInstanceId:instanceId] ? @YES : @NO);
-}
-
-- (BOOL)configureWithConfig:(nonnull PowerAuthConfiguration *)config
-             keychainConfig:(nullable PowerAuthKeychainConfiguration *)keychainConfig
-               clientConfig:(nullable PowerAuthClientConfiguration *)clientConfig
-{
-    if ([self powerAuthForInstanceId: [config instanceId]]) {
-        // powerAuth instance for this instanceId already exists
-        return NO;
-    }
-    
-    if ([config validateConfiguration]) {
-        PowerAuthSDK* sdk = [[PowerAuthSDK alloc] initWithConfiguration:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
-        [_instances setObject:sdk forKey:[config instanceId]];
-        return YES;
-    } else {
-        return NO;
-    }
+    resolve(@([self powerAuthForInstanceId:instanceId] != nil));
 }
 
 RCT_REMAP_METHOD(configure,
@@ -96,6 +79,11 @@ RCT_REMAP_METHOD(configure,
                  configureResolve:(RCTPromiseResolveBlock)resolve
                  configureReject:(RCTPromiseRejectBlock)reject)
 {
+    if (instanceId.length == 0) {
+        reject(@"WRONG_PARAMETER", @"Instance identifier is missing or empty string", nil);
+        return;
+    }
+    
     // Instance config
     PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
     config.instanceId = instanceId;
@@ -103,6 +91,11 @@ RCT_REMAP_METHOD(configure,
     config.appSecret = CAST_TO(configuration[@"applicationSecret"], NSString);
     config.masterServerPublicKey = CAST_TO(configuration[@"masterServerPublicKey"], NSString);
     config.baseEndpointUrl = CAST_TO(configuration[@"baseEndpointUrl"], NSString);
+    
+    if (![config validateConfiguration]) {
+        reject(@"WRONG_PARAMETER", @"Provided configuration is invalid", nil);
+        return;
+    }
 
     // HTTP client config
     PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
@@ -118,11 +111,18 @@ RCT_REMAP_METHOD(configure,
     // Biometry
     keychainConfig.linkBiometricItemsToCurrentSet = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber).boolValue;
     keychainConfig.allowBiometricAuthenticationFallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber).boolValue;
+
+    // Now register the instance in the thread safe manner.
+    BOOL registered = [self registerPowerAuthForInstanceId:instanceId instanceProvider:^PowerAuthSDK * _Nonnull {
+        return [[PowerAuthSDK alloc] initWithConfiguration:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
+    }];
     
-    if ([self configureWithConfig:config keychainConfig:keychainConfig clientConfig:clientConfig]) {
+    if (registered) {
+        // Resolve success
         resolve(@YES);
     } else {
-        resolve(@NO);
+        // Instance is already configured
+        reject(@"REACT_NATIVE_ERROR", @"PowerAuth object with this instanceId is already configured.", nil);
     }
 }
 
@@ -131,7 +131,8 @@ RCT_REMAP_METHOD(deconfigure,
                  deconfigureResolve:(RCTPromiseResolveBlock)resolve
                  deconfigureReject:(RCTPromiseRejectBlock)reject)
 {
-    [_instances removeObjectForKey:instanceId];
+    [self unregisterPowerAuthForInstanceId:instanceId];
+    resolve(@YES);
 }
 
 RCT_REMAP_METHOD(hasValidActivation,
@@ -846,26 +847,73 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     PA_BLOCK_END
 }
 
-#pragma mark HELPER METHODS
 
-- (void)usePowerAuth:(NSString *)instanceId
-              reject:(RCTPromiseRejectBlock)reject
-            callback:(void(^)(PowerAuthSDK *sdk))callback
+#pragma mark - Instances register
+
+/// Method gets PowerAuthSDK instance with given identifier.
+/// @param instanceId PowerAuthSDK instance or nil if there's no such instance with required identifier.
+- (PowerAuthSDK*) powerAuthForInstanceId:(NSString *)instanceId
 {
-    PowerAuthSDK* sdk = [self powerAuthForInstanceId:instanceId];
-    if (sdk) {
-        callback(sdk);
+    [_mutex lock];
+    PowerAuthSDK * sdk = [_sdkInstances objectForKey:instanceId];
+    [_mutex unlock];
+    return sdk;
+}
+
+/// Method registers PowerAuthSDK instance for given identifier. The SDK instnace must be provided by instanceProvider block.
+/// @param instanceId Instance identifier.
+/// @param instanceProvider Block to construct valid PowerAuthSDK instance.
+- (BOOL) registerPowerAuthForInstanceId:(nonnull NSString*)instanceId
+                       instanceProvider:(PowerAuthSDK * _Nonnull (^ _Nonnull)(void))instanceProvider
+{
+    [_mutex lock];
+    BOOL registered;
+    if (_sdkInstances[instanceId] == nil) {
+        _sdkInstances[instanceId] = instanceProvider();
+        registered = YES;
     } else {
-        reject(@"INSTANCE_NOT_CONFIGURED", @"This instance is not configured.", nil);
+        registered = NO;
+    }
+    [_mutex unlock];
+    return registered;
+}
+
+/// Method unregister PowerAuthSDK instnace with given identifier. If there's no such object, then does nothing,
+/// @param instanceId Instance identifier.
+- (void) unregisterPowerAuthForInstanceId:(NSString*)instanceId
+{
+    [_mutex lock];
+    [_sdkInstances removeObjectForKey:instanceId];
+    [_mutex unlock];
+}
+
+
+#pragma mark - Helper methods
+
+/// Method gets PowerAuthSDK instance from instance register and call `callback` with given object.
+/// In case that there's no such instnace, or instanceId is invalid, then calls reject promise with a failure.
+/// @param instanceId Instance identifier.
+/// @param reject Reject promise block.
+/// @param callback Callback to call with a valid PowerAuthSDK instance.
+- (void) usePowerAuth:(NSString *)instanceId
+               reject:(RCTPromiseRejectBlock)reject
+             callback:(void(^)(PowerAuthSDK *sdk))callback
+{
+    if (instanceId.length != 0) {
+        PowerAuthSDK* sdk = [self powerAuthForInstanceId:instanceId];
+        if (sdk) {
+            callback(sdk);
+        } else {
+            reject(@"INSTANCE_NOT_CONFIGURED", @"This instance is not configured.", nil);
+        }
+    } else {
+        reject(@"WRONG_PARAMETER", @"Instance identifier is missing or empty string", nil);
     }
 }
 
-- (PowerAuthSDK *)powerAuthForInstanceId:(NSString *)instanceId
-{
-    return [_instances objectForKey:instanceId];
-}
-
-- (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict
+/// Translate dictionary into `PowerAuthAuthentication` object.
+/// @param dict Dictionary with authentication data.
+- (PowerAuthAuthentication*) constructAuthenticationFromDictionary:(NSDictionary*)dict
 {
     PowerAuthAuthentication *auth = [[PowerAuthAuthentication alloc] init];
     auth.usePossession = [RCTConvert BOOL:dict[@"usePossession"]];
@@ -882,8 +930,25 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     return auth;
 }
 
+/// Method translates `PowerAuthActivationState` into string representation.
+/// @param status State to translate.
+- (NSString*) getStatusCode:(PowerAuthActivationState)status
+{
+    switch (status) {
+        case PowerAuthActivationState_Created: return @"CREATED";
+        case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
+        case PowerAuthActivationState_Active: return @"ACTIVE";
+        case PowerAuthActivationState_Blocked: return @"BLOCKED";
+        case PowerAuthActivationState_Removed: return @"REMOVED";
+        case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
+        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+    }
+}
+
 #pragma mark - Error handling
 
+/// Translates PowerAuthErrorCode into string representation.
+/// @param code Error code to convert.
 static NSString * _TranslatePAErrorCode(PowerAuthErrorCode code)
 {
     switch (code) {
@@ -908,6 +973,9 @@ static NSString * _TranslatePAErrorCode(PowerAuthErrorCode code)
     }
 }
 
+/// Method translate reported NSError into proper React Native error code and reports everything bactk promise reject block.
+/// @param error Error to report.
+/// @param reject Reject promise to call.
 - (void) processError:(nullable NSError*)error with:(nonnull RCTPromiseRejectBlock)reject
 {
     NSString * errorCode = nil;
@@ -982,20 +1050,6 @@ static NSString * _TranslatePAErrorCode(PowerAuthErrorCode code)
     
     // Finally call promise's reject
     reject(errorCode, message, error);
-}
-
-
-- (NSString*)getStatusCode:(PowerAuthActivationState)status
-{
-    switch (status) {
-        case PowerAuthActivationState_Created: return @"CREATED";
-        case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
-        case PowerAuthActivationState_Active: return @"ACTIVE";
-        case PowerAuthActivationState_Blocked: return @"BLOCKED";
-        case PowerAuthActivationState_Removed: return @"REMOVED";
-        case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
-        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
-    }
 }
 
 @end
