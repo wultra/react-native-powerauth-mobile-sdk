@@ -1,9 +1,9 @@
 {
     "powerAuth" : {
-        "appKey": "your-app-key",
-        "appSecret": "your-app-secret",
-        "masterServerPublicKey": "your-master-server-public-key",
-        "baseUrl": "htttps://base-service-url.com/",
+        "appKey": "74w+JmBGvhluACjuJMAzNw==",
+        "appSecret": "xCfog773wr3FJdcMJzVikg==",
+        "masterServerPublicKey": "BP3YVmaON739UFGJMKoOPs+O11+t5YGIPq+Vz8L0p44LC/IVKrViI+v1SHc1/PvPrtCssQ5FX4fOFOJEFZZPLFs=",
+        "baseUrl": "https://mojeid-mtoken-demo.wultra.app/enrollment-server",
         "allowUnsecureConnection": false    
     }
 }
