@@ -1,25 +1,26 @@
 /**
  * The `PowerAuthActivationCodeUtil` provides various set of methods for parsing and validating
- activation or recovery codes.
- 
- Current format:
- ------------------
- code without signature:	CCCCC-CCCCC-CCCCC-CCCCC
- code with signature:		CCCCC-CCCCC-CCCCC-CCCCC#BASE64_STRING_WITH_SIGNATURE
- 
- recovery code:				CCCCC-CCCCC-CCCCC-CCCCC
- recovery code from QR:		R:CCCCC-CCCCC-CCCCC-CCCCC
- 
- recovery PUK:				DDDDDDDDDD
- 
- - Where the 'C' is Base32 sequence of characters, fully decodable into the sequence of bytes.
-   The validator then compares CRC-16 checksum calculated for the first 10 bytes and compares
-   it to last two bytes (in big endian order).
- 
- - Where the 'D' is digit (0 - 9)
- 
- As you can see, both activation and recovery codes, shares the same basic principle (like CRC16
- checksum). That's why parser returns the same `PowerAuthOtp` object for both scenarios.
+ * activation or recovery codes.
+ *
+ * Current format:
+ * ```
+ * code without signature:    CCCCC-CCCCC-CCCCC-CCCCC
+ * code with signature:       CCCCC-CCCCC-CCCCC-CCCCC#BASE64_STRING_WITH_SIGNATURE
+ *
+ * recovery code:             CCCCC-CCCCC-CCCCC-CCCCC
+ * recovery code from QR:     R:CCCCC-CCCCC-CCCCC-CCCCC
+ *
+ * recovery PUK:              DDDDDDDDDD
+ * ```
+ *
+ * - Where the 'C' is Base32 sequence of characters, fully decodable into the sequence of bytes.
+ *   The validator then compares CRC-16 checksum calculated for the first 10 bytes and compares
+ *   it to last two bytes (in big endian order).
+ *
+ * - Where the 'D' is digit (0 - 9)
+ *
+ * As you can see, both activation and recovery codes, shares the same basic principle (like CRC16
+ * checksum). That's why parser returns the same `PowerAuthOtp` object for both scenarios.
  */
 export declare class PowerAuthActivationCodeUtil {
     /**
