@@ -172,7 +172,7 @@ export default class App extends Component<any, State> {
             setItems={() => {}}
             setOpen={val => {
               this.setState({
-                isActivationDropdownOpen: val
+                isActivationDropdownOpen: val as boolean
               })
             }}
           />
