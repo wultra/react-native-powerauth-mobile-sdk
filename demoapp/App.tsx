@@ -23,6 +23,7 @@ interface State {
   activationFingerprint?: string;
   activationStatus?: string;
   biometryStatus?: PowerAuthBiometryInfo;
+  hasBiometryFactorSet?: boolean;
   // prompts
   promptVisible: boolean;
   promptLabel: string;
@@ -111,6 +112,7 @@ export default class App extends Component<any, State> {
       const canStart = await this.powerAuth.canStartActivation();
       const pending = await this.powerAuth.hasPendingActivation();
       const bioStatus = await this.powerAuth.getBiometryInfo();
+      const hasBioFactor = await this.powerAuth.hasBiometryFactor();
 
       this.setState({
         activationId: id,
@@ -119,7 +121,8 @@ export default class App extends Component<any, State> {
         canStartActivation: canStart,
         hasPendingActivation: pending,
         activationStatus: "Fetching...",
-        biometryStatus: bioStatus
+        biometryStatus: bioStatus,
+        hasBiometryFactorSet: hasBioFactor
       }, async () => {
         let status = "";
         try {
@@ -154,7 +157,8 @@ export default class App extends Component<any, State> {
             value={this.state.selectedPowerAuthInstanceId}
             items={[
               {label: 'Activation 1', value: 'your-app-activation'},
-              {label: 'Activation 2', value: 'your-app-activation2'}
+              {label: 'Activation 2', value: 'your-app-activation2'},
+              {label: 'Wrong Activation ID', value: ''}
             ]}
             setValue={ async (value: any) => {
               this.powerAuth = new PowerAuth(value());
@@ -168,7 +172,7 @@ export default class App extends Component<any, State> {
             setItems={() => {}}
             setOpen={val => {
               this.setState({
-                isActivationDropdownOpen: val
+                isActivationDropdownOpen: val as boolean
               })
             }}
           />
@@ -176,22 +180,14 @@ export default class App extends Component<any, State> {
         <ScrollView style={{zIndex: 900}}>
           <View style={styles.scrollContainer}>
             <Text style={styles.titleText}>Activation status</Text>
-            <Text style={styles.actLabel}>Has valid activation</Text>
-            <Text style={styles.actVal}>{`${this.state.hasValidActivation}`}</Text>
-            <Text style={styles.actLabel}>Can start activation</Text>
-            <Text style={styles.actVal}>{`${this.state.canStartActivation}`}</Text>
-            <Text style={styles.actLabel}>Has pending activation</Text>
-            <Text style={styles.actVal}>{`${this.state.hasPendingActivation}`}</Text>
+            <Text style={styles.actVal}>{`${this.state.activationStatus}`}</Text>
+            <Text style={styles.actLabel}>{`Has valid activation: ${this.state.hasValidActivation}`}</Text>
+            <Text style={styles.actLabel}>{`Can start activation: ${this.state.canStartActivation}`}</Text>
+            <Text style={styles.actLabel}>{`Has pending activation: ${this.state.hasPendingActivation}`}</Text>
             <Text style={styles.actLabel}>Activation ID</Text>
             <Text style={styles.actVal}>{`${this.state.activationId}`}</Text>
             <Text style={styles.actLabel}>Activation fingerprint</Text>
             <Text style={styles.actVal}>{`${this.state.activationFingerprint}`}</Text>
-            <Text style={styles.actLabel}>Activation status</Text>
-            <Text style={styles.actVal}>{`${this.state.activationStatus}`}</Text>
-            <Text style={styles.actLabel}>Biometry status</Text>
-            <Text style={styles.actVal}>can authenticate: {`${this.state.biometryStatus?.canAuthenticate}`}</Text>
-            <Text style={styles.actVal}>biometry type: {`${this.state.biometryStatus?.biometryType}`}</Text>
-            <Text style={styles.actVal}>is available: {`${this.state.biometryStatus?.isAvailable}`}</Text>
             <Button title="Refresh data" onPress={_ => { this.refreshActivationInfo() }} />
             <Button title="Deconfigure" onPress={ async _ => { 
               try { 
@@ -314,14 +310,16 @@ export default class App extends Component<any, State> {
             }})}}/>
 
             <Text style={styles.titleText}>Biometry</Text>
-            <Button title="Is biometry set" onPress={ async _ => {
-              const hasRecovery = await this.powerAuth.hasBiometryFactor();
-              alert(`Biometry factor present: ${hasRecovery}`);
-            }} />
+            <Text style={styles.actLabel}>can authenticate: {`${this.state.biometryStatus?.canAuthenticate}`}</Text>
+            <Text style={styles.actLabel}>biometry type: {`${this.state.biometryStatus?.biometryType}`}</Text>
+            <Text style={styles.actLabel}>is available: {`${this.state.biometryStatus?.isAvailable}`}</Text>
+            <Text style={styles.actLabel}>has biometry factor: {`${this.state.hasBiometryFactorSet}`}</Text>
+
             <Button title="Add biometry factor" onPress={ async _ => {
               this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
                 try {
                   const r = await this.powerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
+                  this.refreshActivationInfo();
                   alert(`Biometry factor added`);
                 } catch (e) {
                   alert(`Failed: ${e.code}`);
@@ -330,6 +328,7 @@ export default class App extends Component<any, State> {
               }})}} />
             <Button title="Remove biometry factor" onPress={ async _ => {
               const result =  await this.powerAuth.removeBiometryFactor();
+              this.refreshActivationInfo();
               alert(`Biometry factor removed: ${result}`);
             }} />
             <Button title="Test offlineSignature (biometry)" onPress={ async _ => {
