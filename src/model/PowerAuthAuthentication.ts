@@ -17,7 +17,7 @@
 /**
  * Class representing a multi-factor authentication object.
  */
- export class PowerAuthAuthentication {
+export class PowerAuthAuthentication {
     /** Indicates if a possession factor should be used. */
     usePossession: boolean = false;
     /** Indicates if a biometry factor should be used. */

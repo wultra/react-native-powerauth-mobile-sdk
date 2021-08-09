@@ -29,7 +29,7 @@ import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActiva
 import { PowerAuthError } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { __NativeWrapper } from "./internal/NativeWrapper";
-import { PowerAuthTokenStore } from "./core/PowerAuthTokenStore"
+import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -169,6 +169,12 @@ export class PowerAuth {
     /**
      * Fetch the activation status for current activation.
      * 
+     * The following calls to PowerAuth Standard RESTful API endpoints are performed on the background:
+     * - `/pa/activation/status` - to get the activation status
+     * - `/pa/upgrade/start` - (optional) in case that protocol upgrade is required.
+     * - `/pa/upgrade/commit` - (optional) in case that protocol upgrade is required.
+     * - `/pa/signature/validate` - (optional) as a prevention to local counter desynchronization.
+     * 
      * @return A promise with activation status result - it contains status information in case of success and error in case of failure.
      */
     fetchActivationStatus(): Promise<PowerAuthActivationStatus> {
@@ -176,7 +182,7 @@ export class PowerAuth {
     }
 
     /**
-     * Create a new activation.
+     * Create a new activation by calling a PowerAuth Standard RESTful API endpoint `/pa/activation/create`.
      * 
      * @param activation A PowerAuthActivation object containg all information required for the activation creation.
      */
@@ -208,7 +214,9 @@ export class PowerAuth {
     }
 
     /**
-     * Remove current activation by calling a PowerAuth Standard RESTful API endpoint '/pa/activation/remove'.
+     * Remove current activation by calling a PowerAuth Standard RESTful API endpoint `/pa/activation/remove`. The user can authenticate with password
+     * or with biometry, if biometric factor is configured in the current activation. In case of biometry, the system biometric authentication dialog 
+     * is displayed, so the operation may take an undefined amount of time to complete.
      * 
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
@@ -218,7 +226,7 @@ export class PowerAuth {
 
     /**
      * This method removes the activation session state and biometry factor key. Cached possession related key remains intact.
-     * Unlike the `removeActivationWithAuthentication`, this method doesn't inform server about activation removal. In this case
+     * Unlike the `removeActivationWithAuthentication()`, this method doesn't inform server about activation removal. In this case
      * user has to remove the activation by using another channel (typically internet banking, or similar web management console)
      */
     removeActivationLocal(): Promise<void> {
@@ -227,6 +235,8 @@ export class PowerAuth {
 
     /**
      * Compute the HTTP signature header for GET HTTP method, URI identifier and HTTP query parameters using provided authentication information.
+     * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
+     * may take an undefined amount of time to complete. 
      * 
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      * @param uriId URI identifier.
@@ -234,11 +244,13 @@ export class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature
      */
     async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapper.call("requestGetSignature",await this.wrapper.authenticate(authentication), uriId, params ?? null);
+        return this.wrapper.call("requestGetSignature", await this.wrapper.authenticate(authentication), uriId, params ?? null);
     }
 
     /**
      * Compute the HTTP signature header for given HTTP method, URI identifier and HTTP request body using provided authentication information.
+     * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
+     * may take an undefined amount of time to complete.
      * 
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      * @param method HTTP method used for the signature computation.
@@ -251,7 +263,9 @@ export class PowerAuth {
     }
 
     /**
-     * Compute the offline signature for given HTTP method, URI identifier and HTTP request body using provided authentication information.
+     * Compute the offline signature for given HTTP method, URI identifier and HTTP request body using provided authentication information. Be aware that if 
+     * `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined 
+     * amount of time to complete. 
      * 
      * @param authentication An authentication instance specifying what factors should be used to sign the request. The possession and knowledge is recommended.
      * @param uriId URI identifier.
@@ -268,14 +282,14 @@ export class PowerAuth {
      * 
      * @param data An arbitrary data
      * @param signature A signature calculated for data, in Base64 format
-     * @param masterKey If true, then master server public key is used for validation, otherwise personalized server's public key.
+     * @param masterKey If `true`, then master server public key is used for validation, otherwise personalized server's public key.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
         return this.wrapper.call("verifyServerSignedData", data, signature, masterKey);
     }
 
     /**
-     * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint '/pa/signature/validate'.
+     * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint `/pa/signature/validate`.
      * 
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
@@ -301,7 +315,7 @@ export class PowerAuth {
 
     /**
      * Regenerate a biometry related factor key.
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for original private key decryption.
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
      * 
      * @param password Password used for authentication during vault unlocking call.
      * @param title (used only in Android) Title for biometry dialog
@@ -342,9 +356,10 @@ export class PowerAuth {
     }
 
     /** 
-     * Generate a derived encryption key with given index.
-     * The key is returned in form of base64 encoded string.
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for subsequent key derivation using given index.
+     * Generate a derived encryption key with given index. The key is returned in form of base64 encoded string.
+     * 
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used 
+     * for subsequent key derivation using given index.
      * 
      * @param authentication Authentication used for vault unlocking call.
      * @param index Index of the derived key using KDF. 
@@ -355,7 +370,9 @@ export class PowerAuth {
 
     /**
      * Sign given data with the original device private key (asymetric signature).
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for private key decryption. Data is then signed using ECDSA algorithm with this key and can be validated on the server side.
+     * 
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key 
+     * used for private key decryption. Data is then signed using ECDSA algorithm with this key and can be validated on the server side.
      * 
      * @param authentication Authentication used for vault unlocking call.
      * @param data Data to be signed with the private key.
@@ -366,7 +383,8 @@ export class PowerAuth {
 
     /** 
      * Validate a user password.
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/signature/validate' to validate the signature value.
+     * 
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/signature/validate` to validate the signature value.
      * 
      * @param password Password to be verified.
      */
@@ -383,7 +401,8 @@ export class PowerAuth {
 
     /**
      * Get an activation recovery data.
-     * This method calls PowerAuth Standard RESTful API endpoint '/pa/vault/unlock' to obtain the vault encryption key used for private recovery data decryption.
+     * 
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for private recovery data decryption.
      * 
      * @param authentication Authentication used for vault unlocking call.
      */
@@ -392,7 +411,8 @@ export class PowerAuth {
     }
 
     /**
-     * Confirm given recovery code on the server.
+     * Confirm given recovery code on the server by calling a PowerAuth Standard RESTful API endpoint `/pa/recovery/confirm`.
+     * 
      * The method is useful for situations when user receives a recovery information via OOB channel (for example via postcard). 
      * Such recovery codes cannot be used without a proper confirmation on the server. To confirm codes, user has to authenticate himself
      * with a knowledge factor.
