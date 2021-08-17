@@ -25,7 +25,7 @@ jobs:
         run: |
           [[ $GITHUB_REF == refs/heads/${{ github.event.inputs.confirmBranch }} ]] || exit 1
       - name: Publish the library
-        uses: kober32/library-deploy@develop
+        uses: wultra/library-deploy@develop
         with:
           script-parameters: ${{ github.event.inputs.version }} ${{ github.event.inputs.command }}
         env:
