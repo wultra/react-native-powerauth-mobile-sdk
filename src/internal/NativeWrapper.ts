@@ -55,7 +55,7 @@ export class __NativeWrapper {
         // - Check if the exception is already PowerAuthError type. If so, then return the same instance.
         if (exception == null) {
             return new PowerAuthError(null, message ?? "Operation failed with unspecified error")
-        } else if (exception as PowerAuthError) {
+        } else if (exception instanceof PowerAuthError) {
             // There's no additional message, we can return exception as it is.
             if (message == null) {
                 return exception
