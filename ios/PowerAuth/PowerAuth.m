@@ -60,6 +60,11 @@ static inline id _CastObjectTo(id instance, Class desiredClass) {
 
 RCT_EXPORT_MODULE(PowerAuth);
 
++ (BOOL)requiresMainQueueSetup
+{
+    return NO;
+}
+
 #pragma mark - React methods
 
 RCT_REMAP_METHOD(isConfigured,
