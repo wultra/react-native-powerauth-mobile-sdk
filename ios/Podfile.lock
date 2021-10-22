@@ -10,9 +10,9 @@ PODS:
     - React-jsi (= 0.64.1)
     - ReactCommon/turbomodule/core (= 0.64.1)
   - glog (0.3.5)
-  - PowerAuth2 (1.6.0):
-    - PowerAuthCore (~> 1.6.0)
-  - PowerAuthCore (1.6.0)
+  - PowerAuth2 (1.6.1):
+    - PowerAuthCore (~> 1.6.1)
+  - PowerAuthCore (1.6.1)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -277,7 +277,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - PowerAuth2 (= 1.6.0)
+  - PowerAuth2 (= 1.6.1)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -373,10 +373,10 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: 7b423f9e248eae65987838148c36eec1dbfe0b53
-  FBReactNativeSpec: b1a5a4a7e43daf5f1ae09396d940ec492aff0828
+  FBReactNativeSpec: 64044649a7057c7b78a292eea256f0f505f77ff5
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: 9a3ba5fe163fad011a702ece1c20bc4767ee9607
-  PowerAuthCore: 0a97050bfa8c37de86e497fab3c2f41da45deddb
+  PowerAuth2: 7483fd55abab153a89b9cb5aff05ffe8e64495fa
+  PowerAuthCore: 09fe7958d744024e33e0bbad5b6fc2c49c88e08f
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: ec2ebc96b7bfba3ca5c32740f5a0c6a014a274d2
   RCTTypeSafety: 22567f31e67c3e088c7ac23ea46ab6d4779c0ea5
@@ -402,6 +402,6 @@ SPEC CHECKSUMS:
   ReactCommon: bedc99ed4dae329c4fcf128d0c31b9115e5365ca
   Yoga: a7de31c64fe738607e7a3803e3f591a4b1df7393
 
-PODFILE CHECKSUM: 681e5e763871172c45d2aa99d29501943b694c40
+PODFILE CHECKSUM: a9a5c6769628d2e27e219d39abcd1d61c21dd157
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.10.2

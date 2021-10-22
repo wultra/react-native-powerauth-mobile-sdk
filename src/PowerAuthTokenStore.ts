@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication';
-import { PowerAuthAuthorizationHttpHeader } from '../model/PowerAuthAuthorizationHttpHeader';
-import { __NativeWrapper } from "../internal/NativeWrapper";
+import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
+import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
+import { __NativeWrapper } from "./internal/NativeWrapper";
 
 /**
  * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as 
@@ -67,7 +67,8 @@ export class PowerAuthTokenStore {
     }
 
     /**
-     * Create a new access token with given name for requested signature factors.
+     * Create a new access token with given name for requested signature factors by calling 
+     * a PowerAuth Standard RESTful API endpoint `/pa/token/create`.
      * 
      * Note that the method is thread safe, but it's not recommended to request for the same token
      * name in parallel when the token is not created yet. You can use hasLocalToken() method
@@ -82,7 +83,8 @@ export class PowerAuthTokenStore {
     }
 
     /**
-     * Remove previously created access token from the server and from local database.
+     * Remove previously created access token from the server and from local database by calling 
+     * a PowerAuth Standard RESTful API endpoint `/pa/token/remove`.
      * 
      * Note that if the removal request doesn't succeed, then the local token's data is not removed.
      * The method is thread safe, but it's not recommended to issue conflicting request for the same
@@ -112,19 +114,19 @@ export interface PowerAuthToken {
      * Return true if this token object contains a valid token data.
      */
      isValid: boolean;
-     /**
-      * Symbolic name of token or null if token contains an invalid data.
-      */
-     tokenName?: string;
-     /**
-      * Return token's unique identifier. You normally don't need this value, but it may help
-      * with application's debugging. The value identifies this token on PowerAuth server.
-      *
-      * Null if token contains an invalid data.
-      */
-     tokenIdentifier?: string;
-     /**
-      * True if header can be generated.
-      */
-      canGenerateHeader: boolean;
+    /**
+     * Symbolic name of token or null if token contains an invalid data.
+     */
+    tokenName?: string;
+    /**
+     * Return token's unique identifier. You normally don't need this value, but it may help
+     * with application's debugging. The value identifies this token on PowerAuth server.
+     *
+     * Null if token contains an invalid data.
+     */
+    tokenIdentifier?: string;
+    /**
+     * True if header can be generated.
+     */
+    canGenerateHeader: boolean;
 }

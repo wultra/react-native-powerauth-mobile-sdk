@@ -15,21 +15,7 @@
  */
 
 #import <React/RCTBridgeModule.h>
-#import <PowerAuth2/PowerAuthClientConfiguration.h>
-#import <PowerAuth2/PowerAuthKeychainConfiguration.h>
-#import <PowerAuth2/PowerAuthConfiguration.h>
 
 @interface PowerAuth: NSObject<RCTBridgeModule>
 
-/**
- * Prepares the PowerAuth instance.
- *
- * @param config PowerAuth configuration
- * @param keychainConfig PowerAuth Keychain configuration
- * @param clientConfig PowerAuth HTTP client configuration
- * @return If the configuration was successful.
-*/
-- (BOOL) configureWithConfig:(nonnull PowerAuthConfiguration *)config
-             keychainConfig:(nullable PowerAuthKeychainConfiguration *)keychainConfig
-               clientConfig:(nullable PowerAuthClientConfiguration *)clientConfig;
 @end

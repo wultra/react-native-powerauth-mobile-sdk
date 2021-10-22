@@ -19,7 +19,7 @@
  */
 export class PowerAuthError {
 
-    /** Original exception thrown by the native layer (iOS or Android) */
+    /** Original exception thrown by the native layer (iOS or Android). If null, then error was created in TypeScript. */
     originalException: any;
 
     /** Code of the error. */
@@ -28,22 +28,16 @@ export class PowerAuthError {
     message?: string;
     /** Additional error data. */
     errorData?: any;
-    /** Domain of the error (iOS only). */
-    domain?: string;
-    /** Description of the error (iOS only). */
-    description?: string;
 
-    constructor(exception: any, message: string = null) {
+    constructor(exception: any, message: string = null, code: PowerAuthErrorCode = null, errorData: any = null) {
         this.originalException = exception;
-        this.code = exception?.code ?? null;
+        this.code = code ?? exception?.code ?? null;
         this.message = message ?? exception?.message ?? null;
-        this.domain = exception?.domain ?? null;
-        this.errorData = exception?.userInfo ?? null;
-        this.description = exception?.userInfo?.NSLocalizedDescription ?? null;
+        this.errorData = errorData ?? exception?.userInfo ?? null;
     }
 
     print(): string {
-        return `code: ${this.code}\nmessage: ${this.message}\ndomain: ${this.domain}\ndescription: ${this.description}`;
+        return `code: ${this.code}\nmessage: ${this.message}`;
     }
 };
 
@@ -54,6 +48,22 @@ export enum PowerAuthErrorCode {
 
     /** Error code for error with network connectivity or download. */
     NETWORK_ERROR = "NETWORK_ERROR",
+  
+    /** 
+     * Failed to authenticate on the server. The code is reported when 401 HTTP status code from the server is received. 
+     * You can investigate more failure details in similar manner than `RESPONSE_ERROR`.
+     */
+    AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR",
+  
+    /** 
+     * Non 200 HTTP status code received from the server. The `errorData` dictionary contains the following values:
+     * - `httpStatusCode` - Number with exact value of the HTTP status code.
+     * - `serverResponseCode` - Error code as defined in standard PowerAuth RESTful API error response. 
+     * - `serverResponseMessage` - Error message as defined in standard PowerAuth RESTful API error response.
+     * - `responseBody` - String with JSON response body.
+     * - `currentRecoveryPukIndex` - (optional) Number with current recovery PUK index, in case that activation recovery failed. 
+     */
+    RESPONSE_ERROR = "RESPONSE_ERROR",
 
     /** Error code for error in signature calculation. */
     SIGNATURE_ERROR = "SIGNATURE_ERROR",
@@ -76,7 +86,7 @@ export enum PowerAuthErrorCode {
     /**
      * Error code for canceled operation. This kind of error may occur in situations, when SDK
      * needs to cancel an asynchronous operation, but the cancel is not initiated by the application
-     * itself. For example, if you reset the state of {@code PowerAuthSDK} during the pending
+     * itself. For example, if you reset the state of `PowerAuthSDK` during the pending
      * fetch for activation status, then the application gets an exception, with this error code.
      */
     OPERATION_CANCELED = "OPERATION_CANCELED",
@@ -128,9 +138,6 @@ export enum PowerAuthErrorCode {
     /** Error code for a general error related to WatchConnectivity (iOS only) */
     WATCH_CONNECTIVITY = "WATCH_CONNECTIVITY",
 
-    /** Network communication returned an error. See more information in the message of the exception. */
-    RESPONSE_ERROR = "RESPONSE_ERROR",
-
     /** When the error is not originating from the native module. */
     REACT_NATIVE_ERROR = "REACT_NATIVE_ERROR",
 
@@ -157,4 +164,7 @@ export enum PowerAuthErrorCode {
 
     /** Error when invalid activation object is provided during activation */
     INVALID_ACTIVATION_OBJECT = "INVALID_ACTIVATION_OBJECT",
+
+    /** Failed with unexpected error. */
+    UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }

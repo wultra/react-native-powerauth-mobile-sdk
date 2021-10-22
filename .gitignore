@@ -1,8 +1,11 @@
 # OSX
 .DS_Store
 
-# node.js
+# library
 node_modules
+lib/internal/NativeWrapper.d.ts
+
+# demoapp
 demoapp/node_modules
 
 # Android
@@ -21,8 +24,15 @@ demoapp/android/app/.gradle/
 demoapp/android/app/.project
 demoapp/android/app/.settings
 *build/
+.idea
+*.iml
+*.ipr
+*.iws
+out
+gen-external-apklibs
 
 # iOS
+xcuserdata
 *.xcuserstate
 ios/Pods/*
 demoapp/ios/Pods/*

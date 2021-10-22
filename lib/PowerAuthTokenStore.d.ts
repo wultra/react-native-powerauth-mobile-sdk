@@ -1,5 +1,5 @@
-import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication';
-import { PowerAuthAuthorizationHttpHeader } from '../model/PowerAuthAuthorizationHttpHeader';
+import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
+import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 /**
  * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as
  * underlying storage for received data. Note that the whole store's interface is thread safe, but it's
@@ -33,7 +33,8 @@ export declare class PowerAuthTokenStore {
      */
     removeAllLocalTokens(): Promise<void>;
     /**
-     * Create a new access token with given name for requested signature factors.
+     * Create a new access token with given name for requested signature factors by calling
+     * a PowerAuth Standard RESTful API endpoint `/pa/token/create`.
      *
      * Note that the method is thread safe, but it's not recommended to request for the same token
      * name in parallel when the token is not created yet. You can use hasLocalToken() method
@@ -45,7 +46,8 @@ export declare class PowerAuthTokenStore {
      */
     requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken>;
     /**
-     * Remove previously created access token from the server and from local database.
+     * Remove previously created access token from the server and from local database by calling
+     * a PowerAuth Standard RESTful API endpoint `/pa/token/remove`.
      *
      * Note that if the removal request doesn't succeed, then the local token's data is not removed.
      * The method is thread safe, but it's not recommended to issue conflicting request for the same

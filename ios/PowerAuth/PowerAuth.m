@@ -24,13 +24,26 @@
 #import <PowerAuth2/PowerAuthKeychain.h>
 #import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
 
-@interface PowerAuth ()
- 
-@property (retain, readwrite) NSMutableDictionary* instances;
- 
-@end
+/**
+ Cast object to desired class, or return nil if object is different kind of class.
+ */
+static inline id _CastObjectTo(id instance, Class desiredClass) {
+    if ([instance isKindOfClass:desiredClass]) {
+        return instance;
+    }
+    return nil;
+}
+/**
+ Macro to cast object to desired class, or return nil if object is different kind of class.
+ */
+#define CAST_TO(object, requiredClass) ((requiredClass*)(_CastObjectTo(object, [requiredClass class])))
+
 
 @implementation PowerAuth
+{
+    id<NSLocking> _mutex;
+    NSMutableDictionary<NSString*, PowerAuthSDK*>* _sdkInstances;
+}
 
 #define PA_BLOCK_START [self usePowerAuth:instanceId reject:reject callback:^(PowerAuthSDK * powerAuth) {
 #define PA_BLOCK_END }];
@@ -39,66 +52,82 @@
 {
     self = [super init];
     if (self) {
-        _instances = [[NSMutableDictionary alloc] init];
+        _mutex = [[NSLock alloc] init];
+        _sdkInstances = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
 RCT_EXPORT_MODULE(PowerAuth);
 
++ (BOOL)requiresMainQueueSetup
+{
+    return NO;
+}
+
+#pragma mark - React methods
+
 RCT_REMAP_METHOD(isConfigured,
                  instanceId:(NSString *)instanceId
                  isConfiguredResolve:(RCTPromiseResolveBlock)resolve
                  isConfiguredReject:(RCTPromiseRejectBlock)reject)
 {
-    resolve([self powerAuthForInstanceId:instanceId] ? @YES : @NO);
-}
-
-- (BOOL)configureWithConfig:(nonnull PowerAuthConfiguration *)config
-             keychainConfig:(nullable PowerAuthKeychainConfiguration *)keychainConfig
-               clientConfig:(nullable PowerAuthClientConfiguration *)clientConfig
-{
-    if ([self powerAuthForInstanceId: [config instanceId]]) {
-        // powerAuth instance for this instanceId already exists
-        return NO;
-    }
-    
-    if ([config validateConfiguration]) {
-        PowerAuthSDK* sdk = [[PowerAuthSDK alloc] initWithConfiguration:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
-        [_instances setObject:sdk forKey:[config instanceId]];
-        return YES;
-    } else {
-        return NO;
-    }
+    resolve(@([self powerAuthForInstanceId:instanceId] != nil));
 }
 
 RCT_REMAP_METHOD(configure,
                  instanceId:(NSString*)instanceId
-                 appKey:(NSString*)appKey
-                 appSecret:(NSString*)appSecret
-                 masterServerPublicKey:(NSString*)masterServerPublicKey
-                 baseEndpointUrl:(NSString*)baseEndpointUrl
-                 enableUnsecureTraffic:(BOOL)enableUnsecureTraffic
+                 configuration:(NSDictionary*)configuration
+                 clientConfiguration:(NSDictionary*)clientConfiguration
+                 biometryConfiguration:(NSDictionary*)biometryConfiguration
+                 keychainConfiguration:(NSDictionary*)keychainConfiguration
                  configureResolve:(RCTPromiseResolveBlock)resolve
                  configureReject:(RCTPromiseRejectBlock)reject)
 {
+    if (instanceId.length == 0) {
+        reject(@"WRONG_PARAMETER", @"Instance identifier is missing or empty string", nil);
+        return;
+    }
+    
+    // Instance config
     PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
     config.instanceId = instanceId;
-    config.appKey = appKey;
-    config.appSecret = appSecret;
-    config.masterServerPublicKey = masterServerPublicKey;
-    config.baseEndpointUrl = baseEndpointUrl;
-
-    PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
+    config.appKey = CAST_TO(configuration[@"applicationKey"], NSString);
+    config.appSecret = CAST_TO(configuration[@"applicationSecret"], NSString);
+    config.masterServerPublicKey = CAST_TO(configuration[@"masterServerPublicKey"], NSString);
+    config.baseEndpointUrl = CAST_TO(configuration[@"baseEndpointUrl"], NSString);
     
-    if (enableUnsecureTraffic) {
+    if (![config validateConfiguration]) {
+        reject(@"WRONG_PARAMETER", @"Provided configuration is invalid", nil);
+        return;
+    }
+
+    // HTTP client config
+    PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
+    clientConfig.defaultRequestTimeout = CAST_TO(clientConfiguration[@"connectionTimeout"], NSNumber).doubleValue;
+    if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
         [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
     }
     
-    if ([self configureWithConfig:config keychainConfig:nil clientConfig:clientConfig]) {
+    PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
+    // Keychain specific
+    keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
+    keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
+    // Biometry
+    keychainConfig.linkBiometricItemsToCurrentSet = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber).boolValue;
+    keychainConfig.allowBiometricAuthenticationFallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber).boolValue;
+
+    // Now register the instance in the thread safe manner.
+    BOOL registered = [self registerPowerAuthForInstanceId:instanceId instanceProvider:^PowerAuthSDK * _Nonnull {
+        return [[PowerAuthSDK alloc] initWithConfiguration:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
+    }];
+    
+    if (registered) {
+        // Resolve success
         resolve(@YES);
     } else {
-        resolve(@NO);
+        // Instance is already configured
+        reject(@"REACT_NATIVE_ERROR", @"PowerAuth object with this instanceId is already configured.", nil);
     }
 }
 
@@ -107,7 +136,8 @@ RCT_REMAP_METHOD(deconfigure,
                  deconfigureResolve:(RCTPromiseResolveBlock)resolve
                  deconfigureReject:(RCTPromiseRejectBlock)reject)
 {
-    [_instances removeObjectForKey:instanceId];
+    [self unregisterPowerAuthForInstanceId:instanceId];
+    resolve(@YES);
 }
 
 RCT_REMAP_METHOD(hasValidActivation,
@@ -158,7 +188,7 @@ RCT_REMAP_METHOD(fetchActivationStatus,
             };
             resolve(response);
         } else {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -219,7 +249,7 @@ RCT_REMAP_METHOD(createActivation,
             };
             resolve(response);
         } else {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -240,7 +270,7 @@ RCT_REMAP_METHOD(commitActivation,
     if (success) {
         resolve(@YES);
     } else {
-        reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        [self processError:error with:reject];
     }
     PA_BLOCK_END
 }
@@ -276,7 +306,7 @@ RCT_REMAP_METHOD(removeActivationWithAuthentication,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(@YES);
         }
@@ -309,7 +339,7 @@ RCT_REMAP_METHOD(requestGetSignature,
     PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestGetSignatureWithAuthentication:auth uriId:uriId params:params error: &error];
     
     if (error) {
-        reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        [self processError:error with:reject];
     } else {
         NSDictionary *response = @{
             @"key": signature.key,
@@ -336,7 +366,7 @@ RCT_REMAP_METHOD(requestSignature,
     PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
     
     if (error) {
-        reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        [self processError:error with:reject];
     } else {
         NSDictionary *response = @{
             @"key": signature.key,
@@ -362,7 +392,7 @@ RCT_REMAP_METHOD(offlineSignature,
     NSString* signature = [powerAuth offlineSignatureWithAuthentication:auth uriId:uriId body:[RCTConvert NSData:body] nonce:nonce error:&error];
     
     if (error) {
-        reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+        [self processError:error with:reject];
     } else {
         resolve(signature);
     }
@@ -406,7 +436,7 @@ RCT_REMAP_METHOD(changePassword,
     PA_BLOCK_START
     [powerAuth changePasswordFrom:oldPassword to:newPassword callback:^(NSError * error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(@YES);
         }
@@ -423,7 +453,7 @@ RCT_REMAP_METHOD(addBiometryFactor,
     PA_BLOCK_START
     [powerAuth addBiometryFactor:password callback:^(NSError * error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(@YES);
         }
@@ -509,7 +539,7 @@ RCT_REMAP_METHOD(fetchEncryptionKey,
         if (encryptionKey) {
             resolve([encryptionKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -528,7 +558,7 @@ RCT_REMAP_METHOD(signDataWithDevicePrivateKey,
         if (signature) {
             resolve([RCTConvert NSString:signature]);
         } else {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -543,7 +573,7 @@ RCT_REMAP_METHOD(validatePassword,
     PA_BLOCK_START
     [powerAuth validatePasswordCorrect:password callback:^(NSError * error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(@YES);
         }
@@ -571,7 +601,7 @@ RCT_REMAP_METHOD(activationRecoveryData,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [powerAuth activationRecoveryData:auth callback:^(PowerAuthActivationRecoveryData * data, NSError * error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             NSDictionary *response = @{
                 @"recoveryCode": data.recoveryCode,
@@ -594,7 +624,7 @@ RCT_REMAP_METHOD(confirmRecoveryCode,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [powerAuth confirmRecoveryCode:recoveryCode authentication:auth callback:^(BOOL alreadyConfirmed, NSError * error) {
         if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(alreadyConfirmed ? @YES : @NO);
         }
@@ -616,7 +646,7 @@ RCT_REMAP_METHOD(authenticateWithBiometry,
         if (authentication) {
             resolve([authentication.overridenBiometryKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -710,7 +740,7 @@ RCT_REMAP_METHOD(requestAccessToken,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
         if (error || token == nil) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
+            [self processError:error with:reject];
         } else {
             resolve(@{
                 @"isValid": token.isValid ? @YES : @NO,
@@ -733,10 +763,8 @@ RCT_REMAP_METHOD(removeAccessToken,
     [[powerAuth tokenStore] removeAccessTokenWithName:tokenName completion:^(BOOL removed, NSError * error) {
         if (removed) {
             resolve([NSNull null]);
-        } else if (error) {
-            reject([self getErrorCodeFromError:error], error.localizedDescription, error);
         } else {
-            reject(@"PowerAuthReactNativeError", @"Unknown error", nil);
+            [self processError:error with:reject];
         }
     }];
     PA_BLOCK_END
@@ -824,26 +852,73 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     PA_BLOCK_END
 }
 
-#pragma mark HELPER METHODS
 
-- (void)usePowerAuth:(NSString *)instanceId
-              reject:(RCTPromiseRejectBlock)reject
-            callback:(void(^)(PowerAuthSDK *sdk))callback
+#pragma mark - Instances register
+
+/// Method gets PowerAuthSDK instance with given identifier.
+/// @param instanceId PowerAuthSDK instance or nil if there's no such instance with required identifier.
+- (PowerAuthSDK*) powerAuthForInstanceId:(NSString *)instanceId
 {
-    PowerAuthSDK* sdk = [self powerAuthForInstanceId:instanceId];
-    if (sdk) {
-        callback(sdk);
+    [_mutex lock];
+    PowerAuthSDK * sdk = [_sdkInstances objectForKey:instanceId];
+    [_mutex unlock];
+    return sdk;
+}
+
+/// Method registers PowerAuthSDK instance for given identifier. The SDK instnace must be provided by instanceProvider block.
+/// @param instanceId Instance identifier.
+/// @param instanceProvider Block to construct valid PowerAuthSDK instance.
+- (BOOL) registerPowerAuthForInstanceId:(nonnull NSString*)instanceId
+                       instanceProvider:(PowerAuthSDK * _Nonnull (^ _Nonnull)(void))instanceProvider
+{
+    [_mutex lock];
+    BOOL registered;
+    if (_sdkInstances[instanceId] == nil) {
+        _sdkInstances[instanceId] = instanceProvider();
+        registered = YES;
     } else {
-        reject(@"INSTANCE_NOT_CONFIGURED", @"This instance is not configured.", nil);
+        registered = NO;
+    }
+    [_mutex unlock];
+    return registered;
+}
+
+/// Method unregister PowerAuthSDK instnace with given identifier. If there's no such object, then does nothing,
+/// @param instanceId Instance identifier.
+- (void) unregisterPowerAuthForInstanceId:(NSString*)instanceId
+{
+    [_mutex lock];
+    [_sdkInstances removeObjectForKey:instanceId];
+    [_mutex unlock];
+}
+
+
+#pragma mark - Helper methods
+
+/// Method gets PowerAuthSDK instance from instance register and call `callback` with given object.
+/// In case that there's no such instnace, or instanceId is invalid, then calls reject promise with a failure.
+/// @param instanceId Instance identifier.
+/// @param reject Reject promise block.
+/// @param callback Callback to call with a valid PowerAuthSDK instance.
+- (void) usePowerAuth:(NSString *)instanceId
+               reject:(RCTPromiseRejectBlock)reject
+             callback:(void(^)(PowerAuthSDK *sdk))callback
+{
+    if (instanceId.length != 0) {
+        PowerAuthSDK* sdk = [self powerAuthForInstanceId:instanceId];
+        if (sdk) {
+            callback(sdk);
+        } else {
+            reject(@"INSTANCE_NOT_CONFIGURED", @"This instance is not configured.", nil);
+        }
+    } else {
+        reject(@"WRONG_PARAMETER", @"Instance identifier is missing or empty string", nil);
     }
 }
 
-- (PowerAuthSDK *)powerAuthForInstanceId:(NSString *)instanceId
-{
-    return [_instances objectForKey:instanceId];
-}
-
-- (PowerAuthAuthentication *)constructAuthenticationFromDictionary:(NSDictionary*)dict
+/// Translate dictionary into `PowerAuthAuthentication` object.
+/// @param dict Dictionary with authentication data.
+- (PowerAuthAuthentication*) constructAuthenticationFromDictionary:(NSDictionary*)dict
 {
     PowerAuthAuthentication *auth = [[PowerAuthAuthentication alloc] init];
     auth.usePossession = [RCTConvert BOOL:dict[@"usePossession"]];
@@ -860,9 +935,28 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     return auth;
 }
 
-- (NSString*)getErrorCodeFromError:(NSError*)paError
+/// Method translates `PowerAuthActivationState` into string representation.
+/// @param status State to translate.
+- (NSString*) getStatusCode:(PowerAuthActivationState)status
 {
-    switch (paError.code) {
+    switch (status) {
+        case PowerAuthActivationState_Created: return @"CREATED";
+        case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
+        case PowerAuthActivationState_Active: return @"ACTIVE";
+        case PowerAuthActivationState_Blocked: return @"BLOCKED";
+        case PowerAuthActivationState_Removed: return @"REMOVED";
+        case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
+        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+    }
+}
+
+#pragma mark - Error handling
+
+/// Translates PowerAuthErrorCode into string representation.
+/// @param code Error code to convert.
+static NSString * _TranslatePAErrorCode(PowerAuthErrorCode code)
+{
+    switch (code) {
         case PowerAuthErrorCode_NetworkError: return @"NETWORK_ERROR";
         case PowerAuthErrorCode_SignatureError: return @"SIGNATURE_ERROR";
         case PowerAuthErrorCode_InvalidActivationState: return @"INVALID_ACTIVATION_STATE";
@@ -880,22 +974,87 @@ RCT_REMAP_METHOD(generateHeaderForToken,
         case PowerAuthErrorCode_BiometryNotAvailable: return @"BIOMETRY_NOT_AVAILABLE";
         case PowerAuthErrorCode_WatchConnectivity: return @"WATCH_CONNECTIVITY";
         case PowerAuthErrorCode_BiometryFailed: return @"BIOMETRY_FAILED";
-        default: return [[NSString alloc] initWithFormat:@"UNKNOWN_%li", paError.code];
+        default: return [[NSString alloc] initWithFormat:@"UNKNOWN_%li", code];
     }
-    return [[NSString alloc] initWithFormat:@"PowerAuthUnknownCode%li", paError.code];
 }
 
-- (NSString*)getStatusCode:(PowerAuthActivationState)status
+/// Method translate reported NSError into proper React Native error code and reports everything bactk promise reject block.
+/// @param error Error to report.
+/// @param reject Reject promise to call.
+- (void) processError:(nullable NSError*)error with:(nonnull RCTPromiseRejectBlock)reject
 {
-    switch (status) {
-        case PowerAuthActivationState_Created: return @"CREATED";
-        case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
-        case PowerAuthActivationState_Active: return @"ACTIVE";
-        case PowerAuthActivationState_Blocked: return @"BLOCKED";
-        case PowerAuthActivationState_Removed: return @"REMOVED";
-        case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
-        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+    NSString * errorCode = nil;
+    NSString * message;
+    if (error != nil) {
+        // Keep message
+        message = error.localizedDescription;
+        // If powerAuthErrorCode is different than .NA, then it's PowerAuthDomain error.
+        PowerAuthErrorCode paErrorCode = error.powerAuthErrorCode;
+        if (paErrorCode != PowerAuthErrorCode_NA) {
+            // Handle PA error
+            NSDictionary * responseData = CAST_TO(error.userInfo[PowerAuthErrorInfoKey_AdditionalInfo], NSDictionary);
+            if (responseData != nil) {
+                // Handle error response received from the server. In this case, we have to re-create a new NSError, because
+                // React Native layer cannot translate our custom objects, stored in NSError. So, we have to create a new userInfo with
+                // a plain serializable data.
+                PowerAuthRestApiErrorResponse * responseObject = CAST_TO(error.userInfo[PowerAuthErrorDomain], PowerAuthRestApiErrorResponse);
+                NSUInteger httpStatusCode = responseObject.httpStatusCode;
+                if (httpStatusCode == 401) {
+                    errorCode = @"AUTHENTICATION_ERROR";
+                    message = @"Unauthorized";
+                } else {
+                    errorCode = @"RESPONSE_ERROR";
+                    message = @"Wrong HTTP status code received from the server";
+                }
+                NSMutableDictionary * newUserInfo = [NSMutableDictionary dictionaryWithObject:message forKey:NSLocalizedDescriptionKey];
+                if (responseObject) {
+                    newUserInfo[@"httpStatusCode"] = @(httpStatusCode);
+                    // Serialize dictionary back to string, to be compatible with Android
+                    NSData * jsonData = [NSJSONSerialization dataWithJSONObject:responseData options:0 error:nil];
+                    if (jsonData) {
+                        NSString * jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+                        if (jsonString) {
+                            newUserInfo[@"responseBody"] = jsonString;
+                        }
+                    }
+                    NSString * serverResponseCode = responseObject.responseObject.code;
+                    if (serverResponseCode) {
+                        newUserInfo[@"serverResponseCode"] = serverResponseCode;
+                    }
+                    NSString * serverResponseMessage = responseObject.responseObject.message;
+                    if (serverResponseMessage) {
+                        newUserInfo[@"serverResponseMessage"] = serverResponseMessage;
+                    }
+                    NSInteger recoveryPukIndex = responseObject.responseObject.currentRecoveryPukIndex;
+                    if (recoveryPukIndex > 0) {
+                        newUserInfo[@"currentRecoveryPukIndex"] = @(recoveryPukIndex);
+                    }
+                }
+                // Finally, build a new error
+                error = [NSError errorWithDomain:PowerAuthErrorDomain code:error.code userInfo:newUserInfo];
+                //
+            } else {
+                // Other type of PowerAuthError. Just translate errorCode to string and keep NSError as it is.
+                errorCode = _TranslatePAErrorCode(paErrorCode);
+                //
+            }
+        } else if ([error.domain isEqualToString:NSURLErrorDomain]) {
+            // Handle error from NSURLSession
+            errorCode = @"NETWORK_ERROR";
+            //
+        } else {
+            // We don't know this domain, so translate result as an UNKNOWN_ERROR
+            errorCode = @"UNKNOWN_ERROR";
+            //
+        }
+    } else {
+        // Error object is nil
+        errorCode = @"UNKNOWN_ERROR";
+        message = @"Native code failed with unspecified error";
     }
+    
+    // Finally call promise's reject
+    reject(errorCode, message, error);
 }
 
 @end

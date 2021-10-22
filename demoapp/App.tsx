@@ -8,6 +8,11 @@ import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/P
 import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
 import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
 import {PowerAuthError} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthError';
+import { PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthConfiguration';
+import { PowerAuthClientConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthClientConfiguration';
+import { PowerAuthKeychainConfiguration, PowerAuthKeychainProtection } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthKeychainConfiguration';
+import { PowerAuthBiometryConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryConfiguration';
+import * as AppConfig from './AppConfig.json';
 
 interface State {
   // activation status
@@ -18,6 +23,7 @@ interface State {
   activationFingerprint?: string;
   activationStatus?: string;
   biometryStatus?: PowerAuthBiometryInfo;
+  hasBiometryFactorSet?: boolean;
   // prompts
   promptVisible: boolean;
   promptLabel: string;
@@ -50,10 +56,10 @@ export default class App extends Component<any, State> {
       promptCallback: _ => {}
     };
 
-    this.setupPowerAuth();
+    this.setupPowerAuth(false);
   }
 
-  async setupPowerAuth() {
+  async setupPowerAuth(advancedConfig: boolean) {
     const isConfigured = await this.powerAuth.isConfigured();
     if (isConfigured) {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" was already configured.`);
@@ -61,7 +67,34 @@ export default class App extends Component<any, State> {
     } else {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" isn't configured, configuring...`);
       try {
-        await this.powerAuth.configure("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/", true);
+        let appKey                  = AppConfig.powerAuth.appKey
+        let appSecret               = AppConfig.powerAuth.appSecret
+        let masterServerPublicKey   = AppConfig.powerAuth.masterServerPublicKey
+        let baseUrl                 = AppConfig.powerAuth.baseUrl
+        let allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
+        if (appKey == "your-app-key") {
+          console.log(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
+          return
+        }
+        if (advancedConfig) {
+          // Advanced config
+          let configuration = new PowerAuthConfiguration(appKey, appSecret, masterServerPublicKey, baseUrl)
+          let clientConfiguration = new PowerAuthClientConfiguration()
+          clientConfiguration.enableUnsecureTraffic = allowUnsecureConnection
+          clientConfiguration.readTimeout = 10
+          clientConfiguration.connectionTimeout = 5
+          let biometryConfiguration = new PowerAuthBiometryConfiguration()
+          biometryConfiguration.linkItemsToCurrentSet = false
+          biometryConfiguration.fallbackToDevicePasscode = true
+          biometryConfiguration.authenticateOnBiometricKeySetup = true
+          biometryConfiguration.confirmBiometricAuthentication = true
+          let keychainConfiguration = new PowerAuthKeychainConfiguration()
+          keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
+          await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+        } else {
+          // Basic config
+          await this.powerAuth.configure(appKey, appSecret, masterServerPublicKey, baseUrl, allowUnsecureConnection);
+        }
         console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" configuration successfull.`);
         await this.refreshActivationInfo();
       } catch(e) {
@@ -79,6 +112,7 @@ export default class App extends Component<any, State> {
       const canStart = await this.powerAuth.canStartActivation();
       const pending = await this.powerAuth.hasPendingActivation();
       const bioStatus = await this.powerAuth.getBiometryInfo();
+      const hasBioFactor = await this.powerAuth.hasBiometryFactor();
 
       this.setState({
         activationId: id,
@@ -87,12 +121,14 @@ export default class App extends Component<any, State> {
         canStartActivation: canStart,
         hasPendingActivation: pending,
         activationStatus: "Fetching...",
-        biometryStatus: bioStatus
+        biometryStatus: bioStatus,
+        hasBiometryFactorSet: hasBioFactor
       }, async () => {
         let status = "";
         try {
           status = (await this.powerAuth.fetchActivationStatus()).state;
         } catch (e) {
+          this.printPAException(e);
           status = e.code;
         }
         this.setState({
@@ -121,7 +157,8 @@ export default class App extends Component<any, State> {
             value={this.state.selectedPowerAuthInstanceId}
             items={[
               {label: 'Activation 1', value: 'your-app-activation'},
-              {label: 'Activation 2', value: 'your-app-activation2'}
+              {label: 'Activation 2', value: 'your-app-activation2'},
+              {label: 'Wrong Activation ID', value: ''}
             ]}
             setValue={ async (value: any) => {
               this.powerAuth = new PowerAuth(value());
@@ -129,14 +166,13 @@ export default class App extends Component<any, State> {
                 selectedPowerAuthInstanceId: value(),
                 isActivationDropdownOpen: false
               });
-              await this.setupPowerAuth();
+              await this.setupPowerAuth(false);
               await this.refreshActivationInfo();
             }}
             setItems={() => {}}
-            //@ts-expect-error
             setOpen={val => {
               this.setState({
-                isActivationDropdownOpen: val
+                isActivationDropdownOpen: val as boolean
               })
             }}
           />
@@ -144,34 +180,29 @@ export default class App extends Component<any, State> {
         <ScrollView style={{zIndex: 900}}>
           <View style={styles.scrollContainer}>
             <Text style={styles.titleText}>Activation status</Text>
-            <Text style={styles.actLabel}>Has valid activation</Text>
-            <Text style={styles.actVal}>{`${this.state.hasValidActivation}`}</Text>
-            <Text style={styles.actLabel}>Can start activation</Text>
-            <Text style={styles.actVal}>{`${this.state.canStartActivation}`}</Text>
-            <Text style={styles.actLabel}>Has pending activation</Text>
-            <Text style={styles.actVal}>{`${this.state.hasPendingActivation}`}</Text>
+            <Text style={styles.actVal}>{`${this.state.activationStatus}`}</Text>
+            <Text style={styles.actLabel}>{`Has valid activation: ${this.state.hasValidActivation}`}</Text>
+            <Text style={styles.actLabel}>{`Can start activation: ${this.state.canStartActivation}`}</Text>
+            <Text style={styles.actLabel}>{`Has pending activation: ${this.state.hasPendingActivation}`}</Text>
             <Text style={styles.actLabel}>Activation ID</Text>
             <Text style={styles.actVal}>{`${this.state.activationId}`}</Text>
             <Text style={styles.actLabel}>Activation fingerprint</Text>
             <Text style={styles.actVal}>{`${this.state.activationFingerprint}`}</Text>
-            <Text style={styles.actLabel}>Activation status</Text>
-            <Text style={styles.actVal}>{`${this.state.activationStatus}`}</Text>
-            <Text style={styles.actLabel}>Biometry status</Text>
-            <Text style={styles.actVal}>can authenticate: {`${this.state.biometryStatus?.canAuthenticate}`}</Text>
-            <Text style={styles.actVal}>biometry type: {`${this.state.biometryStatus?.biometryType}`}</Text>
-            <Text style={styles.actVal}>is available: {`${this.state.biometryStatus?.isAvailable}`}</Text>
             <Button title="Refresh data" onPress={_ => { this.refreshActivationInfo() }} />
             <Button title="Deconfigure" onPress={ async _ => { 
               try { 
                 await this.powerAuth.deconfigure();
                 alert("Deconfigured");
-                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" failed was deconfigured.`)
+                console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" was deconfigured.`)
               } catch (e) { 
                 this.printPAException(e); 
               } 
             }} />
-          <Button title="Reconfigure" onPress={ async _ => { 
-              this.setupPowerAuth(); 
+          <Button title="Reconfigure (basic)" onPress={ async _ => { 
+              this.setupPowerAuth(false); 
+            }} />
+          <Button title="Reconfigure (advanced)" onPress={ async _ => { 
+              this.setupPowerAuth(true); 
             }} />
             <Text style={styles.titleText}>Create activation</Text>
             <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
@@ -279,14 +310,16 @@ export default class App extends Component<any, State> {
             }})}}/>
 
             <Text style={styles.titleText}>Biometry</Text>
-            <Button title="Is biometry set" onPress={ async _ => {
-              const hasRecovery = await this.powerAuth.hasBiometryFactor();
-              alert(`Biometry factor present: ${hasRecovery}`);
-            }} />
+            <Text style={styles.actLabel}>can authenticate: {`${this.state.biometryStatus?.canAuthenticate}`}</Text>
+            <Text style={styles.actLabel}>biometry type: {`${this.state.biometryStatus?.biometryType}`}</Text>
+            <Text style={styles.actLabel}>is available: {`${this.state.biometryStatus?.isAvailable}`}</Text>
+            <Text style={styles.actLabel}>has biometry factor: {`${this.state.hasBiometryFactorSet}`}</Text>
+
             <Button title="Add biometry factor" onPress={ async _ => {
               this.setState({ promptVisible: true, promptLabel: "Enter password", promptCallback: async pass => {
                 try {
                   const r = await this.powerAuth.addBiometryFactor(pass, "Add biometry", "Allow biometry factor");
+                  this.refreshActivationInfo();
                   alert(`Biometry factor added`);
                 } catch (e) {
                   alert(`Failed: ${e.code}`);
@@ -295,7 +328,23 @@ export default class App extends Component<any, State> {
               }})}} />
             <Button title="Remove biometry factor" onPress={ async _ => {
               const result =  await this.powerAuth.removeBiometryFactor();
+              this.refreshActivationInfo();
               alert(`Biometry factor removed: ${result}`);
+            }} />
+            <Button title="Test offlineSignature (biometry)" onPress={ async _ => {
+              const auth = new PowerAuthAuthentication();
+              auth.usePossession = true;
+              auth.userPassword = null;
+              auth.useBiometry = true;
+              auth.biometryMessage = "tadaaa";
+              try {
+                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "VGhpcyBpcyBzZWNyZXQhIQ==", "body");
+                alert(`Signature: ${r}`);
+              } catch (e) {
+                alert(`Signature calculation failed: ${e.code}`);
+                this.printPAException(e);
+              }
+              await this.refreshActivationInfo();
             }} />
 
             <Text style={styles.titleText}>Recovery</Text>
@@ -404,11 +453,10 @@ export default class App extends Component<any, State> {
               auth.useBiometry = false;
               auth.biometryMessage = "tadaaa";
               try {
-                // TODO: solve this differently, this failes for now as we pass nonsense data
-                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "body", "nonce");
+                const r = await this.powerAuth.offlineSignature(auth, "/pa/signature/validate", "VGhpcyBpcyBzZWNyZXQhIQ==", "body");
                 alert(`Signature: ${r}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Signature calculation failed: ${e.code}`);
                 this.printPAException(e);
               }
               await this.refreshActivationInfo();
@@ -419,7 +467,7 @@ export default class App extends Component<any, State> {
                 const r = await this.powerAuth.verifyServerSignedData("data", "signature", true);
                 alert(`Verified: ${r}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
             }} />
@@ -434,7 +482,7 @@ export default class App extends Component<any, State> {
                 alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
                 console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               } catch (e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
               await this.refreshActivationInfo();
@@ -450,7 +498,7 @@ export default class App extends Component<any, State> {
                 alert(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
                 console.log(`Signature:\nKEY:${r.key}\nVAL:${r.value}`);
               } catch(e) {
-                alert(`Remove failed: ${e.code}`);
+                alert(`Operation failed: ${e.code}`);
                 this.printPAException(e);
               }
             } }) }} />
@@ -537,8 +585,6 @@ export default class App extends Component<any, State> {
     console.log(`# CODE: ${pe.code}`);
     console.log(`# MESSAGE: ${pe.message}`);
     console.log(`# ERROR DATA: ${pe.errorData ? JSON.stringify(pe.errorData) : "null"}`);
-    console.log(`# DESCRIPTION: ${pe.description}`);
-    console.log(`# DOMAIN: ${pe.domain}`);
     console.log(`# ORIGINAL EXCEPTION:\n ${JSON.stringify(pe.originalException)}`);
   }
 }

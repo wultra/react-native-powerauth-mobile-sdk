@@ -49,9 +49,9 @@ PODS:
     - React-jsi (= 0.64.1)
     - ReactCommon/turbomodule/core (= 0.64.1)
   - glog (0.3.5)
-  - PowerAuth2 (1.6.0):
-    - PowerAuthCore (~> 1.6.0)
-  - PowerAuthCore (1.6.0)
+  - PowerAuth2 (1.6.1):
+    - PowerAuthCore (~> 1.6.1)
+  - PowerAuthCore (1.6.1)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -246,7 +246,7 @@ PODS:
     - React-perflogger (= 0.64.1)
   - React-jsinspector (0.64.1)
   - react-native-powerauth-mobile-sdk (1.5.2):
-    - PowerAuth2 (= 1.6.0)
+    - PowerAuth2 (= 1.6.1)
     - React
   - React-perflogger (0.64.1)
   - React-RCTActionSheet (0.64.1):
@@ -529,25 +529,25 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
-  EXConstants: 6ec1ea4a13ec734c7e2274bc9e5b7408d73007a1
-  EXErrorRecovery: 88541714d9bbf8a823f4ee0b7078a92d3e0e42d2
-  EXFileSystem: b82693d78de152efe10a77d4aac781f782e10916
-  EXFont: af4c3281cac0bf6ccd8b8a534e9bce6437cc2e17
-  EXImageLoader: 5c9d1bf408443ac4d4f44463eaf3b0d03bc70425
-  EXKeepAwake: 4b53df0b4e87aa9f38bf57461e07fc167716a760
-  EXLinearGradient: 8189387e3a65c2a9ba5507432e3a099ea8f7ea86
-  EXLocation: 0397e4f11666d6ceb026b6424fdf66995c604964
-  EXPermissions: d2cafee9c72578ecc9ca121481e6c4a04a798861
-  EXSplashScreen: 6888f24a847a2cdbf5ca4d996300adf9cc2726b4
-  EXSQLite: 15268ec49f859e4594fe5b0a1c7a47913da0b67e
-  EXStructuredHeaders: 0c3b4c8030ec5ed2c3bc0b64f5af81005b9cb5c8
-  EXUpdates: 3bcd7a0fda56c88951ff3eaa207e68dcaabe9f19
-  EXWebBrowser: 6364e9e1ea73f6c3c2e6e3cc0ac17259a260e3a8
+  EXConstants: f486f6b4a36b86e47ab258d4d2b7b2699786fdce
+  EXErrorRecovery: 8f4c21ab2f51bf75defe4536f841a37de59b0661
+  EXFileSystem: cf4232ba7c62dc49b78c2d36005f97b6fddf0b01
+  EXFont: b60f7a8900e3a12e7be3b2a40e19b22c7b5f89ba
+  EXImageLoader: 5ad6896fa1ef2ee814b551873cbf7a7baccc694a
+  EXKeepAwake: d045bc2cf1ad5a04f0323cc7c894b95b414042e0
+  EXLinearGradient: 97d8095d1e4ad96f7893e010e564796ed8aeea42
+  EXLocation: bbd487fd96a18a3ad9725389bbb94c4a5f78edf3
+  EXPermissions: 24b97f734ce9172d245a5be38ad9ccfcb6135964
+  EXSplashScreen: 6568daa178c8e17f2197d29cea858f0e0b61b695
+  EXSQLite: 877ad6c8eb169353a2f94d5ad26510ffadd46a1f
+  EXStructuredHeaders: be834496a4d9fd0069cd12ec1cc57b31c6d3b256
+  EXUpdates: efe0e8c514dcff06a8fd0b63be6019a6365fb9c7
+  EXWebBrowser: 5902f99ac5ac551e5c82ff46f13a337b323aa9ea
   FBLazyVector: 7b423f9e248eae65987838148c36eec1dbfe0b53
-  FBReactNativeSpec: 0af6c53716817e2a045e573831bd8245bd380b86
+  FBReactNativeSpec: ac3a40ec4c5acbc6dd2d59e8a368f0c251e325ee
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: 9a3ba5fe163fad011a702ece1c20bc4767ee9607
-  PowerAuthCore: 0a97050bfa8c37de86e497fab3c2f41da45deddb
+  PowerAuth2: 7483fd55abab153a89b9cb5aff05ffe8e64495fa
+  PowerAuthCore: 09fe7958d744024e33e0bbad5b6fc2c49c88e08f
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: ec2ebc96b7bfba3ca5c32740f5a0c6a014a274d2
   RCTTypeSafety: 22567f31e67c3e088c7ac23ea46ab6d4779c0ea5
@@ -559,7 +559,7 @@ SPEC CHECKSUMS:
   React-jsi: 5de8204706bd872b78ea646aee5d2561ca1214b6
   React-jsiexecutor: 124e8f99992490d0d13e0649d950d3e1aae06fe9
   React-jsinspector: 500a59626037be5b3b3d89c5151bc3baa9abf1a9
-  react-native-powerauth-mobile-sdk: c7c26d56a85d6957f8f718ce15f58a29c2c7c658
+  react-native-powerauth-mobile-sdk: 2e885b2ac3670c3dc28910ebc0554157ecd9d8e2
   React-perflogger: aad6d4b4a267936b3667260d1f649b6f6069a675
   React-RCTActionSheet: fc376be462c9c8d6ad82c0905442fd77f82a9d2a
   React-RCTAnimation: ba0a1c3a2738be224a08092fa7f1b444ab77d309
@@ -575,21 +575,21 @@ SPEC CHECKSUMS:
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
   RNReanimated: 4e102df74a9674fa943e05f97f3362b6e44d0b48
   RNScreens: 812b79d384e2bea7eebc4ec981469160d4948fd5
-  UMAppLoader: ae5eaee9f3c8cc847c631a579fed20d217de5913
-  UMBarCodeScannerInterface: aa3409ab9d108866e55c09ad0292e4a6c08a7775
-  UMCameraInterface: 9d5da92c521e0af7815afbf77ea19bd0312b4928
-  UMConstantsInterface: 4a1d3062a89421d3290bbe8f75efabd849935bea
-  UMCore: cb544737bc72ecfccae9dd476e4d647468b4ebd0
-  UMFaceDetectorInterface: c6d69c914426fc29f5a2442411a575e887adb823
-  UMFileSystemInterface: bee6c9ca4f3d70da5f7c9752efc8b3f3a7f47b61
-  UMFontInterface: 884955c5fd329095e2072d16de9b5bf1bce93005
-  UMImageLoaderInterface: 3781f05d7e0be1c5b00dd3cc9c390b94d8484300
-  UMPermissionsInterface: a3c5910e28a5ec31810dbfd1936e4948a4439310
-  UMReactNativeAdapter: e936c48fd15114cd1d5b06310797198a06f72ca0
-  UMSensorsInterface: fc92b1f92202166284ca0f95e0acc1daab5d16a8
-  UMTaskManagerInterface: 4e6c4c34a89512e2225d336154df1cb689226a29
+  UMAppLoader: ee77a072f9e15128f777ccd6d2d00f52ab4387e6
+  UMBarCodeScannerInterface: 9dc692b87e5f20fe277fa57aa47f45d418c3cc6c
+  UMCameraInterface: 625878bbf2ba188a8548675e1d1d2e438a653e6d
+  UMConstantsInterface: 64060cf86587bcd90b1dbd804cceb6d377a308c1
+  UMCore: eb200e882eadafcd31ead290770835fd648c0945
+  UMFaceDetectorInterface: d6677d6ddc9ab95a0ca857aa7f8ba76656cc770f
+  UMFileSystemInterface: c70ea7147198b9807080f3597f26236be49b0165
+  UMFontInterface: d9d3b27af698c5389ae9e20b99ef56a083f491fb
+  UMImageLoaderInterface: 14dd2c46c67167491effc9e91250e9510f12709e
+  UMPermissionsInterface: 5e83a9167c177e4a0f0a3539345983cc749efb3e
+  UMReactNativeAdapter: 126da3486c1a1f11945b649d557d6c2ebb9407b2
+  UMSensorsInterface: 48941f70175e2975af1a9386c6d6cb16d8126805
+  UMTaskManagerInterface: cb890c79c63885504ddc0efd7a7d01481760aca2
   Yoga: a7de31c64fe738607e7a3803e3f591a4b1df7393
 
 PODFILE CHECKSUM: df5bb7404879325bfaead6be3b9567b6d93e10c4
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.10.2
