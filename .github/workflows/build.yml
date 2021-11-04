@@ -6,6 +6,8 @@ on:
       - develop
       - master
   pull_request:
+  schedule:
+    - cron: '25 6 * * *'
 
 jobs:
   buildnrun:
