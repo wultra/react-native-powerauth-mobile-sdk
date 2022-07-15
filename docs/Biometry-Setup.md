@@ -102,52 +102,9 @@ try {
 
 ## Biometry Factor-Related Key Lifetime
 
-By default, the biometry factor-related key is **NOT** invalidated after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation. To change this behavior, you have to initialize the SDK [in the native layer](Configuration.md#configuration-from-native-code). 
+By default, the biometry factor-related key is **NOT invalidated on Android** and **invalidated on iOS** after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation on Android but not on iOS. To change this behavior, see `linkItemsToCurrentSet` [in the advanced configuration](Configuration.md#advanced-configuration). 
 
-Be aware that the configuration below is effective only for the new keys. So, if your application is already using the biometry factor-related key with a different configuration, then the configuration change doesn't change the existing key. You have to [disable](#disable-biometry) and [enable](#enable-biometry) biometry to apply the change.
-
-### iOS
-
-On iOS, you have to provide `PowerAuthKeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `YES` and use that configuration for the `PowerAuth` object configuration:
-
-```objc
-// Get the React Native bridge module
-PowerAuth *pa = [bridge moduleForClass:PowerAuth.class];
-// Prepare your PA config
-PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] init];
-// ...
-
-// Prepare PA2KeychainConfiguration
-// Set YES to 'linkBiometricItemsToCurrentSet' property.
-PowerAuthKeychainConfiguration *keychainConfiguration = [[PowerAuthKeychainConfiguration alloc] init];
-keychainConfiguration.linkBiometricItemsToCurrentSet = YES;
-
-// Init shared PowerAuthSDK instance
-[pa configureWithConfig:config keychainConfig:keychainConfiguration clientConfig:nil];
-```
-
-### Android
-
-On Android, you have to provide `PowerAuthKeychainConfiguration` object with `linkBiometricItemsToCurrentSet` parameter set to `true` and use that configuration for the `PowerAuthRNPackage` object configuration:
-
-```java
-for (ReactPackage pkg : this.getReactNativeHost().getReactInstanceManager().getPackages()) {
-    if (pkg instanceof PowerAuthRNPackage) {
-        try {
-            String instanceId = "your-app-activation";
-            PowerAuthSDK.Builder builder = new PowerAuthSDK.Builder(
-              new PowerAuthConfiguration.Builder(instanceId, "https://your-powerauth-endpoint.com/", "APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MPK").build()
-            );
-            PowerAuthKeychainConfiguration.Builder keychainConfiguration = new PowerAuthKeychainConfiguration.Builder();
-            keychainConfiguration.linkBiometricItemsToCurrentSet(true);
-            builder.keychainConfiguration(keychainConfiguration.build());
-            ((PowerAuthRNPackage) pkg).configure(instanceId, builder);
-        } catch (Exception e) {
-            // error
-        }
-    }
-}
-```
+Be aware that the change in the configuration is effective only for the new keys. So, if your application is already using the biometry factor-related key with a different configuration, then the configuration change doesn't change the existing key. You have to [disable](#disable-biometry) and [enable](#enable-biometry) biometry to apply the change.
 
 ## Read Next
 
