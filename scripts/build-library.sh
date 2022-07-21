@@ -4,6 +4,9 @@ set -e # stop sript when error occures
 set -u # stop when undefined variable is used
 #set -x # print all execution (good for debugging)
 
+echo '------------------------------------------------------------'
+echo 'Installing dependencies'
+echo '------------------------------------------------------------'
 export NPM_TOKEN="DUMMY" # dummy variable to silence npm error
 
 TOP=$(dirname $0)
@@ -14,10 +17,12 @@ pushd "${TOP}/.."
 # instal npm dependencies
 npm i
 
-# install pods
+echo '------------------------------------------------------------'
+echo 'Building iOS platform'
+echo '------------------------------------------------------------'
+
 npx pod-install
 
-# build ios
 pushd ios
 
 xcrun xcodebuild \
@@ -29,12 +34,17 @@ xcrun xcodebuild \
 
 popd
 
-# build android
+echo '------------------------------------------------------------'
+echo 'Building Android platform'
+echo '------------------------------------------------------------'
+
 pushd android
 
 ./gradlew clean build -PincludeAndroidToolsVersion=true
 
-# build Typescript
+echo '------------------------------------------------------------'
+echo 'Building Typescript'
+echo '------------------------------------------------------------'
 popd
 tsc --build
 
@@ -48,3 +58,7 @@ tsc --build
 #   git diff
 #   exit 1
 # fi
+
+echo '------------------------------------------------------------'
+echo 'SUCCESS'
+echo ''
