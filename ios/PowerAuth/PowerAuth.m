@@ -23,6 +23,7 @@
 #import <PowerAuth2/PowerAuthErrorConstants.h>
 #import <PowerAuth2/PowerAuthKeychain.h>
 #import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
+#import <PowerAuth2/PowerAuthRestApiErrorResponse.h>
 
 /**
  Cast object to desired class, or return nil if object is different kind of class.
@@ -176,10 +177,8 @@ RCT_REMAP_METHOD(fetchActivationStatus,
                  fetchActivationStatusReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    [powerAuth fetchActivationStatusWithCallback:^(PowerAuthActivationStatus * _Nullable status, NSDictionary * _Nullable customObject, NSError * _Nullable error) {
-        
+    [powerAuth getActivationStatusWithCallback:^(PowerAuthActivationStatus * _Nullable status, NSError * _Nullable error) {
         if (error == nil) {
-            
             NSDictionary *response = @{
                 @"state": [self getStatusCode:status.state],
                 @"failCount": [[NSNumber alloc] initWithUnsignedInt:status.failCount],
@@ -262,7 +261,7 @@ RCT_REMAP_METHOD(commitActivation,
                  commitActivationRejecter:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:YES];
     
     NSError* error = nil;
     bool success = [powerAuth commitActivationWithAuthentication:auth error:&error];
@@ -303,7 +302,7 @@ RCT_REMAP_METHOD(removeActivationWithAuthentication,
                  removeActivationRejecter:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
         if (error) {
             [self processError:error with:reject];
@@ -334,7 +333,7 @@ RCT_REMAP_METHOD(requestGetSignature,
                  requestSignatureReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     NSError* error = nil;
     PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestGetSignatureWithAuthentication:auth uriId:uriId params:params error: &error];
     
@@ -360,7 +359,7 @@ RCT_REMAP_METHOD(requestSignature,
                  requestSignatureReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     
     NSError* error = nil;
     PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
@@ -387,7 +386,7 @@ RCT_REMAP_METHOD(offlineSignature,
                  offlineSignatureReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     NSError* error = nil;
     NSString* signature = [powerAuth offlineSignatureWithAuthentication:auth uriId:uriId body:[RCTConvert NSData:body] nonce:nonce error:&error];
     
@@ -534,7 +533,7 @@ RCT_REMAP_METHOD(fetchEncryptionKey,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth fetchEncryptionKey:auth index:index  callback:^(NSData * encryptionKey, NSError * error) {
         if (encryptionKey) {
             resolve([encryptionKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
@@ -553,7 +552,7 @@ RCT_REMAP_METHOD(signDataWithDevicePrivateKey,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth signDataWithDevicePrivateKey:auth data:[RCTConvert NSData:data] callback:^(NSData * signature, NSError * error) {
         if (signature) {
             resolve([RCTConvert NSString:signature]);
@@ -598,7 +597,7 @@ RCT_REMAP_METHOD(activationRecoveryData,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth activationRecoveryData:auth callback:^(PowerAuthActivationRecoveryData * data, NSError * error) {
         if (error) {
             [self processError:error with:reject];
@@ -621,7 +620,7 @@ RCT_REMAP_METHOD(confirmRecoveryCode,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth confirmRecoveryCode:recoveryCode authentication:auth callback:^(BOOL alreadyConfirmed, NSError * error) {
         if (error) {
             [self processError:error with:reject];
@@ -737,7 +736,7 @@ RCT_REMAP_METHOD(requestAccessToken,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
         if (error || token == nil) {
             [self processError:error with:reject];
@@ -916,23 +915,68 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     }
 }
 
+/// Extract NSString value from dictionary containing encoded JS object.
+/// @param dict Dictionary containing JS object.
+/// @param key Key for value to extract from the dictionary.
+/// @return String extracted from the dictionary.
+static NSString * _GetNSStringValueFromDict(NSDictionary * dict, NSString * key)
+{
+    id value = dict[key];
+    if (value == nil || value == [NSNull null]) {
+        return nil;
+    }
+    return [RCTConvert NSString:value];
+}
+
+/// Extract NSData value from dictionary containing encoded JS object. The dictionary must contain
+/// Base64 encoded string for the provided key.
+/// @param dict Dictionary containing JS object.
+/// @param key Key for value to extract from the dictionary.
+/// @return NSData extracted from the dictionary.
+static NSData * _GetNSDataValueFromDict(NSDictionary * dict, NSString * key)
+{
+    NSString * encodedData = _GetNSStringValueFromDict(dict, key);
+    if (encodedData) {
+        return [[NSData alloc] initWithBase64EncodedString:encodedData options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    }
+    return nil;
+}
+
 /// Translate dictionary into `PowerAuthAuthentication` object.
 /// @param dict Dictionary with authentication data.
+/// @param commit Set YES if authentication is required for activation commit.
 - (PowerAuthAuthentication*) constructAuthenticationFromDictionary:(NSDictionary*)dict
+                                                         forCommit:(BOOL)commit
 {
-    PowerAuthAuthentication *auth = [[PowerAuthAuthentication alloc] init];
-    auth.usePossession = [RCTConvert BOOL:dict[@"usePossession"]];
-    auth.useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
-    if (dict[@"userPassword"] != [NSNull null]) {
-        auth.usePassword = [RCTConvert NSString:dict[@"userPassword"]];
+    BOOL useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
+    NSString * password = _GetNSStringValueFromDict(dict, @"userPassword");
+    if (commit) {
+        // Activation commit
+        if (useBiometry) {
+            // All factors needs to be estabilished in activation.
+            return [PowerAuthAuthentication commitWithPasswordAndBiometry:password];
+        } else {
+            return [PowerAuthAuthentication commitWithPassword:password];
+        }
+    } else {
+        // Data signing
+        if (password) {
+            return [PowerAuthAuthentication possessionWithPassword:password];
+        } else if (useBiometry) {
+            NSData * biometryKey = _GetNSDataValueFromDict(dict, @"biometryKey");
+            if (biometryKey) {
+                return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKey customPossessionKey:nil];
+            }
+            NSString * biometryPrompt = _GetNSStringValueFromDict(dict, @"biometryMessage");
+            if (biometryPrompt) {
+                return [PowerAuthAuthentication possessionWithBiometryPrompt:biometryPrompt];
+            } else {
+                return [PowerAuthAuthentication possessionWithBiometry];
+            }
+        } else {
+            return [PowerAuthAuthentication possession];
+        }
     }
-    if (dict[@"biometryMessage"] != [NSNull null]) {
-        auth.biometryPrompt = [RCTConvert NSString:dict[@"biometryMessage"]];
-    }
-    if ([dict.allKeys containsObject:@"biometryKey"] && dict[@"biometryKey"] != [NSNull null]) {
-        auth.overridenBiometryKey = [[NSData alloc] initWithBase64EncodedString:[RCTConvert NSString:dict[@"biometryKey"]] options:NSDataBase64DecodingIgnoreUnknownCharacters];
-    }
-    return auth;
 }
 
 /// Method translates `PowerAuthActivationState` into string representation.
@@ -978,7 +1022,7 @@ static NSString * _TranslatePAErrorCode(PowerAuthErrorCode code)
     }
 }
 
-/// Method translate reported NSError into proper React Native error code and reports everything bactk promise reject block.
+/// Method translate reported NSError into proper React Native error code and reports everything back promise reject block.
 /// @param error Error to report.
 /// @param reject Reject promise to call.
 - (void) processError:(nullable NSError*)error with:(nonnull RCTPromiseRejectBlock)reject

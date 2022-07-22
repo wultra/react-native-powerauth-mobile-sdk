@@ -10,9 +10,9 @@ PODS:
     - React-jsi (= 0.64.3)
     - ReactCommon/turbomodule/core (= 0.64.3)
   - glog (0.3.5)
-  - PowerAuth2 (1.6.5):
-    - PowerAuthCore (~> 1.6.5)
-  - PowerAuthCore (1.6.5)
+  - PowerAuth2 (1.7.1):
+    - PowerAuthCore (~> 1.7.1)
+  - PowerAuthCore (1.7.1)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -277,7 +277,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - PowerAuth2 (= 1.6.5)
+  - PowerAuth2 (= 1.7.1)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -371,12 +371,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
+  DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: c71c5917ec0ad2de41d5d06a5855f6d5eda06971
   FBReactNativeSpec: 5f7c5838cb089debe68346d75f5dd9af2f31c40d
-  glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: 879a90783c3e239ecf7a53cbbfedecc930d51331
-  PowerAuthCore: 5c595bdca6173f89a0ff9e5b00b5af21bf0f8137
+  glog: 3d02b25ca00c2d456734d0bcff864cbc62f6ae1a
+  PowerAuth2: f75ccf46ec84fd8ae2093f54680d2c3b3c4028e4
+  PowerAuthCore: f01d70990ceed8f26d3d01f21f856f7db8a7b8f9
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: d34bf57e17cb6e3b2681f4809b13843c021feb6c
   RCTTypeSafety: 8dab4933124ed39bb0c1d88d74d61b1eb950f28f
@@ -402,6 +402,6 @@ SPEC CHECKSUMS:
   ReactCommon: 8fea6422328e2fc093e25c9fac67adbcf0f04fb4
   Yoga: e6ecf3fa25af9d4c87e94ad7d5d292eedef49749
 
-PODFILE CHECKSUM: 0c0a59b9a6b155b3be8f793efeca4256902b866e
+PODFILE CHECKSUM: 111dc8325cdf6f914a5cdef219081415b1983c86
 
 COCOAPODS: 1.11.3
