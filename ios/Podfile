@@ -9,7 +9,7 @@ target 'PowerAuth' do
   config = use_native_modules!
   use_react_native!(:path => config["reactNativePath"])
   
-  pod 'PowerAuth2', '1.6.5'
+  pod 'PowerAuth2', '1.7.1'
   
 end
 
