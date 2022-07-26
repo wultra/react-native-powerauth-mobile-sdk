@@ -30,6 +30,7 @@ xcrun xcodebuild \
     -scheme "PowerAuth" \
     -configuration "Release" \
     -sdk "iphonesimulator" \
+    -arch x86_64 \
     build
 
 popd
