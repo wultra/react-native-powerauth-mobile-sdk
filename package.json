@@ -9,6 +9,7 @@
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNModule.java",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNPackage.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/WrapperException.java",
     "android/build.gradle",
     "lib/**/*.*",
     "lib/*.*",
