@@ -49,9 +49,9 @@ PODS:
     - React-jsi (= 0.64.1)
     - ReactCommon/turbomodule/core (= 0.64.1)
   - glog (0.3.5)
-  - PowerAuth2 (1.6.1):
-    - PowerAuthCore (~> 1.6.1)
-  - PowerAuthCore (1.6.1)
+  - PowerAuth2 (1.7.1):
+    - PowerAuthCore (~> 1.7.1)
+  - PowerAuthCore (1.7.1)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
     - DoubleConversion
@@ -246,7 +246,7 @@ PODS:
     - React-perflogger (= 0.64.1)
   - React-jsinspector (0.64.1)
   - react-native-powerauth-mobile-sdk (1.5.2):
-    - PowerAuth2 (= 1.6.1)
+    - PowerAuth2 (~> 1.7.1)
     - React
   - React-perflogger (0.64.1)
   - React-RCTActionSheet (0.64.1):
@@ -528,7 +528,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
+  DoubleConversion: 831926d9b8bf8166fd87886c4abab286c2422662
   EXConstants: f486f6b4a36b86e47ab258d4d2b7b2699786fdce
   EXErrorRecovery: 8f4c21ab2f51bf75defe4536f841a37de59b0661
   EXFileSystem: cf4232ba7c62dc49b78c2d36005f97b6fddf0b01
@@ -545,9 +545,9 @@ SPEC CHECKSUMS:
   EXWebBrowser: 5902f99ac5ac551e5c82ff46f13a337b323aa9ea
   FBLazyVector: 7b423f9e248eae65987838148c36eec1dbfe0b53
   FBReactNativeSpec: ac3a40ec4c5acbc6dd2d59e8a368f0c251e325ee
-  glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: 7483fd55abab153a89b9cb5aff05ffe8e64495fa
-  PowerAuthCore: 09fe7958d744024e33e0bbad5b6fc2c49c88e08f
+  glog: 476ee3e89abb49e07f822b48323c51c57124b572
+  PowerAuth2: f75ccf46ec84fd8ae2093f54680d2c3b3c4028e4
+  PowerAuthCore: f01d70990ceed8f26d3d01f21f856f7db8a7b8f9
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: ec2ebc96b7bfba3ca5c32740f5a0c6a014a274d2
   RCTTypeSafety: 22567f31e67c3e088c7ac23ea46ab6d4779c0ea5
@@ -559,7 +559,7 @@ SPEC CHECKSUMS:
   React-jsi: 5de8204706bd872b78ea646aee5d2561ca1214b6
   React-jsiexecutor: 124e8f99992490d0d13e0649d950d3e1aae06fe9
   React-jsinspector: 500a59626037be5b3b3d89c5151bc3baa9abf1a9
-  react-native-powerauth-mobile-sdk: 2e885b2ac3670c3dc28910ebc0554157ecd9d8e2
+  react-native-powerauth-mobile-sdk: 7528860a39fe0b0ac9c6cce1d0debf124bb940ff
   React-perflogger: aad6d4b4a267936b3667260d1f649b6f6069a675
   React-RCTActionSheet: fc376be462c9c8d6ad82c0905442fd77f82a9d2a
   React-RCTAnimation: ba0a1c3a2738be224a08092fa7f1b444ab77d309
@@ -592,4 +592,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: df5bb7404879325bfaead6be3b9567b6d93e10c4
 
-COCOAPODS: 1.10.2
+COCOAPODS: 1.11.3

@@ -16,5 +16,5 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.dependency "React"
-  s.dependency "PowerAuth2", "1.6.1"
+  s.dependency "PowerAuth2", "~> 1.7.1"
 end
