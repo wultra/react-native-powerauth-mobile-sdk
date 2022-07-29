@@ -126,7 +126,7 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				57C187D4395E0528E9C52977 /* [CP] Copy Pods Resources */,
-				18A2F3F3CFAA75D8AC5CEA8D /* [CP] Embed Pods Frameworks */,
+				1E1219F2C8E67CFC35C7FC87 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -200,7 +200,7 @@
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n../node_modules/expo-updates/scripts/create-manifest-ios.sh";
 		};
-		18A2F3F3CFAA75D8AC5CEA8D /* [CP] Embed Pods Frameworks */ = {
+		1E1219F2C8E67CFC35C7FC87 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
