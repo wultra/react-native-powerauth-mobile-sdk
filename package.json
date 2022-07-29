@@ -38,11 +38,11 @@
     "node-fetch": ">=2.6.1"
   },
   "peerDependencies": {
-    "react-native": "^0.69.3"
+    "react-native": ">=0.64"
   },
   "devDependencies": {
-    "@types/react-native": "^0.69.3",
+    "@types/react-native": ">=0.64",
     "lodash": "^4.17.21",
-    "react-native": "^0.69.3"
+    "react-native": ">=0.64"
   }
 }

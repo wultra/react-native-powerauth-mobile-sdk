@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Button, Text, ScrollView, Picker, Platform } from 'react-native';
+import { StyleSheet, View, Button, Text, ScrollView, Platform } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Prompt from 'rn-prompt';
 import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
@@ -172,7 +172,7 @@ export default class App extends Component<any, State> {
             setItems={() => {}}
             setOpen={val => {
               this.setState({
-                isActivationDropdownOpen: val as boolean
+                isActivationDropdownOpen: val as unknown as boolean
               })
             }}
           />

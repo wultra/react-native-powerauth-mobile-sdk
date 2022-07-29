@@ -23,6 +23,7 @@ demoapp/android/.settings
 demoapp/android/app/.gradle/
 demoapp/android/app/.project
 demoapp/android/app/.settings
+demoapp/.expo
 *build/
 .idea
 *.iml
