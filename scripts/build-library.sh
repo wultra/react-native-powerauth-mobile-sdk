@@ -41,7 +41,7 @@ echo '------------------------------------------------------------'
 
 pushd android
 
-./gradlew clean build -PincludeAndroidToolsVersion=true
+./gradlew clean build
 
 echo '------------------------------------------------------------'
 echo 'Building Typescript'
