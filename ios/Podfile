@@ -1,26 +1,14 @@
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
-platform :ios, '10.0'
+platform :ios, '12.4'
 
 project 'PowerAuth'
 
 target 'PowerAuth' do
   config = use_native_modules!
-  use_react_native!(:path => config["reactNativePath"])
-  
-  pod 'PowerAuth2', '1.7.1'
-  
-end
-
-# Disable bitcode for iOS targets (also see chapter Disabling bitcode)
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    if target.platform_name == :ios
-      puts "Disabling bitcode for target  #{target.name}"
-      target.build_configurations.each do |config|
-        config.build_settings['ENABLE_BITCODE'] = 'NO'
-      end
-    end
-  end
+  use_react_native!(
+    :path => config["reactNativePath"]
+  )
+  pod 'PowerAuth2', '1.7.1'  
 end

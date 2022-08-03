@@ -1,6 +1,6 @@
 def DEFAULT_COMPILE_SDK_VERSION = 31
 def DEFAULT_BUILD_TOOLS_VERSION = '33.0.0'
-def DEFAULT_MIN_SDK_VERSION = 19
+def DEFAULT_MIN_SDK_VERSION = 21
 def DEFAULT_TARGET_SDK_VERSION = 31
 
 def safeExtGet(prop, fallback) {
@@ -10,15 +10,10 @@ def safeExtGet(prop, fallback) {
 apply plugin: 'com.android.library'
 
 buildscript {
-    if (project.hasProperty('includeAndroidToolsVersion') && project.getProperty('includeAndroidToolsVersion') == 'true') {
-        ext {
-            androidToolsVersion = "3.5.3"
-        }
-    } else {
-        ext {
-            androidToolsVersion = "3.4.3"
-        }
+    ext {
+        androidToolsVersionStandalone = "7.2.1"
     }
+
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.
@@ -29,7 +24,7 @@ buildscript {
             mavenCentral()
         }
         dependencies {
-            classpath "com.android.tools.build:gradle:${project.ext.androidToolsVersion}"
+            classpath "com.android.tools.build:gradle:${project.ext.androidToolsVersionStandalone}"
         }
     }
 }
@@ -48,7 +43,6 @@ android {
 }
 
 repositories {
-    mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
         url "$rootDir/../node_modules/react-native/android"
@@ -57,8 +51,8 @@ repositories {
         // Android JSC is installed from npm
         url "$rootDir/../node_modules/jsc-android/dist"
     }
+    mavenCentral()
     google()
-    jcenter()
 }
 
 dependencies {

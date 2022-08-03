@@ -30,6 +30,7 @@ xcrun xcodebuild \
     -scheme "PowerAuth" \
     -configuration "Release" \
     -sdk "iphonesimulator" \
+    -arch x86_64 \
     build
 
 popd
@@ -40,7 +41,7 @@ echo '------------------------------------------------------------'
 
 pushd android
 
-./gradlew clean build -PincludeAndroidToolsVersion=true
+./gradlew clean build
 
 echo '------------------------------------------------------------'
 echo 'Building Typescript'
