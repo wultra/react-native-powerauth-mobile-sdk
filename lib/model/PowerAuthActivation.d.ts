@@ -5,16 +5,21 @@
 export declare class PowerAuthActivation {
     /** parameters that are filled by create* methods  */
     activationName: string;
-    activationCode?: string;
-    recoveryCode?: string;
-    recoveryPuk?: string;
+    activationCode?: string | null;
+    recoveryCode?: string | null;
+    recoveryPuk?: string | null;
     identityAttributes?: any;
     /** Extra attributes of the activation, used for application specific purposes (for example, info about the clientdevice or system). This extras string will be associated with the activation record on PowerAuth Server. */
-    extras?: string;
+    extras?: string | null;
     /** Custom attributes object that are processed on Intermediate Server Application. Note that this custom data will not be associated with the activation record on PowerAuth Server */
     customAttributes?: any;
     /** Additional activation OTP that can be used only with a regular activation, by activation code */
-    additionalActivationOtp?: string;
+    additionalActivationOtp?: string | null;
+    /**
+     * Private constructor, used internally.
+     * @param activationName Activation name to be assigned to new activation.
+     */
+    private constructor();
     /**
      * Create an instance of `PowerAuthActivation` configured with the activation code. The activation code may contain
      * an optional signature part, in case that it is scanned from QR code.

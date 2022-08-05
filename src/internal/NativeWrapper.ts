@@ -15,7 +15,7 @@
  */
 
 import { NativeModules, Platform } from 'react-native';
-import { PowerAuthError, PowerAuthErrorCode } from '../model/PowerAuthError';
+import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication'
 
 export class __NativeWrapper {
@@ -49,7 +49,7 @@ export class __NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    static processException(exception: any, message: string = null): PowerAuthError {
+    static processException(exception: any, message: string | null = null): PowerAuthError {
         // Initial checks:
         // - Check if exception is null. That can happen when non-native exception is processed.
         // - Check if the exception is already PowerAuthError type. If so, then return the same instance.
@@ -80,7 +80,7 @@ export class __NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    private static processIosException(exception: any, message: string = null): PowerAuthError {
+    private static processIosException(exception: any, message: string | null = null): PowerAuthError {
         return new PowerAuthError(exception, message)
     }
 
@@ -91,7 +91,7 @@ export class __NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    private static processAndroidException(exception: any, message: string = null): PowerAuthError {
+    private static processAndroidException(exception: any, message: string | null = null): PowerAuthError {
         return new PowerAuthError(exception, message)
     }
 
@@ -124,5 +124,5 @@ export class __NativeWrapper {
 }
 
 class ReusablePowerAuthAuthentication extends PowerAuthAuthentication {
-    biometryKey: string;
+    biometryKey: string | null = null
 }

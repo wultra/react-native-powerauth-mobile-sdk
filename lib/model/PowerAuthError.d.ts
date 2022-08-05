@@ -10,7 +10,7 @@ export declare class PowerAuthError {
     message?: string;
     /** Additional error data. */
     errorData?: any;
-    constructor(exception: any, message?: string, code?: PowerAuthErrorCode, errorData?: any);
+    constructor(exception: any, message?: string | null, code?: PowerAuthErrorCode | null, errorData?: any);
     print(): string;
 }
 export declare enum PowerAuthErrorCode {

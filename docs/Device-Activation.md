@@ -9,7 +9,7 @@ The original activation method uses a one-time activation code generated in Powe
 Use the following code to create an activation once you have an activation code:
 
 ```javascript
-import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk';
 
 const deviceName = "Petr's iPhone 7"; // users phone name
 const activationCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // let user type or QR-scan this value
@@ -33,7 +33,7 @@ If the received activation result also contains recovery data, then you should d
 If an [additional activation OTP](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Additional-Activation-OTP.md) is required to complete the activation, then use the following code to configure the `PowerAuthActivation` object:
 
 ```javascript   
-import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk';
 
 const deviceName = "Petr's iPhone 7"; // users phone name
 const activationCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // let user type or QR-scan this value
@@ -56,7 +56,7 @@ You may also create an activation using any custom login data - it can be anythi
 Use the following code to create an activation using custom credentials:
 
 ```javascript
-import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk';
 
 // Create a new activation with a given device name and custom login credentials
 const deviceName = "Petr's iPhone 7"; // users phone name
@@ -89,7 +89,7 @@ If PowerAuth Server is configured to support [Recovery Codes](https://github.com
 Use the following code to create an activation using recovery code:
 
 ```javascript
-import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk';
 
 const deviceName = "John Tramonta"; // users phone name
 const recoveryCode = "55555-55555-55555-55YMA"; // User's input
@@ -114,7 +114,7 @@ try {
 You can set an additional properties to `PowerAuthActivation` object, before any type of activation is created. For example:
 
 ```javascript
-import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
+import { PowerAuthActivation } from 'react-native-powerauth-mobile-sdk';
 
 // Custom attributes that can be processed before the activation is created on PowerAuth Server.
 // The dictionary may contain only values that can be serialized to JSON.
@@ -147,7 +147,7 @@ try {
 After you create an activation using one of the methods mentioned above, you need to commit the activation - to use provided user credentials to store the activation data on the device. 
 
 ```javascript
-import { PowerAuthAuthentication } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
+import { PowerAuthAuthentication } from 'react-native-powerauth-mobile-sdk';
 
 const auth = new PowerAuthAuthentication();
 auth.usePossession = true;
@@ -176,7 +176,7 @@ The mobile SDK is providing a couple of functions in `PowerAuthActivationCodeUti
 To validate an activation code scanned from QR code, you can use `PowerAuthActivationCodeUtil.parseActivationCode(code)` function. You have to provide the code with or without the signature part. For example:
 
 ```javascript
-import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
@@ -193,7 +193,7 @@ try {
 Note that the signature is only formally validated in the function above. The actual signature verification is performed in the activation process, or you can do it on your own:
 
 ```javascript
-import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
@@ -241,7 +241,7 @@ Here's an example how to iterate over the string and validate it character by ch
 
 
 ```javascript
-import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
+import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk';
 
 /// Returns corrected code
 validateAndCorrectCharacters(code) {

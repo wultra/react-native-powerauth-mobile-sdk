@@ -23,12 +23,12 @@ export class PowerAuthAuthentication {
     /** Indicates if a biometry factor should be used. */
     useBiometry: boolean = false;
     /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
-    userPassword?: string = null;
+    userPassword?: string | null = null;
     /**
      * Message displayed when prompted for biometric authentication
      */
-    biometryMessage: string = null;
+    biometryMessage: string | null = null;
 
     /** (Android only) Title of biometric prompt */
-    biometryTitle: string = null;
+    biometryTitle: string | null = null;
 };

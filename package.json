@@ -3,7 +3,9 @@
   "title": "PowerAuth SDK for React Native Mobile Apps",
   "version": "2.3.0",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
-  "main": "lib/PowerAuth.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "source": "src/index",
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
