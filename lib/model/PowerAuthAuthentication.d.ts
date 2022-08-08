@@ -7,11 +7,11 @@ export declare class PowerAuthAuthentication {
     /** Indicates if a biometry factor should be used. */
     useBiometry: boolean;
     /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
-    userPassword?: string;
+    userPassword?: string | null;
     /**
      * Message displayed when prompted for biometric authentication
      */
-    biometryMessage: string;
+    biometryMessage: string | null;
     /** (Android only) Title of biometric prompt */
-    biometryTitle: string;
+    biometryTitle: string | null;
 }

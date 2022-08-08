@@ -77,11 +77,12 @@ In case that you need an advanced configuration, then you can import and use the
 The following code snipped shows usage of the advanced configuration:
 
 ```javascript
-import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthClientConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthBiometryConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk';
+import {
+    PowerAuth,
+    PowerAuthConfiguration,
+    PowerAuthClientConfiguration,
+    PowerAuthBiometryConfiguration,
+    PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk';
 import { Component } from 'react';
 
 export default class AppMyApplication extends Component {

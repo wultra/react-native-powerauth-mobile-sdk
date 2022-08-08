@@ -47,7 +47,7 @@ export declare class PowerAuthKeychainConfiguration {
      *
      * Access group name used by the `PowerAuth` keychain instances.
      */
-    accessGroupName?: string;
+    accessGroupName?: string | null;
     /**
      * ### iOS specific
      *
@@ -58,7 +58,7 @@ export declare class PowerAuthKeychainConfiguration {
      * with no suite name specified, the developer is responsible for migrating data
      * to the new `UserDefaults` before using the SDK with the new suite name.
      */
-    userDefaultsSuiteName?: string;
+    userDefaultsSuiteName?: string | null;
     /**
      * ### Android specific
      *

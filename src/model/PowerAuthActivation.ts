@@ -23,19 +23,27 @@
     /** parameters that are filled by create* methods  */ 
 
     activationName: string;
-    activationCode?: string;
-    recoveryCode?: string;
-    recoveryPuk?: string;
-    identityAttributes?: any;
+    activationCode?: string | null = null;
+    recoveryCode?: string | null = null;
+    recoveryPuk?: string | null = null;
+    identityAttributes?: any = null;
     
     /** Extra attributes of the activation, used for application specific purposes (for example, info about the clientdevice or system). This extras string will be associated with the activation record on PowerAuth Server. */
-    extras?: string;
+    extras?: string | null = null;
 
     /** Custom attributes object that are processed on Intermediate Server Application. Note that this custom data will not be associated with the activation record on PowerAuth Server */
-    customAttributes?: any;
+    customAttributes?: any = null;
 
     /** Additional activation OTP that can be used only with a regular activation, by activation code */
-    additionalActivationOtp?: string;
+    additionalActivationOtp?: string | null = null;
+
+    /**
+     * Private constructor, used internally.
+     * @param activationName Activation name to be assigned to new activation.
+     */
+    private constructor(activationName: string) {
+        this.activationName = activationName;
+    }
 
     /**
      * Create an instance of `PowerAuthActivation` configured with the activation code. The activation code may contain
@@ -49,7 +57,7 @@
      * @return New instance of `PowerAuthActivation`.
      */
     static createWithActivationCode(activationCode: string, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.activationCode = activationCode;
         return a;
@@ -67,7 +75,7 @@
      * @return New instance of `PowerAuthActivation`.
      */
     static createWithRecoveryCode(recoveryCode: string, recoveryPuk: string, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.recoveryCode = recoveryCode;
         a.recoveryPuk = recoveryPuk;
@@ -85,7 +93,7 @@
      * @return New instance of `PowerAuthActivation`.
      */
     static createWithIdentityAttributes(identityAttributes: any, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.identityAttributes = identityAttributes;
         return a;

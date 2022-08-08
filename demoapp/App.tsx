@@ -2,16 +2,21 @@ import React, { Component } from 'react';
 import { StyleSheet, View, Button, Text, ScrollView, Platform } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Prompt from 'rn-prompt';
-import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
-import {PowerAuthActivationCodeUtil} from 'react-native-powerauth-mobile-sdk/lib/PowerAuthActivationCodeUtil';
-import {PowerAuthActivation} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthActivation';
-import {PowerAuthAuthentication} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthAuthentication';
-import {PowerAuthBiometryInfo} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryInfo';
-import {PowerAuthError} from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthError';
-import { PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthConfiguration';
-import { PowerAuthClientConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthClientConfiguration';
-import { PowerAuthKeychainConfiguration, PowerAuthKeychainProtection } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthKeychainConfiguration';
-import { PowerAuthBiometryConfiguration } from 'react-native-powerauth-mobile-sdk/lib/model/PowerAuthBiometryConfiguration';
+
+import {
+  PowerAuth, 
+  PowerAuthActivationCodeUtil,
+  PowerAuthActivation, 
+  PowerAuthAuthentication, 
+  PowerAuthError, 
+  PowerAuthBiometryInfo,
+  PowerAuthConfiguration, 
+  PowerAuthClientConfiguration, 
+  PowerAuthKeychainConfiguration,
+  PowerAuthKeychainProtection,
+  PowerAuthBiometryConfiguration 
+} from 'react-native-powerauth-mobile-sdk';
+
 import * as AppConfig from './AppConfig.json';
 
 interface State {
@@ -73,7 +78,7 @@ export default class App extends Component<any, State> {
         let baseUrl                 = AppConfig.powerAuth.baseUrl
         let allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
         if (appKey == "your-app-key") {
-          console.log(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
+          console.warn(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
           return
         }
         if (advancedConfig) {

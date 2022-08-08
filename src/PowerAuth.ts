@@ -40,22 +40,22 @@ export class PowerAuth {
      * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    configuration?: PowerAuthConfiguration
+    configuration?: PowerAuthConfiguration | null = null
     /**
      * Client configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    clientConfiguration?: PowerAuthClientConfiguration
+    clientConfiguration?: PowerAuthClientConfiguration | null = null
     /**
      * Biometry configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    biometryConfiguration?: PowerAuthBiometryConfiguration
+    biometryConfiguration?: PowerAuthBiometryConfiguration | null = null
     /**
      * Keychain configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    keychainConfiguration?: PowerAuthKeychainConfiguration
+    keychainConfiguration?: PowerAuthKeychainConfiguration | null = null
 
     /**
      * Object for managing access tokens.

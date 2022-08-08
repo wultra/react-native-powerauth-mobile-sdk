@@ -29,7 +29,7 @@ export class PowerAuthError {
     /** Additional error data. */
     errorData?: any;
 
-    constructor(exception: any, message: string = null, code: PowerAuthErrorCode = null, errorData: any = null) {
+    constructor(exception: any, message: string | null = null, code: PowerAuthErrorCode | null = null, errorData: any = null) {
         this.originalException = exception;
         this.code = code ?? exception?.code ?? null;
         this.message = message ?? exception?.message ?? null;

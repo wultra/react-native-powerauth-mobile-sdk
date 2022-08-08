@@ -8,36 +8,49 @@ REQUIRE_COMMAND "npm"
 
 LIB='react-native-powerauth-mobile-sdk'
 
-LOG_LINE
-LOG 'Building library archive'
-LOG_LINE
+function LIB_PACKAGE
+{
+    LOG_LINE
+    LOG 'Building library archive'
+    LOG_LINE
 
-PUSH_DIR "$SRC"
+    PUSH_DIR "$SRC"
 
-rm ${LIB}-*.tgz
-npm pack
-LIB_ARCHIVE=$(ls | grep ${LIB}-*.tgz)
-[[ -z "$LIB_ARCHIVE" ]] && FAILURE "npm pack did not produce library archive"
+    rm ${LIB}-*.tgz
+    tsc -b
+    npm pack
+    LIB_ARCHIVE=$(ls | grep ${LIB}-*.tgz)
+    [[ -z "$LIB_ARCHIVE" ]] && FAILURE "npm pack did not produce library archive"
 
-POP_DIR
+    POP_DIR
+}
 
-LOG_LINE
-LOG 'Updating dependency in demoapp project'
-LOG_LINE
+function UPDATE_DEPENDENCIES
+{
+    local APP_NAME=$1
 
-PUSH_DIR "$SRC/demoapp"
+    LOG_LINE
+    LOG "Updating dependency in '${APP_NAME}' project"
+    LOG_LINE
 
-npm r $LIB
-npm i ../$LIB_ARCHIVE 
+    PUSH_DIR "${SRC}/${APP_NAME}"
 
-POP_DIR
+    npm r $LIB
+    npm i ../$LIB_ARCHIVE 
 
-LOG_LINE
-LOG 'Updating CocoaPods...'
-LOG_LINE
+    POP_DIR
 
-PUSH_DIR "$SRC/demoapp/ios"
-pod update
-POP_DIR
+    LOG_LINE
+    LOG 'Updating CocoaPods...'
+    LOG_LINE
+
+    PUSH_DIR "${SRC}/${APP_NAME}/ios"
+    pod install
+    POP_DIR
+}
+
+LIB_PACKAGE
+UPDATE_DEPENDENCIES demoapp
+# UPDATE_DEPENDENCIES testapp
 
 EXIT_SUCCESS
