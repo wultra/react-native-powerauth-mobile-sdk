@@ -72,28 +72,28 @@ export default class App extends Component<any, State> {
     } else {
       console.log(`PowerAuth instance "${this.state.selectedPowerAuthInstanceId}" isn't configured, configuring...`);
       try {
-        let appKey                  = AppConfig.powerAuth.appKey
-        let appSecret               = AppConfig.powerAuth.appSecret
-        let masterServerPublicKey   = AppConfig.powerAuth.masterServerPublicKey
-        let baseUrl                 = AppConfig.powerAuth.baseUrl
-        let allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
+        const appKey                  = AppConfig.powerAuth.appKey
+        const appSecret               = AppConfig.powerAuth.appSecret
+        const masterServerPublicKey   = AppConfig.powerAuth.masterServerPublicKey
+        const baseUrl                 = AppConfig.powerAuth.baseUrl
+        const allowUnsecureConnection = AppConfig.powerAuth.allowUnsecureConnection
         if (appKey == "your-app-key") {
           console.warn(`Please modify AppConfig.json with a valid PowerAuth configuration.`);
           return
         }
         if (advancedConfig) {
           // Advanced config
-          let configuration = new PowerAuthConfiguration(appKey, appSecret, masterServerPublicKey, baseUrl)
-          let clientConfiguration = new PowerAuthClientConfiguration()
+          const configuration = new PowerAuthConfiguration(appKey, appSecret, masterServerPublicKey, baseUrl)
+          const clientConfiguration = new PowerAuthClientConfiguration()
           clientConfiguration.enableUnsecureTraffic = allowUnsecureConnection
           clientConfiguration.readTimeout = 10
           clientConfiguration.connectionTimeout = 5
-          let biometryConfiguration = new PowerAuthBiometryConfiguration()
+          const biometryConfiguration = new PowerAuthBiometryConfiguration()
           biometryConfiguration.linkItemsToCurrentSet = false
           biometryConfiguration.fallbackToDevicePasscode = true
           biometryConfiguration.authenticateOnBiometricKeySetup = true
           biometryConfiguration.confirmBiometricAuthentication = true
-          let keychainConfiguration = new PowerAuthKeychainConfiguration()
+          const keychainConfiguration = new PowerAuthKeychainConfiguration()
           keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
           await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
         } else {
@@ -213,7 +213,7 @@ export default class App extends Component<any, State> {
             <Button title="Create activation: Activation Code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async activationCode => {
               const activation = PowerAuthActivation.createWithActivationCode(activationCode, "ReactNativeTest");
               try {
-                let result = await this.powerAuth.createActivation(activation);
+                const result = await this.powerAuth.createActivation(activation);
                 console.log(result);
                 alert(`Activation created`);
               } catch (e) {
@@ -512,7 +512,7 @@ export default class App extends Component<any, State> {
             <Button title="Parse activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
               await sleep(100);
               try {
-                let ac = await PowerAuthActivationCodeUtil.parseActivationCode(code);
+                const ac = await PowerAuthActivationCodeUtil.parseActivationCode(code);
                 alert(`CODE:${ac.activationCode}\nSIGNATURE:${ac.activationSignature}`);
               } catch(e) {
                 alert(`Not valid: ${e.code}`);
@@ -522,7 +522,7 @@ export default class App extends Component<any, State> {
             <Button title="Parse recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
               await sleep(100);
               try {
-                let ac = await PowerAuthActivationCodeUtil.parseRecoveryCode(code);
+                const ac = await PowerAuthActivationCodeUtil.parseRecoveryCode(code);
                 alert(`CODE:${ac.activationCode}\nSIGNATURE:${ac.activationSignature}`);
               } catch(e) {
                 alert(`Not valid: ${e.code}`);
@@ -531,22 +531,22 @@ export default class App extends Component<any, State> {
             } }) }} />
             <Button title="Is valid activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter activation code", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthActivationCodeUtil.validateActivationCode(code);
+              const valid = await PowerAuthActivationCodeUtil.validateActivationCode(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid recovery code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery code", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthActivationCodeUtil.validateRecoveryCode(code);
+              const valid = await PowerAuthActivationCodeUtil.validateRecoveryCode(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid recovery PUK" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter recovery PUK", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthActivationCodeUtil.validateRecoveryPuk(code);
+              const valid = await PowerAuthActivationCodeUtil.validateRecoveryPuk(code);
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Is valid activation code character" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter character", promptCallback: async code => {
               await sleep(100);
-              let valid = await PowerAuthActivationCodeUtil.validateTypedCharacter(code.charCodeAt(0));
+              const valid = await PowerAuthActivationCodeUtil.validateTypedCharacter(code.charCodeAt(0));
               alert(`IsValid: ${valid}`);
             } }) }} />
             <Button title="Correct activation code" onPress={ _ => { this.setState({ promptVisible: true, promptLabel: "Enter code", promptCallback: async code => {

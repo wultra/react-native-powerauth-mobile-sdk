@@ -445,7 +445,7 @@ export class PowerAuth {
             throw new PowerAuthError(null, "Requesting biometric authentication, but `useBiometry` is set to false.");
         }
         try {
-            let reusable = await this.wrapper.authenticate(authentication, true);
+            const reusable = await this.wrapper.authenticate(authentication, true);
             try {
                 // integrator defined chain of authorization calls with reusable authentication
                 await groupedAuthenticationCalls(reusable);

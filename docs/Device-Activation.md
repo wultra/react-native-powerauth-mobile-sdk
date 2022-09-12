@@ -17,7 +17,7 @@ const activationCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // let user type or QR-scan th
 // Create activation object with given activation code.
 const activation = PowerAuthActivation.createWithActivationCode(activationCode, deviceName);
 try {
-    let result = await powerAuth.createActivation(activation);
+    const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
@@ -70,7 +70,7 @@ const activation = PowerAuthActivation.createWithIdentityAttributes(credentials,
 
 // Create a new activation with just created activation object
 try {
-    let result = await powerAuth.createActivation(activation);
+    const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
@@ -100,7 +100,7 @@ const activation = PowerAuthActivation.createWithRecoveryCode(recoveryCode, puk,
 
 // Create a new activation with just created activation object
 try {
-    let result = await powerAuth.createActivation(activation);
+    const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
@@ -135,7 +135,7 @@ activation.customAttributes = customAttributes;
 
 // Create a new activation as usual
 try {
-    let result = await powerAuth.createActivation(activation);
+    const result = await powerAuth.createActivation(activation);
     // continue with the flow
 } catch (e) {
     // process eror
@@ -180,7 +180,7 @@ import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
-  let otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
+  const otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
   if (otp.activationSignature == null) {
      // QR code should contain a signature
      return
@@ -197,7 +197,7 @@ import { PowerAuthActivationCodeUtil } from 'react-native-powerauth-mobile-sdk';
 
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
-  let otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
+  const otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
   if (otp.activationSignature) {
      await powerAuth.verifyServerSignedData(otp.activationCode, otp.activationSignature, true);
      // valid

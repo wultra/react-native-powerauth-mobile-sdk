@@ -104,7 +104,7 @@ export class __NativeWrapper {
      */
      async authenticate(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
 
-        let obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
+        const obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
 
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)

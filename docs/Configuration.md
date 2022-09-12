@@ -97,15 +97,15 @@ export default class AppMyApplication extends Component {
             console.log("PowerAuth was already configured.");
         } else {
             try {
-              let configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
-              let clientConfiguration = new PowerAuthClientConfiguration()
+              const configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
+              const clientConfiguration = new PowerAuthClientConfiguration()
               clientConfiguration.enableUnsecureTraffic = false
-              let biometryConfiguration = new PowerAuthBiometryConfiguration()
+              const biometryConfiguration = new PowerAuthBiometryConfiguration()
               biometryConfiguration.linkItemsToCurrentSet = true
-              let keychainConfiguration = new PowerAuthKeychainConfiguration()
+              const keychainConfiguration = new PowerAuthKeychainConfiguration()
               keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
               await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
-                console.log("PowerAuth configuration successfull.");
+              console.log("PowerAuth configuration successfull.");
             } catch(e) {
                 console.log(`PowerAuth failed to configure: ${e.code}`);
             }
