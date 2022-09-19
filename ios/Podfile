@@ -1,7 +1,7 @@
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
-platform :ios, '10.0'
+platform :ios, '11.0'
 
 project 'PowerAuth'
 
@@ -9,7 +9,7 @@ target 'PowerAuth' do
   config = use_native_modules!
   use_react_native!(:path => config["reactNativePath"])
   
-  pod 'PowerAuth2', '1.6.5'
+  pod 'PowerAuth2', '1.6.6'
   
 end
 
