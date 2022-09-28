@@ -1,6 +1,10 @@
 # OSX
 .DS_Store
 
+# vscode
+.vscode
+!.vscode/launch.json
+
 # library
 node_modules
 lib/internal/NativeWrapper.d.ts
