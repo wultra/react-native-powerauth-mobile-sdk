@@ -15,6 +15,7 @@
  */
 
 import { Config, VerboseLevel } from "powerauth-js-test-client";
+import { Platform } from "react-native";
 
 export interface EnrollmentConfig {
     baseUrl: string
@@ -35,11 +36,13 @@ export interface TestConfig extends Config {
     debug?: DebugConfig
 }
 
-const defaultHost = 'localhost'
+const defaultHost = '192.168.0.110'
 const defaultPrefix = "RNPowerAuth"
+const defaultSuffix = Platform.OS
 const defaultConfig: TestConfig = {
     connection: {
-        baseUrl: `http://${defaultHost}:8080/powerauth-java-server`
+        baseUrl: `http://${defaultHost}:8080/powerauth-java-server`,
+        autoCommit: true
     },
     application: {
         applicationName: `${defaultPrefix}-App`,
@@ -47,8 +50,8 @@ const defaultConfig: TestConfig = {
         enableRecoveryCodes: true
     },
     testUser: {
-        userId: `${defaultPrefix}-User`,
-        alternateUserId: `${defaultPrefix}-AnotherUser`,
+        userId: `${defaultPrefix}-User-${defaultSuffix}`,
+        alternateUserId: `${defaultPrefix}-AnotherUser-${defaultSuffix}`,
         externalUserId: `${defaultPrefix}-ExternalUser`
     },
     enrollment: {

@@ -14,18 +14,48 @@
  * limitations under the License.
  */
 
-import { RNActivationHelper, createActivationHelper, CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
-import { Activation } from "powerauth-js-test-client";
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthCreateActivationResult } from "react-native-powerauth-mobile-sdk";
+import { 
+    PowerAuth,
+    PowerAuthActivation,
+    PowerAuthAuthentication,
+    PowerAuthCreateActivationResult } from "react-native-powerauth-mobile-sdk";
+import {
+    Activation,
+    ActivationStatus } from "powerauth-js-test-client";
+import { 
+    RNActivationHelper,
+    createActivationHelper,
+    CustomActivationHelperPrepareData } from "./RNActivationHelper";
 import { TestWithServer } from "./TestWithServer";
 
+/**
+ * Set of various activation credentials.
+ */
 export interface ActivationCredentials {
+    /**
+     * Authentication for possession factor only.
+     */
     possession: PowerAuthAuthentication
+    /**
+     * Authentication for possession & knowledge factors.
+     */
     knowledge: PowerAuthAuthentication
+    /**
+     * Authentication for possession & invalid knowledge factors.
+     */
     invalidKnowledge: PowerAuthAuthentication
+    /**
+     * Authenticatio for posession & biometry factors.
+     */
     biometry: PowerAuthAuthentication
 
+    /**
+     * String with a valid password.
+     */
     validPassword: string
+    /**
+     * String with an invalid password.
+     */
     invalidPassword: string
 }
 
@@ -36,14 +66,34 @@ export interface ActivationCredentials {
 export class TestWithActivation extends TestWithServer {
 
     /**
-     * If true, then `RNActivationHelper` is automatically created in `beforeAll()` method. If you set this variable
-     * to false, then you have to provide your own object to `helperInstance` property.
+     * Overridable method. If returns true, then `RNActivationHelper` is automatically created in `beforeAll()` method.
+     * If you return this variable to false, then you have to provide your own object to `helperInstance` property.
      */
-    automaticallyCreateActivationHelper = true
+    shouldCreateActivationHelper(): boolean {
+        return true
+    }
     /**
-     * If true, then helper will automatically create an activation in `beforeEach()` method.
+     * Overridable method. If returns true, then helper will automatically create an activation in `beforeEach()` method.
      */
-    automaticallyCreateActivation = true
+    shouldCreateActivationBeforeTest(): boolean {
+        return true
+    }
+
+    /**
+     * Overridable method. If returns true, then helper will automatically remove local activation in `beforeEach()` method.
+     * This is recommended to set to `true`. You normally don't need to keep activation between the tests.
+     */
+    shouldRemoveActivationBeforeTest(): boolean {
+        return true
+    }
+
+    /**
+     * Overridable method. If returns true, then helper will automatically remove local activation in `afterEach()` method.
+     * This is recommended to set to `true`. You normally don't need to keep activation between the tests.
+     */
+    shouldRemoveActivationAfterTest(): boolean {
+        return true
+    }
     
 
     protected helperInstance?: RNActivationHelper
@@ -88,6 +138,14 @@ export class TestWithActivation extends TestWithServer {
             this.credentialsData = this.generateActivationCredentials()
         }
         return this.credentialsData
+    }
+
+    /**
+     * Create PowerAuth instance.
+     * @returns Promise with PowerAuth result.
+     */
+     createSdk(): Promise<PowerAuth> {
+        return this.helper.getPowerAuthSdk(this.customPrepareData())
     }
 
     /**
@@ -152,11 +210,17 @@ export class TestWithActivation extends TestWithServer {
         // Invalidate credentials to generate set of passwords for each test.
         this.credentialsData = undefined
         // If automatic activation creation is set, then do it.
-        if (this.automaticallyCreateActivationHelper) {
-            this.helperInstance = await createActivationHelper(this.serverApi, this.context.config, (activation) => this.beforeCreateActivation(activation))
-            if (this.automaticallyCreateActivation) {
-                const prepareData = this.customPrepareData()
+        if (this.shouldCreateActivationHelper()) {
+            this.debugInfo('Creating activation helper')
+            const helper = await createActivationHelper(this.serverApi, this.context.config, (activation) => this.beforeCreateActivation(activation))
+            this.helperInstance = helper
+            const prepareData = this.customPrepareData()
+            if (this.shouldRemoveActivationBeforeTest()) {
+                await this.cleanupActivation(prepareData)
+            }
+            if (this.shouldCreateActivationBeforeTest()) {
                 await this.helper.createActivation(undefined, prepareData)
+                this.debugInfo(`Using activation ${this.activation.activationId}`)
             }
         }
     }
@@ -164,6 +228,30 @@ export class TestWithActivation extends TestWithServer {
     async afterEach() {
         await super.afterEach()
         if (this.helperInstance !== undefined) {
+            const sdk = await this.helperInstance.getPowerAuthSdk(this.customPrepareData())
+            if (this.shouldRemoveActivationAfterTest()) {
+                await this.cleanupActivation(this.customPrepareData())
+            }
+        }
+    }
+
+    private async cleanupActivation(prepareData: CustomActivationHelperPrepareData) {
+        if (this.helperInstance === undefined) {
+            return
+        }
+        const sdk = await this.helperInstance.getPowerAuthSdk(prepareData)
+        if (await sdk.hasValidActivation()) {
+            const activationId = await sdk.getActivationIdentifier()
+            this.debugInfo(`Removing activation ${activationId}`)
+            const status = (await this.serverApi.getActivationDetil(activationId)).activationStatus
+            // If status is not 'REMOVED' then remove the activation on the server.
+            if (status !== ActivationStatus.REMOVED) {
+                await this.serverApi.activationRemove(activationId)
+            }
+            // And then remove the activation locally
+            await sdk.removeActivationLocal()
+        } else {
+            // Otherwise just cleanup the activation if activation is in right state.
             await this.helperInstance.cleanup()
         }
     }

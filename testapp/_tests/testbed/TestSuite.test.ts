@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { TestRunner, TestSuite, expect, TestMonitorGroup, TestLog } from "../../src/testbed";
+import { TestRunner, TestSuite, expect, TestEventType } from "../../src/testbed";
 import { ConfigurableTest } from "./ConfigurableTest";
+import { CustomInteraction } from "./CustomInteraction";
 import { CustomMonitor } from "./CustomMonitor";
 
 export class TestSuiteTests extends TestSuite {
@@ -38,5 +39,37 @@ export class TestSuiteTests extends TestSuite {
         expect(t._testFailedCalled).toBe(0)
         expect(t._androidTestCalled).toBe(0)
         expect(t._iosTestCalled).toBe(0)
+    }
+
+    async testInfoMessages() {
+        const monitor = new CustomMonitor()
+        const interaction = new CustomInteraction()
+        const runner = new TestRunner('testRunOnlyOneTest', this.config, monitor, interaction)
+        const t = new ConfigurableTest()
+        t.printDebugMessages = true
+        const result = await runner.runTests([ t ])
+        expect(result).toBeTruthy()
+        const el = monitor.eventList
+        const il = interaction.infoList
+        expect(el[0].eventType).toBe(TestEventType.BATCH_INFO)
+        expect(el[0].message).toBe("Starting 1 test suites with 6 tests inside.")
+
+        expect(il[0]).toBe('beforeAll()')
+        expect(il[1]).toBe('beforeEach()')
+        expect(il[2]).toBe('afterEach()')
+        expect(il[3 + 5*2]).toBe('afterAll()')
+    }
+
+    async testSkipMessages() {
+        const monitor = new CustomMonitor()
+        const interaction = new CustomInteraction()
+        const runner = new TestRunner('testRunOnlyOneTest', this.config, monitor, interaction)
+        const t = new ConfigurableTest()
+        t.printDebugMessages = true
+        t.confAllowSkipFromFunc = true
+        const result = await runner.runTests([ t ])
+        expect(result).toBeTruthy()
+        const sl = interaction.skipList
+        expect(sl[0]).toBe('Skipped from test')
     }
 }

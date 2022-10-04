@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
+import { Platform } from "react-native";
 import { parseRnCallStack } from "./private/CallStack";
 import { TestEvent, TestEventType, TestMonitor } from "./TestMonitor";
 import { TestProgress } from "./TestProgress";
 
 export interface TestLogPadding {
-    errorPadding: string
-    logPadding: string
-    infoPadding: string
-    warnPadding: string
+    errorPadding: string;
+    logPadding: string;
+    infoPadding: string;
+    warnPadding: string;
 }
 
 function parseStack(stack: string | undefined): string {
     if (stack === undefined) {
-        return ''
+        return '';
     }
-    const p = '     ▶️ '
-    const parsed = parseRnCallStack(stack, p)
-    return `\n${parsed}\n${p}`
+    const p = '     ▶️ ';
+    const parsed = parseRnCallStack(stack, p);
+    return `\n${parsed}\n${p}`;
 }
 
 export class TestLog implements TestMonitor {
@@ -43,53 +44,72 @@ export class TestLog implements TestMonitor {
         warnPadding:  " "
     }
 
+    platform: string
+
+    constructor() {
+        if (Platform.OS === 'android') {
+            this.platform = 'Android :  ';
+        } else if (Platform.OS === 'ios') {
+            this.platform = '    iOS :  ';
+        } else {
+            this.platform = `${Platform.OS} :  `;
+        }
+    }
+
     reportEvent(event: TestEvent): void {
-        const desc = event.eventDescription
-        const test = event.testName ?? `<?T ${event.suite}>`
-        const msg = event.message ?? ""
-        const ep = this.paddings.errorPadding
-        const ip = this.paddings.infoPadding
-        const lp = this.paddings.logPadding
-        const wp = this.paddings.warnPadding
+        const desc = event.eventDescription;
+        const test = event.testName ?? `<?T ${event.suite}>`;
+        const msg = event.message ?? '';
+        const ep = this.paddings.errorPadding + this.platform;
+        const ip = this.paddings.infoPadding + this.platform;
+        const lp = this.paddings.logPadding + this.platform;
+        const wp = this.paddings.warnPadding + this.platform;
+        const p = this.platform;
         switch (event.eventType) {
             case TestEventType.BATCH_INFO:
-                console.info (`${ip}## ${desc} ## - ${msg}`)
-                break
+                console.info (`${ip}## ${desc} ## - ${msg}`);
+                break;
             case TestEventType.BATCH_FAIL:
-                console.error(`${ep}## ${desc} ## - ${event.failureDescription}${parseStack(event.failCallstack)}`)
-                break
+                console.error(`${ep}## ${desc} ## - ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                break;
 
             case TestEventType.SUITE_START:
-                console.info (`${ip} [ ${desc} ] - STARTED`)
-                break
+                console.info (`${ip}[[ ${desc} ]] - STARTED`);
+                break;
             case TestEventType.SUITE_SKIP:
-                console.warn (`${wp} [ ${desc} ] - SKIPPED`)
-                break
+                console.warn (`${wp}[[ ${desc} ]] - SKIPPED`);
+                break;
             case TestEventType.SUITE_FAIL:
-                console.error(`${ep} [ ${desc} ] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`)
-                break
+                console.error(`${ep}[[ ${desc} ]] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                break;
             case TestEventType.SUITE_SUCCESS:
-                console.info (`${ip} [ ${desc} ] - SUCCESS`)
-                break
+                console.info (`${ip}[[ ${desc} ]] - SUCCESS`);
+                break;
             case TestEventType.SUITE_INFO:
-                console.log  (`${lp} [ ${desc} ] - ${msg}`)
-                break
+                console.log  (`${lp} [ ${desc} ] - ${msg}`);
+                break;
+            case TestEventType.SUITE_WARN:
+                console.warn (`${wp} [ ${desc} ] - ${msg}`);
+                break;
 
             case TestEventType.TEST_START:
-                console.info (`${ip} [ ${desc} ] - STARTED`)
-                break
+                console.info (`${ip} [ ${desc} ] - STARTED`);
+                break;
             case TestEventType.TEST_SKIPPED:
-                console.warn (`${wp} [ ${desc} ] - SKIPPED`)
-                break
+                console.warn (`${wp} [ ${desc} ] - SKIPPED`);
+                break;
             case TestEventType.TEST_FAIL:
-                console.error(`${ep} [ ${desc} ] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`)
-                break
+                console.error(`${ep} [ ${desc} ] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                break;
             case TestEventType.TEST_SUCCESS:
-                console.info (`${ip} [ ${desc} ] - SUCCESS`)
-                break
+                console.info (`${ip} [ ${desc} ] - SUCCESS`);
+                break;
             case TestEventType.TEST_INFO:
-                console.log  (`${lp} [ ${desc} ] - ${msg}`)
-                break
+                console.log  (`${lp} [ ${desc} ] - ${msg}`);
+                break;
+            case TestEventType.TEST_WARN:
+                console.warn (`${wp} [ ${desc} ] - ${msg}`);
+                break;
         }
     }
 

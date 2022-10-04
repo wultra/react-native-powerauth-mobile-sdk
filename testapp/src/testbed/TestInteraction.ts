@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { TestContext } from "./TestSuite"
+
 export enum TestPromptDuration {
     SHORT,
     LONG
@@ -21,8 +23,9 @@ export enum TestPromptDuration {
 
 export interface TestInteraction {
 
-    showPrompt(message: string, duration: TestPromptDuration): Promise<void>
+    showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void>
 
-    reportInfo(message: string): void
-    reportSkip(reason: string): void
+    reportWarning(context: TestContext, message: string): void
+    reportInfo(context: TestContext, message: string): void
+    reportSkip(context: TestContext, reason: string): void
 }

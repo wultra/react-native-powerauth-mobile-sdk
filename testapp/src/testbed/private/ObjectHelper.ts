@@ -20,21 +20,21 @@
  * @returns List of method names implemented in the object.
  */
 export function getAllObjectMethods(obj: any) {
-    let props: string[] = []
-    let parent: any
+    let props: string[] = [];
+    let parent: any;
     // Walk over the prototype chain, ignore `Object` methods (e.g. there's no parent prototype)
     while (obj && (parent = Object.getPrototypeOf(obj))) {
         // get all descriptors at once
-        const allDescs = Object.getOwnPropertyDescriptors(obj)
+        const allDescs = Object.getOwnPropertyDescriptors(obj);
         for (const prop in allDescs) {
             // Functions are writable unlike the getters. If we don't test for `writable`, then the next `obj[prop]`
-            // statement will access the value of property via the getter function. In other words, it call the 
+            // statement will access the value of property via the getter function. In other words, it call the
             // getter function and that's not we want.
             if (allDescs[prop].writable === true && typeof obj[prop] === 'function' && prop !== 'constructor') {
-                props.push(prop)
+                props.push(prop);
             }
         }
-        obj = parent
+        obj = parent;
     }
-    return props
+    return props;
 }

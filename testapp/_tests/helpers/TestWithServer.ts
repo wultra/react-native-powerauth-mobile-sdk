@@ -15,7 +15,7 @@
  */
 
 import { Logger, PowerAuthTestServer, VerboseLevel } from "powerauth-js-test-client";
-import { TestSuite } from "../src/testbed";
+import { TestSuite } from "../../src/testbed";
 
 /**
  * Test suite base for tests that require connection to PowerAuth Server RESTFul API. 
@@ -38,7 +38,7 @@ export class TestWithServer extends TestSuite {
         await super.beforeAll()
         Logger.setVerboseLevel(this.context.config.debug?.pasVerboseLevel ?? VerboseLevel.Warning)
         Logger.setDebugRequestResponse(this.context.config.debug?.pasDebugRequestResponse ?? false)
-        if (this.printInfoMessages) this.reportInfo('Connecting to server...')
+        if (this.printDebugMessages) this.debugInfo('Connecting to server...')
         const server = new PowerAuthTestServer(this.config)
         await server.connect()
         this.serverInstance = server

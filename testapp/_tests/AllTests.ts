@@ -15,19 +15,23 @@
  */
 
 import { TestSuite } from "../src/testbed/TestSuite";
-import { BasicActivationTests } from "./BasicActivationTests";
-import { TestRunnerTests } from "./testbed/TestRunnerTests";
-import { TestSuiteTests } from "./testbed/TestSuiteTests";
+import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
+import { PowerAuthActivationTests } from "./PowerAuthActivation.test";
+import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
+import { TestRunnerTests } from "./testbed/TestRunner.test";
+import { TestSuiteTests } from "./testbed/TestSuite.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
-        new BasicActivationTests()
-    ]
+        new PowerAuthActivationTests(),
+        new PowerAuthActivationCodeUtilTests(),
+        new PowerAuth_ActivationTests()
+    ];
 }
 
 export function getTestbedTests(): TestSuite[] {
     return [
         new TestRunnerTests(),
         new TestSuiteTests()
-    ]
+    ];
 }

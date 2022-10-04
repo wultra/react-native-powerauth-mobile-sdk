@@ -23,17 +23,17 @@ import { EmptyTestSuite } from "./EmptyTestSuite";
 
 export class TestRunnerTests extends TestSuite {
 
-    expectOnAndroid = Platform.OS === 'android' ? 1 : 0
-    expectOnIos = Platform.OS === 'ios' ? 1 : 0
+    expectOnAndroid = Platform.OS === 'android' ? 1 : 0;
+    expectOnIos = Platform.OS === 'ios' ? 1 : 0;
 
-    monitorRef = new CustomMonitor()
-    loggerRef = new TestLog()
-    interactionRef = new CustomInteraction()
+    monitorRef = new CustomMonitor();
+    loggerRef = new TestLog();
+    interactionRef = new CustomInteraction();
 
     // Tests debugging
     /// Set to test function name to run only this
-    runOnlyThisTest?: string
-    runWithLogger = false
+    runOnlyThisTest?: string;
+    runWithLogger = false;
 
     createRunner(): TestRunner {
         let m: TestMonitor
@@ -69,7 +69,7 @@ export class TestRunnerTests extends TestSuite {
         super.beforeEach()
         if (this.runOnlyThisTest !== undefined) {
             if (this.currentTestName !== this.runOnlyThisTest) {
-                this.interaction.reportSkip(`Skipping`)
+                this.reportSkip(`Skipping`)
             }
         }
     }

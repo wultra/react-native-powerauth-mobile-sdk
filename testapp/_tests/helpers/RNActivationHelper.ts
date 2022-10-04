@@ -102,7 +102,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
         if (!pd) throw new Error('prepareStep: Missing prepare data object')
         if (!pd.password) throw new Error('Missing password in prepare data object')
         // Get SDK
-        const sdk = await helper.getPowerAuthSdk()
+        const sdk = await helper.getPowerAuthSdk(prepareData)
         // Remove activation if there's still an activation
         if (await sdk.hasValidActivation()) {
             await sdk.removeActivationLocal()

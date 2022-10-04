@@ -16,9 +16,10 @@
 
 import { Platform } from "react-native";
 import { TestConfig } from "../Config";
+import { describeError } from "./private/ErrorHelper";
 import { getAllObjectMethods } from "./private/ObjectHelper";
 import { TestInteraction, TestPromptDuration } from "./TestInteraction";
-import { TestEvent, TestEventType, TestMonitor } from "./TestMonitor";
+import { TestEvent, TestMonitor } from "./TestMonitor";
 import { TestCounter } from "./TestProgress";
 import { TestContext, TestMethod, TestSuite } from "./TestSuite";
 
@@ -64,7 +65,7 @@ export class TestRunner {
         } catch (e) {
             this.monitor.reportEvent(TestEvent.batchFail(this.batchName, 'Unhandled error while executing tests.', e))
             if (e instanceof Error) {
-                console.error(`${e.name}: ${e.message}`)
+                console.error(`${describeError(e, true)}`)
             }
             return false
         }
@@ -110,7 +111,7 @@ export class TestRunner {
         await ctx.beforeAll(testSuite.suiteName, testMethods.length, async (context) => {
             testSuite._assignContext(context)
             if (testSuite.isInteractive && !this.isInteractive) {
-                context.interaction.reportSkip("Test suite is interactive, but the current test runner doesn't support interaction with the user.")
+                context.interaction.reportSkip(context, "Test suite is interactive, but the current test runner doesn't support interaction with the user.")
             }
             await testSuite.beforeAll()
         })
@@ -127,7 +128,10 @@ export class TestRunner {
             await ctx.each(async (context) => { 
                 testSuite._assignContext(context)
                 const suiteObj = testSuite as any
-                await (suiteObj[methodName] as TestMethod)()
+                const result = (suiteObj[methodName] as TestMethod)()
+                if (result instanceof Promise) {
+                    await result
+                }
             })
             // Call "afterEach()"
             await ctx.afterEach(async (context) => { 
@@ -157,12 +161,18 @@ export class TestRunner {
     }
 }
 
+interface PrivateTestContext extends TestContext {
+    contextState: RunnerState
+}
+
+type TestContextInfo = Pick<PrivateTestContext, 'contextState' | 'testName' | 'testSuiteName'>
+
 enum RunnerState {
-    BEFORE_ALL,
-    BEFORE_EACH,
-    IN_TEST,
-    AFTER_EACH,
-    AFTER_ALL
+    BEFORE_ALL = 'BEFORE_ALL',
+    BEFORE_EACH = 'BEFORE_EACH',
+    IN_TEST = 'IN_TEST',
+    AFTER_EACH = 'AFTER_EACH',
+    AFTER_ALL = 'AFTER_ALL'
 }
 
 class RunnerContext implements TestInteraction {
@@ -172,10 +182,7 @@ class RunnerContext implements TestInteraction {
 
     private currentSuiteName?: string
     get testSuiteName(): string {
-        if (!this.currentSuiteName) {
-            throw new Error('Internal testbed error. Name of test suite is not known.')
-        }
-        return this.currentSuiteName
+        return this.currentSuiteName ?? '<< empty testSuiteName >>'
     }
 
     private currentTestName?: string
@@ -222,27 +229,29 @@ class RunnerContext implements TestInteraction {
 
         this.monitor.reportEvent(TestEvent.suiteStart(this.contextForTest(false)))
 
+        const ctx = this.contextForTest()
         try {
             if (testMethodsCount > 0) {
-                await action(this.contextForTest())
+                await action(ctx)
             } else {
                 throw new Error('Test suite is empty. Please implement at least one method starting with \'test\', \'iosTest\' or \'androidTest\'')
             }
         } catch (e) {
-            this.reportResult(e)
+            this.reportResult(ctx, e)
         }
     }
 
     async afterAll(action: (context: TestContext) => Promise<void>) {
         this.state = RunnerState.AFTER_ALL
         this.currentTestName = undefined
+        const ctx = this.contextForTest()
         try {
             if (!this.isSkipped && !this.isFailed) {
-                await action(this.contextForTest())
+                await action(ctx)
             }
-            this.reportResult()
+            this.reportResult(ctx)
         } catch (e) {
-            this.reportResult(e)
+            this.reportResult(ctx, e)
         }
         this.currentSuiteName = undefined
     }
@@ -254,43 +263,45 @@ class RunnerContext implements TestInteraction {
         this.isTestFailed = this.isFailed
 
         this.monitor.reportEvent(TestEvent.testStart(this.contextForTest(false)))
-
+        const ctx = this.contextForTest()
         try {
             if (!this.isSkipped && !this.isFailed) {
-                await action(this.contextForTest())
+                await action(ctx)
             }
         } catch (e) {
-            this.reportResult(e)
+            this.reportResult(ctx, e)
         }
     }
 
     async each(action: (context: TestContext) => Promise<void>) {
         this.state = RunnerState.IN_TEST
+        const ctx = this.contextForTest()
         try {
             // Ignore this test if beforeEach() failed
             if (!this.isTestSkipped && !this.isTestFailed) {
-                await action(this.contextForTest())
+                await action(ctx)
             }
         } catch (e) {
-            this.reportResult(e)
+            this.reportResult(ctx, e)
         }
     }
 
     async afterEach(action: (context: TestContext) => Promise<void>) {
         this.state = RunnerState.AFTER_EACH
+        const ctx = this.contextForTest()
         try {
             // Ignore afterEach() only if everything is skipped or fails.
             if (!this.isSkipped && !this.isFailed) {
-                await action(this.contextForTest())
+                await action(ctx)
             }
-            this.reportResult()
+            this.reportResult(ctx)
         } catch (e) {
-            this.reportResult(e)
+            this.reportResult(ctx, e)
         }
         this.currentTestName = undefined
     }
 
-    private contextForTest(forEvent: boolean = false): TestContext {
+    private contextForTest(forEvent: boolean = false): PrivateTestContext {
         let testName = this.testName
         if (forEvent) {
             if (this.state == RunnerState.BEFORE_ALL) {
@@ -305,17 +316,57 @@ class RunnerContext implements TestInteraction {
                 }
             }
         }
-        let ctx = {
+        return {
             config: this.config,
             testSuiteName: this.testSuiteName,
             testName: testName,
             interaction: this,
-            interactionIsAllowed: this.interaction !== undefined
+            interactionIsAllowed: this.interaction !== undefined,
+            contextState: this.state
         }
-        return ctx
     }
 
-    private reportResult(failure: any = undefined) {
+    private validateContext<T>(context: TestContext, error: any, success: () => T, failure: () => string): T {
+        const pContext = context as PrivateTestContext
+        if (pContext.contextState === undefined) {
+            throw new Error('Invalid TestContext object passed from the TestSuite.')
+        }
+        const current = this.contextForTest(false)
+        if (current.contextState !== current.contextState ||
+            current.testSuiteName !== pContext.testSuiteName ||
+            current.testName !== pContext.testName) {
+            const locationMessage = failure()
+            const p = Platform.OS === 'android' ? 'Android' : 'iOS'
+            const contextInfo: TestContextInfo = { testSuiteName: pContext.testSuiteName, testName: pContext.testName, contextState: pContext.contextState }
+            console.error(`${p}: It appears that test code did not wait for some promise. The context reported from the test is wrong, so the event is reported after the test did finish.`)
+            console.error(`${p}:   location : ${locationMessage}`)
+            console.error(`${p}:    context : ${JSON.stringify(contextInfo)}`)
+            if (error !== undefined) {
+                console.error(`${p}:      error : ${JSON.stringify(error)}`)
+                // we're already in throw-catch block
+            } else {
+                // Not in try-catch block
+                throw new Error(`It appears that test code did not wait for some promise.`)
+            }   
+        }
+        return success()
+    }
+
+    private reportResult(context: TestContext, failure: any = undefined) {
+        this.validateContext(context, failure !== undefined, () => {
+            this.reportResultImpl(failure)
+        }, () => {
+            if (failure === undefined) {
+                return 'reportResult() reporting success'
+            } else {
+                return `reportResult() reporting an issue`
+            }
+            
+        })
+    }
+
+    private reportResultImpl(failure: any) {
+        // Context is valid, so report the result.
         let event: TestEvent | undefined
         const ctx = this.contextForTest(false)
         switch (this.state) {
@@ -377,32 +428,66 @@ class RunnerContext implements TestInteraction {
 
     // TestInteraction impl.
 
-    async showPrompt(message: string, duration: TestPromptDuration): Promise<void> {
-        if (!this.interaction) {
-            throw new Error(`Interaction the user is not allowed for this test.`)
-        }
-        await this.interaction.showPrompt(message, duration)
+    async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
+        await this.validateContext(context, undefined, async () => {
+            if (!this.interaction) {
+                throw new Error(`Interaction the user is not allowed for this test.`)
+            }
+            return this.interaction.showPrompt(context, message, duration)
+        }, () => {
+            return `showPrompt('${message}')`
+        })
     }
     
-    reportInfo(message: string): void {
+    reportInfo(context: TestContext, message: string): void {
+        this.validateContext(context, undefined, () => {
+            this.reportMessage(message, false)
+        }, () => {
+            return `reportInfo('${message}')`
+        })
+    }
+
+    reportWarning(context: TestContext, message: string): void {
+        this.validateContext(context, undefined, () => {
+            this.reportMessage(message, true)
+        }, () => {
+            return `reportWarning('${message}')`
+        })
+    }
+
+    reportSkip(context: TestContext, reason: string): void {
+        this.validateContext(context, undefined, () => {
+            return this.reportSkipImpl(reason)
+        }, () => {
+            return `reportSkip('${reason}')`
+        })
+    }
+
+    reportMessage(message: string, warning: boolean) {
         let evt: TestEvent
-        let ctx = this.contextForTest(true)
+        const ctx = this.contextForTest(true)
         switch (this.state) {
             case RunnerState.BEFORE_ALL:
             case RunnerState.AFTER_ALL:
-                evt = TestEvent.suiteInfo(ctx, message)
+                evt = TestEvent.suiteMessage(ctx, message, warning)
                 break
             case RunnerState.BEFORE_EACH:
             case RunnerState.IN_TEST:
             case RunnerState.AFTER_EACH:
-                evt = TestEvent.testInfo(ctx, message)
+                evt = TestEvent.testMessage(ctx, message, warning)
                 break
         }
         this.monitor.reportEvent(evt)
-        this.interaction?.reportInfo(message)
+        if (this.interaction) {
+            if (warning) {
+                this.interaction?.reportWarning(ctx, message)
+            } else {
+                this.interaction?.reportInfo(ctx, message)
+            }
+        }
     }
 
-    reportSkip(reason: string): void {
+    reportSkipImpl(reason: string): void {
         if (this.state == RunnerState.AFTER_EACH) {
             throw new Error(`You should not call reportSkip() from afterEach() function`)
         }
@@ -427,7 +512,7 @@ class RunnerContext implements TestInteraction {
         }
         if (evt != undefined) {
             this.monitor.reportEvent(evt)
-            this.interaction?.reportSkip(reason)    
+            this.interaction?.reportSkip(ctx, reason)    
         }
     }
 }

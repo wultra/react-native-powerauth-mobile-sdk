@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { TestInteraction, TestPromptDuration } from "../../src/testbed";
+import { TestContext, TestInteraction, TestPromptDuration } from "../../src/testbed";
 
 export interface PromptWithDuration {
     prompt: string
@@ -23,24 +23,30 @@ export interface PromptWithDuration {
 
 export class CustomInteraction implements TestInteraction {
     promptList: PromptWithDuration[] = []
+    warnList: string[] = []
     infoList: string[] = []
     skipList: string[] = []
 
     reset() {
         this.promptList = []
+        this.warnList = []
         this.infoList = []
         this.skipList = []
     }
 
-    async showPrompt(message: string, duration: TestPromptDuration): Promise<void> {
+    async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
         this.promptList.push({prompt: message, duration: duration})
     }
 
-    reportInfo(message: string): void {
+    reportWarning(context: TestContext, message: string): void {
+        this.warnList.push(message)
+    }
+    
+    reportInfo(context: TestContext, message: string): void {
         this.infoList.push(message)
     }
 
-    reportSkip(reason: string): void {
-        this.infoList.push(reason)
+    reportSkip(context: TestContext, reason: string): void {
+        this.skipList.push(reason)
     }
 }

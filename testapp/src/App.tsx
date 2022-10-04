@@ -37,15 +37,16 @@ class TestExecutor {
   
   async runTests() {
     if (this.isRunning) {
-      console.warn('Tests are still running...');
+      console.warn('Tests are still in progress...');
       return
     }
     this.isRunning = true
     
     const cfg = await getTestConfig()
     const logger = new TestLog()
-    const runner = new TestRunner('Automatic tests', cfg, logger, undefined)
-    const allTests = getTestbedTests()
+    const monitor = new TestMonitorGroup([ logger ])
+    const runner = new TestRunner('Automatic tests', cfg, monitor, undefined)
+    const allTests = getTestbedTests().concat(getLibraryTests())
     await runner.runTests(allTests)
     this.isRunning = false
   }
@@ -71,11 +72,6 @@ class App extends Component {
         >
          <Text>Run tests</Text>
         </TouchableOpacity>
-        <View>
-          <Text>
-            You clicked { this.state.count } times
-          </Text>
-        </View>
       </View>
      )
    }

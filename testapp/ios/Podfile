@@ -18,11 +18,13 @@ target 'testapp' do
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
-
-  target 'testappTests' do
-    inherit! :complete
-    # Pods for testing
-  end
+  
+  # Unpublished SDKs
+  # 
+  # At first, remove "Pods" and "Podfile.lock", 
+  #   then uncomment the following line and setup proper branch with unpublished code,
+  #   and finally run "pod install".
+  #pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'develop', :submodules => true
 
   # Enables Flipper.
   #

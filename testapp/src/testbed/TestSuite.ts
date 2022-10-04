@@ -16,7 +16,7 @@
 
 import { TestConfig } from "../Config"
 import { TestInteraction } from "./TestInteraction"
-
+import { expect } from "./expect"
 /**
  * Defines context for running test.
  */
@@ -73,7 +73,7 @@ export class TestSuite {
     /**
      * If set to true, then prints info messages from beforeAll, afterAll, beforeEach, afterEach methods. 
      */
-    printInfoMessages: boolean = false
+    printDebugMessages: boolean = false
 
     /**
      * If set to test function name, then it will skip all test functions except this one.
@@ -127,7 +127,7 @@ export class TestSuite {
      * @param context Test context.
      */
     async beforeAll() {
-        if (this.printInfoMessages) this.reportInfo('beforeAll()')
+        this.debugInfo('beforeAll()')
     }
 
     /**
@@ -136,7 +136,7 @@ export class TestSuite {
      * @param context Test context.
      */
     async afterAll() {
-        if (this.printInfoMessages) this.reportInfo('afterAll()')
+        this.debugInfo('afterAll()')
     }
 
     /**
@@ -145,9 +145,9 @@ export class TestSuite {
      * @param context Test context.
      */
     async beforeEach() {
-        if (this.printInfoMessages) this.reportInfo('beforeEach()')
+        this.debugInfo('beforeEach()')
         if (this.runOnlyOneTest !== undefined && this.currentTestName !== this.runOnlyOneTest) {
-            this.interaction.reportSkip(`Skipped, bevause only ${this.runOnlyOneTest} is allowed to run`)
+            this.interaction.reportSkip(this.context, `Skipped, bevause only ${this.runOnlyOneTest} is allowed to run`)
         }
     }
 
@@ -157,7 +157,15 @@ export class TestSuite {
      * @param context Test context.
      */
     async afterEach() {
-        if (this.printInfoMessages) this.reportInfo('afterEach()')
+        this.debugInfo('afterEach()')
+    }
+
+    /**
+     * Report debug information from the test. The information is reported only if `printInfoMessages` is `true`.
+     * @param message Information to report.
+     */
+    debugInfo(message: string) {
+        if (this.printDebugMessages) this.interaction.reportInfo(this.context, message)
     }
 
     /**
@@ -165,7 +173,40 @@ export class TestSuite {
      * @param message Information to report.
      */
     reportInfo(message: string) {
-        this.interaction.reportInfo(message)
+        this.interaction.reportInfo(this.context, message)
+    }
+    
+    /**
+     * Report warning from the test.
+     * @param message Information to report.
+     */
+    reportWarning(message: string) {
+        this.interaction.reportWarning(this.context, message)
+    }
+
+    /**
+     * Report failure from the test.
+     * @param reason Reason of failure.
+     */
+    reportFailure(reason: string) {
+        throw reason
+    }
+
+    /**
+     * Report skip from the test.
+     * @param reason Reason of skip.
+     */
+    reportSkip(reason: string) {
+        this.interaction.reportSkip(this.context, reason)
+    }
+
+    /**
+     * Sleep execution for requested amount of time in milliseconds.
+     * @param milliseconds Sleep time in milliseconds.
+     * @returns Promise completed once the sleep time is over.
+     */
+    sleep(milliseconds: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
     }
 
     /**

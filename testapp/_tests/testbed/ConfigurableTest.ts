@@ -15,8 +15,7 @@
  */
 
 import { Platform } from "react-native"
-import { expect } from "../../src/testbed"
-import { TestSuite } from "../../src/testbed/TestSuite"
+import { TestSuite, expect } from "../../src/testbed"
 
 /**
  * This test suite allows you to configure point of skip or failure during the testing.
@@ -53,9 +52,9 @@ export class ConfigurableTest extends TestSuite {
         await super.beforeAll()
         this._beforeAllCalled++
         if (this.confAllowSkipFromBeforeAll) {
-            this.interaction.reportSkip('Skipped from beforeAll')
+            this.reportSkip('Skipped from beforeAll')
             if (this.confAllowDoubleSkip) {
-                this.interaction.reportSkip('Skipped from beforeAll for 2nd time')
+                this.reportSkip('Skipped from beforeAll for 2nd time')
             }
         }
         if (this.confAllowFailFromBeforeAll) {
@@ -67,9 +66,9 @@ export class ConfigurableTest extends TestSuite {
         await super.afterAll()
         this._afterAllCalled++
         if (this.confAllowSkipFromAfterAll) {
-            this.interaction.reportSkip('Skipped from afterAll')
+            this.reportSkip('Skipped from afterAll')
             if (this.confAllowDoubleSkip) {
-                this.interaction.reportSkip('Skipped from afterAll for 2nd time')
+                this.reportSkip('Skipped from afterAll for 2nd time')
             }
         }
         if (this.confAllowFailFromAfterAll) {
@@ -81,9 +80,9 @@ export class ConfigurableTest extends TestSuite {
         await super.beforeEach()
         this._beforeEachCalled++
         if (this.confAllowSkipFromBeforeEach && this.currentTestName === 'testSkipped') {
-            this.interaction.reportSkip('Skipped from beforeEach')
+            this.reportSkip('Skipped from beforeEach')
             if (this.confAllowDoubleSkip) {
-                this.interaction.reportSkip('Skipped from beforeEach for 2nd time')
+                this.reportSkip('Skipped from beforeEach for 2nd time')
             }
         }
         if (this.confAllowFailFromBeforeEach && this.currentTestName === 'testFailed') {
@@ -95,9 +94,9 @@ export class ConfigurableTest extends TestSuite {
         await super.afterEach()
         this._afterEachCalled++
         if (this.confAllowSkipFromAfterEach && this.currentTestName == 'testSkipped') {
-            this.interaction.reportSkip('Skipped from afterEach')
+            this.reportSkip('Skipped from afterEach')
             if (this.confAllowDoubleSkip) {
-                this.interaction.reportSkip('Skipped from afterEach for 2nd time')
+                this.reportSkip('Skipped from afterEach for 2nd time')
             }
         }
         if (this.confAllowFailFromAfterEach && this.currentTestName === 'testFailed') {
@@ -120,9 +119,9 @@ export class ConfigurableTest extends TestSuite {
     async testSkippedFromTest() {
         this._testSkippedFromTestCalled++
         if (this.confAllowSkipFromFunc) {
-            this.interaction.reportSkip('Skipped from test')
+            this.interaction.reportSkip(this.context, 'Skipped from test')
             if (this.confAllowDoubleSkip) {
-                this.interaction.reportSkip('Skipped from afterEach for 2nd time')
+                this.reportSkip('Skipped from afterEach for 2nd time')
             }
         }
     }

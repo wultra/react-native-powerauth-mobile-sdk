@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { PowerAuthError } from "react-native-powerauth-mobile-sdk";
+import { describeError } from "./private/ErrorHelper";
 import { TestProgress } from "./TestProgress";
 import { TestContext } from "./TestSuite";
 
@@ -38,6 +40,10 @@ export enum TestEventType {
      * Information reported from the test's beforeAll() or afterAll() methods.
      */
     SUITE_INFO = 'SUITE_INFO',
+    /**
+     * Warning reported from the test's beforeAll() or afterAll() methods.
+     */
+    SUITE_WARN = 'SUITE_WARN',
 
     /**
      * Test started.
@@ -59,7 +65,11 @@ export enum TestEventType {
      * Information reported from the test. Message contains information string.
      */
     TEST_INFO = 'TEST_INFO',
-
+    /**
+     * Warning reported from the test. Message contains information string.
+     */
+    TEST_WARN = 'TEST_WARN',
+    
     /**
      * Information reported from the top level of test hierarchy.
      */
@@ -88,8 +98,8 @@ export class TestEvent {
     }
 
     get failureDescription(): string {
-        if (this.failReason instanceof Error) {
-            return `${this.failReason.name}: ${this.failReason.message}`
+        if (this.failReason ) {
+            return describeError(this.failReason)
         }
         return this.message ?? ""
     }
@@ -131,8 +141,9 @@ export class TestEvent {
         return new TestEvent(TestEventType.SUITE_SUCCESS, ctx.testSuiteName, ctx.testName)
     }
 
-    static suiteInfo(ctx: TestContext, message: string) {
-        return new TestEvent(TestEventType.SUITE_INFO, ctx.testSuiteName, ctx.testName, message)
+    static suiteMessage(ctx: TestContext, message: string, warning: boolean) {
+        const t = warning ? TestEventType.SUITE_WARN : TestEventType.SUITE_INFO
+        return new TestEvent(t, ctx.testSuiteName, ctx.testName, message)
     }
 
     static testSkip(ctx: TestContext, reason: string): TestEvent {
@@ -148,8 +159,9 @@ export class TestEvent {
         return new TestEvent(TestEventType.TEST_SUCCESS, ctx.testSuiteName, ctx.testName)
     }
 
-    static testInfo(ctx: TestContext, message: string) {
-        return new TestEvent(TestEventType.TEST_INFO, ctx.testSuiteName, ctx.testName, message)
+    static testMessage(ctx: TestContext, message: string, warning: boolean) {
+        const t = warning ? TestEventType.TEST_WARN : TestEventType.TEST_INFO
+        return new TestEvent(t, ctx.testSuiteName, ctx.testName, message)
     }
 
     private static errorEvent(type: TestEventType, suite: string, testName: string|undefined, failure: any, message: string | undefined = undefined): TestEvent {
