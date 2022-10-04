@@ -250,9 +250,8 @@ export class TestWithActivation extends TestWithServer {
             }
             // And then remove the activation locally
             await sdk.removeActivationLocal()
-        } else {
-            // Otherwise just cleanup the activation if activation is in right state.
-            await this.helperInstance.cleanup()
         }
+        // Otherwise just cleanup the activation if activation is in right state.
+        await this.helperInstance.cleanup()
     }
 }

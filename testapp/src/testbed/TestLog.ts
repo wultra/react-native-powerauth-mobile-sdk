@@ -77,7 +77,7 @@ export class TestLog implements TestMonitor {
                 console.info (`${ip}[[ ${desc} ]] - STARTED`);
                 break;
             case TestEventType.SUITE_SKIP:
-                console.warn (`${wp}[[ ${desc} ]] - SKIPPED`);
+                console.warn (`${wp}[[ ${desc} ]] - SKIPPED - ${msg}`);
                 break;
             case TestEventType.SUITE_FAIL:
                 console.error(`${ep}[[ ${desc} ]] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);
@@ -96,7 +96,7 @@ export class TestLog implements TestMonitor {
                 console.info (`${ip} [ ${desc} ] - STARTED`);
                 break;
             case TestEventType.TEST_SKIPPED:
-                console.warn (`${wp} [ ${desc} ] - SKIPPED`);
+                console.warn (`${wp} [ ${desc} ] - SKIPPED - ${msg}`);
                 break;
             case TestEventType.TEST_FAIL:
                 console.error(`${ep} [ ${desc} ] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);

@@ -23,6 +23,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     async beforeAll(): Promise<void> {
         await super.beforeAll()
         this.printDebugMessages = false
+        //this.reportSkip('Temporary')
     }
 
     shouldCreateActivationBeforeTest(): boolean {
@@ -191,40 +192,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     async testCreateActivationWithSignedCode() {
         return await this.createActivationTest(true)
     }
-
     
-    async testCreateActivationRecovery() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBeTruthy()
-        let activationResult = this.helper.prepareActivationResult
-        const recoveryData = activationResult.activationRecovery
-        expect(recoveryData).toBeDefined()
-        expect(recoveryData?.recoveryCode).toBeDefined()
-        expect(recoveryData?.puk).toBeDefined()
-
-        // Test original activation
-        let status = await this.helper.getActivationStatus()
-        expect(status).toBe('ACTIVE')
-
-        // Now remove activation locally
-        await this.sdk.removeActivationLocal()
-
-        // And create activation with a recovery code
-        const activation = PowerAuthActivation.createWithRecoveryCode(recoveryData!.recoveryCode, recoveryData!.puk, 'Recovery Test')
-        activationResult = await this.sdk.createActivation(activation)
-        this.sdk.commitActivation(this.credentials.knowledge)
-
-        // const newActivationId = await this.sdk.getActivationIdentifier()
-        // expect(newActivationId).toBeNotNull()
-
-        // const newStatus = await this.serverApi.getActivationDetil(newActivationId)
-        // expect(newStatus).toBeDefined()
-        // expect(newStatus.activationStatus).toBe('ACTIVE')
-
-        // Test original activation
-        status = await this.helper.getActivationStatus()
-        expect(status).toBe('REMOVED')
-    }
-
     async testFetchActivationStatus() {
         expect(await this.sdk.hasValidActivation()).toBeTruthy()
 

@@ -20,12 +20,22 @@ import { PowerAuthActivationTests } from "./PowerAuthActivation.test";
 import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
+import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
+import { PowerAuth_PasswordTests } from "./PowerAuth_Password.test";
+import { PowerAuth_BiometryTests } from "./PowerAuth_Biometry.test";
+import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
+import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
-        new PowerAuth_ActivationTests()
+        new PowerAuth_ActivationTests(),
+        new PowerAuth_RecoveryTests(),
+        new PowerAuth_PasswordTests(),
+        new PowerAuth_BiometryTests(),
+        new PowerAuth_SignatureTests(),
+        new PowerAuth_TokenTests(),
     ];
 }
 

@@ -27,6 +27,7 @@ function parseCallstackLine(line: string): StackEntry | undefined {
 }
 
 export function parseRnCallStack(stack: string, padding: string = ""): string {
+    //console.warn(`Stack = ${stack}`)
     const lines = stack.split('\n');
     if (lines.length == 0) {
         return '';
