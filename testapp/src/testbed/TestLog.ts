@@ -30,7 +30,7 @@ function parseStack(stack: string | undefined): string {
     if (stack === undefined) {
         return '';
     }
-    const p = '     ▶️ ';
+    const p = '        ';
     const parsed = parseRnCallStack(stack, p);
     return `\n${parsed}\n${p}`;
 }
@@ -65,12 +65,16 @@ export class TestLog implements TestMonitor {
         const lp = this.paddings.logPadding + this.platform;
         const wp = this.paddings.warnPadding + this.platform;
         const p = this.platform;
+        let errDesc = event.failureDescription
+        if (errDesc.length > 0) {
+            errDesc = ` - ${event.failureDescription}${parseStack(event.failCallstack)}`
+        }
         switch (event.eventType) {
             case TestEventType.BATCH_INFO:
                 console.info (`${ip}## ${desc} ## - ${msg}`);
                 break;
             case TestEventType.BATCH_FAIL:
-                console.error(`${ep}## ${desc} ## - ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                console.error(`${ep}## ${desc} ##${errDesc}`);
                 break;
 
             case TestEventType.SUITE_START:
@@ -80,7 +84,7 @@ export class TestLog implements TestMonitor {
                 console.warn (`${wp}[[ ${desc} ]] - SKIPPED - ${msg}`);
                 break;
             case TestEventType.SUITE_FAIL:
-                console.error(`${ep}[[ ${desc} ]] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                console.error(`${ep}[[ ${desc} ]] - FAILED${errDesc}`);
                 break;
             case TestEventType.SUITE_SUCCESS:
                 console.info (`${ip}[[ ${desc} ]] - SUCCESS`);
@@ -99,7 +103,7 @@ export class TestLog implements TestMonitor {
                 console.warn (`${wp} [ ${desc} ] - SKIPPED - ${msg}`);
                 break;
             case TestEventType.TEST_FAIL:
-                console.error(`${ep} [ ${desc} ] - FAILED: ${event.failureDescription}${parseStack(event.failCallstack)}`);
+                console.error(`${ep} [ ${desc} ] - FAILED${errDesc}`);
                 break;
             case TestEventType.TEST_SUCCESS:
                 console.info (`${ip} [ ${desc} ] - SUCCESS`);
