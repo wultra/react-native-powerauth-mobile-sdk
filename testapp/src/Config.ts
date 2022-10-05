@@ -36,37 +36,50 @@ export interface TestConfig extends Config {
     debug?: DebugConfig
 }
 
-const defaultHost = '192.168.0.110'
+const defaultHost = 'localhost'
 const defaultPrefix = "RNPowerAuth"
 const defaultSuffix = Platform.OS
-const defaultConfig: TestConfig = {
-    connection: {
-        baseUrl: `http://${defaultHost}:8080/powerauth-java-server`,
-        autoCommit: true
-    },
-    application: {
-        applicationName: `${defaultPrefix}-App`,
-        applicationVersion: "default",
-        enableRecoveryCodes: true
-    },
-    testUser: {
-        userId: `${defaultPrefix}-User-${defaultSuffix}`,
-        alternateUserId: `${defaultPrefix}-AnotherUser-${defaultSuffix}`,
-        externalUserId: `${defaultPrefix}-ExternalUser`
-    },
-    enrollment: {
-        baseUrl: `http://${defaultHost}:8080/enrollment-server`
-    },
-    instance: {
-        powerAuthInstanceId: `${defaultPrefix}-instanceId`
-    },
-    debug: {
-        pasVerboseLevel: VerboseLevel.Warning,
-        pasDebugRequestResponse: false
 
+function defaultConfig(): TestConfig {
+    let host: string
+    if (Platform.OS === 'android' && defaultHost === 'localhost') {
+        // On Android, localhost points to the device's localhost, so
+        // it has to be altered to preconfigured IP representing
+        // developer's machine.
+        host = '10.0.2.2'
+    } else {
+        // Otherwise use default
+        host = defaultHost
+    }
+    return {
+        connection: {
+            baseUrl: `http://${host}:8080/powerauth-java-server`,
+            autoCommit: true
+        },
+        application: {
+            applicationName: `${defaultPrefix}-App`,
+            applicationVersion: "default",
+            enableRecoveryCodes: true
+        },
+        testUser: {
+            userId: `${defaultPrefix}-User-${defaultSuffix}`,
+            alternateUserId: `${defaultPrefix}-AnotherUser-${defaultSuffix}`,
+            externalUserId: `${defaultPrefix}-ExternalUser`
+        },
+        enrollment: {
+            baseUrl: `http://${defaultHost}:8080/enrollment-server`
+        },
+        instance: {
+            powerAuthInstanceId: `${defaultPrefix}-instanceId`
+        },
+        debug: {
+            pasVerboseLevel: VerboseLevel.Warning,
+            pasDebugRequestResponse: false
+
+        }
     }
 }
 
 export async function getTestConfig(): Promise<TestConfig> {
-    return defaultConfig
+    return defaultConfig()
 }
