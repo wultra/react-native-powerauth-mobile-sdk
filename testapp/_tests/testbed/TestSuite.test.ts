@@ -26,7 +26,6 @@ export class TestSuiteTests extends TestSuite {
         const t = new ConfigurableTest()
         t.runOnlyOneTest = 'test2'
         const result = await runner.runTests([ t ])
-
         expect(result).toBeTruthy()
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
@@ -44,32 +43,24 @@ export class TestSuiteTests extends TestSuite {
     async testInfoMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testRunOnlyOneTest', this.config, monitor, interaction)
+        const runner = new TestRunner('testInfoMessages', this.config, monitor, interaction)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         const result = await runner.runTests([ t ])
         expect(result).toBeTruthy()
         const el = monitor.eventList
-        const il = interaction.infoList
         expect(el[0].eventType).toBe(TestEventType.BATCH_INFO)
         expect(el[0].message).toBe("Starting 1 test suites with 6 tests inside.")
-
-        expect(il[0]).toBe('beforeAll()')
-        expect(il[1]).toBe('beforeEach()')
-        expect(il[2]).toBe('afterEach()')
-        expect(il[3 + 5*2]).toBe('afterAll()')
     }
 
     async testSkipMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testRunOnlyOneTest', this.config, monitor, interaction)
+        const runner = new TestRunner('testSkipMessages', this.config, monitor, interaction)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         t.confAllowSkipFromFunc = true
         const result = await runner.runTests([ t ])
         expect(result).toBeTruthy()
-        const sl = interaction.skipList
-        expect(sl[0]).toBe('Skipped from test')
     }
 }

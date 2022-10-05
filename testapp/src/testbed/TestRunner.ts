@@ -18,7 +18,7 @@ import { Platform } from "react-native";
 import { TestConfig } from "../Config";
 import { describeError } from "./private/ErrorHelper";
 import { getAllObjectMethods } from "./private/ObjectHelper";
-import { TestInteraction, TestPromptDuration } from "./TestInteraction";
+import { TestInteraction, UserInteraction, TestPromptDuration } from "./TestInteraction";
 import { TestEvent, TestMonitor } from "./TestMonitor";
 import { TestCounter } from "./TestProgress";
 import { TestContext, TestMethod, TestSuite } from "./TestSuite";
@@ -27,7 +27,7 @@ export class TestRunner {
     readonly batchName: string
     readonly config: TestConfig
     readonly monitor: TestMonitor
-    readonly interaction?: TestInteraction
+    readonly interaction?: UserInteraction
 
     readonly allSuitesCounter: TestCounter
     readonly allTestsCounter: TestCounter
@@ -36,7 +36,7 @@ export class TestRunner {
         batchName: string,
         config: TestConfig,
         monitor: TestMonitor,
-        interaction: TestInteraction | undefined
+        interaction: UserInteraction | undefined
     ) {
         this.batchName = batchName
         this.config = config
@@ -111,7 +111,7 @@ export class TestRunner {
         await ctx.beforeAll(testSuite.suiteName, testMethods.length, async (context) => {
             testSuite._assignContext(context)
             if (testSuite.isInteractive && !this.isInteractive) {
-                context.interaction.reportSkip(context, "Test suite is interactive, but the current test runner doesn't support interaction with the user.")
+                throw new TestSkipException("Test suite is interactive, but the current test runner doesn't support interaction with the user.")
             }
             await testSuite.beforeAll()
         })
@@ -178,7 +178,7 @@ enum RunnerState {
 class RunnerContext implements TestInteraction {
 
     readonly config: TestConfig
-    readonly interaction?: TestInteraction
+    readonly interaction?: UserInteraction
 
     private currentSuiteName?: string
     get testSuiteName(): string {
@@ -199,7 +199,7 @@ class RunnerContext implements TestInteraction {
     constructor(
         config: TestConfig,
         monitor: TestMonitor,
-        interaction: TestInteraction | undefined,
+        interaction: UserInteraction | undefined,
         suitesCounter: TestCounter,
         testsCounter: TestCounter) {
         this.config = config
@@ -358,18 +358,55 @@ class RunnerContext implements TestInteraction {
         }, () => {
             if (failure === undefined) {
                 return 'reportResult() reporting success'
+            } else if (failure instanceof TestSkipException) {
+                return `reportResult() reporting skip`
             } else {
-                return `reportResult() reporting an issue`
+                return `reportResult() reporting issue`
             }
-            
         })
     }
 
     private reportResultImpl(failure: any) {
         // Context is valid, so report the result.
+        const state = this.state
+        if (failure instanceof TestSkipException) {
+            // Failure is skip, so report skip
+            while (true) {
+                if (this.state == RunnerState.AFTER_EACH) {
+                    failure = new Error(`You should not call reportSkip() from afterEach() function`)
+                    break
+                }
+                if (this.state == RunnerState.AFTER_ALL) {
+                    failure = new Error(`You should not call reportSkip() from afterAll() function`)
+                    break
+                }
+                const reason = failure.message
+                let event: TestEvent | undefined
+                let ctx = this.contextForTest(false)
+                if (state == RunnerState.BEFORE_EACH || state == RunnerState.IN_TEST) {
+                    if (!this.isTestSkipped) {
+                        this.isTestSkipped = true
+                        this.testsCounter.addSkipped()
+                        event = TestEvent.testSkip(ctx, reason)    
+                    }
+                } else {
+                    if (!this.isSkipped) {
+                        this.isSkipped = true
+                        this.suitesCounter.addSkipped()
+                        this.testsCounter.addSkipped(this.testMethodsCount)
+                        event = TestEvent.suiteSkip(ctx, reason)
+                    }
+                }
+                if (event != undefined) {
+                    this.monitor.reportEvent(event)
+                }
+                return
+            }
+        }
+        // Success or failure
         let event: TestEvent | undefined
         const ctx = this.contextForTest(false)
-        switch (this.state) {
+        switch (state) {
             case RunnerState.BEFORE_ALL:
                 if (failure !== undefined) {
                     // beforeAll failed
@@ -424,6 +461,7 @@ class RunnerContext implements TestInteraction {
         if (event !== undefined) {
             this.monitor.reportEvent(event)
         }
+        
     }
 
     // TestInteraction impl.
@@ -457,9 +495,17 @@ class RunnerContext implements TestInteraction {
 
     reportSkip(context: TestContext, reason: string): void {
         this.validateContext(context, undefined, () => {
-            return this.reportSkipImpl(reason)
+            throw new TestSkipException(reason)
         }, () => {
             return `reportSkip('${reason}')`
+        })
+    }
+
+    reportFailure(context: TestContext, reason: string) {
+        this.validateContext(context, undefined, () => {
+            throw reason
+        }, () => {
+            return `reportFailure('${reason}')`
         })
     }
 
@@ -478,41 +524,15 @@ class RunnerContext implements TestInteraction {
                 break
         }
         this.monitor.reportEvent(evt)
-        if (this.interaction) {
-            if (warning) {
-                this.interaction?.reportWarning(ctx, message)
-            } else {
-                this.interaction?.reportInfo(ctx, message)
-            }
-        }
     }
+}
 
-    reportSkipImpl(reason: string): void {
-        if (this.state == RunnerState.AFTER_EACH) {
-            throw new Error(`You should not call reportSkip() from afterEach() function`)
-        }
-        if (this.state == RunnerState.AFTER_ALL) {
-            throw new Error(`You should not call reportSkip() from afterAll() function`)
-        }
-        let evt: TestEvent | undefined
-        let ctx = this.contextForTest(false)
-        if (this.state == RunnerState.BEFORE_EACH || this.state == RunnerState.IN_TEST) {
-            if (!this.isTestSkipped) {
-                this.isTestSkipped = true
-                this.testsCounter.addSkipped()
-                evt = TestEvent.testSkip(ctx, reason)    
-            }
-        } else {
-            if (!this.isSkipped) {
-                this.isSkipped = true
-                this.suitesCounter.addSkipped()
-                this.testsCounter.addSkipped(this.testMethodsCount)
-                evt = TestEvent.suiteSkip(ctx, reason)
-            }
-        }
-        if (evt != undefined) {
-            this.monitor.reportEvent(evt)
-            this.interaction?.reportSkip(ctx, reason)    
-        }
+/**
+ * Exception reported when test is skipped.
+ */
+ class TestSkipException extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = 'TestSkipException'
     }
 }

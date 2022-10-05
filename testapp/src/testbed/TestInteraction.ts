@@ -21,11 +21,13 @@ export enum TestPromptDuration {
     LONG
 }
 
-export interface TestInteraction {
-
+export interface UserInteraction {
     showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void>
+}
 
+export interface TestInteraction extends UserInteraction {
     reportWarning(context: TestContext, message: string): void
     reportInfo(context: TestContext, message: string): void
     reportSkip(context: TestContext, reason: string): void
+    reportFailure(context: TestContext, reason: string): void
 }

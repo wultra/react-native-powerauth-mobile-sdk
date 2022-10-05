@@ -15,8 +15,8 @@
  */
 
 import { TestConfig } from "../Config"
-import { TestInteraction } from "./TestInteraction"
-import { expect } from "./expect"
+import { TestInteraction, UserInteraction } from "./TestInteraction"
+
 /**
  * Defines context for running test.
  */
@@ -36,7 +36,7 @@ export interface TestContext {
     /**
      * Current instance of test interaction.
      */
-    readonly interaction: TestInteraction
+    readonly interaction: UserInteraction
     /**
      * Contains true if interaction with user is allowed.
      */
@@ -110,7 +110,7 @@ export class TestSuite {
     /**
      * Contains `TestInteraction` implementation.
      */
-    get interaction(): TestInteraction {
+    get interaction(): UserInteraction {
         return this.context.interaction
     }
 
@@ -147,7 +147,7 @@ export class TestSuite {
     async beforeEach() {
         this.debugInfo('beforeEach()')
         if (this.runOnlyOneTest !== undefined && this.currentTestName !== this.runOnlyOneTest) {
-            this.interaction.reportSkip(this.context, `Skipped, bevause only ${this.runOnlyOneTest} is allowed to run`)
+            this.reportSkip(`Skipped, bevause only ${this.runOnlyOneTest} is allowed to run`)
         }
     }
 
@@ -165,7 +165,9 @@ export class TestSuite {
      * @param message Information to report.
      */
     debugInfo(message: string) {
-        if (this.printDebugMessages) this.interaction.reportInfo(this.context, message)
+        if (this.printDebugMessages) {
+            this.privateInteraction.reportInfo(this.context, message)
+        }
     }
 
     /**
@@ -173,7 +175,7 @@ export class TestSuite {
      * @param message Information to report.
      */
     reportInfo(message: string) {
-        this.interaction.reportInfo(this.context, message)
+        this.privateInteraction.reportInfo(this.context, message)
     }
     
     /**
@@ -181,7 +183,7 @@ export class TestSuite {
      * @param message Information to report.
      */
     reportWarning(message: string) {
-        this.interaction.reportWarning(this.context, message)
+        this.privateInteraction.reportWarning(this.context, message)
     }
 
     /**
@@ -197,7 +199,7 @@ export class TestSuite {
      * @param reason Reason of skip.
      */
     reportSkip(reason: string) {
-        this.interaction.reportSkip(this.context, reason)
+        this.privateInteraction.reportSkip(this.context, reason)
     }
 
     /**
@@ -216,5 +218,12 @@ export class TestSuite {
      */
     _assignContext(context: TestContext) {
         this.currentContext = context
+    }
+
+    /**
+     * Contains `PrivateTestInteraction` implementation.
+     */
+    private get privateInteraction(): TestInteraction {
+        return this.context.interaction as TestInteraction
     }
 }

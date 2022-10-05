@@ -49,8 +49,8 @@ export class ConfigurableTest extends TestSuite {
     _androidTestCalled = 0
 
     async beforeAll() {
-        await super.beforeAll()
         this._beforeAllCalled++
+        await super.beforeAll()
         if (this.confAllowSkipFromBeforeAll) {
             this.reportSkip('Skipped from beforeAll')
             if (this.confAllowDoubleSkip) {
@@ -63,8 +63,8 @@ export class ConfigurableTest extends TestSuite {
     }
     
     async afterAll() {
-        await super.afterAll()
         this._afterAllCalled++
+        await super.afterAll()
         if (this.confAllowSkipFromAfterAll) {
             this.reportSkip('Skipped from afterAll')
             if (this.confAllowDoubleSkip) {
@@ -77,8 +77,8 @@ export class ConfigurableTest extends TestSuite {
     }
 
     async beforeEach() {
-        await super.beforeEach()
         this._beforeEachCalled++
+        await super.beforeEach()
         if (this.confAllowSkipFromBeforeEach && this.currentTestName === 'testSkipped') {
             this.reportSkip('Skipped from beforeEach')
             if (this.confAllowDoubleSkip) {
@@ -91,8 +91,8 @@ export class ConfigurableTest extends TestSuite {
     }
     
     async afterEach() {
-        await super.afterEach()
         this._afterEachCalled++
+        await super.afterEach()
         if (this.confAllowSkipFromAfterEach && this.currentTestName == 'testSkipped') {
             this.reportSkip('Skipped from afterEach')
             if (this.confAllowDoubleSkip) {
@@ -119,7 +119,7 @@ export class ConfigurableTest extends TestSuite {
     async testSkippedFromTest() {
         this._testSkippedFromTestCalled++
         if (this.confAllowSkipFromFunc) {
-            this.interaction.reportSkip(this.context, 'Skipped from test')
+            this.reportSkip('Skipped from test')
             if (this.confAllowDoubleSkip) {
                 this.reportSkip('Skipped from afterEach for 2nd time')
             }
