@@ -55,21 +55,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         // [ 2 ] Create activation locally, don't wait for promise completion, we need to test 
         //       a pending state
         const activation = PowerAuthActivation.createWithActivationCode(code, 'RN')
-        const resultPromise = sdk.createActivation(activation)
+        const result = await sdk.createActivation(activation)
 
-        await this.runFailingMethodsDuringActivation('DURING_CREATE', PowerAuthErrorCode.PENDING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
-        await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-        await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-
-        expect(await sdk.canStartActivation()).toBeFalsy()
-        expect(await sdk.hasPendingActivation()).toBeTruthy()
-        expect(await sdk.hasValidActivation()).toBeFalsy()
-        expect(await sdk.getActivationIdentifier()).toBeNullish()
-        expect(await sdk.getActivationFingerprint()).toBeNullish()
-
-
-        // Now wait for the resultPromise
-        const result = await resultPromise
         expect(result.activationFingerprint).toBeDefined()
 
         await this.runFailingMethodsDuringActivation('AFTER_CREATE', PowerAuthErrorCode.PENDING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
@@ -79,7 +66,6 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.canStartActivation()).toBeFalsy()
         expect(await sdk.hasPendingActivation()).toBeTruthy()
         expect(await sdk.hasValidActivation()).toBeFalsy()
-
 
         let activationId = await sdk.getActivationIdentifier()
         let activationFingerprint = await sdk.getActivationFingerprint()
