@@ -12,7 +12,7 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "expect": "^29.0.3",
-    "powerauth-js-test-client": "^0.2.4",
+    "powerauth-js-test-client": "^0.2.5",
     "react": "17.0.2",
     "react-native": "0.68.3",
     "react-native-powerauth-mobile-sdk": "file:../react-native-powerauth-mobile-sdk-2.3.0.tgz"

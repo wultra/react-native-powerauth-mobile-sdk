@@ -296,46 +296,9 @@ export const expect = (received: any) => ({
         return _R(received, expected, (r) => r.evaluateFail((failure, expected) => {
             evaluateError(failure, expected)
         }))
-
-        // // Evaluate whether received is a function
-        // if (typeof received === 'function') {
-        //     try {
-        //         // Call function and evaluate its result
-        //         const value = received()
-        //         if (value instanceof Promise) {
-        //             // Function is asynchronous and returned some Promise. We don't know the result
-        //             // type, so we should chain this promise with our own Promise<void>
-        //             return new Promise<void>((resolve, reject) => {
-        //                 value.then((result) => {
-        //                     // Promise succeeded and that's unexpected
-        //                     reject(new Error(`Expected to fail but returned '${result}'`))
-        //                 }).catch((error) => {
-        //                     // Promise failed, so evaluate the failure
-        //                     const failure = evaluateError(error, expected)
-        //                     if (failure !== undefined) {
-        //                         console.error(`Failed function: ${received}`)
-        //                         reject(failure)
-        //                     } else {
-        //                         resolve()
-        //                     }
-        //                 }) 
-        //             })
-        //         } else {
-        //             // The synchronous function succeeded and that's unexpected
-        //             throw new Error(`Expected to fail but returned '${value}'`)
-        //         }
-        //     } catch (error) {
-        //         // Synchronous function failed, so evaluate the error
-        //         const failure = evaluateError(error, expected)
-        //         if (failure !== undefined) {
-        //             console.error(`Failed function: ${received}`)
-        //             throw failure
-        //         }
-        //     }
-        // } else {
-        //     // Received must be a function
-        //     throw new Error(`Expected function that throws but received '${received}'`)
-        // }
+    },
+    toSucceed: (): ExpectResult => {
+        return _R(received, undefined, (r) => r.evaluate((_failure, _expected) => {}))
     },
 })
 
