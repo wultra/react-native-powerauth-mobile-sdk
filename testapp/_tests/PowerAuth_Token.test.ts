@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { ActivationStatus } from "powerauth-js-test-client";
-import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthServerError, TokenDigest, TokenDigestVerifyResult } from "powerauth-js-test-client";
+import { Platform } from "react-native";
+import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -37,6 +38,8 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         await expect(async () => await tokenStore.generateHeaderForToken(T1)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
         await expect(async () => await tokenStore.generateHeaderForToken(T2)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
+        await expect(async () => await tokenStore.getLocalToken(T1)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
+        await expect(async () => await tokenStore.getLocalToken(T2)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
 
         const token1 = await tokenStore.requestAccessToken(T1, T1_cred)
         expect(token1.tokenIdentifier).toBeDefined()
@@ -48,6 +51,8 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         expect(await tokenStore.hasLocalToken(T1)).toBeTruthy()
         expect(await tokenStore.hasLocalToken(T2)).toBeTruthy()
+        expect(await tokenStore.getLocalToken(T1)).toBeDefined()
+        expect(await tokenStore.getLocalToken(T2)).toBeDefined()
 
         const token1a = await tokenStore.requestAccessToken(T1, T1_cred)
         expect(token1a.tokenIdentifier).toBe(token1.tokenIdentifier)
@@ -55,6 +60,13 @@ export class PowerAuth_TokenTests extends TestWithActivation {
         const token2a = await tokenStore.requestAccessToken(T2, T2_cred)
         expect(token2a.tokenIdentifier).toBe(token2.tokenIdentifier)
         expect(token2a.tokenName).toBe(T2)
+
+        const token1b = await tokenStore.getLocalToken(T1)
+        expect(token1b.tokenIdentifier).toBe(token1.tokenIdentifier)
+        expect(token1b.tokenName).toBe(T1)
+        const token2b = await tokenStore.getLocalToken(T2)
+        expect(token2b.tokenIdentifier).toBe(token2.tokenIdentifier)
+        expect(token2b.tokenName).toBe(T2)
 
         // Requesting with different auth
         await expect(async () => await tokenStore.requestAccessToken(T1, T1_invCred)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
@@ -84,7 +96,6 @@ export class PowerAuth_TokenTests extends TestWithActivation {
         const T2_cred = this.credentials.knowledge
 
         const sdk = this.sdk
-        const tokenHelper = this.helper.tokenHelper
         const tokenStore = sdk.tokenStore
 
         const token1 = await tokenStore.requestAccessToken(T1, T1_cred)
@@ -97,16 +108,29 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         const header1 = await tokenStore.generateHeaderForToken(T1)
         expect(header1.value).toBeDefined()
-        const result1 = await tokenHelper.verifyTokenDigest(header1.value)
+        const result1 = await this.verifyTokenDigest(header1.value)
         expect(result1.tokenValid).toBeTruthy()
         expect(result1.activationId).toBe(activationId)
         expect(result1.signatureType).toBe('POSSESSION')
 
         const header2 = await tokenStore.generateHeaderForToken(T2)
         expect(header2.value).toBeDefined()
-        const result2 = await tokenHelper.verifyTokenDigest(header2.value)
+        const result2 = await this.verifyTokenDigest(header2.value)
         expect(result2.tokenValid).toBeTruthy()
         expect(result2.activationId).toBe(activationId)
         expect(result2.signatureType).toBe('POSSESSION_KNOWLEDGE')
+    }
+
+    async verifyTokenDigest(digest: TokenDigest | string, timeIsWrong: boolean = false): Promise<TokenDigestVerifyResult> {
+        try {
+            return await this.helper.tokenHelper.verifyTokenDigest(digest)
+        } catch (error) {
+            if (error instanceof PowerAuthServerError) {
+                if (Platform.OS === 'android' && error.httpStatusCode === 400 && error.serverErrorCode === 'ERR0030' && !timeIsWrong) {
+                    this.reportWarning(`It appears that time on Android Device is out of sync`)
+                }
+            }
+            throw error
+        }
     }
 }

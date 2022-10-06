@@ -161,7 +161,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         await expect(async () => await sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: expectedError})
 
         // TODO: following functions should fail and not return false or some different error
-        expect(await sdk.verifyServerSignedData('SomeData', 'c2lnbmF0dXJl', false)).toBeFalsy()
+        expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBeFalsy()
         expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBeFalsy()
         expect(await sdk.removeBiometryFactor()).toBeFalsy()
         await expect(async () => await sdk.activationRecoveryData(this.credentials.knowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})

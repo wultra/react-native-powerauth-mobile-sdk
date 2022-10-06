@@ -18,6 +18,7 @@ import { ActivationStatus, SignatureHelper, SignatureType } from "powerauth-js-t
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
+import { Base64 } from "js-base64"; 
 
 interface SignatureTestData {
     method: string,
@@ -41,6 +42,10 @@ const testData: SignatureTestData[] = [
 ]
 
 export class PowerAuth_SignatureTests extends TestWithActivation {
+
+    shouldCreateActivationBeforeTest(): boolean {
+        return this.currentTestName !== 'testServerSignedData_WithNoActivation'
+    }
 
     async testSignatureCalculation() {
         const sdk = this.sdk
@@ -100,5 +105,45 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         }
         expect(status.state).toBe(PowerAuthActivationState.BLOCKED)
         expect(status.remainingAttempts).toBe(0)
+    }
+
+    async testDeviceSignedData() {
+        const dataToSign = 'This is a very sensitive information and must be signed.'
+        const activationId = await this.sdk.getActivationIdentifier()
+        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign)
+        // Now verify signature on the server.
+        const result = await this.serverApi.verifyDeviceSignedData(activationId, dataToSign, signature)
+        expect(result).toBeTruthy()
+    }
+
+    async testServerSignedData_WithNoActivation() {
+        const dataToSign = 'All your money are belong to us!'
+        let signedPayload = await this.serverApi.createNonPersonalizedOfflineSignature(this.helper.application, dataToSign)
+        let signedData = signedPayload.parsedSignedData
+        let signature = signedPayload.parsedSignature
+        expect(signedPayload.parsedData).toBe(dataToSign)
+        expect(signedData).toBeNotNullish()
+        expect(signature).toBeNotNullish()
+
+        let result = await this.sdk.verifyServerSignedData(signedData!, signature!, true)
+        expect(result).toBeTruthy()
+        result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, true)
+        expect(result).toBeFalsy()
+    }
+
+    async testServerSignedData_WithActivation() {
+        const activationId = await this.sdk.getActivationIdentifier()
+        const dataToSign = 'All your money are belong to us!'
+        let signedPayload = await this.serverApi.createPersonalizedOfflineSignature(activationId, dataToSign)
+        let signedData = signedPayload.parsedSignedData
+        let signature = signedPayload.parsedSignature
+        expect(signedPayload.parsedData).toBe(dataToSign)
+        expect(signedData).toBeNotNullish()
+        expect(signature).toBeNotNullish()
+
+        let result = await this.sdk.verifyServerSignedData(signedData!, signature!, false)
+        expect(result).toBeTruthy()
+        result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, false)
+        expect(result).toBeFalsy()
     }
 }
