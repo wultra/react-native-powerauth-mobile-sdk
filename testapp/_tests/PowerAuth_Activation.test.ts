@@ -36,9 +36,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         const sdk = await this.createSdk()
         expect(sdk).toBeDefined()
 
-        expect(await sdk.canStartActivation()).toBeTruthy()
-        expect(await sdk.hasPendingActivation()).toBeFalsy()
-        expect(await sdk.hasValidActivation()).toBeFalsy()
+        expect(await sdk.canStartActivation()).toBe(true)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(false)
         expect(await sdk.getActivationIdentifier()).toBeNullish()
         expect(await sdk.getActivationFingerprint()).toBeNullish()
 
@@ -63,9 +63,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
         
         // Key-exchange should be completed now, so activation Id and fingerprint is now available.
-        expect(await sdk.canStartActivation()).toBeFalsy()
-        expect(await sdk.hasPendingActivation()).toBeTruthy()
-        expect(await sdk.hasValidActivation()).toBeFalsy()
+        expect(await sdk.canStartActivation()).toBe(false)
+        expect(await sdk.hasPendingActivation()).toBe(true)
+        expect(await sdk.hasValidActivation()).toBe(false)
 
         let activationId = await sdk.getActivationIdentifier()
         let activationFingerprint = await sdk.getActivationFingerprint()
@@ -87,9 +87,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(activationId).toBeNotNullish()
         expect(activationFingerprint).toBeNotNullish()
 
-        expect(await sdk.canStartActivation()).toBeFalsy()
-        expect(await sdk.hasPendingActivation()).toBeFalsy()
-        expect(await sdk.hasValidActivation()).toBeTruthy()
+        expect(await sdk.canStartActivation()).toBe(false)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(true)
 
         activationDetail = await this.helper.getActivationDetail()
         expect(activationDetail.devicePublicKeyFingerprint).toBeNotNullish()
@@ -133,16 +133,16 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
             expect(state).toBe(PowerAuthActivationState.ACTIVE)
         }
 
-        expect(await sdk.canStartActivation()).toBeFalsy()
-        expect(await sdk.hasPendingActivation()).toBeFalsy()
-        expect(await sdk.hasValidActivation()).toBeTruthy()
+        expect(await sdk.canStartActivation()).toBe(false)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(true)
 
         await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
         await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
-        expect(await sdk.canStartActivation()).toBeFalsy()
-        expect(await sdk.hasPendingActivation()).toBeFalsy()
-        expect(await sdk.hasValidActivation()).toBeTruthy()
+        expect(await sdk.canStartActivation()).toBe(false)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(true)
     }
 
     async runFailingMethodsDuringActivation(stage: string, expectedFetchError: PowerAuthErrorCode, expectedError: PowerAuthErrorCode) {
@@ -161,9 +161,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         await expect(async () => await sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: expectedError})
 
         // TODO: following functions should fail and not return false or some different error
-        expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBeFalsy()
-        expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBeFalsy()
-        expect(await sdk.removeBiometryFactor()).toBeFalsy()
+        expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBe(false)
+        expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBe(false)
+        expect(await sdk.removeBiometryFactor()).toBe(false)
         await expect(async () => await sdk.activationRecoveryData(this.credentials.knowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
         //await expect(async () => await sdk.offlineSignature(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc=', undefined)).toThrow({errorCode: PowerAuthErrorCode.MISSING_ACTIVATION})
         //await expect(async () => await sdk.confirmRecoveryCode('R:ZKMVN-4IMFK-FLSYX-ARRGA', this.credentials.knowledge)).toThrow({errorCode: expectedError})
@@ -180,7 +180,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     }
     
     async testFetchActivationStatus() {
-        expect(await this.sdk.hasValidActivation()).toBeTruthy()
+        expect(await this.sdk.hasValidActivation()).toBe(true)
 
         let status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
@@ -196,14 +196,14 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         await this.helper.removeActivation()
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.REMOVED)
-        expect(await this.sdk.hasValidActivation()).toBeTruthy()
+        expect(await this.sdk.hasValidActivation()).toBe(true)
 
         await this.sdk.removeActivationLocal()
-        expect(await this.sdk.hasValidActivation()).toBeFalsy()
+        expect(await this.sdk.hasValidActivation()).toBe(false)
     }
 
     async testActivationRemove() {
         await this.sdk.removeActivationWithAuthentication(this.credentials.knowledge)
-        expect(await this.sdk.hasValidActivation()).toBeFalsy()
+        expect(await this.sdk.hasValidActivation()).toBe(false)
     }
 }

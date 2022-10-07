@@ -80,7 +80,7 @@ export class TestRunnerTests extends TestSuite {
         const t = new ConfigurableTest()
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -119,7 +119,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowDoubleSkip = true
         const result = await runner.runTests([ new ConfigurableTest(), t ])
 
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -154,7 +154,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowDoubleSkip = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -189,7 +189,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowDoubleSkip = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -225,7 +225,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowDoubleSkip = true
         const result = await runner.runTests([ new ConfigurableTest(), t ])
 
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -260,7 +260,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowDoubleSkip = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(0)
         expect(t._beforeEachCalled).toBe(0)
@@ -298,7 +298,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowFailFromBeforeEach = true
         const result = await runner.runTests([ new ConfigurableTest(), t ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -332,7 +332,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowFailFromAfterEach = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -366,7 +366,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowFailFromAfterAll = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -400,7 +400,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowFailFromFunc = true
         const result = await runner.runTests([ new ConfigurableTest(), t ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -434,7 +434,7 @@ export class TestRunnerTests extends TestSuite {
         t.confAllowFailFromBeforeAll = true
         const result = await runner.runTests([ t, new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(0)
         expect(t._beforeEachCalled).toBe(0)
@@ -466,7 +466,7 @@ export class TestRunnerTests extends TestSuite {
         
         const result = await runner.runTests([ new EmptyTestSuite(), new ConfigurableTest() ])
 
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
 
         // validate counters
         expect(runner.allSuitesCounter.total).toBe(2)

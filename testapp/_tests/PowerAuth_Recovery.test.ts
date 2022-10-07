@@ -29,7 +29,7 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
     }
 
     async testCreateActivationRecovery() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBeTruthy()
+        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
 
         // Extract activation recovery
         let activationResult = this.helper.prepareActivationResult
@@ -64,21 +64,21 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
     }
 
     async testConfirmRecoveryCode() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBeTruthy()
+        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
 
         // Extract activation recovery
         const rd = this.recoveryData
 
         // We can confirm already confirmed RC, so let's confirm RC created as a part of activation
         let result = await this.sdk.confirmRecoveryCode(rd!.recoveryCode, this.credentials.knowledge)
-        expect(result.alreadyConfirmed).toBeTruthy()
+        expect(result.alreadyConfirmed).toBe(true)
 
         await expect(async () => this.sdk.confirmRecoveryCode('AAAAA-AAAAA-AAAAA-AAAAA', this.credentials.knowledge)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
         await expect(async () => this.sdk.confirmRecoveryCode(rd!.recoveryCode, this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
     }
 
     async testGetRecoveryData() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBeTruthy()
+        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
         
         // Extract activation recovery
         const rd = this.recoveryData

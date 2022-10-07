@@ -113,7 +113,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign)
         // Now verify signature on the server.
         const result = await this.serverApi.verifyDeviceSignedData(activationId, dataToSign, signature)
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
     }
 
     async testServerSignedData_WithNoActivation() {
@@ -126,9 +126,9 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(signature).toBeNotNullish()
 
         let result = await this.sdk.verifyServerSignedData(signedData!, signature!, true)
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, true)
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
     }
 
     async testServerSignedData_WithActivation() {
@@ -142,8 +142,8 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(signature).toBeNotNullish()
 
         let result = await this.sdk.verifyServerSignedData(signedData!, signature!, false)
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, false)
-        expect(result).toBeFalsy()
+        expect(result).toBe(false)
     }
 }

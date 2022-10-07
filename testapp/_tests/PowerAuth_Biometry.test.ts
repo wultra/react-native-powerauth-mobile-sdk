@@ -42,14 +42,14 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     async testAddRemoveBiometryFactor() {
-        expect(await this.sdk.hasBiometryFactor()).toBeTruthy()
-        expect(await this.sdk.removeBiometryFactor()).toBeTruthy()
-        expect(await this.sdk.hasBiometryFactor()).toBeFalsy()
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        expect(await this.sdk.removeBiometryFactor()).toBe(true)
+        expect(await this.sdk.hasBiometryFactor()).toBe(false)
         // TODO: ios returns true, android null
         await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
-        expect(await this.sdk.hasBiometryFactor()).toBeTruthy()
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
 
         await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
-        expect(await this.sdk.hasBiometryFactor()).toBeTruthy()
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
     }
 }

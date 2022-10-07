@@ -26,7 +26,7 @@ export class TestSuiteTests extends TestSuite {
         const t = new ConfigurableTest()
         t.runOnlyOneTest = 'test2'
         const result = await runner.runTests([ t ])
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         expect(t._beforeAllCalled).toBe(1)
         expect(t._afterAllCalled).toBe(1)
         expect(t._beforeEachCalled).toBe(6)
@@ -47,7 +47,7 @@ export class TestSuiteTests extends TestSuite {
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         const result = await runner.runTests([ t ])
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
         const el = monitor.eventList
         expect(el[0].eventType).toBe(TestEventType.BATCH_INFO)
         expect(el[0].message).toBe("Starting 1 test suites with 6 tests inside.")
@@ -61,6 +61,6 @@ export class TestSuiteTests extends TestSuite {
         t.printDebugMessages = true
         t.confAllowSkipFromFunc = true
         const result = await runner.runTests([ t ])
-        expect(result).toBeTruthy()
+        expect(result).toBe(true)
     }
 }

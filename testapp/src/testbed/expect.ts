@@ -202,14 +202,14 @@ export const expect = (received: any) => ({
     },
     toBeTruthy: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
-            if (received !== true) {
+            if (received != true) {
                 throw new Error(`Expected true but received '${received}'`)
             }
         }))
     },
     toBeFalsy: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
-            if (received !== false) {
+            if (received != false) {
                 throw new Error(`Expected false but received '${received}'`)
             }
         }))
