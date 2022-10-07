@@ -8,6 +8,14 @@ REQUIRE_COMMAND "npm"
 
 LIB='react-native-powerauth-mobile-sdk'
 
+DO_DEMO=1
+DO_TEST=1
+case $1 in
+    demo) DO_DEMO=1; DO_TEST=0 ;;
+    test) DO_DEMO=0; DO_TEST=1 ;;
+    *) DO_DEMO=1; DO_TEST=1 ;;
+esac
+
 function LIB_PACKAGE
 {
     LOG_LINE
@@ -16,7 +24,9 @@ function LIB_PACKAGE
 
     PUSH_DIR "$SRC"
 
-    rm ${LIB}-*.tgz
+    local file=( ${LIB}-*.tgz )
+    [[ -f "$file" ]] && $RM ${LIB}-*.tgz
+    
     tsc -b
     npm pack
     LIB_ARCHIVE=$(ls | grep ${LIB}-*.tgz)
@@ -50,7 +60,6 @@ function UPDATE_DEPENDENCIES
 }
 
 LIB_PACKAGE
-UPDATE_DEPENDENCIES demoapp
-# UPDATE_DEPENDENCIES testapp
-
+[[ x$DO_DEMO == x1 ]] && UPDATE_DEPENDENCIES demoapp
+[[ x$DO_TEST == x1 ]] && UPDATE_DEPENDENCIES testapp
 EXIT_SUCCESS
