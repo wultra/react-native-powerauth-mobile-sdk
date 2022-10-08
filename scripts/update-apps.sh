@@ -8,12 +8,12 @@ REQUIRE_COMMAND "npm"
 
 LIB='react-native-powerauth-mobile-sdk'
 
-DO_DEMO=1
 DO_TEST=1
 case $1 in
-    demo) DO_DEMO=1; DO_TEST=0 ;;
-    test) DO_DEMO=0; DO_TEST=1 ;;
-    *) DO_DEMO=1; DO_TEST=1 ;;
+    test | testapp) 
+        DO_TEST=1 ;;
+    *) 
+        DO_TEST=1 ;;
 esac
 
 function LIB_PACKAGE
@@ -60,6 +60,5 @@ function UPDATE_DEPENDENCIES
 }
 
 LIB_PACKAGE
-[[ x$DO_DEMO == x1 ]] && UPDATE_DEPENDENCIES demoapp
 [[ x$DO_TEST == x1 ]] && UPDATE_DEPENDENCIES testapp
 EXIT_SUCCESS

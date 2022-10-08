@@ -27,9 +27,11 @@ import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
 import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 import { PowerAuth_EncryptionTests } from "./PowerAuth_Encryption.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
+import { PowerAuth_Example } from "./PowerAuth_Example";
 
 export function getLibraryTests(): TestSuite[] {
     return [
+        new PowerAuth_Example(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ActivationTests(),
         new PowerAuth_RecoveryTests(),
