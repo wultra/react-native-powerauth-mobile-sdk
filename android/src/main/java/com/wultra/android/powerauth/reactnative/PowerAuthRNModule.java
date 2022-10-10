@@ -466,7 +466,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 if (headerObject != null) {
                     promise.resolve(headerObject);
                 } else {
-                    promise.reject(getErrorCodeFromError(header.powerAuthErrorCode), "Signature failed.");
+                    promise.reject(getErrorCodeFromError(header.powerAuthErrorCode), "Signature calculation failed.");
                 }
             }
         });
@@ -518,7 +518,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
             public void run(@NonNull PowerAuthSDK sdk) {
                 try {
                     byte[] decodedData = data.getBytes(StandardCharsets.UTF_8);
-                    byte[] decodedSignature = Base64.decode(signature, Base64.DEFAULT);
+                    byte[] decodedSignature = Base64.decode(signature, Base64.NO_WRAP);
                     promise.resolve(sdk.verifyServerSignedData(decodedData, decodedSignature, masterKey));
                 } catch (Exception e) {
                     rejectPromise(promise, e);
@@ -682,7 +682,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 sdk.fetchEncryptionKey(context, auth, index, new IFetchEncryptionKeyListener() {
                     @Override
                     public void onFetchEncryptionKeySucceed(@NonNull byte[] encryptedEncryptionKey) {
-                        promise.resolve(Base64.encodeToString(encryptedEncryptionKey, Base64.DEFAULT));
+                        promise.resolve(Base64.encodeToString(encryptedEncryptionKey, Base64.NO_WRAP));
                     }
 
                     @Override
@@ -704,7 +704,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 sdk.signDataWithDevicePrivateKey(context, auth, data.getBytes(StandardCharsets.UTF_8), new IDataSignatureListener() {
                     @Override
                     public void onDataSignedSucceed(@NonNull byte[] signature) {
-                        promise.resolve(Base64.encodeToString(signature, Base64.DEFAULT));
+                        promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP));
                     }
 
                     @Override
