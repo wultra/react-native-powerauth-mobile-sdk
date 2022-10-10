@@ -19,13 +19,11 @@ import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../PowerAuthDebug';
 
 interface StaticCallTrampoline {
-    call<T>(name: string, args: any[]): Promise<T>;
-    callBool(name: string, args: any[]): Promise<boolean>;
+    call<T>(name: string, args: any[]): Promise<T>
 }
 
 interface ThisCallTrampoline {
-    call<T>(name: string, instanceId: string, args: any[]): Promise<T>;
-    callBool(name: string, instanceId: string, args: any[]): Promise<boolean>
+    call<T>(name: string, instanceId: string, args: any[]): Promise<T>
 }
 
 /**
@@ -39,13 +37,6 @@ class DefaultStaticCall implements StaticCallTrampoline {
             throw NativeWrapper.processException(e);
         }
     }
-    async callBool(name: string, args: any[]): Promise<boolean> {
-        try {
-            return await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, args)));
-        } catch (e) {
-            throw NativeWrapper.processException(e);
-        }
-    }
 }
 
 /**
@@ -55,13 +46,6 @@ class DefaultThisCall implements ThisCallTrampoline {
     async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
         try {
             return await ((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]));
-        } catch (e) {
-            throw NativeWrapper.processException(e);
-        }
-    }
-    async callBool(name: string, instanceId: string, args: any[]): Promise<boolean> {
-        try {
-            return await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]));
         } catch (e) {
             throw NativeWrapper.processException(e);
         }
@@ -80,25 +64,6 @@ class DebugStaticCall implements StaticCallTrampoline {
                 console.log(`call ${msg}`)
             }
             const r = await ((NativeModules.PowerAuth[name] as Function).apply(null, args))
-            if (this.traceCall) {
-                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
-            }
-            return r
-        } catch (e) {
-            const te = NativeWrapper.processException(e)
-            if (this.traceFail) {
-                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
-            }
-            throw te
-        }
-    }
-    async callBool(name: string, args: any[]): Promise<boolean> {
-        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(args)})` : undefined
-        try {
-            if (this.traceCall) {
-                console.log(`call ${msg}`)
-            }
-            const r = await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, args)))
             if (this.traceCall) {
                 console.log(` ret ${msg} => ${JSON.stringify(r)}`)
             }
@@ -137,25 +102,6 @@ class DebugThisCall implements ThisCallTrampoline {
             throw te
         }
     }
-    async callBool(name: string, instanceId: string, args: any[]): Promise<boolean> {
-        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs([instanceId, ...args])})` : undefined
-        try {
-            if (this.traceCall) {
-                console.log(`call ${msg}`)
-            }
-            const r = await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]))
-            if (this.traceCall) {
-                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
-            }
-            return r
-        } catch (e) {
-            const te = NativeWrapper.processException(e)
-            if (this.traceFail) {
-                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
-            }
-            throw te
-        }
-    }
 }
 
 /**
@@ -173,8 +119,19 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with return type.
      */
-    static async thisCall<T>(name: string, instanceId: string, ...args): Promise<T> {
+    static thisCall<T>(name: string, instanceId: string, ...args): Promise<T> {
         return this.thisTrampoline.call(name, instanceId, [ ...args ])
+    }
+
+    /**
+     * Perform call to the native function with given name.
+     * @param name Name of function to call.
+     * @param instanceId PowerAuth instance identifier.
+     * @param args Additional arguments for the function.
+     * @returns Promise with optional return type.
+     */
+    static thisCallNull<T>(name: string, instanceId: string, ...args): Promise<T | undefined> {
+        return patchNull(this.thisTrampoline.call(name, instanceId, [ ...args ]))
     }
 
     /**
@@ -184,23 +141,41 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with boolean type.
      */
-    static async thisCallBool(name: string, instanceId: string, ...args): Promise<boolean> {
-        return this.thisTrampoline.callBool(name, instanceId, [ ...args ])
+    static thisCallBool(name: string, instanceId: string, ...args): Promise<boolean> {
+        return patchBool(this.thisTrampoline.call(name, instanceId, [ ...args ]))
     }
 
     /**
      * Perform call to the native function with given name. The method is useful in case that
-     * call to functions that doesn't require instance identifier is required.
+     * call to functions doesn't require instance identifier.
      * @param name Name of function to call.
      * @param args Additional arguments for the function.
-     * @returns 
+     * @returns Promise with type.
      */
-    static async staticCall<T>(name: string, ...args): Promise<T> {
+    static staticCall<T>(name: string, ...args): Promise<T> {
         return this.staticTrampoline.call(name, [ ...args ])
     }
+    
+    /**
+     * Perform call to the native function with given name. The method is useful in case that
+     * call to functions doesn't require instance identifier.
+     * @param name Name of function to call.
+     * @param args Additional arguments for the function.
+     * @returns Promise with optiomal return type.
+     */
+    static staticCallNull<T>(name: string, ...args): Promise<T | undefined> {
+        return patchNull(this.staticTrampoline.call(name, [ ...args ]))
+    }
 
-    static async staticCallBool(name: string, ...args): Promise<boolean> {
-        return this.staticTrampoline.callBool(name, [ ...args ])
+    /**
+     * Perform call to the native function with given name. The method is useful in case that
+     * call to functions doesn't require instance identifier.
+     * @param name Name of function to call.
+     * @param args Additional arguments for the function.
+     * @returns Promise with bool type.
+     */
+    static staticCallBool(name: string, ...args): Promise<boolean> {
+        return patchBool(this.staticTrampoline.call(name, [ ...args ]))
     }
 
     /**
@@ -229,15 +204,15 @@ export class NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    static processException(exception: any, message: string | null = null): PowerAuthError {
+    static processException(exception: any, message: string | undefined = undefined): PowerAuthError {
         // Initial checks:
-        // - Check if exception is null. That can happen when non-native exception is processed.
+        // - Check if exception is undefined. That can happen when non-native exception is processed.
         // - Check if the exception is already PowerAuthError type. If so, then return the same instance.
-        if (exception == null) {
-            return new PowerAuthError(null, message ?? "Operation failed with unspecified error")
+        if (!exception) {
+            return new PowerAuthError(undefined, message ?? "Operation failed with unspecified error")
         } else if (exception instanceof PowerAuthError) {
             // There's no additional message, we can return exception as it is.
-            if (message == null) {
+            if (!message) {
                 return exception
             }
             // There's additional message, so wrap PowerAuthError into another PowerAuthError
@@ -249,7 +224,7 @@ export class NativeWrapper {
         } else if (Platform.OS == "ios") {
             return this.processIosException(exception, message)
         } else {
-            return new PowerAuthError(null, "Unsupported platform")
+            return new PowerAuthError(undefined, "Unsupported platform")
         }
     }
 
@@ -260,7 +235,7 @@ export class NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    private static processIosException(exception: any, message: string | null = null): PowerAuthError {
+    private static processIosException(exception: any, message: string | undefined = undefined): PowerAuthError {
         return new PowerAuthError(exception, message)
     }
 
@@ -271,7 +246,7 @@ export class NativeWrapper {
      * @param message Optional message.
      * @returns Instance of PowerAuthError.
      */
-    private static processAndroidException(exception: any, message: string | null = null): PowerAuthError {
+    private static processAndroidException(exception: any, message: string | undefined = undefined): PowerAuthError {
         return new PowerAuthError(exception, message)
     }
 }
@@ -292,6 +267,21 @@ function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
             .catch(f => rejected(f))
     })
 }
+
+/**
+ * Function patch nullable value (e.g. null or undefined) returned from native code to be always undefined.
+ * The reason for this is that on iOS, we marshal BOOL as NSNumber.
+ * @param originalPromise Original promise which result needs to be patched.
+ * @returns Patched promise that always resolve to value or undefined.
+ */
+ function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T | undefined> {
+    return new Promise((resolved, rejected) => {
+        originalPromise
+            .then(r => resolved(r ?? undefined))
+            .catch(f => rejected(f))
+    })
+}
+
 /**
  * Function translate array of arguments into pretty string.
  * @param args Array with arguments.

@@ -80,7 +80,7 @@ export class PowerAuthActivationCodeUtilTests extends TestSuite {
     async testActivationCodeParser() {
         let code = await PowerAuthActivationCodeUtil.parseActivationCode('BBBBB-BBBBB-BBBBB-BTA6Q')
         expect(code.activationCode).toBe('BBBBB-BBBBB-BBBBB-BTA6Q')
-        expect(code.activationSignature).toBeNull()
+        expect(code.activationSignature).toBeUndefined()
 
         code = await PowerAuthActivationCodeUtil.parseActivationCode('CCCCC-CCCCC-CCCCC-CNUUQ#ABCD')
         expect(code.activationCode).toBe('CCCCC-CCCCC-CCCCC-CNUUQ')
@@ -186,12 +186,12 @@ export class PowerAuthActivationCodeUtilTests extends TestSuite {
         let code = await PowerAuthActivationCodeUtil.parseRecoveryCode('BBBBB-BBBBB-BBBBB-BTA6Q')
         expect(code).toBeDefined()
         expect(code.activationCode).toBe('BBBBB-BBBBB-BBBBB-BTA6Q')
-        expect(code.activationSignature).toBeNull()
+        expect(code.activationSignature).toBeUndefined()
 
         code = await PowerAuthActivationCodeUtil.parseRecoveryCode('R:BBBBB-BBBBB-BBBBB-BTA6Q')
         expect(code).toBeDefined()
         expect(code.activationCode).toBe('BBBBB-BBBBB-BBBBB-BTA6Q')
-        expect(code.activationSignature).toBeNull()
+        expect(code.activationSignature).toBeUndefined()
 
         const invalidCodes = [
             "",

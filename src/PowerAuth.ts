@@ -40,22 +40,22 @@ export class PowerAuth {
      * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    configuration?: PowerAuthConfiguration | null = null
+    configuration?: PowerAuthConfiguration
     /**
      * Client configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    clientConfiguration?: PowerAuthClientConfiguration | null = null
+    clientConfiguration?: PowerAuthClientConfiguration
     /**
      * Biometry configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    biometryConfiguration?: PowerAuthBiometryConfiguration | null = null
+    biometryConfiguration?: PowerAuthBiometryConfiguration
     /**
      * Keychain configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
      */
-    keychainConfiguration?: PowerAuthKeychainConfiguration | null = null
+    keychainConfiguration?: PowerAuthKeychainConfiguration
 
     /**
      * Object for managing access tokens.
@@ -85,9 +85,9 @@ export class PowerAuth {
      * Prepares the PowerAuth instance with an advanced configuration. The method needs to be called before before any other method.
      * 
      * @param configuration Configuration object with basic parameters for `PowerAuth` class.
-     * @param clientConfiguration  Configuration for internal HTTP client. If `null` is provided, then `PowerAuthClientConfiguration.default()` is used.
-     * @param biometryConfiguration Biometry configuration. If `null` is provided, then `PowerAuthBiometryConfiguration.default()` is used.
-     * @param keychainConfiguration Configuration for internal keychain storage. If `null` is provided, then `PowerAuthKeychainConfiguration.default()` is used.
+     * @param clientConfiguration  Configuration for internal HTTP client. If `undefined` is provided, then `PowerAuthClientConfiguration.default()` is used.
+     * @param biometryConfiguration Biometry configuration. If `undefined` is provided, then `PowerAuthBiometryConfiguration.default()` is used.
+     * @param keychainConfiguration Configuration for internal keychain storage. If `undefined` is provided, then `PowerAuthKeychainConfiguration.default()` is used.
      */
     configure(configuration: PowerAuthConfiguration, clientConfiguration?: PowerAuthClientConfiguration, biometryConfiguration?: PowerAuthBiometryConfiguration, keychainConfiguration?: PowerAuthKeychainConfiguration): Promise<boolean>;
 
@@ -132,10 +132,10 @@ export class PowerAuth {
      * Deconfigures the instance
      */
     deconfigure(): Promise<boolean> {
-        this.configuration = null
-        this.clientConfiguration = null
-        this.biometryConfiguration = null
-        this.keychainConfiguration = null
+        this.configuration = undefined
+        this.clientConfiguration = undefined
+        this.biometryConfiguration = undefined
+        this.keychainConfiguration = undefined
         return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
     }
 
@@ -151,7 +151,7 @@ export class PowerAuth {
     /**
      * Check if it is possible to start an activation process.
      * 
-     * @return true if activation process can be started, false otherwise.
+     * @returns true if activation process can be started, false otherwise.
      */
     canStartActivation(): Promise<boolean> {
         return NativeWrapper.thisCallBool("canStartActivation", this.instanceId);
@@ -160,7 +160,7 @@ export class PowerAuth {
     /**
      * Checks if there is a pending activation (activation in progress).
      * 
-     * @return true if there is a pending activation, false otherwise.
+     * @returns true if there is a pending activation, false otherwise.
      */
     hasPendingActivation(): Promise<boolean> {
         return NativeWrapper.thisCallBool("hasPendingActivation", this.instanceId);
@@ -175,7 +175,7 @@ export class PowerAuth {
      * - `/pa/upgrade/commit` - (optional) in case that protocol upgrade is required.
      * - `/pa/signature/validate` - (optional) as a prevention to local counter desynchronization.
      * 
-     * @return A promise with activation status result - it contains status information in case of success and error in case of failure.
+     * @returns A promise with activation status result - it contains status information in case of success and error in case of failure.
      */
     fetchActivationStatus(): Promise<PowerAuthActivationStatus> {
         return NativeWrapper.thisCall("fetchActivationStatus", this.instanceId);
@@ -200,17 +200,17 @@ export class PowerAuth {
     }
 
     /**
-     * Activation identifier or null if object has no valid activation.
+     * Activation identifier or undefined if object has no valid activation.
      */
-    getActivationIdentifier(): Promise<string> {
-        return NativeWrapper.thisCall("activationIdentifier", this.instanceId);
+    getActivationIdentifier(): Promise<string | undefined> {
+        return NativeWrapper.thisCallNull("activationIdentifier", this.instanceId);
     }
 
     /**
-     * Fingerprint calculated from device's public key or null if object has no valid activation.
+     * Fingerprint calculated from device's public key or undefined if object has no valid activation.
      */
-    getActivationFingerprint(): Promise<string> {
-        return NativeWrapper.thisCall("activationFingerprint", this.instanceId);
+    getActivationFingerprint(): Promise<string | undefined> {
+        return NativeWrapper.thisCallNull("activationFingerprint", this.instanceId);
     }
 
     /**
@@ -241,10 +241,10 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      * @param uriId URI identifier.
      * @param params HTTP query params.
-     * @return HTTP header with PowerAuth authorization signature
+     * @returns HTTP header with PowerAuth authorization signature
      */
     async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return NativeWrapper.thisCall("requestGetSignature", this.instanceId, await this.authenticate(authentication), uriId, params ?? null);
+        return NativeWrapper.thisCall("requestGetSignature", this.instanceId, await this.authenticate(authentication), uriId, params ?? undefined);
     }
 
     /**
@@ -256,7 +256,7 @@ export class PowerAuth {
      * @param method HTTP method used for the signature computation.
      * @param uriId URI identifier.
      * @param body HTTP request body.
-     * @return HTTP header with PowerAuth authorization signature.
+     * @returns HTTP header with PowerAuth authorization signature.
      */
     async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
         return NativeWrapper.thisCall("requestSignature", this.instanceId, await this.authenticate(authentication), method, uriId, body);
@@ -271,7 +271,7 @@ export class PowerAuth {
      * @param uriId URI identifier.
      * @param body HTTP request body.
      * @param nonce NONCE in Base64 format.
-     * @return String representing a calculated signature for all involved factors.
+     * @returns String representing a calculated signature for all involved factors.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
         return NativeWrapper.thisCall("offlineSignature", this.instanceId, await this.authenticate(authentication), uriId, body, nonce);
@@ -307,7 +307,7 @@ export class PowerAuth {
  
      @param oldPassword Old password, currently set to store the data.
      @param newPassword New password, to be set in case authentication with old password passes.
-     @return Returns true in case password was changed without error, NO otherwise.
+     @returns Returns true in case password was changed without error, false otherwise.
      */
     unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
         return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, oldPassword, newPassword);
@@ -340,7 +340,7 @@ export class PowerAuth {
     /**
      * Remove the biometry related factor key.
      * 
-     * @return true if the key was successfully removed, NO otherwise.
+     * @returns true if the key was successfully removed, false otherwise.
      */
     removeBiometryFactor(): Promise<boolean> {
         return NativeWrapper.thisCallBool("removeBiometryFactor", this.instanceId);
@@ -444,10 +444,10 @@ export class PowerAuth {
      */
     async groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void> {
         if (!await this.isConfigured()) {
-            throw new PowerAuthError(null, "Instance is not configured", PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED);
+            throw new PowerAuthError(undefined, "Instance is not configured", PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED);
         }
         if (authentication.useBiometry == false) {
-            throw new PowerAuthError(null, "Requesting biometric authentication, but `useBiometry` is set to false.");
+            throw new PowerAuthError(undefined, "Requesting biometric authentication, but `useBiometry` is set to false.");
         }
         try {
             const reusable = await this.authenticate(authentication, true);

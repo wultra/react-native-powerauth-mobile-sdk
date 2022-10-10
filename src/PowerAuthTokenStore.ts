@@ -34,7 +34,7 @@ export class PowerAuthTokenStore {
      * Quick check whether the token with name is in local database.
      *
      * @param tokenName Name of access token to be checked.
-     * @return true if token exists in local database.
+     * @returns true if token exists in local database.
      */
     hasLocalToken(tokenName: string): Promise<boolean> {
         return NativeWrapper.thisCallBool("hasLocalToken", this.instanceId, tokenName);
@@ -44,7 +44,7 @@ export class PowerAuthTokenStore {
      * Returns token if the token is already in local database
      * 
      * @param tokenName Name of access token to be returned
-     * @return token object if in the local database (or throws)
+     * @returns token object if in the local database (or throws)
      */
      getLocalToken(tokenName: string): Promise<PowerAuthToken> {
         return NativeWrapper.thisCall("getLocalToken", this.instanceId, tokenName);
@@ -76,7 +76,7 @@ export class PowerAuthTokenStore {
      *
      * @param tokenName Name of requested token.
      * @param authentication An authentication instance specifying what factors should be used for token creation.
-     * @return PowerAuth token with already generated header
+     * @returns PowerAuth token with already generated header
      */
     async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
         return NativeWrapper.thisCall("requestAccessToken", this.instanceId, tokenName, await this.authResolver.resolve(authentication));

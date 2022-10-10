@@ -20,7 +20,19 @@ import {PowerAuthRecoveryActivationData} from "./PowerAuthRecoveryActivationData
  * Success object returned by "createActivation" call.
  */
  export interface PowerAuthCreateActivationResult {
-    activationFingerprint: string;
-    activationRecovery?: PowerAuthRecoveryActivationData;
-    customAttributes?: any; // when available, contents of this object depends of your enrollment server configuration
+    /**
+     * Decimalized fingerprint calculated from device's and server's public keys.
+     */
+    activationFingerprint: string
+    /**
+     * If supported and enabled on the server, then the object contains "Recovery Code" and PUK,
+     * created for this particular activation. Your application should display that values to the user
+     * and forget the values immediately. You should NEVER store values from the object persistently
+     * on the device.
+     */
+    activationRecovery?: PowerAuthRecoveryActivationData
+    /**
+     * When available, contents of this object depends of your enrollment server configuration.
+     */
+    customAttributes?: any
 }

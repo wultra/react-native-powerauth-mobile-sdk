@@ -66,14 +66,14 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         expect(await pa1.isConfigured()).toBe(true)
         expect(await pa2.isConfigured()).toBe(true)
         // Unline instances created in helper, pa1 & pa2
-        expect(pa1.configuration).toBeNullish()
-        expect(pa2.configuration).toBeNullish()
-        expect(pa1.keychainConfiguration).toBeNullish()
-        expect(pa2.keychainConfiguration).toBeNullish()
-        expect(pa1.clientConfiguration).toBeNullish()
-        expect(pa2.clientConfiguration).toBeNullish()
-        expect(pa1.biometryConfiguration).toBeNullish()
-        expect(pa2.biometryConfiguration).toBeNullish()
+        expect(pa1.configuration).toBeUndefined()
+        expect(pa2.configuration).toBeUndefined()
+        expect(pa1.keychainConfiguration).toBeUndefined()
+        expect(pa2.keychainConfiguration).toBeUndefined()
+        expect(pa1.clientConfiguration).toBeUndefined()
+        expect(pa2.clientConfiguration).toBeUndefined()
+        expect(pa1.biometryConfiguration).toBeUndefined()
+        expect(pa2.biometryConfiguration).toBeUndefined()
     }
 
     async testReconfigureWhileActive() {

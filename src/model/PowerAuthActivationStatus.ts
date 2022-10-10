@@ -16,9 +16,24 @@
 
 import { PowerAuthActivationState } from './PowerAuthActivationState';
 
+/**
+ * The `PowerAuthActivationStatus` object represents complete status of the activation.
+ */
 export interface PowerAuthActivationStatus {
-    state: PowerAuthActivationState;
-    failCount: number;
-    maxFailCount: number;
-    remainingAttempts: number;
+    /**
+     * State of the activation.
+     */
+    state: PowerAuthActivationState
+    /**
+     * Number of failed authentication attempts in a row.
+     */
+    failCount: number
+    /**
+     * Maximum number of allowed failed authentication attempts in a row.
+     */
+    maxFailCount: number
+    /**
+     * Contains `(maxFailCount - failCount)` if state is `ACTIVE`, otherwise 0.
+     */
+    remainingAttempts: number
 }

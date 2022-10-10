@@ -46,7 +46,7 @@ import { NativeWrapper } from "./internal/NativeWrapper";
      * Parses an input |activationCode| (which may or may not contain an optional signature) and returns PowerAuthOtp 
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      * 
-     * @return Activation code object
+     * @returns Activation code object
      * @throws error when not valid 
      */
     static parseActivationCode(activationCode: string): Promise<PowerAuthActivationCode> {
@@ -57,7 +57,7 @@ import { NativeWrapper } from "./internal/NativeWrapper";
      * Parses an input |recoveryCode| (which may or may not contain an optional "R:" prefix) and returns PowerAuthOtp 
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      * 
-     * @return Activation code object
+     * @returns Activation code object
      * @throws error when not valid 
      */
     static parseRecoveryCode(recoveryCode: string): Promise<PowerAuthActivationCode> {
