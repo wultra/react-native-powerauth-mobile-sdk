@@ -37,7 +37,7 @@ export class PowerAuthTokenStore {
      * @return true if token exists in local database.
      */
     hasLocalToken(tokenName: string): Promise<boolean> {
-        return this.wrapper.call("hasLocalToken", tokenName);
+        return this.wrapper.callBool("hasLocalToken", tokenName);
     }
 
     /**

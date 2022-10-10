@@ -26,7 +26,7 @@ import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivati
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
-import { PowerAuthError } from './model/PowerAuthError';
+import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { __NativeWrapper } from "./internal/NativeWrapper";
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
@@ -78,7 +78,7 @@ export class PowerAuth {
      * If this PowerAuth instance was configured.
      */
     async isConfigured(): Promise<boolean> {
-        return this.wrapper.call("isConfigured");
+        return this.wrapper.callBool("isConfigured");
     }
 
     /**
@@ -125,7 +125,7 @@ export class PowerAuth {
         this.clientConfiguration = clientConfiguration
         this.biometryConfiguration = biometryConfiguration
         this.keychainConfiguration = keychainConfiguration
-        return this.wrapper.call("configure", configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+        return this.wrapper.callBool("configure", configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
     }
 
     /** 
@@ -136,7 +136,7 @@ export class PowerAuth {
         this.clientConfiguration = null
         this.biometryConfiguration = null
         this.keychainConfiguration = null
-        return this.wrapper.call("deconfigure");
+        return this.wrapper.callBool("deconfigure");
     }
 
     /**
@@ -145,7 +145,7 @@ export class PowerAuth {
      * @returns true if there is a valid activation, false otherwise.
      */
     hasValidActivation(): Promise<boolean> {
-        return this.wrapper.call("hasValidActivation");
+        return this.wrapper.callBool("hasValidActivation");
     }
 
     /**
@@ -154,7 +154,7 @@ export class PowerAuth {
      * @return true if activation process can be started, false otherwise.
      */
     canStartActivation(): Promise<boolean> {
-        return this.wrapper.call("canStartActivation");
+        return this.wrapper.callBool("canStartActivation");
     }
 
     /**
@@ -163,7 +163,7 @@ export class PowerAuth {
      * @return true if there is a pending activation, false otherwise.
      */
     hasPendingActivation(): Promise<boolean> {
-        return this.wrapper.call("hasPendingActivation");
+        return this.wrapper.callBool("hasPendingActivation");
     }
 
     /**
@@ -285,7 +285,7 @@ export class PowerAuth {
      * @param masterKey If `true`, then master server public key is used for validation, otherwise personalized server's public key.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
-        return this.wrapper.call("verifyServerSignedData", data, signature, masterKey);
+        return this.wrapper.callBool("verifyServerSignedData", data, signature, masterKey);
     }
 
     /**
@@ -310,7 +310,7 @@ export class PowerAuth {
      @return Returns true in case password was changed without error, NO otherwise.
      */
     unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
-        return this.wrapper.call("unsafeChangePassword", oldPassword, newPassword);
+        return this.wrapper.callBool("unsafeChangePassword", oldPassword, newPassword);
     }
 
     /**
@@ -334,7 +334,7 @@ export class PowerAuth {
      * This method returns the information about the key value being present in keychain.
      */
     hasBiometryFactor(): Promise<boolean> {
-        return this.wrapper.call("hasBiometryFactor");
+        return this.wrapper.callBool("hasBiometryFactor");
     }
 
     /**
@@ -343,7 +343,7 @@ export class PowerAuth {
      * @return true if the key was successfully removed, NO otherwise.
      */
     removeBiometryFactor(): Promise<boolean> {
-        return this.wrapper.call("removeBiometryFactor");
+        return this.wrapper.callBool("removeBiometryFactor");
     }
 
     /**
@@ -396,7 +396,7 @@ export class PowerAuth {
      * Returns YES if underlying session contains an activation recovery data.
      */
     hasActivationRecoveryData(): Promise<boolean> {
-        return this.wrapper.call("hasActivationRecoveryData");
+        return this.wrapper.callBool("hasActivationRecoveryData");
     }
 
     /**

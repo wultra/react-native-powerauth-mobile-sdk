@@ -40,6 +40,22 @@ export class __NativeWrapper {
         }
     }
 
+    async callBool(name: string, ...args): Promise<boolean> {
+        try {
+            return await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [this.powerAuthInstanceId, ...args]));
+        } catch (e) {
+            throw __NativeWrapper.processException(e);
+        }
+    }
+
+    static async callBool(name: string, ...args): Promise<boolean> {
+        try {
+            return await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, [...args])));
+        } catch (e) {
+            throw __NativeWrapper.processException(e);
+        }
+    }
+
     /**
      * Process any exception reported from the native module and handle platfrom specific cases.
      * The method also validate whether exception parameter is already PowerAuthError type, to prevent
@@ -125,4 +141,21 @@ export class __NativeWrapper {
 
 class ReusablePowerAuthAuthentication extends PowerAuthAuthentication {
     biometryKey: string | null = null
+}
+
+/**
+ * Function patch boolean value returned on iOS platform to be always true or false.
+ * The reason for this is that on iOS, we marshal BOOL as NSNumber.
+ * @param originalPromise Original promise which result needs to be patched.
+ * @returns Patched promise that always resolve to true or false.
+ */
+function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
+    if (Platform.OS === 'android') {
+        return originalPromise
+    }
+    return new Promise((resolved, rejected) => {
+        originalPromise
+            .then(r => resolved(r ? true : false))
+            .catch(f => rejected(f))
+    })
 }
