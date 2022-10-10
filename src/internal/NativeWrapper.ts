@@ -16,43 +16,207 @@
 
 import { NativeModules, Platform } from 'react-native';
 import { PowerAuthError } from '../model/PowerAuthError';
-import { PowerAuthAuthentication } from '../model/PowerAuthAuthentication'
+import { PowerAuthDebug } from '../PowerAuthDebug';
 
-export class __NativeWrapper {
+interface StaticCallTrampoline {
+    call<T>(name: string, args: any[]): Promise<T>;
+    callBool(name: string, args: any[]): Promise<boolean>;
+}
 
-    constructor(private powerAuthInstanceId: string) {
+interface ThisCallTrampoline {
+    call<T>(name: string, instanceId: string, args: any[]): Promise<T>;
+    callBool(name: string, instanceId: string, args: any[]): Promise<boolean>
+}
 
-    }
-
-    async call<T>(name: string, ...args): Promise<T> {
+/**
+ * The default `StaticCallTrampoline` implementation with no debug features supported.
+ */
+class DefaultStaticCall implements StaticCallTrampoline {
+    async call<T>(name: string, args: any[]): Promise<T> {
         try {
-            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [this.powerAuthInstanceId, ...args]));
+            return await ((NativeModules.PowerAuth[name] as Function).apply(null, args));
         } catch (e) {
-            throw __NativeWrapper.processException(e);
+            throw NativeWrapper.processException(e);
         }
     }
-
-    static async call<T>(name: string, ...args): Promise<T> {
+    async callBool(name: string, args: any[]): Promise<boolean> {
         try {
-            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [...args]));
+            return await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, args)));
         } catch (e) {
-            throw __NativeWrapper.processException(e);
+            throw NativeWrapper.processException(e);
         }
     }
+}
 
-    async callBool(name: string, ...args): Promise<boolean> {
+/**
+ * The default `ThisCallTrampoline` implementation with no debug features supported.
+ */
+class DefaultThisCall implements ThisCallTrampoline {
+    async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
         try {
-            return await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [this.powerAuthInstanceId, ...args]));
+            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]));
         } catch (e) {
-            throw __NativeWrapper.processException(e);
+            throw NativeWrapper.processException(e);
         }
     }
-
-    static async callBool(name: string, ...args): Promise<boolean> {
+    async callBool(name: string, instanceId: string, args: any[]): Promise<boolean> {
         try {
-            return await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, [...args])));
+            return await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]));
         } catch (e) {
-            throw __NativeWrapper.processException(e);
+            throw NativeWrapper.processException(e);
+        }
+    }
+}
+
+/**
+ * The `StaticCallTrampoline` implementation that supports debug features.
+ */
+class DebugStaticCall implements StaticCallTrampoline {
+    constructor(private traceCall: boolean, private traceFail: boolean) {}
+    async call<T>(name: string, args: any[]): Promise<T> {
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(args)})` : undefined
+        try {
+            if (this.traceCall) {
+                console.log(`call ${msg}`)
+            }
+            const r = await ((NativeModules.PowerAuth[name] as Function).apply(null, args))
+            if (this.traceCall) {
+                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
+            }
+            return r
+        } catch (e) {
+            const te = NativeWrapper.processException(e)
+            if (this.traceFail) {
+                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
+            }
+            throw te
+        }
+    }
+    async callBool(name: string, args: any[]): Promise<boolean> {
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(args)})` : undefined
+        try {
+            if (this.traceCall) {
+                console.log(`call ${msg}`)
+            }
+            const r = await patchBool(((NativeModules.PowerAuth[name] as Function).apply(null, args)))
+            if (this.traceCall) {
+                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
+            }
+            return r
+        } catch (e) {
+            const te = NativeWrapper.processException(e)
+            if (this.traceFail) {
+                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
+            }
+            throw te
+        }
+    }
+}
+
+/**
+ * The `ThisCallTrampoline` implementation that supports debug features.
+ */
+class DebugThisCall implements ThisCallTrampoline {
+    constructor(private traceCall: boolean, private traceFail: boolean) {}
+    async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs([instanceId, ...args])})` : undefined
+        try {
+            if (this.traceCall) {
+                console.log(`call ${msg}`)
+            }
+            const r = await ((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]))
+            if (this.traceCall) {
+                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
+            }
+            return r
+        } catch (e) {
+            const te = NativeWrapper.processException(e)
+            if (this.traceFail) {
+                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
+            }
+            throw te
+        }
+    }
+    async callBool(name: string, instanceId: string, args: any[]): Promise<boolean> {
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs([instanceId, ...args])})` : undefined
+        try {
+            if (this.traceCall) {
+                console.log(`call ${msg}`)
+            }
+            const r = await patchBool((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]))
+            if (this.traceCall) {
+                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
+            }
+            return r
+        } catch (e) {
+            const te = NativeWrapper.processException(e)
+            if (this.traceFail) {
+                console.error(`fail ${msg} => ${PowerAuthDebug.describeError(te)}`)
+            }
+            throw te
+        }
+    }
+}
+
+/**
+ * The `NativeWrapper` class is a bridge between JS and Native PowerAuth library.
+ */
+export class NativeWrapper {
+
+    private static staticTrampoline: StaticCallTrampoline = new DefaultStaticCall()
+    private static thisTrampoline: ThisCallTrampoline = new DefaultThisCall()
+
+    /**
+     * Perform call to the native function with given name.
+     * @param name Name of function to call.
+     * @param instanceId PowerAuth instance identifier.
+     * @param args Additional arguments for the function.
+     * @returns Promise with return type.
+     */
+    static async thisCall<T>(name: string, instanceId: string, ...args): Promise<T> {
+        return this.thisTrampoline.call(name, instanceId, [ ...args ])
+    }
+
+    /**
+     * Perform call to the native function with given name, returning bool.
+     * @param name Name of function to call.
+     * @param instanceId PowerAuth instance identifier.
+     * @param args Additional arguments for the function.
+     * @returns Promise with boolean type.
+     */
+    static async thisCallBool(name: string, instanceId: string, ...args): Promise<boolean> {
+        return this.thisTrampoline.callBool(name, instanceId, [ ...args ])
+    }
+
+    /**
+     * Perform call to the native function with given name. The method is useful in case that
+     * call to functions that doesn't require instance identifier is required.
+     * @param name Name of function to call.
+     * @param args Additional arguments for the function.
+     * @returns 
+     */
+    static async staticCall<T>(name: string, ...args): Promise<T> {
+        return this.staticTrampoline.call(name, [ ...args ])
+    }
+
+    static async staticCallBool(name: string, ...args): Promise<boolean> {
+        return this.staticTrampoline.callBool(name, [ ...args ])
+    }
+
+    /**
+     * Enable or disable low level debug features. The __DEV__ variable must be true.
+     * @param traceFail If true, then detailed log entry about failure will be printed to the console.
+     * @param traceCall If true, then each call to native code will be printed with a detailed information.
+     */
+    static setDebugFeatures(traceFail: boolean, traceCall: boolean) {
+        if (__DEV__) {
+            if (traceCall || traceFail) {
+                this.thisTrampoline = new DebugThisCall(traceCall, traceFail)
+                this.staticTrampoline = new DebugStaticCall(traceCall, traceFail)
+            } else {
+                this.thisTrampoline = new DefaultThisCall()
+                this.staticTrampoline = new DefaultStaticCall()
+            }    
         }
     }
 
@@ -110,37 +274,6 @@ export class __NativeWrapper {
     private static processAndroidException(exception: any, message: string | null = null): PowerAuthError {
         return new PowerAuthError(exception, message)
     }
-
-    /**
-     * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
-     * 
-     * @param authentication authentication configuration
-     * @param makeReusable if the object should be forced to be reusable
-     * @returns configured authorization object
-     */
-     async authenticate(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-
-        const obj: ReusablePowerAuthAuthentication = { biometryKey: null, ...authentication };
-
-        // On android, we need to fetch the key for every biometric authentication.
-        // If the key is already set, use it (we're processing reusable biometric authentication)
-        if ((Platform.OS == "android" && authentication.useBiometry && (obj.biometryKey == null || makeReusable)) || (Platform.OS == "ios" && makeReusable)) {
-            try {
-                const key = await this.call("authenticateWithBiometry", authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??") as string;
-                obj.biometryKey = key;
-                return obj;
-            } catch (e) {
-                throw __NativeWrapper.processException(e)
-            }
-        }
-        
-        // no need for processing, just return original object
-        return authentication;
-    }
-}
-
-class ReusablePowerAuthAuthentication extends PowerAuthAuthentication {
-    biometryKey: string | null = null
 }
 
 /**
@@ -158,4 +291,13 @@ function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
             .then(r => resolved(r ? true : false))
             .catch(f => rejected(f))
     })
+}
+/**
+ * Function translate array of arguments into pretty string.
+ * @param args Array with arguments.
+ * @returns Pretty string created from arguments array.
+ */
+function prettyArgs(args: any[]): string {
+    const v = JSON.stringify(args)
+    return v.slice(1, v.length - 1)
 }

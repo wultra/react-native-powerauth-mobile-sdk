@@ -28,17 +28,14 @@ import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
-import { __NativeWrapper } from "./internal/NativeWrapper";
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
+import { NativeWrapper } from "./internal/NativeWrapper";
+import { AuthResolver } from "./internal/AuthResolver";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
 export class PowerAuth {
-    /**
-     * Instance identifier associated to this object.
-     */
-    readonly instanceId: string
     /**
      * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
@@ -63,7 +60,7 @@ export class PowerAuth {
     /**
      * Object for managing access tokens.
      */
-    tokenStore: PowerAuthTokenStore;
+    readonly tokenStore: PowerAuthTokenStore;
 
     /**
      * Prepares the PowerAuth instance.
@@ -72,17 +69,16 @@ export class PowerAuth {
      * 
      * @param instanceId Identifier of the PowerAuthSDK instance. The bundle identifier/packagename is recommended.
      */
-    constructor(instanceId: string) {
-        this.instanceId = instanceId
-        this.wrapper = new __NativeWrapper(instanceId);
-        this.tokenStore = new PowerAuthTokenStore(instanceId);
+    constructor(public readonly instanceId: string) {
+        this.authResolver = new AuthResolver(instanceId);
+        this.tokenStore = new PowerAuthTokenStore(instanceId, this.authResolver);
     }
 
     /** 
      * If this PowerAuth instance was configured.
      */
     async isConfigured(): Promise<boolean> {
-        return this.wrapper.callBool("isConfigured");
+        return NativeWrapper.thisCallBool("isConfigured", this.instanceId);
     }
 
     /**
@@ -129,7 +125,7 @@ export class PowerAuth {
         this.clientConfiguration = clientConfiguration
         this.biometryConfiguration = biometryConfiguration
         this.keychainConfiguration = keychainConfiguration
-        return this.wrapper.callBool("configure", configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+        return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
     }
 
     /** 
@@ -140,7 +136,7 @@ export class PowerAuth {
         this.clientConfiguration = null
         this.biometryConfiguration = null
         this.keychainConfiguration = null
-        return this.wrapper.callBool("deconfigure");
+        return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
     }
 
     /**
@@ -149,7 +145,7 @@ export class PowerAuth {
      * @returns true if there is a valid activation, false otherwise.
      */
     hasValidActivation(): Promise<boolean> {
-        return this.wrapper.callBool("hasValidActivation");
+        return NativeWrapper.thisCallBool("hasValidActivation", this.instanceId);
     }
 
     /**
@@ -158,7 +154,7 @@ export class PowerAuth {
      * @return true if activation process can be started, false otherwise.
      */
     canStartActivation(): Promise<boolean> {
-        return this.wrapper.callBool("canStartActivation");
+        return NativeWrapper.thisCallBool("canStartActivation", this.instanceId);
     }
 
     /**
@@ -167,7 +163,7 @@ export class PowerAuth {
      * @return true if there is a pending activation, false otherwise.
      */
     hasPendingActivation(): Promise<boolean> {
-        return this.wrapper.callBool("hasPendingActivation");
+        return NativeWrapper.thisCallBool("hasPendingActivation", this.instanceId);
     }
 
     /**
@@ -182,7 +178,7 @@ export class PowerAuth {
      * @return A promise with activation status result - it contains status information in case of success and error in case of failure.
      */
     fetchActivationStatus(): Promise<PowerAuthActivationStatus> {
-        return this.wrapper.call("fetchActivationStatus");
+        return NativeWrapper.thisCall("fetchActivationStatus", this.instanceId);
     }
 
     /**
@@ -191,7 +187,7 @@ export class PowerAuth {
      * @param activation A PowerAuthActivation object containg all information required for the activation creation.
      */
     createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
-        return this.wrapper.call("createActivation", activation);
+        return NativeWrapper.thisCall("createActivation", this.instanceId, activation);
     }
 
     /**
@@ -200,21 +196,21 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapper.call("commitActivation", authentication);
+        return NativeWrapper.thisCall("commitActivation", this.instanceId, authentication);
     }
 
     /**
      * Activation identifier or null if object has no valid activation.
      */
     getActivationIdentifier(): Promise<string> {
-        return this.wrapper.call("activationIdentifier");
+        return NativeWrapper.thisCall("activationIdentifier", this.instanceId);
     }
 
     /**
      * Fingerprint calculated from device's public key or null if object has no valid activation.
      */
     getActivationFingerprint(): Promise<string> {
-        return this.wrapper.call("activationFingerprint");
+        return NativeWrapper.thisCall("activationFingerprint", this.instanceId);
     }
 
     /**
@@ -225,7 +221,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
     async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return this.wrapper.call("removeActivationWithAuthentication", await this.wrapper.authenticate(authentication));
+        return NativeWrapper.thisCall("removeActivationWithAuthentication", this.instanceId,  await this.authenticate(authentication));
     }
 
     /**
@@ -234,7 +230,7 @@ export class PowerAuth {
      * user has to remove the activation by using another channel (typically internet banking, or similar web management console)
      */
     removeActivationLocal(): Promise<void> {
-        return this.wrapper.call("removeActivationLocal");
+        return NativeWrapper.thisCall("removeActivationLocal", this.instanceId);
     }
 
     /**
@@ -248,7 +244,7 @@ export class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature
      */
     async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapper.call("requestGetSignature", await this.wrapper.authenticate(authentication), uriId, params ?? null);
+        return NativeWrapper.thisCall("requestGetSignature", this.instanceId, await this.authenticate(authentication), uriId, params ?? null);
     }
 
     /**
@@ -263,7 +259,7 @@ export class PowerAuth {
      * @return HTTP header with PowerAuth authorization signature.
      */
     async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapper.call("requestSignature", await this.wrapper.authenticate(authentication), method, uriId, body);
+        return NativeWrapper.thisCall("requestSignature", this.instanceId, await this.authenticate(authentication), method, uriId, body);
     }
 
     /**
@@ -278,7 +274,7 @@ export class PowerAuth {
      * @return String representing a calculated signature for all involved factors.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return this.wrapper.call("offlineSignature", await this.wrapper.authenticate(authentication), uriId, body, nonce);
+        return NativeWrapper.thisCall("offlineSignature", this.instanceId, await this.authenticate(authentication), uriId, body, nonce);
     }
 
     /**
@@ -289,7 +285,7 @@ export class PowerAuth {
      * @param masterKey If `true`, then master server public key is used for validation, otherwise personalized server's public key.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
-        return this.wrapper.callBool("verifyServerSignedData", data, signature, masterKey);
+        return NativeWrapper.thisCallBool("verifyServerSignedData", this.instanceId, data, signature, masterKey);
     }
 
     /**
@@ -299,7 +295,7 @@ export class PowerAuth {
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
     changePassword(oldPassword: string, newPassword: string): Promise<void> {
-        return this.wrapper.call("changePassword", oldPassword, newPassword);
+        return NativeWrapper.thisCall("changePassword", this.instanceId, oldPassword, newPassword);
     }
 
     /**
@@ -314,7 +310,7 @@ export class PowerAuth {
      @return Returns true in case password was changed without error, NO otherwise.
      */
     unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
-        return this.wrapper.callBool("unsafeChangePassword", oldPassword, newPassword);
+        return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, oldPassword, newPassword);
     }
 
     /**
@@ -326,10 +322,10 @@ export class PowerAuth {
      * @param description (used only in Android) Description for biometry dialog
      */
     addBiometryFactor(password: string, title: string, description: string): Promise<void> {
-        if (Platform.OS == "android") {
-            return this.wrapper.call("addBiometryFactor", password, title, description);
+        if (Platform.OS === 'android') {
+            return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, title, description);
         } else {
-            return this.wrapper.call("addBiometryFactor", password);
+            return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password);
         }
     }
 
@@ -338,7 +334,7 @@ export class PowerAuth {
      * This method returns the information about the key value being present in keychain.
      */
     hasBiometryFactor(): Promise<boolean> {
-        return this.wrapper.callBool("hasBiometryFactor");
+        return NativeWrapper.thisCallBool("hasBiometryFactor", this.instanceId);
     }
 
     /**
@@ -347,7 +343,7 @@ export class PowerAuth {
      * @return true if the key was successfully removed, NO otherwise.
      */
     removeBiometryFactor(): Promise<boolean> {
-        return this.wrapper.callBool("removeBiometryFactor");
+        return NativeWrapper.thisCallBool("removeBiometryFactor", this.instanceId);
     }
 
     /**
@@ -356,7 +352,7 @@ export class PowerAuth {
      * @returns object with information data about biometry
      */
     getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
-        return this.wrapper.call("getBiometryInfo");
+        return NativeWrapper.thisCall("getBiometryInfo", this.instanceId);
     }
 
     /** 
@@ -369,7 +365,7 @@ export class PowerAuth {
      * @param index Index of the derived key using KDF. 
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return this.wrapper.call("fetchEncryptionKey", await this.wrapper.authenticate(authentication), index);
+        return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticate(authentication), index);
     }
 
     /**
@@ -382,7 +378,7 @@ export class PowerAuth {
      * @param data Data to be signed with the private key.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return this.wrapper.call("signDataWithDevicePrivateKey", await this.wrapper.authenticate(authentication), data);
+        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data);
     }
 
     /** 
@@ -393,14 +389,14 @@ export class PowerAuth {
      * @param password Password to be verified.
      */
     validatePassword(password: string): Promise<void> {
-        return this.wrapper.call("validatePassword", password);
+        return NativeWrapper.thisCall("validatePassword", this.instanceId, password);
     }
 
     /**
      * Returns YES if underlying session contains an activation recovery data.
      */
     hasActivationRecoveryData(): Promise<boolean> {
-        return this.wrapper.callBool("hasActivationRecoveryData");
+        return NativeWrapper.thisCallBool("hasActivationRecoveryData", this.instanceId);
     }
 
     /**
@@ -411,7 +407,7 @@ export class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      */
     async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
-        return this.wrapper.call("activationRecoveryData", await this.wrapper.authenticate(authentication));
+        return NativeWrapper.thisCall("activationRecoveryData", this.instanceId, await this.authenticate(authentication));
     }
 
     /**
@@ -429,7 +425,9 @@ export class PowerAuth {
      * @returns Result of the confirmation
      */
     async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult> {
-        return { alreadyConfirmed: await this.wrapper.call("confirmRecoveryCode", recoveryCode, await this.wrapper.authenticate(authentication)) };
+        return { 
+            alreadyConfirmed: await NativeWrapper.thisCall("confirmRecoveryCode", this.instanceId, recoveryCode, await this.authenticate(authentication)) 
+        }
     }
 
     /**
@@ -452,7 +450,7 @@ export class PowerAuth {
             throw new PowerAuthError(null, "Requesting biometric authentication, but `useBiometry` is set to false.");
         }
         try {
-            const reusable = await this.wrapper.authenticate(authentication, true);
+            const reusable = await this.authenticate(authentication, true);
             try {
                 // integrator defined chain of authorization calls with reusable authentication
                 await groupedAuthenticationCalls(reusable);
@@ -462,9 +460,20 @@ export class PowerAuth {
             }
         } catch (e) {
             // catching biometry authentication error and rethrowing it as PowerAuthError
-            throw __NativeWrapper.processException(e);
+            throw NativeWrapper.processException(e);
         }  
     }
-    
-    private wrapper: __NativeWrapper;
+
+    /**
+     * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
+     * 
+     * @param authentication authentication configuration
+     * @param makeReusable if the object should be forced to be reusable
+     * @returns configured authorization object
+     */
+    private authenticate(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
+        return this.authResolver.resolve(authentication, makeReusable)
+    }
+
+    private authResolver: AuthResolver
 }
