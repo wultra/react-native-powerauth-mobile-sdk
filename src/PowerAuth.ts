@@ -35,7 +35,10 @@ import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
  * Class used for the main interaction with the PowerAuth SDK components.
  */
 export class PowerAuth {
-
+    /**
+     * Instance identifier associated to this object.
+     */
+    readonly instanceId: string
     /**
      * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
      * stored object is useful for the debugging purposes.
@@ -70,6 +73,7 @@ export class PowerAuth {
      * @param instanceId Identifier of the PowerAuthSDK instance. The bundle identifier/packagename is recommended.
      */
     constructor(instanceId: string) {
+        this.instanceId = instanceId
         this.wrapper = new __NativeWrapper(instanceId);
         this.tokenStore = new PowerAuthTokenStore(instanceId);
     }
@@ -441,6 +445,9 @@ export class PowerAuth {
      * @param groupedAuthenticationCalls call that will use reusable authentication object
      */
     async groupedBiometricAuthentication(authentication: PowerAuthAuthentication, groupedAuthenticationCalls: (reusableAuthentication: PowerAuthAuthentication) => Promise<void>): Promise<void> {
+        if (!await this.isConfigured()) {
+            throw new PowerAuthError(null, "Instance is not configured", PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED);
+        }
         if (authentication.useBiometry == false) {
             throw new PowerAuthError(null, "Requesting biometric authentication, but `useBiometry` is set to false.");
         }
