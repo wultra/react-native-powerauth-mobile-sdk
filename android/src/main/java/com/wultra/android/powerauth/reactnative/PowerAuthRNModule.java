@@ -852,8 +852,6 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                     @Override
                     public void onGetTokenSucceeded(@NonNull PowerAuthToken token) {
                         WritableMap response = Arguments.createMap();
-                        response.putBoolean("isValid", token.isValid());
-                        response.putBoolean("canGenerateHeader", token.canGenerateHeader());
                         response.putString("tokenName", token.getTokenName());
                         response.putString("tokenIdentifier", token.getTokenIdentifier());
                         promise.resolve(response);
@@ -897,8 +895,6 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 PowerAuthToken token = sdk.getTokenStore().getLocalToken(context, tokenName);
                 if (token != null) {
                     WritableMap response = Arguments.createMap();
-                    response.putBoolean("isValid", token.isValid());
-                    response.putBoolean("canGenerateHeader", token.canGenerateHeader());
                     response.putString("tokenName", token.getTokenName());
                     response.putString("tokenIdentifier", token.getTokenIdentifier());
                     promise.resolve(response);

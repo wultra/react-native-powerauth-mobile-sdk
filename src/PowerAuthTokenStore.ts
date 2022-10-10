@@ -111,22 +111,14 @@ export class PowerAuthTokenStore {
 
 export interface PowerAuthToken {
     /**
-     * Return true if this token object contains a valid token data.
-     */
-     isValid: boolean;
-    /**
      * Symbolic name of token or null if token contains an invalid data.
      */
-    tokenName?: string;
+    tokenName: string;
     /**
      * Return token's unique identifier. You normally don't need this value, but it may help
      * with application's debugging. The value identifies this token on PowerAuth server.
      *
      * Null if token contains an invalid data.
      */
-    tokenIdentifier?: string;
-    /**
-     * True if header can be generated.
-     */
-    canGenerateHeader: boolean;
+    tokenIdentifier: string;
 }
