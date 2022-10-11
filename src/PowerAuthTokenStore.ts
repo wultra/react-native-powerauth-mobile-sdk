@@ -16,7 +16,8 @@
 
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
-import { __NativeWrapper } from "./internal/NativeWrapper";
+import { NativeWrapper } from "./internal/NativeWrapper";
+import { AuthResolver as AuthResolver } from './internal/AuthResolver';
 
 /**
  * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as 
@@ -26,28 +27,27 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
  */
 export class PowerAuthTokenStore {
 
-    constructor(instanceId: string) {
-        this.wrapper = new __NativeWrapper(instanceId);
+    constructor(private instanceId: string, private authResolver: AuthResolver) {
     }
 
     /**
      * Quick check whether the token with name is in local database.
      *
      * @param tokenName Name of access token to be checked.
-     * @return true if token exists in local database.
+     * @returns true if token exists in local database.
      */
     hasLocalToken(tokenName: string): Promise<boolean> {
-        return this.wrapper.call("hasLocalToken", tokenName);
+        return NativeWrapper.thisCallBool("hasLocalToken", this.instanceId, tokenName);
     }
 
     /**
      * Returns token if the token is already in local database
      * 
      * @param tokenName Name of access token to be returned
-     * @return token object if in the local database (or throws)
+     * @returns token object if in the local database (or throws)
      */
      getLocalToken(tokenName: string): Promise<PowerAuthToken> {
-        return this.wrapper.call("getLocalToken", tokenName);
+        return NativeWrapper.thisCall("getLocalToken", this.instanceId, tokenName);
     }
 
     /**
@@ -56,14 +56,14 @@ export class PowerAuthTokenStore {
      * @param tokenName token to be removed
      */
     removeLocalToken(tokenName: string): Promise<void> {
-        return this.wrapper.call("removeLocalToken", tokenName);
+        return NativeWrapper.thisCall("removeLocalToken", this.instanceId, tokenName);
     }
 
     /**
      * Remove all tokens from local database. This method doesn't issue a HTTP request to the server.
      */
     removeAllLocalTokens(): Promise<void> {
-        return this.wrapper.call("removeAllLocalTokens");
+        return NativeWrapper.thisCall("removeAllLocalTokens", this.instanceId);
     }
 
     /**
@@ -76,10 +76,10 @@ export class PowerAuthTokenStore {
      *
      * @param tokenName Name of requested token.
      * @param authentication An authentication instance specifying what factors should be used for token creation.
-     * @return PowerAuth token with already generated header
+     * @returns PowerAuth token with already generated header
      */
     async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
-        return this.wrapper.call("requestAccessToken", tokenName, await this.wrapper.authenticate(authentication));
+        return NativeWrapper.thisCall("requestAccessToken", this.instanceId, tokenName, await this.authResolver.resolve(authentication));
     }
 
     /**
@@ -93,7 +93,7 @@ export class PowerAuthTokenStore {
      * @param tokenName Name of token to be removed
      */
     removeAccessToken(tokenName: string): Promise<void> {
-        return this.wrapper.call("removeAccessToken", tokenName);
+        return NativeWrapper.thisCall("removeAccessToken", this.instanceId, tokenName);
     }
 
     /**
@@ -103,10 +103,8 @@ export class PowerAuthTokenStore {
      * @returns header or throws
      */
     generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return this.wrapper.call("generateHeaderForToken", tokenName ?? "");
+        return NativeWrapper.thisCall("generateHeaderForToken", this.instanceId, tokenName ?? "");
     }
-
-    private wrapper: __NativeWrapper;
 }
 
 export interface PowerAuthToken {

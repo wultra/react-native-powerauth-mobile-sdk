@@ -15,4 +15,5 @@
 
 **Additional Topics**
 
+- [Troubleshooting](Troubleshooting.md)
 - [Sample Integration](Sample-Integration.md)

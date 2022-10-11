@@ -23,7 +23,6 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     async beforeAll(): Promise<void> {
         await super.beforeAll()
         this.printDebugMessages = false
-        //this.reportSkip('Temporary')
     }
 
     shouldCreateActivationBeforeTest(): boolean {
@@ -39,8 +38,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.canStartActivation()).toBe(true)
         expect(await sdk.hasPendingActivation()).toBe(false)
         expect(await sdk.hasValidActivation()).toBe(false)
-        expect(await sdk.getActivationIdentifier()).toBeNullish()
-        expect(await sdk.getActivationFingerprint()).toBeNullish()
+        expect(await sdk.getActivationIdentifier()).toBeUndefined()
+        expect(await sdk.getActivationFingerprint()).toBeUndefined()
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
         await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
@@ -56,7 +55,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         //       a pending state
         const activation = PowerAuthActivation.createWithActivationCode(code, 'RN')
         const result = await sdk.createActivation(activation)
-
+        expect(result).toBeDefined()
         expect(result.activationFingerprint).toBeDefined()
 
         await this.runFailingMethodsDuringActivation('AFTER_CREATE', PowerAuthErrorCode.PENDING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
@@ -69,33 +68,33 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
 
         let activationId = await sdk.getActivationIdentifier()
         let activationFingerprint = await sdk.getActivationFingerprint()
-        expect(activationId).toBeNotNullish()
-        expect(activationFingerprint).toBeNotNullish()
+        expect(activationId).toBeDefined()
+        expect(activationFingerprint).toBeDefined()
 
         let activationDetail = await this.helper.getActivationDetail()
 
-        expect(activationDetail.devicePublicKeyFingerprint).toBeNotNullish()
+        expect(activationDetail.devicePublicKeyFingerprint).toBeDefined()
+        expect(activationId).toBe(activationDetail.activationId)
         expect(result.activationFingerprint).toBe(activationFingerprint)
         expect(result.activationFingerprint).toBe(activationDetail.devicePublicKeyFingerprint)
-        expect(activationId).toBe(activationDetail.activationId)
 
         // [ 3 ] Now commit activation locally
         await sdk.commitActivation(this.credentials.knowledge)
 
         activationId = await sdk.getActivationIdentifier()
         activationFingerprint = await sdk.getActivationFingerprint()
-        expect(activationId).toBeNotNullish()
-        expect(activationFingerprint).toBeNotNullish()
+        expect(activationId).toBeDefined()
+        expect(activationFingerprint).toBeDefined()
 
         expect(await sdk.canStartActivation()).toBe(false)
         expect(await sdk.hasPendingActivation()).toBe(false)
         expect(await sdk.hasValidActivation()).toBe(true)
 
         activationDetail = await this.helper.getActivationDetail()
-        expect(activationDetail.devicePublicKeyFingerprint).toBeNotNullish()
+        expect(activationDetail.devicePublicKeyFingerprint).toBeDefined()
+        expect(activationId).toBe(activationDetail.activationId)
         expect(result.activationFingerprint).toBe(activationFingerprint)
         expect(result.activationFingerprint).toBe(activationDetail.devicePublicKeyFingerprint)
-        expect(activationId).toBe(activationDetail.activationId)
 
         // Fetch status now
 

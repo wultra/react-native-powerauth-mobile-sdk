@@ -238,15 +238,14 @@ RCT_REMAP_METHOD(createActivation,
     
     [powerAuth createActivation:paActivation callback:^(PowerAuthActivationResult * _Nullable result, NSError * _Nullable error) {
         if (error == nil) {
-            NSDictionary *response = @{
+            resolve(_PatchNull(@{
                 @"activationFingerprint": result.activationFingerprint,
                 @"activationRecovery": result.activationRecovery ? @{
                     @"recoveryCode": result.activationRecovery.recoveryCode,
                     @"puk": result.activationRecovery.puk
                 } : [NSNull null],
                 @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null]
-            };
-            resolve(response);
+            }));
         } else {
             [self processError:error with:reject];
         }
@@ -320,7 +319,7 @@ RCT_REMAP_METHOD(removeActivationLocal,
 {
     PA_BLOCK_START
     [powerAuth removeActivationLocal];
-    resolve([NSNull null]);
+    resolve(nil);
     PA_BLOCK_END
 }
 
@@ -658,10 +657,10 @@ RCT_REMAP_METHOD(parseActivationCode,
 {
     PowerAuthActivationCode *ac = [PowerAuthActivationCodeUtil parseFromActivationCode:activationCode];
     if (ac) {
-        resolve(@{
+        resolve(_PatchNull(@{
             @"activationCode": ac.activationCode,
             @"activationSignature": ac.activationSignature ? ac.activationSignature : [NSNull null]
-        });
+        }));
     } else {
         reject(@"INVALID_ACTIVATION_CODE", @"Invalid activation code.", nil);
     }
@@ -682,10 +681,10 @@ RCT_REMAP_METHOD(parseRecoveryCode,
 {
     PowerAuthActivationCode *ac = [PowerAuthActivationCodeUtil parseFromRecoveryCode:recoveryCode];
     if (ac) {
-        resolve(@{
+        resolve(_PatchNull(@{
             @"activationCode": ac.activationCode,
             @"activationSignature": ac.activationSignature ? ac.activationSignature : [NSNull null]
-        });
+        }));
     } else {
         reject(@"INVALID_RECOVERY_CODE", @"Invalid recovery code.", nil);
     }
@@ -759,7 +758,7 @@ RCT_REMAP_METHOD(removeAccessToken,
     PA_BLOCK_START
     [[powerAuth tokenStore] removeAccessTokenWithName:tokenName completion:^(BOOL removed, NSError * error) {
         if (removed) {
-            resolve([NSNull null]);
+            resolve(nil);
         } else {
             [self processError:error with:reject];
         }
@@ -805,7 +804,7 @@ RCT_REMAP_METHOD(removeLocalToken,
 {
     PA_BLOCK_START
     [[powerAuth tokenStore] removeLocalTokenWithName:tokenName];
-    resolve([NSNull null]);
+    resolve(nil);
     PA_BLOCK_END
 }
 
@@ -816,7 +815,7 @@ RCT_REMAP_METHOD(removeAllLocalTokens,
 {
     PA_BLOCK_START
     [[powerAuth tokenStore] removeAllLocalTokens];
-    resolve([NSNull null]);
+    resolve(nil);
     PA_BLOCK_END
 }
 
@@ -889,6 +888,24 @@ RCT_REMAP_METHOD(generateHeaderForToken,
 
 
 #pragma mark - Helper methods
+
+/**
+ Patch nulls in object to undefined (e.g. remove keys with nulls)
+ */
+static id _PatchNull(id object) {
+    if (object == [NSNull null]) {
+        return nil;
+    }
+    if ([object isKindOfClass:[NSDictionary class]]) {
+        // Key-value dictionary
+        NSMutableDictionary * newObject = [object mutableCopy];
+        [(NSDictionary*)object enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL * stop) {
+            newObject[key] = _PatchNull(value);
+        }];
+        return newObject;
+    }
+    return object;
+}
 
 /// Method gets PowerAuthSDK instance from instance register and call `callback` with given object.
 /// In case that there's no such instnace, or instanceId is invalid, then calls reject promise with a failure.

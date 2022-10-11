@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
+import { PowerAuthDebug } from "../PowerAuthDebug";
+
 /**
  * PowerAuthError is a wrapper error that is thrown by every API in this module.
  */
 export class PowerAuthError {
 
-    /** Original exception thrown by the native layer (iOS or Android). If null, then error was created in TypeScript. */
-    originalException: any;
+    /** Original exception thrown by the native layer (iOS or Android). If undefined, then error was created in TypeScript. */
+    originalException: any
 
     /** Code of the error. */
-    code?: PowerAuthErrorCode;
+    code?: PowerAuthErrorCode
     /** Message of the error. */
-    message?: string;
+    message?: string
     /** Additional error data. */
-    errorData?: any;
+    errorData?: any
 
-    constructor(exception: any, message: string | null = null, code: PowerAuthErrorCode | null = null, errorData: any = null) {
-        this.originalException = exception;
-        this.code = code ?? exception?.code ?? null;
-        this.message = message ?? exception?.message ?? null;
-        this.errorData = errorData ?? exception?.userInfo ?? null;
+    constructor(exception: any, message: string | undefined = undefined, code: PowerAuthErrorCode | undefined = undefined, errorData: any = undefined) {
+        this.originalException = exception ?? undefined
+        this.code = code ?? exception?.code ?? undefined
+        this.message = message ?? exception?.message ?? undefined
+        this.errorData = errorData ?? exception?.userInfo ?? undefined
     }
 
     print(): string {
-        return `code: ${this.code}\nmessage: ${this.message}`;
+        return PowerAuthDebug.describeError(this)
     }
 };
 

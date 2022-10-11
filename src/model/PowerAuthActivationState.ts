@@ -14,11 +14,35 @@
  * limitations under the License.
  */
 
+/**
+ * The `PowerAuthActivationState` enum defines all possible states of activation.
+ * The state is a part of information received together with the rest
+ * of the `PowerAuthActivationStatus` object.
+ */
 export enum PowerAuthActivationState {
+    /**
+     * The activation is just created.
+     */
     CREATED = "CREATED",
+    /**
+     * The activation is not completed yet on the server.
+     */
     PENDING_COMMIT = "PENDING_COMMIT",
+    /**
+     * The shared secure context is valid and active.
+     */
     ACTIVE = "ACTIVE",
+    /**
+     * The activation is blocked.
+     */
     BLOCKED = "BLOCKED",
+    /**
+     * The activation doesn't exist anymore.
+     */
     REMOVED = "REMOVED",
+    /**
+     * The activation is technically blocked. You cannot use it anymore
+     * for the signature calculations.
+     */
     DEADLOCK = "DEADLOCK"
 }

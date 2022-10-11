@@ -18,16 +18,22 @@ esac
 
 function LIB_PACKAGE
 {
+
+    PUSH_DIR "$SRC"
+
+    LOG_LINE
+    LOG 'Compiling typescript'
+    LOG_LINE
+
+    tsc -b
+    
     LOG_LINE
     LOG 'Building library archive'
     LOG_LINE
 
-    PUSH_DIR "$SRC"
-
     local file=( ${LIB}-*.tgz )
     [[ -f "$file" ]] && $RM ${LIB}-*.tgz
-    
-    tsc -b
+
     npm pack
     LIB_ARCHIVE=$(ls | grep ${LIB}-*.tgz)
     [[ -z "$LIB_ARCHIVE" ]] && FAILURE "npm pack did not produce library archive"

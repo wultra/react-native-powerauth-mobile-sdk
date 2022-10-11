@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * The `PowerAuthRecoveryActivationData` object contains information about recovery code and PUK, created
+ * during the activation process.
+ */
 export interface PowerAuthRecoveryActivationData {
-    recoveryCode: string;
-    puk: string;
+    /**
+     * Contains recovery code.
+     */
+    recoveryCode: string
+    /**
+     * Contains PUK, valid with recovery code.
+     */
+    puk: string
 }

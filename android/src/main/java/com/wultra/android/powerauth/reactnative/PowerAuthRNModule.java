@@ -966,7 +966,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         if (ac != null) {
             WritableMap response = Arguments.createMap();
             response.putString("activationCode", ac.activationCode);
-            response.putString("activationSignature", ac.activationSignature);
+            if (ac.activationSignature != null) {
+                response.putString("activationSignature", ac.activationSignature);
+            }
             promise.resolve(response);
         } else {
             promise.reject(EC_INVALID_ACTIVATION_CODE, "Invalid activation code.");
@@ -984,7 +986,9 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         if (ac != null) {
             WritableMap response = Arguments.createMap();
             response.putString("activationCode", ac.activationCode);
-            response.putString("activationSignature", ac.activationSignature);
+            if (ac.activationSignature != null) {
+                response.putString("activationSignature", ac.activationSignature);
+            }
             promise.resolve(response);
         } else {
             promise.reject(EC_INVALID_RECOVERY_CODE, "Invalid recovery code.");
