@@ -555,7 +555,7 @@ RCT_REMAP_METHOD(signDataWithDevicePrivateKey,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict forCommit:NO];
     [powerAuth signDataWithDevicePrivateKey:auth data:[RCTConvert NSData:data] callback:^(NSData * signature, NSError * error) {
         if (signature) {
-            resolve([RCTConvert NSString:signature]);
+            resolve([RCTConvert NSString:[signature base64EncodedStringWithOptions:0]]);
         } else {
             [self processError:error with:reject];
         }
