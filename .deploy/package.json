@@ -3,20 +3,27 @@
   "title": "PowerAuth SDK for React Native Mobile Apps",
   "version": "%DEPLOY_VERSION%",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
-  "main": "lib/PowerAuth.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "source": "src/index",
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNModule.java",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNPackage.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/WrapperException.java",
     "android/build.gradle",
-    "lib/**/*.*",
     "lib/*.*",
+    "lib/internal/*.js",
+    "lib/model/*.*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/PowerAuth.m",
     "ios/PowerAuth/PowerAuth.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
+  "scripts": {
+    "prepare": "tsc"
+  },
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
     "type": "git",
@@ -38,11 +45,11 @@
     "node-fetch": ">=2.6.1"
   },
   "peerDependencies": {
-    "react-native": "^0.64.1"
+    "react-native": ">=0.64"
   },
   "devDependencies": {
-    "@types/react-native": "^0.63.52",
-    "lodash": "^4.17.20",
-    "react-native": "^0.64.1"
+    "@types/react-native": ">=0.64",
+    "lodash": "^4.17.21",
+    "react-native": ">=0.64"
   }
 }
