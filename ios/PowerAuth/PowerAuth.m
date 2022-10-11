@@ -742,8 +742,6 @@ RCT_REMAP_METHOD(requestAccessToken,
             [self processError:error with:reject];
         } else {
             resolve(@{
-                @"isValid": token.isValid ? @YES : @NO,
-                @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
                 @"tokenName": token.tokenName,
                 @"tokenIdentifier": token.tokenIdentifier
             });
@@ -790,8 +788,6 @@ RCT_REMAP_METHOD(getLocalToken,
     PowerAuthToken* token = [[powerAuth tokenStore] localTokenWithName:tokenName];
     if (token) {
         resolve(@{
-            @"isValid": token.isValid ? @YES : @NO,
-            @"canGenerateHeader": token.canGenerateHeader ? @YES : @NO,
             @"tokenName": token.tokenName,
             @"tokenIdentifier": token.tokenIdentifier
         });
