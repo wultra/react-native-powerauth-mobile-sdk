@@ -262,7 +262,9 @@ class RunnerContext implements TestInteraction {
         this.isTestSkipped = this.isSkipped
         this.isTestFailed = this.isFailed
 
-        this.monitor.reportEvent(TestEvent.testStart(this.contextForTest(false)))
+        if (!this.isSkipped) {
+            this.monitor.reportEvent(TestEvent.testStart(this.contextForTest(false)))
+        }
         const ctx = this.contextForTest()
         try {
             if (!this.isSkipped && !this.isFailed) {
