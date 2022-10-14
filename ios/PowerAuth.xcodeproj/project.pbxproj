@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF1F659C28F587B40093A45A /* PowerAuthObjectRegister.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F659A28F587B40093A45A /* PowerAuthObjectRegister.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF1F659D28F587B40093A45A /* PowerAuthObjectRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F659B28F587B40093A45A /* PowerAuthObjectRegister.m */; };
+		BF1F65A028F6EF900093A45A /* Errors.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F659E28F6EF900093A45A /* Errors.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF1F65A128F6EF900093A45A /* Errors.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F659F28F6EF900093A45A /* Errors.m */; };
+		BF1F65A428F80CF80093A45A /* Utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F65A228F80CF80093A45A /* Utilities.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF1F65A528F80CF80093A45A /* Utilities.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65A328F80CF80093A45A /* Utilities.m */; };
+		BF1F65A828F810880093A45A /* PowerAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F65A628F810880093A45A /* PowerAuthData.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65A728F810880093A45A /* PowerAuthData.m */; };
+		BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */; };
+		BF1F65AE28F9581F0093A45A /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F65AC28F9581F0093A45A /* Constants.h */; };
 		CAC0BE336028DD00272CEB09 /* libPods-PowerAuth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */; };
 		DCEDF08B249E59EF00918481 /* PowerAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEDF089249E59EF00918481 /* PowerAuth.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DCEDF092249E5A8600918481 /* PowerAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEDF091249E5A8600918481 /* PowerAuth.m */; };
@@ -15,6 +25,16 @@
 /* Begin PBXFileReference section */
 		04AE46321019BF22569F5B81 /* Pods-PowerAuth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PowerAuth.debug.xcconfig"; path = "Target Support Files/Pods-PowerAuth/Pods-PowerAuth.debug.xcconfig"; sourceTree = "<group>"; };
 		2893562A68484B27897BACFB /* Pods-PowerAuth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PowerAuth.release.xcconfig"; path = "Target Support Files/Pods-PowerAuth/Pods-PowerAuth.release.xcconfig"; sourceTree = "<group>"; };
+		BF1F659A28F587B40093A45A /* PowerAuthObjectRegister.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthObjectRegister.h; sourceTree = "<group>"; };
+		BF1F659B28F587B40093A45A /* PowerAuthObjectRegister.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthObjectRegister.m; sourceTree = "<group>"; };
+		BF1F659E28F6EF900093A45A /* Errors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Errors.h; sourceTree = "<group>"; };
+		BF1F659F28F6EF900093A45A /* Errors.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Errors.m; sourceTree = "<group>"; };
+		BF1F65A228F80CF80093A45A /* Utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utilities.h; sourceTree = "<group>"; };
+		BF1F65A328F80CF80093A45A /* Utilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Utilities.m; sourceTree = "<group>"; };
+		BF1F65A628F810880093A45A /* PowerAuthData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthData.h; sourceTree = "<group>"; };
+		BF1F65A728F810880093A45A /* PowerAuthData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthData.m; sourceTree = "<group>"; };
+		BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "PowerAuthObjectRegister+JS.m"; sourceTree = "<group>"; };
+		BF1F65AC28F9581F0093A45A /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PowerAuth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCEDF086249E59EF00918481 /* PowerAuth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PowerAuth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCEDF089249E59EF00918481 /* PowerAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuth.h; sourceTree = "<group>"; };
@@ -72,8 +92,18 @@
 		DCEDF088249E59EF00918481 /* PowerAuth */ = {
 			isa = PBXGroup;
 			children = (
-				DCEDF091249E5A8600918481 /* PowerAuth.m */,
+				BF1F65AC28F9581F0093A45A /* Constants.h */,
+				BF1F65A228F80CF80093A45A /* Utilities.h */,
+				BF1F65A328F80CF80093A45A /* Utilities.m */,
+				BF1F659E28F6EF900093A45A /* Errors.h */,
+				BF1F659F28F6EF900093A45A /* Errors.m */,
+				BF1F659A28F587B40093A45A /* PowerAuthObjectRegister.h */,
+				BF1F659B28F587B40093A45A /* PowerAuthObjectRegister.m */,
+				BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */,
+				BF1F65A628F810880093A45A /* PowerAuthData.h */,
+				BF1F65A728F810880093A45A /* PowerAuthData.m */,
 				DCEDF089249E59EF00918481 /* PowerAuth.h */,
+				DCEDF091249E5A8600918481 /* PowerAuth.m */,
 				DCEDF08A249E59EF00918481 /* Info.plist */,
 			);
 			path = PowerAuth;
@@ -87,6 +117,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCEDF08B249E59EF00918481 /* PowerAuth.h in Headers */,
+				BF1F65A828F810880093A45A /* PowerAuthData.h in Headers */,
+				BF1F65AE28F9581F0093A45A /* Constants.h in Headers */,
+				BF1F65A428F80CF80093A45A /* Utilities.h in Headers */,
+				BF1F65A028F6EF900093A45A /* Errors.h in Headers */,
+				BF1F659C28F587B40093A45A /* PowerAuthObjectRegister.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,7 +237,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF1F659D28F587B40093A45A /* PowerAuthObjectRegister.m in Sources */,
+				BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */,
 				DCEDF092249E5A8600918481 /* PowerAuth.m in Sources */,
+				BF1F65A528F80CF80093A45A /* Utilities.m in Sources */,
+				BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */,
+				BF1F65A128F6EF900093A45A /* Errors.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

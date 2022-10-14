@@ -28,6 +28,7 @@ import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 import { PowerAuth_EncryptionTests } from "./PowerAuth_Encryption.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
 import { PowerAuth_Example } from "./PowerAuth_Example";
+import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
@@ -42,6 +43,7 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_EncryptionTests(),
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
+        new NativeObjectRegisterTests(),
     ];
 }
 

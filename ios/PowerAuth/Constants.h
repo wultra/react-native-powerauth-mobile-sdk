@@ -1,5 +1,5 @@
-/**
- * Copyright 2020 Wultra s.r.o.
+/*
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
+#import "Utilities.h"
 
-@interface PowerAuth: NSObject<RCTBridgeModule, RCTInitializing>
-
-@end
+/// Time interval in milliseconds to keep pre-authorized biometric
+/// key in memory.
+#define BIOMETRY_KEY_KEEP_ALIVE_TIME    10000

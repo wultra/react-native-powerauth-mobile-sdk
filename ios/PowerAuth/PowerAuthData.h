@@ -1,5 +1,5 @@
-/**
- * Copyright 2020 Wultra s.r.o.
+/*
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
+#import "Utilities.h"
 
-@interface PowerAuth: NSObject<RCTBridgeModule, RCTInitializing>
+/**
+ Object that wrap NSData to JavaScript.
+ */
+@interface PowerAuthData : NSObject
+
+/// Initialize object with NSData object.
+/// - Parameters:
+///   - data: Data object to manage from JavaScript
+///   - cleanup: Do data cleanup if possible.
+- (nonnull instancetype) initWithData:(nonnull NSData*)data cleanup:(BOOL)cleanup;
+
+/// Contains managed data object.
+@property (nonatomic, readonly, strong, nonnull) NSData * data;
 
 @end

@@ -1,5 +1,5 @@
-/**
- * Copyright 2020 Wultra s.r.o.
+/*
+ * Copyright 2021 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
+import { NativeModules } from "react-native"
 
-@interface PowerAuth: NSObject<RCTBridgeModule, RCTInitializing>
+/**
+ * Low level interface provided by native PowerAuthObjectRegister.
+ */
+export interface NativeObject {
+    /**
+     * Test whether underlying native object register still contains object with given ID.
+     * @param objectId Object identifier to test.
+     */
+    isValidNativeObject(objectId: string): Promise<boolean>
+}
 
-@end
+export const NativeObject = NativeModules.PowerAuthObjectRegister as NativeObject
