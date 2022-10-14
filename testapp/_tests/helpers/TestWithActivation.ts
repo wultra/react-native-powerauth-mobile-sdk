@@ -216,7 +216,7 @@ export class TestWithActivation extends TestWithServer {
             this.helperInstance = helper
             const prepareData = this.customPrepareData()
             if (this.shouldRemoveActivationBeforeTest()) {
-                await this.cleanupActivation(prepareData)
+                await this.cleanupActivation(prepareData, false)
             }
             if (this.shouldCreateActivationBeforeTest()) {
                 await this.helper.createActivation(undefined, prepareData)
@@ -230,28 +230,32 @@ export class TestWithActivation extends TestWithServer {
         if (this.helperInstance !== undefined) {
             const sdk = await this.helperInstance.getPowerAuthSdk(this.customPrepareData())
             if (this.shouldRemoveActivationAfterTest()) {
-                await this.cleanupActivation(this.customPrepareData())
+                await this.cleanupActivation(this.customPrepareData(), true)
             }
         }
     }
 
-    private async cleanupActivation(prepareData: CustomActivationHelperPrepareData) {
+    private async cleanupActivation(prepareData: CustomActivationHelperPrepareData, after: boolean) {
         if (this.helperInstance === undefined) {
             return
         }
         const sdk = await this.helperInstance.getPowerAuthSdk(prepareData)
-        if (await sdk.hasValidActivation()) {
-            const activationId = await sdk.getActivationIdentifier()
+        const activationId = await sdk.getActivationIdentifier()
+        if (activationId) {
             this.debugInfo(`Removing activation ${activationId}`)
             const status = (await this.serverApi.getActivationDetil(activationId)).activationStatus
             // If status is not 'REMOVED' then remove the activation on the server.
             if (status !== ActivationStatus.REMOVED) {
                 await this.serverApi.activationRemove(activationId)
             }
-            // And then remove the activation locally
+            // And then remove the activation locally after the test
             await sdk.removeActivationLocal()
         }
         // Otherwise just cleanup the activation if activation is in right state.
         await this.helperInstance.cleanup()
+        if (after) {
+            // Deconfigure SDK after the test
+            await sdk.deconfigure()
+        }
     }
 }

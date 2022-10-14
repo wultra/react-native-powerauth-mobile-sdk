@@ -208,6 +208,7 @@ export class TestSuite {
      * @returns Promise completed once the sleep time is over.
      */
     sleep(milliseconds: number): Promise<void> {
+        this.debugInfo(`Sleeping for ${milliseconds} ms`)
         return new Promise(resolve => setTimeout(resolve, milliseconds))
     }
 
