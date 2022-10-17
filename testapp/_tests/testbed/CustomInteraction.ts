@@ -14,11 +14,11 @@
 // limitations under the License.
 //
 
-import { TestContext, UserInteraction, TestPromptDuration } from "../../src/testbed";
+import { TestContext, UserInteraction, UserPromptDuration } from "../../src/testbed";
 
 export interface PromptWithDuration {
     prompt: string
-    duration: TestPromptDuration
+    duration: UserPromptDuration
 }
 
 export class CustomInteraction implements UserInteraction {
@@ -28,7 +28,7 @@ export class CustomInteraction implements UserInteraction {
         this.promptList = []
     }
 
-    async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
+    async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
         this.promptList.push({prompt: message, duration: duration})
     }
 }

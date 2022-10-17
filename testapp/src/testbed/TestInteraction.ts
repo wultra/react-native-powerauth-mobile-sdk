@@ -16,13 +16,14 @@
 
 import { TestContext } from "./TestSuite"
 
-export enum TestPromptDuration {
+export enum UserPromptDuration {
+    QUICK,
     SHORT,
     LONG
 }
 
 export interface UserInteraction {
-    showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void>
+    showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void>
 }
 
 export interface TestInteraction extends UserInteraction {

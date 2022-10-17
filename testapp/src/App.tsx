@@ -24,7 +24,7 @@ import {
 } from 'react-native'
 import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
 import { getTestConfig } from './Config'
-import { TestContext, TestPromptDuration, UserInteraction } from './testbed'
+import { TestContext, UserPromptDuration, UserInteraction } from './testbed'
 import { TestLog } from './testbed/TestLog'
 import { TestMonitorGroup } from './testbed/TestMonitor'
 import { TestRunner } from './testbed/TestRunner'
@@ -33,9 +33,9 @@ import { TestRunner } from './testbed/TestRunner'
 class TestExecutor implements UserInteraction {
 
   private isRunning = false
-  private readonly onShowPrompt: (context: TestContext, message: string, duration: TestPromptDuration) => Promise<void>
+  private readonly onShowPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>
 
-  constructor(showPrompt: (context: TestContext, message: string, duration: TestPromptDuration) => Promise<void>) {
+  constructor(showPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>) {
     this.onShowPrompt = showPrompt
     this.runTests(false)
   }
@@ -56,7 +56,7 @@ class TestExecutor implements UserInteraction {
     this.isRunning = false
   }
 
-  async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
+  async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
     return await this.onShowPrompt(context, message, duration)
   }
 }
@@ -78,7 +78,14 @@ class App extends Component<Props, State> {
 
   executor = new TestExecutor(async (_context, message, duration) => {
     this.setState({ promptMessage: message })
-    const sleepDuration = (duration === TestPromptDuration.SHORT) ? 2000 : 5000
+    let sleepDuration: number
+    if (duration === UserPromptDuration.QUICK) {
+       sleepDuration = 500
+    } else if (duration === UserPromptDuration.SHORT) {
+      sleepDuration = 2000
+    } else {
+      sleepDuration = 5000
+    }
     await new Promise<void>(resolve => setTimeout(resolve, sleepDuration)) 
     this.setState({ promptMessage: ' '})
   })
@@ -94,7 +101,7 @@ class App extends Component<Props, State> {
   render() {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={{ height: 120 }}>
+        <View style={styles.promptContainer}>
           <Text style={styles.promptText}>
             { this.state.promptMessage ?? ' ' }
           </Text>
@@ -133,7 +140,11 @@ class App extends Component<Props, State> {
   promptText: {
     marginVertical: 16,
     fontSize: 20,
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#FF0000'
+  },
+  promptContainer: {
+    height: 120
   }
 })
  

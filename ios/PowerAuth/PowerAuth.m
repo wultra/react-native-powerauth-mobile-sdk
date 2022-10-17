@@ -922,7 +922,7 @@ RCT_REMAP_METHOD(generateHeaderForToken,
         if (password) {
             return [PowerAuthAuthentication possessionWithPassword:password];
         } else if (useBiometry) {
-            NSString * biometryKeyId = GetNSStringValueFromDict(dict, @"biometryKey");
+            NSString * biometryKeyId = GetNSStringValueFromDict(dict, @"biometryKeyId");
             if (biometryKeyId) {
                 PowerAuthData * biometryKeyData = [_objectRegister useObjectWithId:biometryKeyId expectedClass:[PowerAuthData class]];
                 if (biometryKeyData) {

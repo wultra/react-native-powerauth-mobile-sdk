@@ -15,7 +15,7 @@
 //
 
 import { TestConfig } from "../Config"
-import { TestInteraction, TestPromptDuration, UserInteraction } from "./TestInteraction"
+import { TestInteraction, UserPromptDuration, UserInteraction } from "./TestInteraction"
 
 /**
  * Defines context for running test.
@@ -161,7 +161,7 @@ export class TestSuite {
      * @param message Message to show.
      * @param duration How long message will be displayed.
      */
-    showPrompt(message: string, duration: TestPromptDuration = TestPromptDuration.SHORT): Promise<void> {
+    showPrompt(message: string, duration: UserPromptDuration = UserPromptDuration.SHORT): Promise<void> {
         return this.interaction.showPrompt(this.context, message, duration)
     }
 

@@ -18,7 +18,7 @@ import { Platform } from "react-native";
 import { TestConfig } from "../Config";
 import { describeError } from "./private/ErrorHelper";
 import { getAllObjectMethods } from "./private/ObjectHelper";
-import { TestInteraction, UserInteraction, TestPromptDuration } from "./TestInteraction";
+import { TestInteraction, UserInteraction, UserPromptDuration } from "./TestInteraction";
 import { TestEvent, TestMonitor } from "./TestMonitor";
 import { TestCounter } from "./TestProgress";
 import { TestContext, TestMethod, TestSuite } from "./TestSuite";
@@ -468,7 +468,7 @@ class RunnerContext implements TestInteraction {
 
     // TestInteraction impl.
 
-    async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
+    async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
         await this.validateContext(context, undefined, async () => {
             if (!this.interaction) {
                 throw new Error(`Interaction the user is not allowed for this test.`)

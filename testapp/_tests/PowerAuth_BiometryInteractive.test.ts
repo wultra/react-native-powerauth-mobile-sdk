@@ -16,7 +16,7 @@
 
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
-import { expect } from "../src/testbed";
+import { expect, UserPromptDuration } from "../src/testbed";
 import { PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
 export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
@@ -51,8 +51,10 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
     async testGroupedBiometricAuthentication() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        await this.showPrompt('Please authenticate with biometry. The biometric dialog will be displayed only for once.')
+        await this.showPrompt('Please authenticate with biometry.')
         await this.sdk.groupedBiometricAuthentication(this.credentials.biometry, async reusableAuth => {
+            //
+            await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
             // Calculate signature 
             let data = '{}'
             let uriId = '/some/uriId'
@@ -60,7 +62,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             // Verify signature
             let result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
             expect(result).toBe(true)
-            
+            //
+            await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
             // Calculate yet another signature and verify
             data = '{"value":true}'
             uriId = '/another/uriId'
@@ -73,12 +76,12 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
     async testRemoveActivationWithBiometry() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        await this.showPrompt('Please authenticate with biometry')
+        await this.showPrompt('Authenticate to remove activation')
         await this.sdk.removeActivationWithAuthentication(this.credentials.biometry)
     }
     
 
-    // On iOS emulator you cannot cancel biometry
+    // TODO: On iOS emulator you cannot cancel biometry
 
     // async testCancelBiometry() {
     //     expect(await this.sdk.hasBiometryFactor()).toBe(true)
