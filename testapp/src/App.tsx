@@ -17,25 +17,30 @@
 import React, { Component } from 'react'
 import {
   StyleSheet,
-  TouchableOpacity,
   Text,
   View,
+  SafeAreaView,
+  Button,
 } from 'react-native'
-import { getLibraryTests, getTestbedTests } from '../_tests/AllTests'
+import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
 import { getTestConfig } from './Config'
+import { TestContext, TestPromptDuration, UserInteraction } from './testbed'
 import { TestLog } from './testbed/TestLog'
 import { TestMonitorGroup } from './testbed/TestMonitor'
 import { TestRunner } from './testbed/TestRunner'
  
 
-class TestExecutor {
-  isRunning = false
+class TestExecutor implements UserInteraction {
 
-  constructor() {
-    this.runTests()
+  private isRunning = false
+  private readonly onShowPrompt: (context: TestContext, message: string, duration: TestPromptDuration) => Promise<void>
+
+  constructor(showPrompt: (context: TestContext, message: string, duration: TestPromptDuration) => Promise<void>) {
+    this.onShowPrompt = showPrompt
+    this.runTests(false)
   }
   
-  async runTests() {
+  async runTests(interactive: boolean) {
     if (this.isRunning) {
       console.warn('Tests are still in progress...');
       return
@@ -45,50 +50,91 @@ class TestExecutor {
     const cfg = await getTestConfig()
     const logger = new TestLog()
     const monitor = new TestMonitorGroup([ logger ])
-    const runner = new TestRunner('Automatic tests', cfg, monitor, undefined)
-    const allTests = getTestbedTests().concat(getLibraryTests())
-    await runner.runTests(allTests)
+    const runner = new TestRunner('Automatic tests', cfg, monitor, this)
+    const tests = interactive ? getInteractiveLibraryTests() :  getTestbedTests().concat(getLibraryTests())
+    await runner.runTests(tests)
     this.isRunning = false
+  }
+
+  async showPrompt(context: TestContext, message: string, duration: TestPromptDuration): Promise<void> {
+    return await this.onShowPrompt(context, message, duration)
   }
 }
 
-class App extends Component {
-  state = {
-     count: 0
+const Separator = () => (
+  <View style={styles.separator} />
+);
+
+interface State {
+  promptMessage?: string
+}
+
+interface Props {
+}
+
+class App extends Component<Props, State> {
+  
+  state = {}
+
+  executor = new TestExecutor(async (_context, message, duration) => {
+    this.setState({ promptMessage: message })
+    const sleepDuration = (duration === TestPromptDuration.SHORT) ? 2000 : 5000
+    await new Promise<void>(resolve => setTimeout(resolve, sleepDuration)) 
+    this.setState({ promptMessage: ' '})
+  })
+
+  onPressNotInteractive = async () => {
+    this.executor.runTests(false)
   }
 
-  executor = new TestExecutor()
-
-  onPress = async () => {
-    this.executor.runTests()
+  onPressInteractive = async () => {
+    this.executor.runTests(true)
   }
 
   render() {
     return (
-      <View style={styles.container}>
-        <TouchableOpacity
-         style={styles.button}
-         onPress={this.onPress}
-        >
-         <Text>Run tests</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={{ height: 120 }}>
+          <Text style={styles.promptText}>
+            { this.state.promptMessage ?? ' ' }
+          </Text>
+        </View>
+        <Separator />
+        <View style={styles.fixToText}>
+          <Button
+            title="Run regular"
+            onPress={() => this.onPressNotInteractive() }
+          />
+          <Button
+            title="Run interactive"
+            onPress={() => this.onPressInteractive() }
+          />
+        </View>
+      </SafeAreaView>
      )
    }
  }
  
  const styles = StyleSheet.create({
-   container: {
-     flex: 1,
-     justifyContent: 'center',
-     alignItems: 'center',
-   },
-   button: {
-     alignItems: 'center',
-     backgroundColor: '#DDDDDD',
-     padding: 10,
-     marginBottom: 10
-   }
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 16
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  fixToText: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  promptText: {
+    marginVertical: 16,
+    fontSize: 20,
+    textAlign: 'center'
+  }
 })
  
 export default App;

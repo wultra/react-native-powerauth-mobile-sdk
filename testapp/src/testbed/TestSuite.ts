@@ -15,7 +15,7 @@
 //
 
 import { TestConfig } from "../Config"
-import { TestInteraction, UserInteraction } from "./TestInteraction"
+import { TestInteraction, TestPromptDuration, UserInteraction } from "./TestInteraction"
 
 /**
  * Defines context for running test.
@@ -124,7 +124,6 @@ export class TestSuite {
     /**
      * Method executed before all tests in this test suite. You can override this method in subclass,
      * but you have to call parent's method in the implementation.
-     * @param context Test context.
      */
     async beforeAll() {
         this.debugInfo('beforeAll()')
@@ -133,7 +132,6 @@ export class TestSuite {
     /**
      * Method executed after all tests in this test suite. You can override this method in subclass,
      * but you have to call parent's method in the implementation.
-     * @param context Test context.
      */
     async afterAll() {
         this.debugInfo('afterAll()')
@@ -142,7 +140,6 @@ export class TestSuite {
     /**
      * Method executed before each test in this test suite. You can override this method in subclass,
      * but you have to call parent's method in the implementation.
-     * @param context Test context.
      */
     async beforeEach() {
         this.debugInfo('beforeEach()')
@@ -154,10 +151,18 @@ export class TestSuite {
     /**
      * Method executed after each test in this test suite. You can override this method in subclass,
      * but you have to call parent's method in the implementation.
-     * @param context Test context.
      */
     async afterEach() {
         this.debugInfo('afterEach()')
+    }
+
+    /**
+     * Show prompt to the user.
+     * @param message Message to show.
+     * @param duration How long message will be displayed.
+     */
+    showPrompt(message: string, duration: TestPromptDuration = TestPromptDuration.SHORT): Promise<void> {
+        return this.interaction.showPrompt(this.context, message, duration)
     }
 
     /**

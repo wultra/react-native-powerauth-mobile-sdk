@@ -40,7 +40,7 @@ export class AuthResolver {
      * @returns configured authorization object
      */
     async resolve(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-        const obj: ReusablePowerAuthAuthentication = { ...authentication };
+        const obj: ReusablePowerAuthAuthentication = { ...authentication }
         // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
         // if underlying data object is no longer valid.
         if (obj.biometryKeyId && !NativeObject.isValidNativeObject(obj.biometryKeyId)) {
@@ -52,17 +52,15 @@ export class AuthResolver {
             (Platform.OS == 'ios' && makeReusable)) {
             try {
                 // Android requires to always provide title and message
-                const title   = authentication.biometryTitle ?? "??"
-                const message = authentication.biometryMessage ?? "??"
-                const keepAlive = 10000 // 10 seconds from last internal data use
-                // Acquire i
-                obj.biometryKeyId = (await NativeWrapper.thisCall("authenticateWithBiometry", this.instanceId, title, message, keepAlive)) as string;
+                const title   = authentication.biometryTitle ?? '??'
+                const message = authentication.biometryMessage ?? '??'
+                // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
+                obj.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', this.instanceId, title, message, makeReusable)) as string;
                 return obj;
             } catch (e) {
                 throw NativeWrapper.processException(e)
             }
         }
-        
         // no need for processing, just return original object
         return authentication;
     }
