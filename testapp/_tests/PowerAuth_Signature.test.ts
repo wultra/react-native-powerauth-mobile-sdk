@@ -112,7 +112,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         const activationId = await this.sdk.getActivationIdentifier()
         const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign)
         // Now verify signature on the server.
-        const result = await this.serverApi.verifyDeviceSignedData(activationId, dataToSign, signature)
+        const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
         expect(result).toBe(true)
     }
 
@@ -134,7 +134,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
     async testServerSignedData_WithActivation() {
         const activationId = await this.sdk.getActivationIdentifier()
         const dataToSign = 'All your money are belong to us!'
-        let signedPayload = await this.serverApi.createPersonalizedOfflineSignature(activationId, dataToSign)
+        let signedPayload = await this.serverApi.createPersonalizedOfflineSignature(activationId!, dataToSign)
         let signedData = signedPayload.parsedSignedData
         let signature = signedPayload.parsedSignature
         expect(signedPayload.parsedData).toBe(dataToSign)

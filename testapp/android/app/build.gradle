@@ -79,7 +79,8 @@ import org.apache.tools.ant.taskdefs.condition.Os
  */
 
 project.ext.react = [
-    enableHermes: true,  // clean and rebuild if changing
+    //bundleInDebug: true, // Uncomment to debug app from Android Studio
+    enableHermes: true,    // clean and rebuild if changing
     hermesFlagsRelease: ["-O", "-output-source-map"], // plus whichever flag was required to set this away from default
 ]
 

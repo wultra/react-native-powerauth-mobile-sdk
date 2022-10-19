@@ -73,6 +73,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
     Class objectClass = Nil;
     if ([@"data" isEqual:objectType] || [@"secure-data" isEqual:objectType]) {
         objectClass = [PowerAuthData class];
+    } else if ([@"number" isEqual:objectType]) {
+        objectClass = [NSNumber class];
     }
     if ([@"create" isEqual:command]) {
         // The "create" command creates a new instance of managed object
@@ -102,6 +104,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
             } else if ([@"secure-data" isEqual:objectType]) {
                 NSData * td = [[@"SECURE-DATA" dataUsingEncoding:NSUTF8StringEncoding] mutableCopy];
                 instance = [[PowerAuthData alloc] initWithData:td cleanup:YES];
+            } else if ([@"number" isEqual:objectType]) {
+                instance = [[NSNumber alloc] initWithInt:42];
             }
             if (instance) {
                 NSString * objectId = [self registerObject:instance tag:objectTag policies:policies];
