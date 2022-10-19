@@ -14,7 +14,8 @@
 // limitations under the License.
 //
 
-import { PowerAuthBiometryConfiguration, PowerAuthBiometryStatus } from "react-native-powerauth-mobile-sdk";
+import { Platform } from "react-native";
+import { PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
@@ -45,11 +46,22 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         expect(await this.sdk.removeBiometryFactor()).toBe(true)
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
+
+        // TODO: unify error codes
+        if (Platform.OS === 'android') {
+            await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_AVAILABLE})
+        } else {
+            await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_FAILED})
+        }
         // TODO: ios returns true, android null
         await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
 
         await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        
+        // Now remove factor and try to calculate signature
+        expect(await this.sdk.removeBiometryFactor()).toBe(true)
+        expect(await this.sdk.hasBiometryFactor()).toBe(false)
     }
 }

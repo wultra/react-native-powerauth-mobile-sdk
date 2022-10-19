@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PowerAuthDebug } from "../PowerAuthDebug";
+import { PowerAuthDebug } from "../debug/PowerAuthDebug";
 
 /**
  * PowerAuthError is a wrapper error that is thrown by every API in this module.
@@ -169,4 +169,10 @@ export enum PowerAuthErrorCode {
 
     /** Failed with unexpected error. */
     UNKNOWN_ERROR = "UNKNOWN_ERROR",
+
+    /** 
+     * Underlying native object is no longer valid. This may happen in situations
+     * when you're using 
+     */
+    INVALID_NATIVE_OBJECT = "INVALID_NATIVE_OBJECT",
 }

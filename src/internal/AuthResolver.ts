@@ -15,8 +15,9 @@
 //
 
 import { Platform } from 'react-native';
-import { PowerAuthAuthentication } from '../index';
+import { PowerAuthAuthentication, PowerAuthError, PowerAuthErrorCode } from '../index';
 import { NativeWrapper } from './NativeWrapper';
+import { NativeObject } from './NativeObject';
 
 /**
  * The `AuthResolver` helper class hides internal dependencies when PowerAuthAuthentication needs to be
@@ -35,21 +36,31 @@ export class AuthResolver {
      * 
      * @param authentication authentication configuration
      * @param makeReusable if the object should be forced to be reusable
+     * @param recoveringFromError if true, then this is call
      * @returns configured authorization object
      */
     async resolve(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-        const obj: ReusablePowerAuthAuthentication = { ...authentication };
+        const obj: ReusablePowerAuthAuthentication = { ...authentication }
+        // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
+        // if underlying data object is no longer valid.
+        if (obj.biometryKeyId && !NativeObject.isValidNativeObject(obj.biometryKeyId)) {
+            obj.biometryKeyId = undefined
+        }
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
-        if ((Platform.OS == 'android' && authentication.useBiometry && (obj.biometryKey === undefined || makeReusable)) || (Platform.OS == 'ios' && makeReusable)) {
+        if ((Platform.OS == 'android' && authentication.useBiometry && (!obj.biometryKeyId || makeReusable)) ||
+            (Platform.OS == 'ios' && makeReusable)) {
             try {
-                obj.biometryKey = (await NativeWrapper.thisCall("authenticateWithBiometry", this.instanceId, authentication.biometryTitle ?? "??", authentication.biometryMessage ?? "??")) as string;
+                // Android requires to always provide title and message
+                const title   = authentication.biometryTitle ?? '??'
+                const message = authentication.biometryMessage ?? '??'
+                // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
+                obj.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', this.instanceId, title, message, makeReusable)) as string;
                 return obj;
             } catch (e) {
                 throw NativeWrapper.processException(e)
             }
         }
-        
         // no need for processing, just return original object
         return authentication;
     }
@@ -59,5 +70,8 @@ export class AuthResolver {
  * Extended PowerAuthAuthentication object containing a biometry key.
  */
 class ReusablePowerAuthAuthentication extends PowerAuthAuthentication {
-    biometryKey?: string
+    /**
+     * Contains identifier for data allocated in native code.
+     */
+    biometryKeyId?: string
 }

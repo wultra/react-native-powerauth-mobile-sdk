@@ -6,14 +6,25 @@ In case you encounter a problem with this library, then try to turn-on a detaile
 
 ```javascript
 // Enable debug log with failed call to native function.
-PowerAuthDebug.traceNativeCodeCalls(true)
+PowerAuthDebug.traceNativeCodeCalls(true);
 // Trace all calls to native library
-PowerAuthDebug.traceNativeCodeCalls(true, true)
+PowerAuthDebug.traceNativeCodeCalls(true, true);
 ```
 
 <!-- begin box warning -->
 The `PowerAuthDebug` class is effective only if global `__DEV__` constant is `true`. We don't want to log the sensitive information to the console in the production application.
 <!-- end -->
+
+## Dumping native objects
+
+If `__DEV__` mode is turned on, then you can dump information about all native objects allocated and used by React Native PowerAuth Mobile SDK:
+
+```javascript
+// Dump all objects
+await PowerAuthDebug.dumpNativeObjects();
+// Dump objects related to PowerAuth instance
+await PowerAuthDebug.dumpNativeObjects(powerAuth.instanceId);
+```
 
 ## Read Next
 

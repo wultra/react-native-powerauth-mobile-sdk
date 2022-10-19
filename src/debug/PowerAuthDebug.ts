@@ -14,8 +14,9 @@
 // limitations under the License.
 //
 
-import { PowerAuthError } from "./index";
-import { NativeWrapper } from "./internal/NativeWrapper";
+import { PowerAuthError } from "../index";
+import { NativeWrapper } from "../internal/NativeWrapper";
+import { NativeObjectRegister } from "./NativeObjectRegister";
 
 /**
  * The `PowerAuthDebug` class provides a various functionality that can
@@ -34,6 +35,36 @@ export class PowerAuthDebug {
         }
     }
 
+    /**
+     * Function prints debug information about all native objects registered in native module. Note that the function
+     * is effective ony if native module is compiled in DEBUG mode and if global `__DEV__` constant is `true`.
+     * @param instanceId If provided, then prints only objects that belongs to PowerAuth instance with given identifier.
+     */
+    static async dumpNativeObjects(instanceId: string | undefined = undefined): Promise<void> {
+        if (__DEV__) {
+            if (instanceId) {
+                console.log(`List of native objects associated with instance '${instanceId}' = [`)
+            } else {
+                console.log('List of all registered native objects = [')
+            }
+            const printTag = instanceId ? false : true
+            const objectInfo = await NativeObjectRegister.debugDump(instanceId)
+            const maxLenId = objectInfo.reduce((prev, item) => Math.max(prev, item.id.length), 0)
+            const maxLenTag = printTag ? objectInfo.reduce((prev, item) => Math.max(prev, item.tag?.length ?? 0), 0) : 0
+            objectInfo.forEach(item => {
+                const created = new Date(item.createDate * 1000)
+                const used = item.lastUseDate ? `, lastUsed='${new Date(item.lastUseDate * 1000)}'` : ''
+                const count = item.usageCount ? `, used=${item.usageCount}`: ''
+                const valid = item.isValid ? '   ' : '!! '
+                const tag = item.tag && !instanceId ? ` @ ${item.tag.padEnd(maxLenTag)}` : ''
+                const policies = item.policies.join(', ')
+                const objId = `${item.id}`.padEnd(maxLenId)
+                console.log(`  ${valid}${objId} ${tag} = { ${item.class}, ${policies}, created='${created}'${used}${count} }`)
+            })
+            console.log(']')
+        }
+    }
+        
     /**
      * Function converts any error into human readable string.
      * @param error Error to descrive.

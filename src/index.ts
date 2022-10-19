@@ -19,7 +19,6 @@
 export * from './PowerAuth';
 export * from './PowerAuthActivationCodeUtil';
 export * from './PowerAuthTokenStore';
-export * from './PowerAuthDebug';
 
 // Model objects
 
@@ -37,3 +36,8 @@ export * from './model/PowerAuthCreateActivationResult';
 export * from './model/PowerAuthError';
 export * from './model/PowerAuthKeychainConfiguration';
 export * from './model/PowerAuthRecoveryActivationData';
+
+// Debug features
+
+export * from './debug/PowerAuthDebug';
+export * from './debug/NativeObjectRegister';

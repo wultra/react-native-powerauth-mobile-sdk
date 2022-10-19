@@ -1,5 +1,5 @@
-/**
- * Copyright 2020 Wultra s.r.o.
+/*
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
+#import "Utilities.h"
 
-@interface PowerAuth: NSObject<RCTBridgeModule, RCTInitializing>
+/// Time interval in milliseconds to keep pre-authorized biometric
+/// key in memory.
+#define BIOMETRY_KEY_KEEP_ALIVE_TIME    10000
 
-@end
+/// Default period in milliseconds for automatic objects cleanup job.
+#define CLEANUP_PERIOD_DEFAULT          10000
+/// Minimum allowed period for automatic objects cleanup job.
+#define CLEANUP_PERIOD_MIN                100
+/// Maximum allowed period for automatic objects cleanup job.
+#define CLEANUP_PERIOD_MAX              60000

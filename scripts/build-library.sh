@@ -25,10 +25,26 @@ npx pod-install
 
 pushd ios
 
+echo '------------------------------------------------------------'
+echo 'Compiling iOS Release'
+echo '------------------------------------------------------------'
+
 xcrun xcodebuild \
     -workspace "PowerAuth.xcworkspace" \
     -scheme "PowerAuth" \
     -configuration "Release" \
+    -sdk "iphonesimulator" \
+    -arch x86_64 \
+    build
+
+echo '------------------------------------------------------------'
+echo 'Compiling iOS Debug'
+echo '------------------------------------------------------------'
+
+xcrun xcodebuild \
+    -workspace "PowerAuth.xcworkspace" \
+    -scheme "PowerAuth" \
+    -configuration "Debug" \
     -sdk "iphonesimulator" \
     -arch x86_64 \
     build

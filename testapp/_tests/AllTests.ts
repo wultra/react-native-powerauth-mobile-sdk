@@ -23,11 +23,13 @@ import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
 import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 import { PowerAuth_PasswordTests } from "./PowerAuth_Password.test";
 import { PowerAuth_BiometryTests } from "./PowerAuth_Biometry.test";
+import { PowerAuth_BiometryInteractiveTests } from "./PowerAuth_BiometryInteractive.test";
 import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
 import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 import { PowerAuth_EncryptionTests } from "./PowerAuth_Encryption.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
 import { PowerAuth_Example } from "./PowerAuth_Example";
+import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
@@ -42,12 +44,19 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_EncryptionTests(),
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
-    ];
+        new NativeObjectRegisterTests(),
+    ]
+}
+
+export function getInteractiveLibraryTests(): TestSuite[] {
+    return [
+        new PowerAuth_BiometryInteractiveTests()
+    ]
 }
 
 export function getTestbedTests(): TestSuite[] {
     return [
         new TestRunnerTests(),
         new TestSuiteTests()
-    ];
+    ]
 }

@@ -17,8 +17,8 @@
     "lib/internal/*.js",
     "lib/model/*.*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
-    "ios/PowerAuth/PowerAuth.m",
-    "ios/PowerAuth/PowerAuth.h",
+    "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
   "scripts": {

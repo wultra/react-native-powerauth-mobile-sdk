@@ -16,7 +16,7 @@
 
 import { NativeModules, Platform } from 'react-native';
 import { PowerAuthError } from '../model/PowerAuthError';
-import { PowerAuthDebug } from '../PowerAuthDebug';
+import { PowerAuthDebug } from '../debug/PowerAuthDebug';
 
 interface StaticCallTrampoline {
     call<T>(name: string, args: any[]): Promise<T>
