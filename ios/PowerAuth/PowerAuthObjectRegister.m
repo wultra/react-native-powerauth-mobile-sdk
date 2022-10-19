@@ -15,6 +15,7 @@
  */
 
 #import "PowerAuthObjectRegister.h"
+#import "Constants.h"
 #import <React/RCTConvert.h>
 
 // MARK: - Release policies -
@@ -134,7 +135,7 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
         _lock = dispatch_semaphore_create(1);
         _register = [NSMutableDictionary dictionaryWithCapacity:16];
         _scheduledCleanup = NO;
-        _cleanupPeriod = 10000; // 10 seconds in ms
+        _cleanupPeriod = CLEANUP_PERIOD_DEFAULT;
     }
     return self;
 }
@@ -232,10 +233,10 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
 - (void) setCleanupPeriod:(NSInteger)period
 {
     [self synchronizedVoid:^{
-        if (period >= 100 && period <= 60000) {
+        if (period >= CLEANUP_PERIOD_MIN && period <= CLEANUP_PERIOD_MAX) {
             _cleanupPeriod = period;
         } else {
-            _cleanupPeriod = 10000;
+            _cleanupPeriod = CLEANUP_PERIOD_DEFAULT;
         }
         // Kick the cleanup now, because we don't want to wait for the next
         // tick if period is shorter.
@@ -385,7 +386,7 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
         return content;
     }];
 #else
-    return @{};
+    return @[];
 #endif
 }
 

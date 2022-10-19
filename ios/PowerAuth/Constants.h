@@ -19,3 +19,10 @@
 /// Time interval in milliseconds to keep pre-authorized biometric
 /// key in memory.
 #define BIOMETRY_KEY_KEEP_ALIVE_TIME    10000
+
+/// Default period in milliseconds for automatic objects cleanup job.
+#define CLEANUP_PERIOD_DEFAULT          10000
+/// Minimum allowed period for automatic objects cleanup job.
+#define CLEANUP_PERIOD_MIN                100
+/// Maximum allowed period for automatic objects cleanup job.
+#define CLEANUP_PERIOD_MAX              60000

@@ -21,7 +21,7 @@
 /**
  Object register that allows us to expose native objects into JavaScript world.
  The object is identified by an unique identifier created at the time of registration
- or by 
+ or by application provided identifier.
  */
 @interface PowerAuthObjectRegister : NSObject<RCTBridgeModule>
 
@@ -86,14 +86,14 @@
 - (BOOL) isValidObjectId:(nullable id)objectId;
 
 /**
- Returns dictionary with debug information about objects stored in the register. The method is available only
+ Returns array with debug information about objects stored in the register. The method is available only
  if library is compiled in DEBUG configuration.
  */
-- (nullable NSDictionary<NSString*, NSString*>*) debugDumpObjectsWithTag:(nullable NSString*)tag;
+- (nonnull NSArray<NSDictionary*>*) debugDumpObjectsWithTag:(nullable NSString*)tag;
 
 /**
  Set interval for internal cleanup job that removes objects that are not valid.
- Only the values in range 100 to 60000ms is accepted. If 0 is provided, then register sets
+ Only the value in range 100 to 60000ms is accepted. If 0 is provided, then register sets
  interval to the default period.
  */
 - (void) setCleanupPeriod:(NSInteger)periodInMs;
