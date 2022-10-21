@@ -187,6 +187,18 @@ public class ObjectRegister extends BaseJavaModule {
     }
 
     /**
+     * Touch object with given identifier and prolong its lifetime.
+     * @param objectId Object identifier.
+     * @param expectedClass Expected class.
+     * @param <T> Expected object's type.
+     * @return instance of object with given identifier or null if there's no such object in the register.
+     */
+    @Nullable
+    <T> T touchObject(@Nullable String objectId, @NonNull Class<T> expectedClass) {
+        return synchronize(() -> findManagedObject(objectId, expectedClass, OPT_TOUCH));
+    }
+
+    /**
      * Find object with given identifier.
      * @param objectId Object identifier.
      * @return true if register contains such object.
@@ -271,7 +283,8 @@ public class ObjectRegister extends BaseJavaModule {
 
     private static final int OPT_NONE       = 0;    // no additional operation required
     private static final int OPT_SET_USE    = 1;    // set object as used
-    private static final int OPT_REMOVE     = 2;    // remove object
+    private static final int OPT_TOUCH      = 2;    // prolong object's lifetime
+    private static final int OPT_REMOVE     = 3;    // remove object
 
     /**
      * Finc object with given identifier and do an additional operation with the object.
@@ -295,6 +308,9 @@ public class ObjectRegister extends BaseJavaModule {
                         if (options == OPT_SET_USE) {
                             // Set object as used
                             managedObject.setUsed();
+                        } else if (options == OPT_TOUCH) {
+                            // Prolong object's lifetime
+                            managedObject.touch();
                         } else if (options == OPT_REMOVE) {
                             // Set object as removed.
                             if (managedObject.setRemoved()) {
@@ -513,6 +529,13 @@ public class ObjectRegister extends BaseJavaModule {
         void setUsed() {
             lastUseTime = currentTime();
             usageCount++;
+        }
+
+        /**
+         * Prolong object's lifetime. The function update lastUseTime property.
+         */
+        void touch() {
+            lastUseTime = currentTime();
         }
 
         /**
@@ -746,12 +769,17 @@ public class ObjectRegister extends BaseJavaModule {
                     return;
                 }
             } else if ("find".equals(command)) {
-                // The "find" command just find the object in the register and returns true / false.
+                // The "find" command just find the object in the register and returns true / false if is still in register.
                 if (objectClass != null && objectId != null) {
                     promise.resolve(findObject(objectId, objectClass) != null);
                     return;
                 }
-                //
+            } else if ("touch".equals(command)) {
+                // The "touch" command extends object's lifetime in the register and returns true / false if is still in register.
+                if (objectClass != null && objectId != null) {
+                    promise.resolve(touchObject(objectId, objectClass) != null);
+                    return;
+                }
             } else if ("setPeriod".equals(command)) {
                 // The "setPeriod" command sets cleanup period
                 final int param = options.hasKey("cleanupPeriod") ? options.getInt("cleanupPeriod") : 0;
