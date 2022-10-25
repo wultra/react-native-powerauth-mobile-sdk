@@ -259,8 +259,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(p1, p2)
 
         // Native objects are no created yet
-        expect(await p1.release()).toBeUndefined()
-        expect(await p2.release()).toBeUndefined()
+        await p1.release()
+        await p2.release()
 
         expect(p1CleanupCalled).toBe(0)
         expect(p2CleanupCalled).toBe(0)
@@ -278,8 +278,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(p2CleanupCalled).toBe(0)
 
         // Now manually release passwords
-        expect(await p1.release()).toBeUndefined()
-        expect(await p2.release()).toBeUndefined()
+        await p1.release()
+        await p2.release()
 
         expect(await Register.findObject(id1AfterAccess, 'password')).toBe(false)
         expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
@@ -296,10 +296,10 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(p2CleanupCalled).toBe(0)
 
         // Now release for multiple times, to make sure that function doesn't fail
-        expect(await p1.release()).toBeUndefined()
-        expect(await p2.release()).toBeUndefined()
-        expect(await p1.release()).toBeUndefined()
-        expect(await p2.release()).toBeUndefined()
+        await p1.release()
+        await p2.release()
+        await p1.release()
+        await p2.release()
     }
 
     getRandomId(): string {

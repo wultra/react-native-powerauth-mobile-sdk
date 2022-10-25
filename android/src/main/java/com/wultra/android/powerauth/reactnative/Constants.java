@@ -37,4 +37,12 @@ class Constants {
      * Time interval in milliseconds to keep pre-authorized biometric key in memory.
      */
     static final int BIOMETRY_KEY_KEEP_ALIVE_TIME   = 10_000;
+    /**
+     * Time interval in milliseconds to keep password object valid in memory.
+     */
+    static final int PASSWORD_KEY_KEEP_ALIVE_TIME    = 5 * 60 * 1_000;
+    /**
+     * Upper limit for Unicode Code Point.
+     */
+    static final int CODEPOINT_MAX                   = 0x10FFFF;
 }
