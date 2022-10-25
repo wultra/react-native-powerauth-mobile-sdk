@@ -257,7 +257,7 @@ export class NativeWrapper {
  * @param originalPromise Original promise which result needs to be patched.
  * @returns Patched promise that always resolve to true or false.
  */
-function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
+export function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
     if (Platform.OS === 'android') {
         return originalPromise
     }
@@ -274,7 +274,7 @@ function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
  * @param originalPromise Original promise which result needs to be patched.
  * @returns Patched promise that always resolve to value or undefined.
  */
- function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T | undefined> {
+export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T | undefined> {
     return new Promise((resolved, rejected) => {
         originalPromise
             .then(r => resolved(r ?? undefined))

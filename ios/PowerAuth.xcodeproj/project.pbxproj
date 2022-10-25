@@ -17,9 +17,11 @@
 		BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65A728F810880093A45A /* PowerAuthData.m */; };
 		BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */; };
 		BF1F65AE28F9581F0093A45A /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F65AC28F9581F0093A45A /* Constants.h */; };
+		BFAEDB6C29017F5E00E65B40 /* PowerAuthPasswordModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BFAEDB6D29017F5E00E65B40 /* PowerAuthPasswordModule.m in Sources */ = {isa = PBXBuildFile; fileRef = BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */; };
 		CAC0BE336028DD00272CEB09 /* libPods-PowerAuth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */; };
-		DCEDF08B249E59EF00918481 /* PowerAuth.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEDF089249E59EF00918481 /* PowerAuth.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		DCEDF092249E5A8600918481 /* PowerAuth.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEDF091249E5A8600918481 /* PowerAuth.m */; };
+		DCEDF08B249E59EF00918481 /* PowerAuthModule.h in Headers */ = {isa = PBXBuildFile; fileRef = DCEDF089249E59EF00918481 /* PowerAuthModule.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		DCEDF092249E5A8600918481 /* PowerAuthModule.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEDF091249E5A8600918481 /* PowerAuthModule.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,11 +37,13 @@
 		BF1F65A728F810880093A45A /* PowerAuthData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthData.m; sourceTree = "<group>"; };
 		BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "PowerAuthObjectRegister+JS.m"; sourceTree = "<group>"; };
 		BF1F65AC28F9581F0093A45A /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthPasswordModule.h; sourceTree = "<group>"; };
+		BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthPasswordModule.m; sourceTree = "<group>"; };
 		D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PowerAuth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCEDF086249E59EF00918481 /* PowerAuth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PowerAuth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		DCEDF089249E59EF00918481 /* PowerAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuth.h; sourceTree = "<group>"; };
+		DCEDF089249E59EF00918481 /* PowerAuthModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthModule.h; sourceTree = "<group>"; };
 		DCEDF08A249E59EF00918481 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		DCEDF091249E5A8600918481 /* PowerAuth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PowerAuth.m; sourceTree = "<group>"; };
+		DCEDF091249E5A8600918481 /* PowerAuthModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PowerAuthModule.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,13 +101,15 @@
 				BF1F65A328F80CF80093A45A /* Utilities.m */,
 				BF1F659E28F6EF900093A45A /* Errors.h */,
 				BF1F659F28F6EF900093A45A /* Errors.m */,
+				BF1F65A628F810880093A45A /* PowerAuthData.h */,
+				BF1F65A728F810880093A45A /* PowerAuthData.m */,
 				BF1F659A28F587B40093A45A /* PowerAuthObjectRegister.h */,
 				BF1F659B28F587B40093A45A /* PowerAuthObjectRegister.m */,
 				BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */,
-				BF1F65A628F810880093A45A /* PowerAuthData.h */,
-				BF1F65A728F810880093A45A /* PowerAuthData.m */,
-				DCEDF089249E59EF00918481 /* PowerAuth.h */,
-				DCEDF091249E5A8600918481 /* PowerAuth.m */,
+				BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */,
+				BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */,
+				DCEDF089249E59EF00918481 /* PowerAuthModule.h */,
+				DCEDF091249E5A8600918481 /* PowerAuthModule.m */,
 				DCEDF08A249E59EF00918481 /* Info.plist */,
 			);
 			path = PowerAuth;
@@ -116,11 +122,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DCEDF08B249E59EF00918481 /* PowerAuth.h in Headers */,
+				DCEDF08B249E59EF00918481 /* PowerAuthModule.h in Headers */,
 				BF1F65A828F810880093A45A /* PowerAuthData.h in Headers */,
 				BF1F65AE28F9581F0093A45A /* Constants.h in Headers */,
 				BF1F65A428F80CF80093A45A /* Utilities.h in Headers */,
 				BF1F65A028F6EF900093A45A /* Errors.h in Headers */,
+				BFAEDB6C29017F5E00E65B40 /* PowerAuthPasswordModule.h in Headers */,
 				BF1F659C28F587B40093A45A /* PowerAuthObjectRegister.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -239,10 +246,11 @@
 			files = (
 				BF1F659D28F587B40093A45A /* PowerAuthObjectRegister.m in Sources */,
 				BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */,
-				DCEDF092249E5A8600918481 /* PowerAuth.m in Sources */,
+				DCEDF092249E5A8600918481 /* PowerAuthModule.m in Sources */,
 				BF1F65A528F80CF80093A45A /* Utilities.m in Sources */,
 				BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */,
 				BF1F65A128F6EF900093A45A /* Errors.m in Sources */,
+				BFAEDB6D29017F5E00E65B40 /* PowerAuthPasswordModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

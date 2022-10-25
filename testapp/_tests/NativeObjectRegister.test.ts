@@ -15,80 +15,9 @@
 //
 
 import { expect } from "../src/testbed";
-import { PowerAuthDebug, NativeObjectRegister, NativeObjectType, NativeObjectCmdData, NativeObjectCmdResult } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthDebug } from "react-native-powerauth-mobile-sdk";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-
-interface ObjectsCount {
-    valid: number
-    invalid: number
-}
-
-/**
- * The Register class extends `NativeObjectRegister` functionality for this test suite purposes.
- * 
- * ### Warning
- * 
- * > You suppose do not replicate such functionality in your application's code, because it will not
- * > work in the release build.
- */
-class Register {
-    static async findObject(objectId: string, type: NativeObjectType): Promise<boolean> {
-        const r = await NativeObjectRegister.debugCommand('find', { objectId: objectId, objectType: type })
-        if (typeof r === 'boolean') {
-            return r
-        } else {
-            throw new Error('Unexpected result')
-        }
-    }
-
-    static async useObject(objectId: string, type: NativeObjectType): Promise<boolean> {
-        const r = await NativeObjectRegister.debugCommand('use', { objectId: objectId, objectType: type })
-        if (typeof r === 'boolean') {
-            return r
-        } else {
-            throw new Error('Unexpected result')
-        }
-    }
-
-    static async touchObject(objectId: string, type: NativeObjectType): Promise<boolean> {
-        const r = await NativeObjectRegister.debugCommand('touch', { objectId: objectId, objectType: type })
-        if (typeof r === 'boolean') {
-            return r
-        } else {
-            throw new Error('Unexpected result')
-        }
-    }
-
-    static async removeObject(objectId: string, type: NativeObjectType): Promise<boolean> {
-        const r = await NativeObjectRegister.debugCommand('release', { objectId: objectId, objectType: type })
-        if (typeof r === 'boolean') {
-            return r
-        } else {
-            throw new Error('Unexpected result')
-        }
-    }
-
-    static async createObject(data: NativeObjectCmdData): Promise<string> {
-        const r = await NativeObjectRegister.debugCommand('create', data)
-        if (typeof r === 'string') {
-            return r
-        } else {
-            throw new Error('Unexpected result')
-        }
-    }
-
-    static setCleanupPeriod(periodInMs: number): Promise<NativeObjectCmdResult> {
-        return NativeObjectRegister.debugCommand('setPeriod', { cleanupPeriod: periodInMs })
-    }
-
-    static async countObjects(tag: string): Promise<ObjectsCount> {
-        const r = await NativeObjectRegister.debugDump(tag)
-        return { 
-            valid:   r.reduce((prev, item) => prev + (item.isValid ? 1 : 0), 0), 
-            invalid: r.reduce((prev, item) => prev + (item.isValid ? 0 : 1), 0)
-        }
-    }
-}
+import { Register } from "./helpers/NativeObjectRegister";
 
 export class NativeObjectRegisterTests extends TestWithActivation {
 

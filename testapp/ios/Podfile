@@ -24,7 +24,7 @@ target 'testapp' do
   # At first, remove "Pods" and "Podfile.lock", 
   #   then uncomment the following line and setup proper branch with unpublished code,
   #   and finally run "pod install".
-  pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'develop', :submodules => true
+  #pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'develop', :submodules => true
 
   # Enables Flipper.
   #

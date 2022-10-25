@@ -45,7 +45,7 @@ export type NativeObjectCmd = 'create' | 'release' | 'releaseAll' | 'use' | 'fin
 /**
  * Native object types.
  */
-export type NativeObjectType = 'data' | 'secure-data' | 'number'
+export type NativeObjectType = 'data' | 'secure-data' | 'number' | 'password'
 /**
  * Data accepted in debugCommand() function. 
  */

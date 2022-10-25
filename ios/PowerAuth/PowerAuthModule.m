@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#import "PowerAuth.h"
+#import "PowerAuthModule.h"
 #import "PowerAuthData.h"
 #import "Constants.h"
 
@@ -27,8 +27,9 @@
 #import <PowerAuth2/PowerAuthKeychain.h>
 #import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
 
+@import PowerAuthCore;
 
-@implementation PowerAuth
+@implementation PowerAuthModule
 {
     PowerAuthObjectRegister * _objectRegister;
 }
@@ -242,12 +243,12 @@ RCT_REMAP_METHOD(createActivation,
 
 RCT_REMAP_METHOD(commitActivation,
                  instanceId:(NSString*)instanceId
-                 authentication:(NSDictionary*)authDict
+                 authentication:(NSDictionary*)authentication
                  commitActivationResolver:(RCTPromiseResolveBlock)resolve
                  commitActivationRejecter:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forCommit:YES];
+    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authentication reject:reject forCommit:YES];
     if (!auth) {
         return;
     }
@@ -410,26 +411,42 @@ RCT_REMAP_METHOD(verifyServerSignedData,
 
 RCT_REMAP_METHOD(unsafeChangePassword,
                  instanceId:(NSString*)instanceId
-                 oldPassword:(nonnull NSString*)oldPassword
-                 to:(nonnull NSString*)newPassword
+                 oldPassword:(id)oldPassword
+                 to:(id)newPassword
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    BOOL result = [powerAuth unsafeChangePasswordFrom:oldPassword to:newPassword];
+    PowerAuthCorePassword * coreOldPassword = [self resolvePassword:oldPassword reject:reject];
+    if (!coreOldPassword) {
+        return;
+    }
+    PowerAuthCorePassword * newCorePassword = [self resolvePassword:newPassword reject:reject];
+    if (!newCorePassword) {
+        return;
+    }
+    BOOL result = [powerAuth unsafeChangeCorePasswordFrom:coreOldPassword to:newCorePassword];
     resolve(@(result));
     PA_BLOCK_END
 }
 
 RCT_REMAP_METHOD(changePassword,
                  instanceId:(NSString*)instanceId
-                 oldPassword:(nonnull NSString*)oldPassword
-                 to:(nonnull NSString*)newPassword
+                 oldPassword:(id)oldPassword
+                 to:(id)newPassword
                  changePasswordResolve:(RCTPromiseResolveBlock)resolve
                  changePasswordReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    [powerAuth changePasswordFrom:oldPassword to:newPassword callback:^(NSError * error) {
+    PowerAuthCorePassword * coreOldPassword = [self resolvePassword:oldPassword reject:reject];
+    if (!coreOldPassword) {
+        return;
+    }
+    PowerAuthCorePassword * newCorePassword = [self resolvePassword:newPassword reject:reject];
+    if (!newCorePassword) {
+        return;
+    }
+    [powerAuth changeCorePasswordFrom:coreOldPassword to:newCorePassword callback:^(NSError * error) {
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -441,12 +458,16 @@ RCT_REMAP_METHOD(changePassword,
 
 RCT_REMAP_METHOD(addBiometryFactor,
                  instanceId:(NSString*)instanceId
-                 password:(NSString*)password
+                 password:(id)password
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    [powerAuth addBiometryFactorWithPassword:password callback:^(NSError * error) {
+    PowerAuthCorePassword * corePassword = [self resolvePassword:password reject:reject];
+    if (!corePassword) {
+        return;
+    }
+    [powerAuth addBiometryFactorWithCorePassword:corePassword callback:^(NSError * error) {
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -565,12 +586,16 @@ RCT_REMAP_METHOD(signDataWithDevicePrivateKey,
 
 RCT_REMAP_METHOD(validatePassword,
                  instanceId:(NSString*)instanceId
-                 password:(NSString*)password
+                 password:(id)password
                  validatePasswordResolve:(RCTPromiseResolveBlock)resolve
                  validatePasswordReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    [powerAuth validatePassword:password callback:^(NSError * error) {
+    PowerAuthCorePassword * corePassword = [self resolvePassword:password reject:reject];
+    if (!corePassword) {
+        return;
+    }
+    [powerAuth validateCorePassword:corePassword callback:^(NSError * error) {
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -908,19 +933,27 @@ RCT_REMAP_METHOD(generateHeaderForToken,
                                                          forCommit:(BOOL)commit
 {
     BOOL useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
-    NSString * password = GetNSStringValueFromDict(dict, @"userPassword");
+    id userPassword = dict[@"userPassword"];
     if (commit) {
         // Activation commit
+        PowerAuthCorePassword * password = [self resolvePassword:userPassword reject:reject];
+        if (!password) {
+            return nil;
+        }
         if (useBiometry) {
             // All factors needs to be estabilished in activation.
-            return [PowerAuthAuthentication commitWithPasswordAndBiometry:password];
+            return [PowerAuthAuthentication commitWithCorePasswordAndBiometry:password];
         } else {
-            return [PowerAuthAuthentication commitWithPassword:password];
+            return [PowerAuthAuthentication commitWithCorePassword:password];
         }
     } else {
         // Data signing
-        if (password) {
-            return [PowerAuthAuthentication possessionWithPassword:password];
+        if (userPassword) {
+            PowerAuthCorePassword * password = [self resolvePassword:userPassword reject:reject];
+            if (!password) {
+                return nil;
+            }
+            return [PowerAuthAuthentication possessionWithCorePassword:password];
         } else if (useBiometry) {
             NSString * biometryKeyId = GetNSStringValueFromDict(dict, @"biometryKeyId");
             if (biometryKeyId) {
@@ -942,6 +975,38 @@ RCT_REMAP_METHOD(generateHeaderForToken,
             return [PowerAuthAuthentication possession];
         }
     }
+}
+
+/// Method translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
+/// report an error.
+/// @param anyPassword Object to convert into PowerAuthCorePassword.
+/// @param reject Reject function to call in case of failure
+/// @return PowerAuthCorePassword or nil if no such conversion is possible.
+- (PowerAuthCorePassword*) resolvePassword:(id)anyPassword
+                                    reject:(RCTPromiseRejectBlock)reject
+{
+    if ([anyPassword isKindOfClass:[NSString class]]) {
+        // Password is in form of string
+        return [PowerAuthCorePassword passwordWithString:anyPassword];
+    }
+    if ([anyPassword isKindOfClass:[NSDictionary class]]) {
+        // It appears that this is an object
+        id passwordObjectId = [(NSDictionary*)anyPassword objectForKey:@"passwordObjectId"];
+        if (!passwordObjectId) {
+            // Object identifier is not present in the object. This means that wrong object is passed to call,
+            // or PowerAuthPassword javascript object is not initialized yet.
+            reject(EC_WRONG_PARAMETER, @"PowerAuthPassword is not initialized", nil);
+            return nil;
+        }
+        PowerAuthCorePassword * password = [_objectRegister useObjectWithId:passwordObjectId expectedClass:[PowerAuthCorePassword class]];
+        if (!password) {
+            reject(EC_INVALID_NATIVE_OBJECT, @"PowerAuthPassword object is no longer valid", nil);
+            return nil;
+        }
+        return password;
+    }
+    reject(EC_WRONG_PARAMETER, @"PowerAuthPassword or string is required", nil);
+    return nil;
 }
 
 /// Method translates `PowerAuthActivationState` into string representation.

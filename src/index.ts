@@ -36,6 +36,7 @@ export * from './model/PowerAuthCreateActivationResult';
 export * from './model/PowerAuthError';
 export * from './model/PowerAuthKeychainConfiguration';
 export * from './model/PowerAuthRecoveryActivationData';
+export * from './model/PowerAuthPassword';
 
 // Debug features
 

@@ -20,6 +20,8 @@
 #import <React/RCTConvert.h>
 #import <React/RCTInvalidating.h>
 
+@import PowerAuthCore;
+
 /*
  This class category exports several debug methods to JavaScript.
  The 'debug' methods are available only if library is compiled in DEBUG configuration.
@@ -75,6 +77,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
         objectClass = [PowerAuthData class];
     } else if ([@"number" isEqual:objectType]) {
         objectClass = [NSNumber class];
+    } else if ([@"password" isEqual:objectType]) {
+        objectClass = [PowerAuthCoreMutablePassword class];
     }
     if ([@"create" isEqual:command]) {
         // The "create" command creates a new instance of managed object
@@ -106,6 +110,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
                 instance = [[PowerAuthData alloc] initWithData:td cleanup:YES];
             } else if ([@"number" isEqual:objectType]) {
                 instance = [[NSNumber alloc] initWithInt:42];
+            } else if ([@"password" isEqual:objectType]) {
+                instance = [PowerAuthCoreMutablePassword mutablePassword];
             }
             if (instance) {
                 NSString * objectId = [self registerObject:instance tag:objectTag policies:policies];
@@ -132,9 +138,15 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
             return;
         }
     } else if ([@"find" isEqual:command]) {
-        // The "find" command just find the object in the register and returns true / false.
+        // The "find" command just find the object in the register and returns true / false if object still exists.
         if (objectClass && objectId) {
             resolve([self findObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
+            return;
+        }
+    } else if ([@"touch" isEqual:command]) {
+        // The "touch" command prolongs lifetime of object in the register and returns true / false if object still exists.
+        if (objectClass && objectId) {
+            resolve([self touchObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
             return;
         }
     } else if ([@"setPeriod" isEqual:command]) {

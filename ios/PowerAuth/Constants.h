@@ -20,6 +20,13 @@
 /// key in memory.
 #define BIOMETRY_KEY_KEEP_ALIVE_TIME    10000
 
+/// Time interval in milliseconds to keep password object valid
+/// in memory.
+#define PASSWORD_KEY_KEEP_ALIVE_TIME    (5 * 60 * 1000)
+
+/// Upper limit for Unicode Code Point
+#define CODEPOINT_MAX                    0x10FFFF
+
 /// Default period in milliseconds for automatic objects cleanup job.
 #define CLEANUP_PERIOD_DEFAULT          10000
 /// Minimum allowed period for automatic objects cleanup job.
