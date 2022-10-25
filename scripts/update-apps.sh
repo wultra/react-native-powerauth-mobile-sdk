@@ -9,9 +9,12 @@ REQUIRE_COMMAND "npm"
 LIB='react-native-powerauth-mobile-sdk'
 
 DO_TEST=1
+DO_RUN=0
 case $1 in
     test | testapp) 
         DO_TEST=1 ;;
+    run | -r)
+        DO_RUN=1 ;;
     *) 
         DO_TEST=1 ;;
 esac
@@ -63,6 +66,22 @@ function UPDATE_DEPENDENCIES
     PUSH_DIR "${SRC}/${APP_NAME}/ios"
     pod install
     POP_DIR
+
+    if [ x$DO_RUN == x1 ]; then
+        PUSH_DIR "${SRC}/${APP_NAME}"
+
+        LOG_LINE
+        LOG 'Starting Android app...'
+        LOG_LINE
+        npm run android
+
+        LOG_LINE
+        LOG 'Starting iOS app...'
+        LOG_LINE
+        npm run ios
+
+        POP_DIR
+    fi
 }
 
 LIB_PACKAGE
