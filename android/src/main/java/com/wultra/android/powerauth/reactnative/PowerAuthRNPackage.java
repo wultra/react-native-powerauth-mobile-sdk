@@ -27,9 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class PowerAuthRNPackage implements ReactPackage {
-
-    private PowerAuthRNModule mPowerAuthModule;
 
     @NonNull
     @Override
@@ -41,8 +40,8 @@ public class PowerAuthRNPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        mPowerAuthModule = new PowerAuthRNModule(reactContext);
-        modules.add(mPowerAuthModule);
+        modules.add(new PowerAuthRNModule(reactContext));
+        modules.add(new ObjectRegister());
         return modules;
     }
 }

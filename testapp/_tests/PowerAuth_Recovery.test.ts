@@ -50,7 +50,7 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
         const newActivationId = await this.sdk.getActivationIdentifier()
         expect(newActivationId).toBeNotNull()
 
-        const newStatus = await this.serverApi.getActivationDetil(newActivationId)
+        const newStatus = await this.serverApi.getActivationDetil(newActivationId!)
         expect(newStatus).toBeDefined()
         expect(newStatus.activationStatus).toBe(ActivationStatus.ACTIVE)
 

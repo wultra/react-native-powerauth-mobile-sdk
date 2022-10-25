@@ -24,7 +24,7 @@ import {
 } from 'react-native'
 import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
 import { getTestConfig } from './Config'
-import { TestContext, UserPromptDuration, UserInteraction } from './testbed'
+import { TestContext, UserPromptDuration, UserInteraction, TestCounter, TestProgressObserver } from './testbed'
 import { TestLog } from './testbed/TestLog'
 import { TestMonitorGroup } from './testbed/TestMonitor'
 import { TestRunner } from './testbed/TestRunner'
@@ -34,9 +34,13 @@ class TestExecutor implements UserInteraction {
 
   private isRunning = false
   private readonly onShowPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>
+  private readonly onProgress: TestProgressObserver
 
-  constructor(showPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>) {
-    this.onShowPrompt = showPrompt
+  constructor(
+    onShowPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>,
+    onProgress: TestProgressObserver) {
+    this.onShowPrompt = onShowPrompt
+    this.onProgress = onProgress
     this.runTests(false)
   }
   
@@ -51,7 +55,8 @@ class TestExecutor implements UserInteraction {
     const logger = new TestLog()
     const monitor = new TestMonitorGroup([ logger ])
     const runner = new TestRunner('Automatic tests', cfg, monitor, this)
-    const tests = interactive ? getInteractiveLibraryTests() :  getTestbedTests().concat(getLibraryTests())
+    runner.allTestsCounter.addObserver(this.onProgress)
+    const tests = interactive ? getInteractiveLibraryTests() :  getLibraryTests().concat(getTestbedTests())
     await runner.runTests(tests)
     this.isRunning = false
   }
@@ -61,20 +66,30 @@ class TestExecutor implements UserInteraction {
   }
 }
 
+interface AppState {
+  inProgress: boolean
+  promptMessage?: string
+
+  testsDone: number
+  testsSkipped: number
+  testsFailed: number
+  testsCount: number
+}
+
 const Separator = () => (
   <View style={styles.separator} />
 );
 
-interface State {
-  promptMessage?: string
-}
-
-interface Props {
-}
-
-class App extends Component<Props, State> {
+class App extends Component<{}, AppState> {
   
-  state = {}
+  state = {
+    inProgress: false, 
+    promptMessage: undefined,
+    testsDone: 0,
+    testsSkipped: 0,
+    testsFailed: 0,
+    testsCount: 0
+  }
 
   executor = new TestExecutor(async (_context, message, duration) => {
     this.setState({ promptMessage: message })
@@ -88,14 +103,25 @@ class App extends Component<Props, State> {
     }
     await new Promise<void>(resolve => setTimeout(resolve, sleepDuration)) 
     this.setState({ promptMessage: ' '})
+  }, (progress) => {
+    this.setState({
+      testsCount: progress.total,
+      testsDone: progress.succeeded,
+      testsSkipped: progress.skipped,
+      testsFailed: progress.failed
+    })
   })
 
   onPressNotInteractive = async () => {
-    this.executor.runTests(false)
+    this.setState({inProgress: true})
+    await this.executor.runTests(false)
+    this.setState({inProgress: false})
   }
 
   onPressInteractive = async () => {
-    this.executor.runTests(true)
+    this.setState({inProgress: true})
+    await this.executor.runTests(true)
+    this.setState({inProgress: false})
   }
 
   render() {
@@ -104,6 +130,11 @@ class App extends Component<Props, State> {
         <View style={styles.promptContainer}>
           <Text style={styles.promptText}>
             { this.state.promptMessage ?? ' ' }
+          </Text>
+        </View>
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {this.state.testsDone + this.state.testsFailed + this.state.testsSkipped} / {this.state.testsCount}
           </Text>
         </View>
         <Separator />
@@ -145,7 +176,14 @@ class App extends Component<Props, State> {
   },
   promptContainer: {
     height: 120
+  },
+  progressContainer: {
+    height: 40
+  },
+  progressText: {
+    textAlign: 'center',
   }
+
 })
  
 export default App;

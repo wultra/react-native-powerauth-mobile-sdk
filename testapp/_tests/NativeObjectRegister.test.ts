@@ -15,7 +15,6 @@
 //
 
 import { expect } from "../src/testbed";
-import { Platform } from "react-native";
 import { PowerAuthDebug, NativeObjectRegister, NativeObjectType, NativeObjectCmdData, NativeObjectCmdResult } from "react-native-powerauth-mobile-sdk";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -44,6 +43,15 @@ class Register {
 
     static async useObject(objectId: string, type: NativeObjectType): Promise<boolean> {
         const r = await NativeObjectRegister.debugCommand('use', { objectId: objectId, objectType: type })
+        if (typeof r === 'boolean') {
+            return r
+        } else {
+            throw new Error('Unexpected result')
+        }
+    }
+
+    static async touchObject(objectId: string, type: NativeObjectType): Promise<boolean> {
+        const r = await NativeObjectRegister.debugCommand('touch', { objectId: objectId, objectType: type })
         if (typeof r === 'boolean') {
             return r
         } else {
@@ -90,9 +98,6 @@ export class NativeObjectRegisterTests extends TestWithActivation {
 
     async beforeAll() {
         await super.beforeAll()
-        if (Platform.OS === 'android') {
-            this.reportSkip('Not available yet for Android')
-        }
         // Set very short cleanup period
         await Register.setCleanupPeriod(100)
     }
@@ -110,11 +115,13 @@ export class NativeObjectRegisterTests extends TestWithActivation {
     async testDumpingRegisteredObjects() {
 
         const tag = this.getRandomTag()
-        this.reportInfo(`Using tag '${tag}'`)
+        this.debugInfo(`Using tag '${tag}'`)
 
         const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 400'] })
         const dataId2 = await Register.createObject({ objectType: 'secure-data', objectTag: tag, releasePolicy: ['keepAlive 200'] })
         const dataId3 = await Register.createObject({ objectType: 'secure-data', objectTag: tag, releasePolicy: ['afterUse 2'] })
+        
+        this.debugInfo(`Using IDs '${dataId1}', '${dataId2}', '${dataId3}'`)
 
         expect(await Register.findObject(dataId1, 'data')).toBe(true)
         expect(await Register.findObject(dataId2, 'secure-data')).toBe(true)
@@ -215,6 +222,37 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect((await Register.countObjects(tag)).valid).toBe(0)
     }
 
+    async testTouchObject() {
+        const tag = this.getRandomTag()
+        this.debugInfo(`Using tag '${tag}'`)
+
+        const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 100', 'afterUse 4'] })
+        const dataId2 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 100', 'afterUse 4'] })
+        
+        this.debugInfo(`Using IDs '${dataId1}', '${dataId2}'`)
+
+        // Initial expectation
+        expect(await Register.findObject(dataId1, 'data')).toBe(true)
+        expect(await Register.findObject(dataId2, 'data')).toBe(true)
+        expect((await Register.countObjects(tag)).valid).toBe(2)
+
+        await this.sleep(50)
+        // After 50ms everything should be still valid
+
+        // use dataId4, this will extend its lifetime
+        expect(await Register.touchObject(dataId2, 'data')).toBe(true)
+
+        await this.sleep(50)
+        // After next 50ms, dataId3 will be removed
+        expect(await Register.findObject(dataId1, 'data')).toBe(false)
+        expect(await Register.findObject(dataId2, 'data')).toBe(true)
+        // Wait for another 50ms to release dataId2
+        await this.sleep(50)
+        expect(await Register.findObject(dataId1, 'data')).toBe(false)
+        expect(await Register.findObject(dataId2, 'data')).toBe(false)
+        expect((await Register.countObjects(tag)).valid).toBe(0)
+    }
+
     async testManualRelease() {
         const tag = this.getRandomTag()
         this.debugInfo(`Using tag '${tag}'`)
@@ -249,6 +287,38 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect(await Register.removeObject(dataId3, 'data')).toBe(true)
         expect(await Register.removeObject(dataId4, 'data')).toBe(true)
 
+        expect((await Register.countObjects(tag)).valid).toBe(0)
+    }
+
+    async testAccessWrongObjectType() {
+        const tag = this.getRandomTag()
+        this.debugInfo(`Using tag '${tag}'`)
+
+        const id1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 200'] })
+        const id2 = await Register.createObject({ objectType: 'number', objectTag: tag, releasePolicy: ['expire 200'] })
+
+        this.debugInfo(`Using IDs '${id1}', '${id2}''`)
+
+        // Correct
+        expect(await Register.findObject(id1, 'data')).toBe(true)
+        expect(await Register.findObject(id2, 'number')).toBe(true)
+        // Incorrect type in find
+        expect(await Register.findObject(id1, 'number')).toBe(false)
+        expect(await Register.findObject(id2, 'data')).toBe(false)
+        // Incorrect type in use
+        expect(await Register.useObject(id1, 'number')).toBe(false)
+        expect(await Register.useObject(id2, 'data')).toBe(false)
+        // Incorrect type in remove
+        expect(await Register.removeObject(id1, 'number')).toBe(false)
+        expect(await Register.removeObject(id2, 'data')).toBe(false)
+
+        // Objects still should be in register
+        expect((await Register.countObjects(tag)).valid).toBe(2)
+        // Correct type in remove
+        expect(await Register.removeObject(id1, 'data')).toBe(true)
+        expect(await Register.removeObject(id2, 'number')).toBe(true)
+        
+        // After cleanup, count should be 0
         expect((await Register.countObjects(tag)).valid).toBe(0)
     }
 }
