@@ -205,6 +205,10 @@ try {
 } catch(e) {
   // not valid
 }
+
+// You can also do both tests at once
+const codeIsValidAndVerified = await powerAuth.verifyScannedActivationCode(scannedCode);
+console.log(`Activation code is valid and verified = ${codeIsValidAndVerified}`);
 ```
 
 ### Validating Entered Activation Code

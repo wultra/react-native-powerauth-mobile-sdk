@@ -28,7 +28,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     shouldCreateActivationBeforeTest(): boolean {
         const n = this.currentTestName
         return n !== 'testCreateActivationWithBareCode' &&
-               n !== 'testCreateActivationWithSignedCode'
+               n !== 'testCreateActivationWithSignedCode' &&
+               n !== 'testVerifyActivationQrCode'
     }
 
     async createActivationTest(useSignature: boolean) {
@@ -204,5 +205,22 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     async testActivationRemove() {
         await this.sdk.removeActivationWithAuthentication(this.credentials.knowledge)
         expect(await this.sdk.hasValidActivation()).toBe(false)
+    }
+
+    async testVerifyActivationQrCode() {
+        const sdk = await this.createSdk()
+        expect(sdk).toBeDefined()
+        expect(await sdk.canStartActivation()).toBe(true)
+
+        // Prepare activation on the server
+        await this.helper.initActivation()
+        expect(this.activation.activationCode).toBeDefined()
+        expect(this.activation.activationSignature).toBeDefined()
+        const code = this.activation.activationCode!
+        const sign = this.activation.activationSignature!
+
+        expect(await sdk.verifyScannedActivationCode(`${code}#${sign}`)).toBe(true)
+        expect(await sdk.verifyScannedActivationCode(`${code}`)).toBe(false)
+        expect(await sdk.verifyScannedActivationCode(`VVVVV-VVVVV-VVVVV-VTFVA#${sign}`)).toBe(false)
     }
 }

@@ -101,22 +101,11 @@ export class PowerAuth_Example extends TestWithServer {
         // Now imagine that user properly scanned the QR code with an activation data, so we have its content available.
         // It's possible to verify in advance whether the code is formally correct and whether was really issued by the server.
 
-        const codeComponents = activationQrCode.split('#')
-        if (codeComponents.length != 2) {
-            throw 'Activation code is not signed'
-        }
-        const code      = codeComponents[0]
-        const signature = codeComponents[1]
-
-        const isCodeValid = await PowerAuthActivationCodeUtil.validateActivationCode(code)
-        if (!isCodeValid) {
-            throw 'Activation code is not formally valid'
-        }
-        const isIssuedByServer = await this.powerAuth.verifyServerSignedData(code, signature, true)
-        if (!isIssuedByServer) {
+        const isValidActivationQrCode = await this.powerAuth.verifyScannedActivationCode(activationQrCode)
+        if (!isValidActivationQrCode) {
             // Be aware that this may happen if you have multiple environments in your infrastructure
             // and you're using the wrong setup (see applicationSetup at the beginning of function)
-            throw 'This is not the code issued by our server'
+            throw 'Activation code is not valid or is not issued by our server'
         }
 
         // Everything looks correct, so create the activation locally
