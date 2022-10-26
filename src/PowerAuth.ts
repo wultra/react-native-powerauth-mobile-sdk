@@ -32,6 +32,7 @@ import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { AuthResolver } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
+import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -428,6 +429,24 @@ export class PowerAuth {
     async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult> {
         return { 
             alreadyConfirmed: await NativeWrapper.thisCall("confirmRecoveryCode", this.instanceId, recoveryCode, await this.authenticate(authentication)) 
+        }
+    }
+
+    /**
+     * Function verify activation code scanned from QR code whethner it's formally valid and is issued by
+     * the PowerAuth Server.
+     * @param activationCode Activation code to scan. 
+     * @returns true if activation code is valid and is issued by PowerAuth Server.
+     */
+    async verifyScannedActivationCode(activationCode: string): Promise<boolean> {
+        try {
+            const code = await PowerAuthActivationCodeUtil.parseActivationCode(activationCode)
+            if (!code.activationSignature) {
+                return false
+            }
+            return await this.verifyServerSignedData(code.activationCode, code.activationSignature, true)
+        } catch {
+            return false
         }
     }
 

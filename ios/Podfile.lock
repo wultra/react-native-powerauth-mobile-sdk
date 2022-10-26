@@ -11,9 +11,9 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.68.2)
   - fmt (6.2.1)
   - glog (0.3.5)
-  - PowerAuth2 (1.7.3):
-    - PowerAuthCore (~> 1.7.3)
-  - PowerAuthCore (1.7.3)
+  - PowerAuth2 (1.7.4):
+    - PowerAuthCore (~> 1.7.4)
+  - PowerAuthCore (1.7.4)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -294,7 +294,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - PowerAuth2 (~> 1.7.3)
+  - PowerAuth2 (~> 1.7.4)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -401,8 +401,8 @@ SPEC CHECKSUMS:
   FBReactNativeSpec: 81ce99032d5b586fddd6a38d450f8595f7e04be4
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
-  PowerAuth2: d4d330c9b37dedc7e9645db02ea5a32889578b9e
-  PowerAuthCore: daeed9d22fce70cf1dfbabbff7a87837dada7e2d
+  PowerAuth2: c597eecdb348b231a024a527bf49237573819448
+  PowerAuthCore: d7e5e8cb9307da8033c1d41694cb5cbb35ec332a
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: 3e917ea5377751094f38145fdece525aa90545a0
   RCTTypeSafety: c43c072a4bd60feb49a9570b0517892b4305c45e
@@ -430,6 +430,6 @@ SPEC CHECKSUMS:
   ReactCommon: 095366164a276d91ea704ce53cb03825c487a3f2
   Yoga: 99652481fcd320aefa4a7ef90095b95acd181952
 
-PODFILE CHECKSUM: 4dcedfce07447677e9d1e2fdfef997b159789b1a
+PODFILE CHECKSUM: b70f1f607024ce52b4368c347cb75ebbca6c008f
 
 COCOAPODS: 1.11.3
