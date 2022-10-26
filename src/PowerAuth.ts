@@ -324,11 +324,7 @@ export class PowerAuth {
      * @param description (used only in Android) Description for biometry dialog
      */
     addBiometryFactor(password: PasswordType, title: string, description: string): Promise<void> {
-        if (Platform.OS === 'android') {
-            return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, title, description);
-        } else {
-            return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password);
-        }
+        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, title, description);
     }
 
     /** 
@@ -341,11 +337,9 @@ export class PowerAuth {
 
     /**
      * Remove the biometry related factor key.
-     * 
-     * @returns true if the key was successfully removed, false otherwise.
      */
-    removeBiometryFactor(): Promise<boolean> {
-        return NativeWrapper.thisCallBool("removeBiometryFactor", this.instanceId);
+    removeBiometryFactor(): Promise<void> {
+        return NativeWrapper.thisCall("removeBiometryFactor", this.instanceId);
     }
 
     /**

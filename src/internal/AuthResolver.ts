@@ -46,6 +46,11 @@ export class AuthResolver {
         if (obj.biometryKeyId && !NativeObject.isValidNativeObject(obj.biometryKeyId)) {
             obj.biometryKeyId = undefined
         }
+        // Validate whether biometric key is set
+        if (obj.useBiometry && !await NativeWrapper.thisCallBool('hasBiometryFactor', this.instanceId)) {
+            // Biometry is requested but there's no biometry factor set
+            throw new PowerAuthError(undefined, "Biometry factor is not configured", PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED)
+        }
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
         if ((Platform.OS == 'android' && authentication.useBiometry && (!obj.biometryKeyId || makeReusable)) ||
