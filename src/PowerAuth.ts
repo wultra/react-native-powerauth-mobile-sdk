@@ -472,7 +472,7 @@ export class PowerAuth {
      * @returns new instance of PowerAuthPassword class that's owned by this PowerAuth instance.
      */
     createPassword(destroyOnUse: boolean = true, onAutomaticCleanup: (() => void) | undefined = undefined): PowerAuthPassword {
-        return new PowerAuthPassword(destroyOnUse, this.instanceId, onAutomaticCleanup)
+        return new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, this.instanceId)
     }
 
     /**

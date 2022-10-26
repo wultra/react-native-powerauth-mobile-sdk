@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,30 +32,36 @@ export type PasswordType = PowerAuthPassword | string
 export type CharacterType = string | number
 
 /**
- * The `PowerAuthPassword` class implements a safe storage for user's passwords.
+ * The `PowerAuthPassword` class implements safe storage for users' passwords.
  * The class is using an underlying native object to store the user's password securely
  * in the memory. The goal is to keep the user's password in the memory for as short 
- * as possible time period. To achieve this, the native object implements the following
+ * as possible time. To achieve this, the native object implements the following
  * precautions: 
  * 
- * - If it's constructed with `destroyOnUse` parameter set to `true` then the naive
- *   password is automatically destroyed when it's used for the cryptographic operation.
+ * - If it's constructed with `destroyOnUse` parameter set to `true` then the native
+ *   password is automatically destroyed after it's used for the cryptographic operation.
  * 
  * - If it's constructed with `powerAuthInstanceId` then the native object will be
  *   destroyed after the `PowerAuth` class with the same identifier is deconfigured.
  * 
- * - If you leave instnace of `PowerAuthPassword` class as it is, then the native 
+ * - If you leave the instance of `PowerAuthPassword` class as it is, then the native 
  *   password is removed from the memory after 5 minutes of inactivity. The JavaScript
  *   object is still functional, so if you use any API function, then the native
  *   password is re-initialized, but the previous passphrase is lost. You can provide
- *   optional `onAutomaticCleanup` function to PowerAuthPassword's constructor
- *   to detect such situation.  
+ *   an optional `onAutomaticCleanup` function to the object's constructor to detect 
+ *   the such situation.
  * 
- * - If you call any PowerAuthPassword method except `release()`, then the auto-cleanup
- *   timer is reset, so the native password will live for another 5 minutes. 
+ * - If you call any `PowerAuthPassword` method except `release()`, then the auto-cleanup
+ *   timer is reset, so the native password will live for another 5 minutes.
  * 
- * If you're interested in more detail why the passwords should be protected in 
- * the memory, then you can follow the [Working with passwrods securely](https://developers.wultra.com/components/powerauth-mobile-sdk/1.7.x/documentation/PowerAuth-SDK-for-iOS#working-with-passwords-securely)
+ * Be aware that this class is effective only if you're using a numeric PIN for the passphrase
+ * although its API accepts full Unicode code point at the input. This is because it's quite
+ * simple to re-implement the PIN keyboard with your custom UI components. On opposite to that,
+ * for the full alphanumeric input, you need to use the system keyboard, which leaves traces
+ * of the user's password in memory.
+ * 
+ * If you're interested in more detail about why the passwords should be protected in 
+ * the memory, then you can follow the [Working with passwords securely](https://developers.wultra.com/components/powerauth-mobile-sdk/1.7.x/documentation/PowerAuth-SDK-for-iOS#working-with-passwords-securely)
  * chapter from the PowerAuth mobile SDK.
  */
 export class PowerAuthPassword {
@@ -63,14 +69,14 @@ export class PowerAuthPassword {
      * Construct password object and specify whether it's re-usable and/or should be destroyed 
      * together with the owning PowerAuth class instance.
      * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptograhic operation.
-     * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
      * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
+     * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
      * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
      */
     constructor(
-        destroyOnUse: boolean = true, 
-        powerAuthInstanceId: string | undefined = undefined,
+        destroyOnUse: boolean = true,
         onAutomaticCleanup: (() => void) | undefined = undefined,
+        powerAuthInstanceId: string | undefined = undefined,
         autoreleaseTime: number = 0) {
         this.destroyOnUse = destroyOnUse
         this.powerAuthInstanceId = powerAuthInstanceId

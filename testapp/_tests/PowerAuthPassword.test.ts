@@ -169,8 +169,8 @@ export class PowerAuthPasswordTests extends TestSuite {
     async testAutomaticCleanup() {
         let p1CleanupCalled = 0
         let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(false, undefined, () => { p1CleanupCalled += 1 }, 100)
-        const p2 = new PowerAuthPassword(false, undefined, () => { p2CleanupCalled += 1 }, 100)
+        const p1 = new PowerAuthPassword(false, () => { p1CleanupCalled += 1 }, undefined, 100)
+        const p2 = new PowerAuthPassword(false, () => { p2CleanupCalled += 1 }, undefined, 100)
         this.cleanup.push(p1, p2)
 
         // Right after construct the identifier is not set
@@ -225,8 +225,8 @@ export class PowerAuthPasswordTests extends TestSuite {
     async testReleaseAfterUse() {
         let p1CleanupCalled = 0
         let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(true, undefined, () => { p1CleanupCalled += 1 }, 100)
-        const p2 = new PowerAuthPassword(true, undefined, () => { p2CleanupCalled += 1 }, 100)
+        const p1 = new PowerAuthPassword(true, () => { p1CleanupCalled += 1 }, undefined, 100)
+        const p2 = new PowerAuthPassword(true, () => { p2CleanupCalled += 1 }, undefined, 100)
         this.cleanup.push(p1, p2)
 
         await p1.addCharacter(48)
@@ -254,8 +254,8 @@ export class PowerAuthPasswordTests extends TestSuite {
     async testManualRelease() {
         let p1CleanupCalled = 0
         let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(false, undefined, () => { p1CleanupCalled += 1 }, 100)
-        const p2 = new PowerAuthPassword(true, undefined, () => { p2CleanupCalled += 1 }, 100)
+        const p1 = new PowerAuthPassword(false, () => { p1CleanupCalled += 1 }, undefined, 100)
+        const p2 = new PowerAuthPassword(true, () => { p2CleanupCalled += 1 }, undefined, 100)
         this.cleanup.push(p1, p2)
 
         // Native objects are no created yet
