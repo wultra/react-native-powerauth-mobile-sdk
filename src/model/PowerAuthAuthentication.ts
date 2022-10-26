@@ -14,21 +14,31 @@
  * limitations under the License.
  */
 
+import { PasswordType } from "./PowerAuthPassword"
+
 /**
  * Class representing a multi-factor authentication object.
  */
 export class PowerAuthAuthentication {
-    /** Indicates if a possession factor should be used. */
-    usePossession: boolean = false
-    /** Indicates if a biometry factor should be used. */
+    /**
+     * Indicates if a possession factor should be used. 
+     */
+    usePossession: boolean = true
+    /**
+     * Indicates if a biometry factor should be used. 
+     */
     useBiometry: boolean = false
-    /** Password to be used for knowledge factor, or nil of knowledge factor should not be used */
-    userPassword?: string
+    /** 
+     * Password to be used for knowledge factor, or undefined if knowledge factor should not be used.
+     * You can use `PowerAuthPassword` object or regular `string` as an user's password.
+     */
+    userPassword?: PasswordType
     /**
      * Message displayed when prompted for biometric authentication
      */
     biometryMessage?: string
-
-    /** (Android only) Title of biometric prompt */
+    /**
+     * (Android only) Title of biometric prompt
+     */
     biometryTitle?: string
 };

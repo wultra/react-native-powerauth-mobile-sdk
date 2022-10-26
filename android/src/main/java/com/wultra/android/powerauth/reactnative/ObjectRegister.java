@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import io.getlime.security.powerauth.core.Password;
 import io.getlime.security.powerauth.exception.PowerAuthErrorException;
 
 /**
@@ -670,7 +671,7 @@ public class ObjectRegister extends BaseJavaModule {
                 // Note: This is not very accurate, but we're using this only for the debugging purposes
                 final long bootTime = System.currentTimeMillis() - currentTime();
                 map.putString("id", key);
-                map.putString("class", object.getClass().getSimpleName());
+                map.putString("class", object.managedInstance().getClass().getSimpleName());
                 map.putArray("policies", debugPolicies);
                 map.putBoolean("isValid", isStillValid());
                 if (tag != null) {
@@ -712,6 +713,8 @@ public class ObjectRegister extends BaseJavaModule {
                 objectClass = byte[].class;
             } else if ("number".equals(objectType)) {
                 objectClass = Integer.class;
+            } else if ("password".equals(objectType)) {
+                objectClass = Password.class;
             }
             if ("create".equals(command)) {
                 // The "create" command creates a new instance of managed object
@@ -744,6 +747,8 @@ public class ObjectRegister extends BaseJavaModule {
                         instance = ManagedAny.wrap("SECURE-DATA".getBytes(StandardCharsets.UTF_8));
                     } else if ("number".equals(objectType)) {
                         instance = ManagedAny.wrap(42);
+                    } else if ("password".equals(objectType)) {
+                        instance = ManagedAny.wrap(new Password(), Password::destroy);
                     }
                     if (instance != null) {
                         promise.resolve(registerObject(instance, objectTag, policies));

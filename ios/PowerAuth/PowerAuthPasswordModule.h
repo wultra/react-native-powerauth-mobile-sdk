@@ -1,5 +1,5 @@
-/**
- * Copyright 2020 Wultra s.r.o.
+/*
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 
 #import <React/RCTBridgeModule.h>
 #import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
 
-@interface PowerAuth: NSObject<RCTBridgeModule, RCTInitializing>
+/**
+ Bridge module implementing PowerAuthPassword JavaScript class.
+ */
+@interface PowerAuthPasswordModule :  NSObject<RCTBridgeModule, RCTInitializing>
 
 @end

@@ -102,7 +102,8 @@ static NSString * _GetRandomString(NSUInteger length)
 @property (nonatomic, nonnull, readonly) NSDate * createDate;
 @property (nonatomic, nonnull, readonly) NSDate * lastUseDate;
 
-- (BOOL) setUsed;
+- (void) setUsed;
+- (void) touch;
 - (BOOL) isStillValid;
 - (NSDictionary*) debugDump;
 
@@ -124,9 +125,10 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
 static NSString * const _GeneratedIdPrefix = @"N47|V3^";
 static NSString * const _OwnIdPrefix       = @"08]3[7^";
 
-#define OPT_NONE        0           // no options
-#define OPT_SET_USE     (1 << 0)    // set object as used
-#define OPT_REMOVE      (1 << 1)    // remove object
+#define OPT_NONE        0    // no options
+#define OPT_SET_USE     1    // set object as used
+#define OPT_TOUCH       2    // touch object
+#define OPT_REMOVE      3    // remove object
 
 - (instancetype) init
 {
@@ -192,6 +194,13 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
 {
     return [self synchronized:^id{
         return [self findManagedObject:objectId expectedClass:expectedClass options:0];
+    }];
+}
+
+- (id) touchObjectWithId:(NSString *)objectId expectedClass:(Class)expectedClass
+{
+    return [self synchronized:^id{
+        return [self findManagedObject:objectId expectedClass:expectedClass options:OPT_TOUCH];
     }];
 }
 
@@ -300,10 +309,13 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
             if (expectedClass == Nil || [managedObject.object isKindOfClass:expectedClass]) {
                 if ([managedObject isStillValid]) {
                     // Still valid. Mark as used and then return the object.
-                    if (options & OPT_SET_USE) {
+                    if (options == OPT_SET_USE) {
                         // Set object as used.
                         [managedObject setUsed];
-                    } else if (options & OPT_REMOVE) {
+                    } else if (options == OPT_TOUCH) {
+                        // Just touch the object and prolong its lifetime.
+                        [managedObject touch];
+                    } else if (options == OPT_REMOVE) {
                         // Remove object from the register.
                         [_register removeObjectForKey:registeredId];
                     }
@@ -434,11 +446,15 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
     return self;
 }
 
-- (BOOL) setUsed
+- (void) setUsed
 {
     _usageCount++;
     _lastUseDate = [NSDate date];
-    return [self isStillValid];
+}
+
+- (void) touch
+{
+    _lastUseDate = [NSDate date];
 }
 
 

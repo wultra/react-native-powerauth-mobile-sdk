@@ -26,11 +26,13 @@ import android.util.Base64;
 import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
@@ -61,14 +63,15 @@ import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor;
 
 @SuppressWarnings("unused")
 @ReactModule(name = "PowerAuth")
-public class PowerAuthRNModule extends ReactContextBaseJavaModule {
+public class PowerAuthModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext context;
-    private ObjectRegister objectRegister;
+    private final ObjectRegister objectRegister;
 
-    public PowerAuthRNModule(ReactApplicationContext context) {
+    public PowerAuthModule(ReactApplicationContext context, @NonNull ObjectRegister objectRegister) {
         super(context);
         this.context = context;
+        this.objectRegister = objectRegister;
     }
 
     // React integration
@@ -77,28 +80,6 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     @Override
     public String getName() {
         return "PowerAuth";
-    }
-
-    @Override
-    public void initialize() {
-        super.initialize();
-        objectRegister = context.getNativeModule(ObjectRegister.class);
-        if (objectRegister == null) {
-            throw new IllegalStateException("PowerAuthObjectRegister not found");
-        }
-    }
-
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        objectRegister = null;
-    }
-
-    ObjectRegister getObjectRegister() {
-        if (objectRegister == null) {
-            throw new IllegalStateException("PowerAuthObjectRegister is not set");
-        }
-        return objectRegister;
     }
 
     @ReactMethod
@@ -125,7 +106,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                 final PowerAuthSDK instance = new PowerAuthSDK.Builder(paConfig)
                         .clientConfiguration(paClientConfig)
                         .keychainConfiguration(paKeychainConfig)
-                        .build(PowerAuthRNModule.this.context);
+                        .build(PowerAuthModule.this.context);
                 return ManagedAny.wrap(instance);
 
             });
@@ -552,71 +533,67 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void unsafeChangePassword(String instanceId, final String oldPassword, final String newPassword, final Promise promise) {
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                promise.resolve(sdk.changePasswordUnsafe(oldPassword, newPassword));
-            }
+    public void unsafeChangePassword(String instanceId, final Dynamic oldPassword, final Dynamic newPassword, final Promise promise) {
+        this.usePowerAuth(instanceId, promise, sdk -> {
+            final Password coreOldPassword = resolvePassword(oldPassword);
+            final Password coreNewPassword = resolvePassword(newPassword);
+            promise.resolve(sdk.changePasswordUnsafe(coreOldPassword, coreNewPassword));
         });
     }
 
     @ReactMethod
-    public void changePassword(String instanceId, final String oldPassword, final String newPassword, final Promise promise) {
+    public void changePassword(String instanceId, final Dynamic oldPassword, final Dynamic newPassword, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                sdk.changePassword(context, oldPassword, newPassword, new IChangePasswordListener() {
-                    @Override
-                    public void onPasswordChangeSucceed() {
-                        promise.resolve(null);
-                    }
-
-                    @Override
-                    public void onPasswordChangeFailed(@NonNull Throwable t) {
-                        Errors.rejectPromise(promise, t);
-                    }
-                });
-            }
-        });
-    }
-
-    @ReactMethod
-    public void addBiometryFactor(String instanceId, final String password, final String title, final String description, final Promise promise) {
-        final Context context = this.context;
-        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    try {
-                        final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
-                        if (fragmentActivity == null) {
-                            throw new IllegalStateException("Current fragment activity is not available");
-                        }
-                        sdk.addBiometryFactor(
-                                context,
-                                fragmentActivity,
-                                title,
-                                description,
-                                password,
-                                new IAddBiometryFactorListener() {
-                                    @Override
-                                    public void onAddBiometryFactorSucceed() {
-                                        promise.resolve(null);
-                                    }
-
-                                    @Override
-                                    public void onAddBiometryFactorFailed(@NonNull PowerAuthErrorException error) {
-                                        Errors.rejectPromise(promise, error);
-                                    }
-                                });
-                    } catch (Exception e) {
-                        Errors.rejectPromise(promise, e);
-                    }
-                } else {
-                    promise.reject(Errors.EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+        this.usePowerAuth(instanceId, promise, sdk -> {
+            final Password coreOldPassword = resolvePassword(oldPassword);
+            final Password coreNewPassword = resolvePassword(newPassword);
+            sdk.changePassword(context, coreOldPassword, coreNewPassword, new IChangePasswordListener() {
+                @Override
+                public void onPasswordChangeSucceed() {
+                    promise.resolve(null);
                 }
+
+                @Override
+                public void onPasswordChangeFailed(@NonNull Throwable t) {
+                    Errors.rejectPromise(promise, t);
+                }
+            });
+        });
+    }
+
+    @ReactMethod
+    public void addBiometryFactor(String instanceId, final Dynamic password, final String title, final String description, final Promise promise) {
+        final Context context = this.context;
+        this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
+            final Password corePassword = resolvePassword(password);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                try {
+                    final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                    if (fragmentActivity == null) {
+                        throw new IllegalStateException("Current fragment activity is not available");
+                    }
+                    sdk.addBiometryFactor(
+                            context,
+                            fragmentActivity,
+                            title,
+                            description,
+                            corePassword,
+                            new IAddBiometryFactorListener() {
+                                @Override
+                                public void onAddBiometryFactorSucceed() {
+                                    promise.resolve(null);
+                                }
+
+                                @Override
+                                public void onAddBiometryFactorFailed(@NonNull PowerAuthErrorException error) {
+                                    Errors.rejectPromise(promise, error);
+                                }
+                            });
+                } catch (Exception e) {
+                    Errors.rejectPromise(promise, e);
+                }
+            } else {
+                promise.reject(Errors.EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
             }
         });
     }
@@ -741,23 +718,21 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void validatePassword(String instanceId, final String password, final Promise promise) {
+    public void validatePassword(String instanceId, final Dynamic password, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                sdk.validatePassword(context, password, new IValidatePasswordListener() {
-                    @Override
-                    public void onPasswordValid() {
-                        promise.resolve(null);
-                    }
+        this.usePowerAuth(instanceId, promise, sdk -> {
+            final Password corePassword = resolvePassword(password);
+            sdk.validatePassword(context, corePassword, new IValidatePasswordListener() {
+                @Override
+                public void onPasswordValid() {
+                    promise.resolve(null);
+                }
 
-                    @Override
-                    public void onPasswordValidationFailed(@NonNull Throwable t) {
-                        Errors.rejectPromise(promise, t);
-                    }
-                });
-            }
+                @Override
+                public void onPasswordValidationFailed(@NonNull Throwable t) {
+                    Errors.rejectPromise(promise, t);
+                }
+            });
         });
     }
 
@@ -852,7 +827,7 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
                                     final List<ReleasePolicy> releasePolicies = makeReusable
                                             ? Collections.singletonList(ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME))
                                             : Arrays.asList(ReleasePolicy.afterUse(1), ReleasePolicy.expire(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME));
-                                    final String managedId = getObjectRegister().registerObject(managedBytes, instanceId, releasePolicies);
+                                    final String managedId = objectRegister.registerObject(managedBytes, instanceId, releasePolicies);
                                     promise.resolve(managedId);
                                 }
 
@@ -1116,14 +1091,19 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         final String biometryKeyId = map.getString("biometryKeyId");
         final byte[] biometryKey;
         if (biometryKeyId != null) {
-            biometryKey = getObjectRegister().useObject(biometryKeyId, byte[].class);
+            biometryKey = objectRegister.useObject(biometryKeyId, byte[].class);
             if (biometryKey == null) {
                 throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "Biometric key in PowerAuthAuthentication object is no longer valid.");
             }
         } else {
             biometryKey = null;
         }
-        final String userPassword = map.getString("userPassword");
+        final Password userPassword;
+        if (map.hasKey("userPassword")) {
+             userPassword = resolvePassword(map.getDynamic("userPassword"));
+        } else {
+            userPassword = null;
+        }
         if (forCommit) {
             // Authentication for activation commit
             if (userPassword == null) {
@@ -1152,9 +1132,35 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
         }
     }
 
-    // Error constants reported back to RN
-
-
+    /**
+     * Function translate dynamic object type into core Password object.
+     * @param anyPassword Dynamic object representing a password.
+     * @return Resolved core password.
+     * @throws WrapperException In case that Password cannot be created.
+     */
+    @NonNull
+    private Password resolvePassword(@Nullable Dynamic anyPassword) throws WrapperException {
+        if (anyPassword != null) {
+            if (anyPassword.getType() == ReadableType.String) {
+                // Direct string was provided
+                return new Password(anyPassword.asString());
+            }
+            if (anyPassword.getType() == ReadableType.Map) {
+                // Object is provided
+                final ReadableMap map = anyPassword.asMap();
+                final String passwordObjectId = map.getString("passwordObjectId");
+                if (passwordObjectId == null) {
+                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword is not initialized");
+                }
+                Password password = objectRegister.useObject(passwordObjectId, Password.class);
+                if (password == null) {
+                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword object is no longer valid");
+                }
+                return password;
+            }
+        }
+        throw new WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required");
+    }
 
     // PowerAuthBlock instance
 
@@ -1209,26 +1215,23 @@ public class PowerAuthRNModule extends ReactContextBaseJavaModule {
 
     @Nullable
     private PowerAuthSDK getPowerAuthInstance(String instanceId) throws PowerAuthErrorException {
-        final ObjectRegister register = getObjectRegister();
-        if (!register.isValidObjectId(instanceId)) {
+        if (!objectRegister.isValidObjectId(instanceId)) {
             throw new PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Instance identifier is missing or empty or forbidden string");
         }
-        return register.findObject(instanceId, PowerAuthSDK.class);
+        return objectRegister.findObject(instanceId, PowerAuthSDK.class);
     }
 
     private void unregisterPowerAuthInstance(String instanceId) throws PowerAuthErrorException {
-        final ObjectRegister register = getObjectRegister();
-        if (!register.isValidObjectId(instanceId)) {
+        if (!objectRegister.isValidObjectId(instanceId)) {
             throw new PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Instance identifier is missing or empty or forbidden string");
         }
-        register.removeAllObjectsWithTag(instanceId);
+        objectRegister.removeAllObjectsWithTag(instanceId);
     }
 
     private boolean registerPowerAuthInstance(String instanceId, ObjectRegister.ObjectFactory factory) throws Throwable {
-        final ObjectRegister register = getObjectRegister();
-        if (!register.isValidObjectId(instanceId)) {
+        if (!objectRegister.isValidObjectId(instanceId)) {
             throw new PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Instance identifier is missing or empty or forbidden string");
         }
-        return register.registerObjectWithId(instanceId, instanceId, Collections.singletonList(ReleasePolicy.manual()), factory);
+        return objectRegister.registerObjectWithId(instanceId, instanceId, Collections.singletonList(ReleasePolicy.manual()), factory);
     }
 }

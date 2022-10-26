@@ -76,9 +76,9 @@ PODS:
   - hermes-engine (0.11.0)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
-  - PowerAuth2 (1.7.3):
-    - PowerAuthCore (~> 1.7.3)
-  - PowerAuthCore (1.7.3)
+  - PowerAuth2 (1.7.4):
+    - PowerAuthCore (~> 1.7.4)
+  - PowerAuthCore (1.7.4)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -304,7 +304,7 @@ PODS:
   - React-logger (0.68.3):
     - glog
   - react-native-powerauth-mobile-sdk (2.3.0):
-    - PowerAuth2 (~> 1.7.3)
+    - PowerAuth2 (~> 1.7.4)
     - React
   - React-perflogger (0.68.3)
   - React-RCTActionSheet (0.68.3):
@@ -406,7 +406,6 @@ DEPENDENCIES:
   - hermes-engine (~> 0.11.0)
   - libevent (~> 2.1.12)
   - OpenSSL-Universal (= 1.1.1100)
-  - PowerAuth2 (from `https://github.com/wultra/powerauth-mobile-sdk.git`, branch `develop`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -454,6 +453,7 @@ SPEC REPOS:
     - hermes-engine
     - libevent
     - OpenSSL-Universal
+    - PowerAuth2
     - PowerAuthCore
     - SocketRocket
     - YogaKit
@@ -469,10 +469,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
-  PowerAuth2:
-    :branch: develop
-    :git: https://github.com/wultra/powerauth-mobile-sdk.git
-    :submodules: true
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -530,12 +526,6 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
-CHECKOUT OPTIONS:
-  PowerAuth2:
-    :commit: 74f9907b1329bc3e2f9612f1621e90a30b4aea5a
-    :git: https://github.com/wultra/powerauth-mobile-sdk.git
-    :submodules: true
-
 SPEC CHECKSUMS:
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -556,8 +546,8 @@ SPEC CHECKSUMS:
   hermes-engine: 84e3af1ea01dd7351ac5d8689cbbea1f9903ffc3
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  PowerAuth2: d4d330c9b37dedc7e9645db02ea5a32889578b9e
-  PowerAuthCore: daeed9d22fce70cf1dfbabbff7a87837dada7e2d
+  PowerAuth2: c597eecdb348b231a024a527bf49237573819448
+  PowerAuthCore: d7e5e8cb9307da8033c1d41694cb5cbb35ec332a
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: b8caca023d386d43740dfb94c2cf68f695fa5e77
   RCTTypeSafety: ec44ea1d6ad1e5cd6447b22159ff40c2ebbd23b1
@@ -572,7 +562,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: a5043e9e1e1bd13b80b58b228c6901b3721a4f54
   React-jsinspector: 86e89b9f135787a2e8eb74b3fc00ec61e9a80ae1
   React-logger: f790bd10f86b38012e108fb4b564023602702270
-  react-native-powerauth-mobile-sdk: 56dc5103df41fee4cee13aa4cc9a4ae2e254d547
+  react-native-powerauth-mobile-sdk: 662c6a4308f1b0df87450e4a0bc9123910a600a1
   React-perflogger: fa15d1d29ff7557ee25ea48f7f59e65896fb3215
   React-RCTActionSheet: e83515333352a3cc19c146e3c7a63a8a9269da8f
   React-RCTAnimation: 8032daa2846e3db7ac28c4c5a207d0bfb5e1e3ad
@@ -589,6 +579,6 @@ SPEC CHECKSUMS:
   Yoga: 2f6a78c58dcc2963bd8e34d96a4246d9dff2e3a7
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 2244a08d672f48d50b66820cd29268989b696fd2
+PODFILE CHECKSUM: 798ade193b192739c56fa9685aae4ab878bc665b
 
 COCOAPODS: 1.11.3

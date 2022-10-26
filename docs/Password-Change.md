@@ -61,4 +61,4 @@ try {
 
 ## Read Next
 
-- [Biometry Setup](./Biometry-Setup.md)
+- [Working with passwords securely](Secure-Password.md)

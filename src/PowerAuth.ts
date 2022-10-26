@@ -31,6 +31,7 @@ import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmR
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { AuthResolver } from "./internal/AuthResolver";
+import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -294,7 +295,7 @@ export class PowerAuth {
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
-    changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    changePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<void> {
         return NativeWrapper.thisCall("changePassword", this.instanceId, oldPassword, newPassword);
     }
 
@@ -309,7 +310,7 @@ export class PowerAuth {
      @param newPassword New password, to be set in case authentication with old password passes.
      @returns Returns true in case password was changed without error, false otherwise.
      */
-    unsafeChangePassword(oldPassword: string, newPassword: string): Promise<boolean> {
+    unsafeChangePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
         return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, oldPassword, newPassword);
     }
 
@@ -321,7 +322,7 @@ export class PowerAuth {
      * @param title (used only in Android) Title for biometry dialog
      * @param description (used only in Android) Description for biometry dialog
      */
-    addBiometryFactor(password: string, title: string, description: string): Promise<void> {
+    addBiometryFactor(password: PasswordType, title: string, description: string): Promise<void> {
         if (Platform.OS === 'android') {
             return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, title, description);
         } else {
@@ -388,7 +389,7 @@ export class PowerAuth {
      * 
      * @param password Password to be verified.
      */
-    validatePassword(password: string): Promise<void> {
+    validatePassword(password: PasswordType): Promise<void> {
         return NativeWrapper.thisCall("validatePassword", this.instanceId, password);
     }
 
@@ -462,6 +463,16 @@ export class PowerAuth {
             // catching biometry authentication error and rethrowing it as PowerAuthError
             throw NativeWrapper.processException(e);
         }  
+    }
+
+    /**
+     * Create new PowerAuthPassword object that will be destroyed automatically when this PowerAuth instance is deconfigured.
+     * @param destroyOnUse If `true` then the underlying native password is destroyed immediately after it's used for a cryptographic operation.
+     * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
+     * @returns new instance of PowerAuthPassword class that's owned by this PowerAuth instance.
+     */
+    createPassword(destroyOnUse: boolean = true, onAutomaticCleanup: (() => void) | undefined = undefined): PowerAuthPassword {
+        return new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, this.instanceId)
     }
 
     /**

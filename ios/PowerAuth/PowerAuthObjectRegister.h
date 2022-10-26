@@ -56,6 +56,14 @@
                    expectedClass:(nonnull Class)expectedClass;
 
 /**
+ Find object with given identifier and prolong its lifetime if `RP_KEEP_ALIVE` policy is specified.
+ The identifier may be auto-generated or application specific. This method doesn't increase object's
+ usage count, so it will not cause an object relase.
+ */
+- (nullable id) touchObjectWithId:(nonnull NSString*)objectId
+                    expectedClass:(nonnull Class)expectedClass;
+
+/**
  Find object with given identifier and increase its usage counter.
  */
 - (nullable id) useObjectWithId:(nonnull NSString*)objectId

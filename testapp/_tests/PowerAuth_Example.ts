@@ -15,6 +15,7 @@
 //
 
 import { PowerAuth, PowerAuthActivation, PowerAuthActivationCodeUtil, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithServer } from "./helpers/TestWithServer";
 
 /**
@@ -146,7 +147,13 @@ export class PowerAuth_Example extends TestWithServer {
         }
 
         // Now you can instruct user to enter his PIN or password
-        const password = "123456"
+        const password = this.powerAuth.createPassword()
+        await password.addCharacter('1')
+        await password.addCharacter('2')
+        await password.addCharacter('3')
+        await password.addCharacter('5')
+        await password.addCharacter('7')
+        await password.addCharacter('9')
         const commitAuthentication = new PowerAuthAuthentication()
         commitAuthentication.userPassword = password
         commitAuthentication.useBiometry = true
@@ -177,7 +184,7 @@ export class PowerAuth_Example extends TestWithServer {
         }
 
         // Now you're ready to sign some HTTP requests... The most simple way is to verify the password
-        await this.powerAuth.validatePassword(password)
+        await this.powerAuth.validatePassword(await importPassword('123579'))
 
         try {
             await this.powerAuth.validatePassword('badpassword')
@@ -198,7 +205,7 @@ export class PowerAuth_Example extends TestWithServer {
         this.reportInfo(`You entered a bad password. You have ${status.remainingAttempts} from ${status.maxFailCount} attempts left`)
 
         // So try again...
-        await this.powerAuth.validatePassword(password)
+        await this.powerAuth.validatePassword(await importPassword('123579'))
 
         // Now remainingAttemtps is back to 5
         status = await this.powerAuth.fetchActivationStatus()
@@ -229,6 +236,9 @@ export class PowerAuth_Example extends TestWithServer {
 
         // Now everything should be in its initial state
         await this.printActivationState('After cleanup')
+
+        // If PA instance is no longer needed, then just deconfigure it
+        await this.powerAuth.deconfigure()
     }
 
     async printActivationState(stage: string) {
