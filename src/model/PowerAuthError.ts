@@ -117,6 +117,9 @@ export enum PowerAuthErrorCode {
     /** The biometric authentication is temporarily unavailable. */
     BIOMETRY_NOT_AVAILABLE = "BIOMETRY_NOT_AVAILABLE",
 
+    /** The biometric authentication is not configured in this PowerAuth instance. You should call `addBiometryFactor()` to add biometry. */
+    BIOMETRY_NOT_CONFIGURED = "BIOMETRY_NOT_CONFIGURED",
+    
     /**
      * The biometric authentication is locked out due to too many failed attempts.
      * 

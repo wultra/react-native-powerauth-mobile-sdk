@@ -44,12 +44,10 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
 
     async testAddRemoveBiometryFactor() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        expect(await this.sdk.removeBiometryFactor()).toBe(true)
+        await this.sdk.removeBiometryFactor()
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
 
-        // TODO: unify error codes, perhaps we should introduce BIOMETRY_NOT_CONFIGURED
-        await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_FAILED})
-        // TODO: ios returns true, android null
+        await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
         await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
 
@@ -57,7 +55,7 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         
         // Now remove factor and try to calculate signature
-        expect(await this.sdk.removeBiometryFactor()).toBe(true)
+        await this.sdk.removeBiometryFactor()
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
     }
 }

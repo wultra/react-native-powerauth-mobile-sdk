@@ -616,14 +616,19 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void removeBiometryFactor(String instanceId, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    promise.resolve(sdk.removeBiometryFactor(context));
+        this.usePowerAuth(instanceId, promise, sdk -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (sdk.removeBiometryFactor(context)) {
+                    promise.resolve(null);
                 } else {
-                    promise.reject(Errors.EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    if (!sdk.hasBiometryFactor(context)) {
+                        promise.reject(Errors.EC_BIOMETRY_NOT_CONFIGURED, "Biometry not configured in this PowerAuth instance");
+                    } else {
+                        promise.reject(Errors.EC_REACT_NATIVE_ERROR, "Failed to remove biometry factor");
+                    }
                 }
+            } else {
+                promise.reject(Errors.EC_BIOMETRY_NOT_SUPPORTED, "Biometry not supported on this android version");
             }
         });
     }

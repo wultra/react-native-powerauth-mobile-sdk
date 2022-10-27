@@ -163,7 +163,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         // TODO: following functions should fail and not return false or some different error
         expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBe(false)
         expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBe(false)
-        expect(await sdk.removeBiometryFactor()).toBe(false)
+        await expect(async () => await sdk.removeBiometryFactor()).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED })
         await expect(async () => await sdk.activationRecoveryData(this.credentials.knowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
         //await expect(async () => await sdk.offlineSignature(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc=', undefined)).toThrow({errorCode: PowerAuthErrorCode.MISSING_ACTIVATION})
         //await expect(async () => await sdk.confirmRecoveryCode('R:ZKMVN-4IMFK-FLSYX-ARRGA', this.credentials.knowledge)).toThrow({errorCode: expectedError})

@@ -459,6 +459,8 @@ RCT_REMAP_METHOD(changePassword,
 RCT_REMAP_METHOD(addBiometryFactor,
                  instanceId:(NSString*)instanceId
                  password:(id)password
+                 title:(id)foo1
+                 description:(id)foo2
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
@@ -471,7 +473,7 @@ RCT_REMAP_METHOD(addBiometryFactor,
         if (error) {
             ProcessError(error, reject);
         } else {
-            resolve(@YES);
+            resolve(nil);
         }
     }];
     PA_BLOCK_END
@@ -493,7 +495,15 @@ RCT_REMAP_METHOD(removeBiometryFactor,
                  removeBiometryFactorReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    resolve(@([powerAuth removeBiometryFactor]));
+    if ([powerAuth removeBiometryFactor]) {
+        resolve(nil);
+    } else {
+        if (![powerAuth hasBiometryFactor]) {
+            reject(EC_BIOMETRY_NOT_CONFIGURED, @"Biometry not configured in this PowerAuth instance", nil);
+        } else {
+            reject(EC_REACT_NATIVE_ERROR, @"Failed to remove biometry factor", nil);
+        }
+    }
     PA_BLOCK_END
 }
 
