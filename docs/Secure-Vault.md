@@ -14,9 +14,7 @@ In order to obtain an encryption key with a given index, use the following code:
 
 ```javascript
 // 2FA signature. It uses device-related key and user PIN code.
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
+const auth = PowerAuthAuthentication.password("1234");
 
 // Select custom key index
 const index = 1000;

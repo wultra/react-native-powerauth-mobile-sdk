@@ -14,8 +14,8 @@
 // limitations under the License.
 //
 
-import { ActivationStatus, SignatureHelper, SignatureType } from "powerauth-js-test-client";
-import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
+import { SignatureType } from "powerauth-js-test-client";
+import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { Base64 } from "js-base64"; 
@@ -46,6 +46,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
     shouldCreateActivationBeforeTest(): boolean {
         return this.currentTestName !== 'testServerSignedData_WithNoActivation'
     }
+    
 
     async testSignatureCalculation() {
         const sdk = this.sdk

@@ -21,8 +21,7 @@ To get an access token, you can use the following code:
 
 ```javascript
 // 1FA signature, uses device related key
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
+const auth = PowerAuthAuthentication.possession();
 
 try {
     const token = await powerAuth.tokenStore.requestAccessToken("MyToken", auth);

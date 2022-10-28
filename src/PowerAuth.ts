@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import { Platform } from 'react-native';
 import { PowerAuthConfiguration } from './model/PowerAuthConfiguration';
 import { PowerAuthClientConfiguration } from './model/PowerAuthClientConfiguration';
 import { PowerAuthBiometryConfiguration } from './model/PowerAuthBiometryConfiguration';
 import { PowerAuthKeychainConfiguration } from './model/PowerAuthKeychainConfiguration';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 import { PowerAuthActivationStatus } from './model/PowerAuthActivationStatus';
-import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
+import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/PowerAuthAuthentication';
 import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivationResult';
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
@@ -198,7 +197,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("commitActivation", this.instanceId, authentication);
+        return NativeWrapper.thisCall("commitActivation", this.instanceId, authentication.convertLegacyObject(true));
     }
 
     /**
@@ -316,15 +315,38 @@ export class PowerAuth {
     }
 
     /**
+     * Regenerate a biometry related factor key. This variant of method is useful only on iOS platform or on Android, if `authenticateOnBiometricKeySetup` is `false`.
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
+     * 
+     * @param password Password used for authentication during vault unlocking call.
+     */
+    addBiometryFactor(password: PasswordType): Promise<void>
+    /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
      * 
      * @param password Password used for authentication during vault unlocking call.
-     * @param title (used only in Android) Title for biometry dialog
-     * @param description (used only in Android) Description for biometry dialog
+     * @param prompt Prompt to be displayed. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
      */
-    addBiometryFactor(password: PasswordType, title: string, description: string): Promise<void> {
-        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, title, description);
+    addBiometryFactor(password: PasswordType, prompt: PowerAuthBiometricPrompt | undefined): Promise<void>
+    /**
+     * Regenerate a biometry related factor key.
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
+     * 
+     * @param password Password used for authentication during vault unlocking call.
+     * @param title Title for biometry dialog. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
+     * @param description Description for biometry dialog. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
+     */
+    addBiometryFactor(password: PasswordType, title: string, description: string): Promise<void>
+
+    addBiometryFactor(password: PasswordType,  ...args: any[]): Promise<void> {
+        let prompt: PowerAuthBiometricPrompt | undefined
+        if (typeof args[0] === 'string' && typeof args[1] === 'string') {
+            prompt = { promptTitle: args[0], promptMessage: args[1] }
+        } else {
+            prompt = args[0]
+        }
+        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, prompt);
     }
 
     /** 
@@ -460,8 +482,8 @@ export class PowerAuth {
         if (!await this.isConfigured()) {
             throw new PowerAuthError(undefined, "Instance is not configured", PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED);
         }
-        if (authentication.useBiometry == false) {
-            throw new PowerAuthError(undefined, "Requesting biometric authentication, but `useBiometry` is set to false.");
+        if (authentication.isBiometricAuthentication == false) {
+            throw new PowerAuthError(undefined, "Authentication object is not configured for biometric factor", PowerAuthErrorCode.WRONG_PARAMETER);
         }
         try {
             const reusable = await this.authenticate(authentication, true);

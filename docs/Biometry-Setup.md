@@ -50,8 +50,13 @@ Use the following code to enable biometric authentication:
 const password = "1234";
 try {
     // Establish biometric data using provided password
-    await powerAuth.addBiometryFactor(password, "Add biometry", "Allow biometry factor");
-    // success
+    await powerAuth.addBiometryFactor(password, {
+        promptTitle: "Add biometry", 
+        promptMessage: "Allow biometry factor"
+    });
+    // You can also use simplified variant on iOS, or if `authenticateOnBiometricKeySetup` 
+    // is `false` on Android.
+    await powerAuth.addBiometryFactor(password)
 } catch (e) {
     //failed
 }
@@ -76,13 +81,10 @@ In order to obtain biometry credentials for the future sig  nature calculation, 
 
 ```javascript
 // Authenticate user with biometry and obtain PowerAuthAuthentication credentials for future signature calculation.
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = null;
-auth.useBiometry = true;
-auth.biometryTitle = "Grouped authentication";
-auth.biometryMessage = "One biometric authentication will be used for 2 operations.";
-    
+const auth = PowerAuthAuthentication.biometry({
+    promptTitle: 'Grouped authentication',
+    promptMessage: 'One biometric authentication will be used for 2 operations.'
+}); 
 try {
     await powerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
         try {

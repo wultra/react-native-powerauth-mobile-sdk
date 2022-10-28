@@ -15,12 +15,17 @@
 //
 
 import { Platform } from "react-native";
-import { PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_BiometryTests extends TestWithActivation {
+
+    shouldCreateActivationBeforeTest(): boolean {
+        const n = this.context.testName
+        return !(n == 'androidTestCreateActivationWithRSABiometryKey')
+    }
 
     customPrepareData(): CustomActivationHelperPrepareData {
         // Use config that allows create activation with biometry key with no user's interaction
@@ -42,16 +47,26 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         }
     }
 
+    async androidTestCreateActivationWithRSABiometryKey() {
+        const sdk = await this.helper.getPowerAuthSdk()
+        const activatioData = await this.helper.initActivation()
+        const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
+        await sdk.createActivation(activation)
+        // Now commit activation with a legacy authentication
+        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(this.credentials.validPassword)
+        await sdk.commitActivation(commitAuth)
+    }
+
     async testAddRemoveBiometryFactor() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.sdk.removeBiometryFactor()
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
 
         await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
-        await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
+        await this.sdk.addBiometryFactor(this.credentials.validPassword)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
 
-        await this.sdk.addBiometryFactor(this.credentials.validPassword, 'Some title', 'Some description')
+        await this.sdk.addBiometryFactor(this.credentials.validPassword)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         
         // Now remove factor and try to calculate signature

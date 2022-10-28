@@ -50,6 +50,12 @@ PA_EXTERN_C id PatchNull(id object);
 /// @return String extracted from the dictionary.
 PA_EXTERN_C NSString * GetNSStringValueFromDict(NSDictionary * dict, NSString * key);
 
+/// Extract value from dictionary containing encoded JS object at given path.
+/// @param dict Dictionary containing JS object.
+/// @param path Path object to extract from the dictionary. Use dot notation.
+/// @return String extracted from the dictionary.
+PA_EXTERN_C id GetValueAtPathFromDict(NSDictionary * dict, NSString * path, Class expectedClass);
+
 /// Extract NSData value from dictionary containing encoded JS object. The dictionary must contain
 /// Base64 encoded string for the provided key.
 /// @param dict Dictionary containing JS object.

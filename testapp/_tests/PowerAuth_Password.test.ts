@@ -117,10 +117,8 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         const pInvalid = await importPassword(this.credentials.invalidPassword, false, this.sdk)
         const signatureHelper = this.helper.signatureHelper
         
-        const validAuth = new PowerAuthAuthentication()
-        validAuth.userPassword = pValid
-        const invalidAuth = new PowerAuthAuthentication()
-        invalidAuth.userPassword = pInvalid
+        const validAuth = PowerAuthAuthentication.password(pValid)
+        const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
         let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
         expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(true)
@@ -138,10 +136,8 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         const pInvalid = await importPassword(this.credentials.invalidPassword, true, this.sdk)
         const signatureHelper = this.helper.signatureHelper
         
-        const validAuth = new PowerAuthAuthentication()
-        validAuth.userPassword = pValid
-        const invalidAuth = new PowerAuthAuthentication()
-        invalidAuth.userPassword = pInvalid
+        const validAuth = PowerAuthAuthentication.password(pValid)
+        const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
         let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
         expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(true)

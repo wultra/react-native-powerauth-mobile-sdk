@@ -37,10 +37,7 @@ if (!hasRecovery) {
 }
 
 // 2FA signature, uses device related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-
+const auth = PowerAuthAuthentication.password("1234");
 try {
     const recoveryData = await powerAuth.activationRecoveryData(auth);
     const recoveryCode = recoveryData.recoveryCode;
@@ -73,9 +70,7 @@ The recovery postcard can contain the recovery code and multiple PUK values on o
 
 ```javascript
 // 2FA signature with possession factor is required
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
+const auth = PowerAuthAuthentication.password("1234");
 
 const recoveryCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // You can also use code scanned from QR
 try {

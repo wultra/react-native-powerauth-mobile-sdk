@@ -150,37 +150,23 @@ export class TestWithActivation extends TestWithServer {
 
     /**
      * Function generate a set of PowerAuthAuthentication credentials.
-     * @returns 
+     * @returns Object containing various credentials.
      */
     generateActivationCredentials(): ActivationCredentials {
         const availablePasswords = [ "VerySecure", "1234", "nbusr123", "39h132v,kJdfvAl", "98765", "correct horse battery staple" ]
         const validIndex = Math.floor(Math.random() * availablePasswords.length)
-        const invalidIndex = (validIndex + 1) % availablePasswords.length
-
-        const possession = new PowerAuthAuthentication()
-        possession.usePossession = true
-        
-        const knowledge = new PowerAuthAuthentication()
-        knowledge.usePossession = true
-        knowledge.userPassword = availablePasswords[validIndex]
-
-        const biometry = new PowerAuthAuthentication()
-        biometry.usePossession = true
-        biometry.useBiometry = true
-        biometry.biometryTitle = "Authenticate with biometry"
-        biometry.biometryMessage = "Please authenticate with biometry"
-        
-        const invalid = new PowerAuthAuthentication()
-        invalid.usePossession = true
-        invalid.userPassword = availablePasswords[invalidIndex]
-
+        const validPassword = availablePasswords[validIndex]
+        const invalidPassword = availablePasswords[(validIndex + 1) % availablePasswords.length]
         return {
-            possession: possession,
-            knowledge: knowledge,
-            invalidKnowledge: invalid,
-            biometry: biometry,
-            validPassword: knowledge.userPassword!,
-            invalidPassword: invalid.userPassword!
+            possession: PowerAuthAuthentication.possession(),
+            knowledge: PowerAuthAuthentication.password(validPassword),
+            invalidKnowledge: PowerAuthAuthentication.password(invalidPassword),
+            biometry: PowerAuthAuthentication.biometry({
+                promptTitle: 'Authenticate',
+                promptMessage: 'Please authenticate with biometry'
+            }),
+            validPassword: validPassword,
+            invalidPassword: invalidPassword
         }
     }
 
@@ -235,6 +221,11 @@ export class TestWithActivation extends TestWithServer {
         }
     }
 
+    /**
+     * Cleanup activation before or after the test.
+     * @param prepareData Data for activation prepare.
+     * @param after If true, this is cleanup after the test.
+     */
     private async cleanupActivation(prepareData: CustomActivationHelperPrepareData, after: boolean) {
         if (this.helperInstance === undefined) {
             return

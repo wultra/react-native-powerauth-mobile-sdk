@@ -40,11 +40,7 @@ Use the following code for an activation removal using signed request:
 
 ```javascript
 // 2FA signature, uses device related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword ="1234";
-auth.useBiometry = false;
-
+const auth = PowerAuthAuthentication.password("1234");
 try {
     await powerAuth.removeActivationWithAuthentication(auth);
     // activation removed
