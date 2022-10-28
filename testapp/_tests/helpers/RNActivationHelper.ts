@@ -122,14 +122,12 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
         // Create activation
         const result = await sdk.createActivation(activationData)
         // Commit activation locally
-        const auth = new PowerAuthAuthentication()
-        auth.usePossession = true
-        auth.userPassword = pd.password
-        auth.useBiometry = pd.useBiometry ?? false
-        if (auth.useBiometry) {
-            auth.biometryMessage = "Please authenticate to enable biometry"
-            auth.biometryTitle = "Enable biometry"
-        }
+        const auth = pd.useBiometry
+                        ? PowerAuthAuthentication.commitWithPasswordAndBiometry(pd.password, {
+                            promptMessage: 'Please authenticate to enable biometry',
+                            promptTitle: 'Enable biometry' 
+                          })
+                        : PowerAuthAuthentication.commitWithPassword(pd.password)
         await sdk.commitActivation(auth)
         return result
     }

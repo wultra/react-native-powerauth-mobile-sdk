@@ -39,10 +39,6 @@ id PatchNull(id object) {
     return object;
 }
 
-/// Extract NSString value from dictionary containing encoded JS object.
-/// @param dict Dictionary containing JS object.
-/// @param key Key for value to extract from the dictionary.
-/// @return String extracted from the dictionary.
 NSString * GetNSStringValueFromDict(NSDictionary * dict, NSString * key)
 {
     id value = dict[key];
@@ -52,11 +48,25 @@ NSString * GetNSStringValueFromDict(NSDictionary * dict, NSString * key)
     return [RCTConvert NSString:value];
 }
 
-/// Extract NSData value from dictionary containing encoded JS object. The dictionary must contain
-/// Base64 encoded string for the provided key.
-/// @param dict Dictionary containing JS object.
-/// @param key Key for value to extract from the dictionary.
-/// @return NSData extracted from the dictionary.
+id GetValueAtPathFromDict(NSDictionary * dict, NSString * path, Class expectedClass)
+{
+    NSArray * pathComponents = [path componentsSeparatedByString:@"."];
+    NSUInteger lastIndex = pathComponents.count - 1;
+    __block id result = nil;
+    __block NSDictionary * currentDict = dict;
+    [pathComponents enumerateObjectsUsingBlock:^(NSString * component, NSUInteger idx, BOOL * stop) {
+        if (idx == lastIndex) {
+            result = CastObjectTo(currentDict[component], expectedClass);
+        } else {
+            currentDict = CastObjectTo(currentDict[component], [NSDictionary class]);
+            if (!currentDict) {
+                *stop = YES;
+            }
+        }
+    }];
+    return result;
+}
+
 NSData * GetNSDataValueFromDict(NSDictionary * dict, NSString * key)
 {
     NSString * encodedData = GetNSStringValueFromDict(dict, key);

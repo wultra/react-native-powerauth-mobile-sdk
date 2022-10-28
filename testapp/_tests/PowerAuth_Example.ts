@@ -143,11 +143,15 @@ export class PowerAuth_Example extends TestWithServer {
         await password.addCharacter('5')
         await password.addCharacter('7')
         await password.addCharacter('9')
-        const commitAuthentication = new PowerAuthAuthentication()
+        const commitAuthentication = PowerAuthAuthentication.commitWithPasswordAndBiometry(password, {
+            // The following strings are required on android platform in case that `biometryConfiguration.authenticateOnBiometricKeySetup` is true
+            // You can provide some dummy strings in case that flag is false.
+            promptTitle: 'Please authenticate with biometry',
+            promptMessage: 'Please authenticate to create an activation supporting biometry'
+        });
         commitAuthentication.userPassword = password
         commitAuthentication.useBiometry = true
-        // The following strings are required on android platform in case that `biometryConfiguration.authenticateOnBiometricKeySetup` is true
-        // YOu can provide some dummy strings in case that flag is false.
+
         commitAuthentication.biometryTitle = 'Please authenticate with biometry'
         commitAuthentication.biometryMessage = 'Please authenticate to create an activation supporting biometry'
 

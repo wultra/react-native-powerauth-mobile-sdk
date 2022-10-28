@@ -459,12 +459,21 @@ RCT_REMAP_METHOD(changePassword,
 RCT_REMAP_METHOD(addBiometryFactor,
                  instanceId:(NSString*)instanceId
                  password:(id)password
-                 title:(id)foo1
-                 description:(id)foo2
+                 prompt:(NSDictionary*)foo
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
+    // Workaround for native SDK. We're expectint MISSING or PEDNING_ACTIVATION
+    // but native SDK prioritize biometry-related error in this situation.
+    if (![powerAuth hasValidActivation]) {
+        reject(EC_MISSING_ACTIVATION, nil, nil);
+        return;
+    }
+    if ([powerAuth hasPendingActivation]) {
+        reject(EC_PENDING_ACTIVATION, nil, nil);
+        return;
+    }
     PowerAuthCorePassword * corePassword = [self resolvePassword:password reject:reject];
     if (!corePassword) {
         return;
@@ -674,15 +683,16 @@ RCT_REMAP_METHOD(confirmRecoveryCode,
 
 RCT_REMAP_METHOD(authenticateWithBiometry,
                  instanceId:(nonnull NSString*)instanceId
-                 title:(nonnull NSString*)title // title is here only for API compatibility with android
-                 message:(nonnull NSString*)message
+                 prompt:(nonnull NSDictionary*)prompt
                  makeReusable:(BOOL)makeReusable
                  resolve:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    NSString * messageString = [RCTConvert NSString:message];
-    [powerAuth authenticateUsingBiometryWithPrompt:messageString callback:^(PowerAuthAuthentication * authentication, NSError * error) {
+    LAContext * context = [[LAContext alloc] init];
+    context.localizedReason = GetNSStringValueFromDict(prompt, @"promptMessage");
+    context.localizedCancelTitle = GetNSStringValueFromDict(prompt, @"cancelButton");
+    [powerAuth authenticateUsingBiometryWithContext:context callback:^(PowerAuthAuthentication * authentication, NSError * error) {
         if (authentication) {
             // Allocate native object
             PowerAuthData * managedData = [[PowerAuthData alloc] initWithData:authentication.overridenBiometryKey cleanup:YES];
@@ -942,8 +952,8 @@ RCT_REMAP_METHOD(generateHeaderForToken,
                                                             reject:(RCTPromiseRejectBlock)reject
                                                          forCommit:(BOOL)commit
 {
-    BOOL useBiometry = [RCTConvert BOOL:dict[@"useBiometry"]];
-    id userPassword = dict[@"userPassword"];
+    BOOL useBiometry = [RCTConvert BOOL:dict[@"isBiometry"]];
+    id userPassword = dict[@"password"];
     if (commit) {
         // Activation commit
         PowerAuthCorePassword * password = [self resolvePassword:userPassword reject:reject];
@@ -975,9 +985,13 @@ RCT_REMAP_METHOD(generateHeaderForToken,
                     return nil;
                 }
             }
-            NSString * biometryPrompt = GetNSStringValueFromDict(dict, @"biometryMessage");
-            if (biometryPrompt) {
-                return [PowerAuthAuthentication possessionWithBiometryPrompt:biometryPrompt];
+            NSString * biometryPrompt = GetValueAtPathFromDict(dict, @"biometricPrompt.promptMessage", [NSString class]);
+            NSString * cancelButton   = GetValueAtPathFromDict(dict, @"biometricPrompt.promptTitle", [NSString class]);
+            if (biometryPrompt || cancelButton) {
+                LAContext * context = [[LAContext alloc] init];
+                context.localizedReason = biometryPrompt;
+                context.localizedCancelTitle = cancelButton;
+                return [PowerAuthAuthentication possessionWithBiometryContext:context];
             } else {
                 return [PowerAuthAuthentication possessionWithBiometry];
             }

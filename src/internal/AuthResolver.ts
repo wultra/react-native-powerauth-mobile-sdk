@@ -15,7 +15,7 @@
 //
 
 import { Platform } from 'react-native';
-import { PowerAuthAuthentication, PowerAuthError, PowerAuthErrorCode } from '../index';
+import { PowerAuthAuthentication, PowerAuthBiometricPrompt, PowerAuthError, PowerAuthErrorCode } from '../index';
 import { NativeWrapper } from './NativeWrapper';
 import { NativeObject } from './NativeObject';
 
@@ -33,50 +33,50 @@ export class AuthResolver {
 
     /**
      * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
-     * 
-     * @param authentication authentication configuration
+     * The method should be used only for the signing purposes.
+     * @param authentication Authentication configuration
+     * @param forCommit If true, then resolve authentication for activation commit.
      * @param makeReusable if the object should be forced to be reusable
-     * @param recoveringFromError if true, then this is call
      * @returns configured authorization object
      */
     async resolve(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-        const obj: ReusablePowerAuthAuthentication = { ...authentication }
+        // Force cast to private interface and patch possible legacy object.
+        const correctAuth = authentication.convertLegacyObject(false)
+        const privateAuth = (correctAuth as any as PrivatePowerAuthAuthentication)
         // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
         // if underlying data object is no longer valid.
-        if (obj.biometryKeyId && !NativeObject.isValidNativeObject(obj.biometryKeyId)) {
-            obj.biometryKeyId = undefined
+        if (privateAuth.biometryKeyId && !NativeObject.isValidNativeObject(privateAuth.biometryKeyId)) {
+            privateAuth.biometryKeyId = undefined
         }
         // Validate whether biometric key is set
-        if (obj.useBiometry && !await NativeWrapper.thisCallBool('hasBiometryFactor', this.instanceId)) {
+        const useBiometry = privateAuth.isBiometry
+        if (useBiometry && !await NativeWrapper.thisCallBool('hasBiometryFactor', this.instanceId)) {
             // Biometry is requested but there's no biometry factor set
             throw new PowerAuthError(undefined, "Biometry factor is not configured", PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED)
         }
         // On android, we need to fetch the key for every biometric authentication.
         // If the key is already set, use it (we're processing reusable biometric authentication)
-        if ((Platform.OS == 'android' && authentication.useBiometry && (!obj.biometryKeyId || makeReusable)) ||
+        if ((Platform.OS == 'android' && useBiometry && (!privateAuth.biometryKeyId || makeReusable)) ||
             (Platform.OS == 'ios' && makeReusable)) {
             try {
-                // Android requires to always provide title and message
-                const title   = authentication.biometryTitle ?? '??'
-                const message = authentication.biometryMessage ?? '??'
+                const prompt = correctAuth.biometricPrompt
                 // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
-                obj.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', this.instanceId, title, message, makeReusable)) as string;
-                return obj;
+                privateAuth.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', this.instanceId, prompt, makeReusable)) as string;
+                return correctAuth;
             } catch (e) {
                 throw NativeWrapper.processException(e)
             }
         }
-        // no need for processing, just return original object
-        return authentication;
+        // no other processing is required
+        return correctAuth;
     }
 }
 
 /**
- * Extended PowerAuthAuthentication object containing a biometry key.
+ * Reveals private properties in PowerAuthAuthentication object.
+ * See private section of `PowerAuthAuthentication`.
  */
-class ReusablePowerAuthAuthentication extends PowerAuthAuthentication {
-    /**
-     * Contains identifier for data allocated in native code.
-     */
+interface PrivatePowerAuthAuthentication {
     biometryKeyId?: string
+    isBiometry: boolean
 }

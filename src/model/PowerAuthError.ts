@@ -164,7 +164,10 @@ export enum PowerAuthErrorCode {
     /** Biometric authentication failed */
     BIOMETRY_FAILED = "BIOMETRY_FAILED",
 
-    /** When password is not set during activation commit */
+    /**
+     * When password is not set during activation commit.
+     * @deprecated "WRONG_PARAM" is returned in this case.
+     */
     PASSWORD_NOT_SET = "PASSWORD_NOT_SET",
 
     /** Error when invalid activation object is provided during activation */

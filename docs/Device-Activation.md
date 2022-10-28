@@ -149,11 +149,13 @@ After you create an activation using one of the methods mentioned above, you nee
 ```javascript
 import { PowerAuthAuthentication } from 'react-native-powerauth-mobile-sdk';
 
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = true; // should biometry authentication should be available?
-auth.biometryMessage = "Enable biometry"; // only displayed on Android
+const auth = PowerAuthAuthentication.commitWithPasswordAndBiometry("1234", {
+    // The `PowerAuthBiometricPrompt` object is required on Android platform in case that
+    // `biometryConfiguration.authenticateOnBiometricKeySetup` is true.
+    // You can provide undefined prompt object in case that flag is false.
+    promptTitle: 'Please authenticate with biometry',
+    promptMessage: 'Please authenticate to create an activation supporting biometry'
+});
 try {
   await powerAuth.commitActivation(auth);
 } catch (e) {

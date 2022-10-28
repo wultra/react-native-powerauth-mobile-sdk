@@ -45,4 +45,8 @@ class Constants {
      * Upper limit for Unicode Code Point.
      */
     static final int CODEPOINT_MAX                   = 0x10FFFF;
+
+    // Fallback strings
+
+    static final String MISSING_REQUIRED_STRING   = "< missing >";
 }

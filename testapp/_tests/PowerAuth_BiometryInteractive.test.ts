@@ -17,9 +17,13 @@
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { expect, UserPromptDuration } from "../src/testbed";
-import { PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { ActivationStatus } from "powerauth-js-test-client";
+import { Platform } from "react-native";
 
 export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
+
+    isAndoid = Platform.OS === 'android'
 
     /**
      * Construct this test suite as interactive
@@ -29,10 +33,18 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         super(suiteName, true)
     }
 
+    shouldCreateActivationBeforeTest(): boolean {
+        const n = this.context.testName
+        return !(n == 'testCreateActivationWithSymmetricKey')
+    }
+
     customPrepareData(): CustomActivationHelperPrepareData {
+        // Use auth on setup
+        const n = this.context.testName
+        const authOnKeySetup = n == 'testCreateActivationWithSymmetricKey'
         // Use config that allows create activation with biometry key with no user's interaction
         const config = new PowerAuthBiometryConfiguration()
-        config.authenticateOnBiometricKeySetup = false
+        config.authenticateOnBiometricKeySetup = authOnKeySetup
         return {
             useConfigObjects: true,
             useBiometry: true,
@@ -47,6 +59,92 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
             this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
         }
+    }
+
+    async testCreateActivationWithSymmetricKey() {
+        const sdk = await this.helper.getPowerAuthSdk()
+        const activatioData = await this.helper.initActivation()
+        const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
+        await sdk.createActivation(activation)
+        // Now commit activation with a legacy authentication
+
+        if (this.isAndoid) await this.showPrompt('Authenticate to create activation with biometry')
+
+        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(this.credentials.validPassword, {
+            promptTitle: 'Authenticate with biometry',
+            promptMessage: 'Authenticate to create activation with biometry'
+        })
+        await sdk.commitActivation(commitAuth)
+
+        // Commit activation on the server
+        if (await this.helper.getActivationStatus() != ActivationStatus.ACTIVE) {
+            await this.helper.commitActivation()
+        }
+
+        // Now calculate some signature
+        await this.showPrompt('Authenticate to calculate signature with symmetric key')
+
+        const auth = PowerAuthAuthentication.biometry({
+            promptTitle: 'Authenticate',
+            promptMessage: 'Please authenticate with biometry'
+        })
+        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
+        await this.sdk.tokenStore.removeAccessToken('biometric-token')
+
+        // Now remove biometry key
+        await this.sdk.removeBiometryFactor()
+
+        // And add it again
+        if (this.isAndoid) await this.showPrompt('Authenticate to add biometric factor again')
+        await this.sdk.addBiometryFactor(this.credentials.validPassword, {
+            promptTitle: 'Authenticate',
+            promptMessage: 'Authenticate to add biometric factor'
+        })
+    }
+
+    async testBiometricSignature() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please authenticate with biometry to request access token')
+
+        const auth = PowerAuthAuthentication.biometry({
+            promptTitle: 'Authenticate',
+            promptMessage: 'Please authenticate with biometry'
+        })
+        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
+        await this.sdk.tokenStore.removeAccessToken('biometric-token')
+    }
+
+    async testBiometricSignature_NoPrompt() {
+        await this.showPrompt('Please authenticate - Dialog without strings')
+
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        const auth = PowerAuthAuthentication.biometry()
+        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
+        await this.sdk.tokenStore.removeAccessToken('biometric-token')
+    }
+
+    async testLegacyBiometricSignature() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please authenticate with biometry to request access token')
+        const auth = new PowerAuthAuthentication()
+        auth.usePossession = true
+        auth.useBiometry = true
+        auth.biometryTitle = 'Authenticate (Legacy)'
+        auth.biometryMessage = 'Please authenticate with biometry to request access token'
+
+        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
+        await this.sdk.tokenStore.removeAccessToken('biometric-token')
+    }
+
+    async testLegacyBiometricSignature_NoPrompt() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        const auth = new PowerAuthAuthentication()
+        auth.usePossession = true
+        auth.useBiometry = true
+
+        await this.showPrompt('Please authenticate - Dialog without strings')
+        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
+        await this.sdk.tokenStore.removeAccessToken('biometric-token')
     }
 
     async testGroupedBiometricAuthentication() {

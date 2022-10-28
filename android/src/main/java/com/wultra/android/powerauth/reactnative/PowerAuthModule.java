@@ -22,6 +22,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Base64;
+import android.util.Pair;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -366,54 +367,45 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void commitActivation(String instanceId, final ReadableMap authMap, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, true);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("useBiometry")) {
-                    String title = authMap.getString("biometryTitle");
-                    if (title == null) {
-                        title = "null"; // to prevent crash
+        this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
+            final PowerAuthAuthentication auth = constructAuthentication(authMap, true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
+                final ReadableMap promptMap = authMap.hasKey("biometricPrompt") ? authMap.getMap("biometricPrompt") : null;
+                final Pair<String, String> titleDesc = extractPromptStrings(promptMap);
+                try {
+                    final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                    if (fragmentActivity == null) {
+                        throw new WrapperException(Errors.EC_REACT_NATIVE_ERROR, "Current fragment activity is not available");
                     }
-                    String message = authMap.getString("biometryMessage");
-                    if (message == null) {
-                        message = "null"; // to prevent crash
+                    if (auth.getPassword() == null) {
+                        throw new IllegalStateException(); // This is handled in "constructAuthentication", so should never happen.
                     }
-                    try {
-                        final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
-                        if (fragmentActivity == null) {
-                            throw new IllegalStateException("Current fragment activity is not available");
+                    sdk.commitActivation(context, fragmentActivity, titleDesc.first, titleDesc.second, auth.getPassword(), new ICommitActivationWithBiometryListener() {
+
+                        @Override
+                        public void onBiometricDialogCancelled() {
+                            promise.reject(Errors.EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
                         }
-                        if (auth.getPassword() == null) {
-                            throw new IllegalStateException("password is not available"); // This is handled in "constructAuthentication", so should never happen.
+
+                        @Override
+                        public void onBiometricDialogSuccess() {
+                            promise.resolve(null);
                         }
-                        sdk.commitActivation(context, fragmentActivity, title, message, auth.getPassword(), new ICommitActivationWithBiometryListener() {
 
-                            @Override
-                            public void onBiometricDialogCancelled() {
-                                promise.reject(Errors.EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
-                            }
-
-                            @Override
-                            public void onBiometricDialogSuccess() {
-                                promise.resolve(null);
-                            }
-
-                            @Override
-                            public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed");
-                            }
-                        });
-                    } catch (Throwable t) {
-                        Errors.rejectPromise(promise, t);
-                    }
+                        @Override
+                        public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
+                            promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed");
+                        }
+                    });
+                } catch (Throwable t) {
+                    Errors.rejectPromise(promise, t);
+                }
+            } else {
+                int result = sdk.commitActivationWithAuthentication(context, auth);
+                if (result == PowerAuthErrorCodes.SUCCEED) {
+                    promise.resolve(null);
                 } else {
-                    int result = sdk.commitActivationWithAuthentication(context, auth);
-                    if (result == PowerAuthErrorCodes.SUCCEED) {
-                        promise.resolve(null);
-                    } else {
-                        promise.reject(Errors.getErrorCodeFromError(result), "Commit failed.");
-                    }
+                    promise.reject(Errors.getErrorCodeFromError(result), "Commit failed.");
                 }
             }
         });
@@ -562,7 +554,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void addBiometryFactor(String instanceId, final Dynamic password, final String title, final String description, final Promise promise) {
+    public void addBiometryFactor(String instanceId, final Dynamic password, final ReadableMap prompt, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
             final Password corePassword = resolvePassword(password);
@@ -572,11 +564,12 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                     if (fragmentActivity == null) {
                         throw new IllegalStateException("Current fragment activity is not available");
                     }
+                    final Pair<String, String> titleDesc = extractPromptStrings(prompt);
                     sdk.addBiometryFactor(
                             context,
                             fragmentActivity,
-                            title,
-                            description,
+                            titleDesc.first,
+                            titleDesc.second,
                             corePassword,
                             new IAddBiometryFactorListener() {
                                 @Override
@@ -799,55 +792,53 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void authenticateWithBiometry(String instanceId, final String title, final String description, final boolean makeReusable, final Promise promise) {
+    public void authenticateWithBiometry(String instanceId, final ReadableMap prompt, final boolean makeReusable, final Promise promise) {
         final Context context = this.context;
-        this.usePowerAuthOnMainThread(instanceId, promise, new PowerAuthBlock() {
-            @Override
-            public void run(@NonNull PowerAuthSDK sdk) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    try {
-                        final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
-                        if (fragmentActivity == null) {
-                            throw new IllegalStateException("Current fragment activity is not available");
-                        }
-                        sdk.authenticateUsingBiometry(
-                            context,
-                            fragmentActivity,
-                            title,
-                            description,
-                            new IBiometricAuthenticationCallback() {
-                                @Override
-                                public void onBiometricDialogCancelled(boolean userCancel) {
-                                    promise.reject(Errors.EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
-                                }
-
-                                @Override
-                                public void onBiometricDialogSuccess(@NonNull BiometricKeyData biometricKeyData) {
-                                    // Allocate native managed object object
-                                    final ManagedAny<byte[]> managedBytes = ManagedAny.wrap(biometricKeyData.getDerivedData());
-                                    // If reusable authentication is going to be created, then "keep alive" release policy is applied.
-                                    // Basically, the data will be available up to 10 seconds from the last access.
-                                    // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
-                                    // to combine it with "expire" policy to make sure that key don't remain in memory forever.
-                                    final List<ReleasePolicy> releasePolicies = makeReusable
-                                            ? Collections.singletonList(ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME))
-                                            : Arrays.asList(ReleasePolicy.afterUse(1), ReleasePolicy.expire(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME));
-                                    final String managedId = objectRegister.registerObject(managedBytes, instanceId, releasePolicies);
-                                    promise.resolve(managedId);
-                                }
-
-                                @Override
-                                public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                    promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed");
-                                }
-                            }
-                        );
-                    } catch (Exception e) {
-                        Errors.rejectPromise(promise, e);
+        this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                try {
+                    final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
+                    if (fragmentActivity == null) {
+                        throw new WrapperException(Errors.EC_REACT_NATIVE_ERROR, "Current fragment activity is not available");
                     }
-                } else {
-                    promise.reject(Errors.EC_REACT_NATIVE_ERROR, "Biometry not supported on this android version.");
+                    final Pair<String, String> titleDesc = extractPromptStrings(prompt);
+                    sdk.authenticateUsingBiometry(
+                        context,
+                        fragmentActivity,
+                        titleDesc.first,
+                        titleDesc.second,
+                        new IBiometricAuthenticationCallback() {
+                            @Override
+                            public void onBiometricDialogCancelled(boolean userCancel) {
+                                promise.reject(Errors.EC_BIOMETRY_CANCEL, "Biometry dialog was canceled");
+                            }
+
+                            @Override
+                            public void onBiometricDialogSuccess(@NonNull BiometricKeyData biometricKeyData) {
+                                // Allocate native managed object object
+                                final ManagedAny<byte[]> managedBytes = ManagedAny.wrap(biometricKeyData.getDerivedData());
+                                // If reusable authentication is going to be created, then "keep alive" release policy is applied.
+                                // Basically, the data will be available up to 10 seconds from the last access.
+                                // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
+                                // to combine it with "expire" policy to make sure that key don't remain in memory forever.
+                                final List<ReleasePolicy> releasePolicies = makeReusable
+                                        ? Collections.singletonList(ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME))
+                                        : Arrays.asList(ReleasePolicy.afterUse(1), ReleasePolicy.expire(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME));
+                                final String managedId = objectRegister.registerObject(managedBytes, instanceId, releasePolicies);
+                                promise.resolve(managedId);
+                            }
+
+                            @Override
+                            public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
+                                promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed");
+                            }
+                        }
+                    );
+                } catch (Exception e) {
+                    Errors.rejectPromise(promise, e);
                 }
+            } else {
+                promise.reject(Errors.EC_BIOMETRY_NOT_SUPPORTED, "Biometry not supported on this android version.");
             }
         });
     }
@@ -1103,19 +1094,19 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         } else {
             biometryKey = null;
         }
-        final Password userPassword;
-        if (map.hasKey("userPassword")) {
-             userPassword = resolvePassword(map.getDynamic("userPassword"));
+        final Password password;
+        if (map.hasKey("password")) {
+            password = resolvePassword(map.getDynamic("password"));
         } else {
-            userPassword = null;
+            password = null;
         }
         if (forCommit) {
             // Authentication for activation commit
-            if (userPassword == null) {
-                throw new WrapperException(Errors.EC_PASSWORD_NOT_SET, "Password is not set");
+            if (password == null) {
+                throw new WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required");
             }
             if (biometryKey == null) {
-                return PowerAuthAuthentication.commitWithPassword(userPassword);
+                return PowerAuthAuthentication.commitWithPassword(password);
             } else {
                 // This is currently not supported in RN wrapper. Application has no way to create
                 // commit authentication object prepared with valid biometry key. This is supported
@@ -1123,18 +1114,36 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 //
                 // We can still use this option in tests, to simulate biometry-related operations
                 // with no user's interaction.
-                return PowerAuthAuthentication.commitWithPasswordAndBiometry(userPassword, biometryKey);
+                return PowerAuthAuthentication.commitWithPasswordAndBiometry(password, biometryKey);
             }
         } else {
             // Authentication for data signing
             if (biometryKey != null) {
                 return PowerAuthAuthentication.possessionWithBiometry(biometryKey);
-            } else if (userPassword != null) {
-                return PowerAuthAuthentication.commitWithPassword(userPassword);
+            } else if (password != null) {
+                return PowerAuthAuthentication.commitWithPassword(password);
             } else  {
                 return PowerAuthAuthentication.possession();
             }
         }
+    }
+
+    /**
+     * Extract strings from biometric prompt.
+     * @param prompt Map with prompt data.
+     * @return Pair where first item is title and second description for biometric dialog.
+     */
+    @NonNull
+    private Pair<String, String> extractPromptStrings(ReadableMap prompt) {
+        String title = prompt != null ? prompt.getString("promptTitle") : null;
+        String description = prompt != null ? prompt.getString("promptMessage") : null;
+        if (title == null) {
+            title = Constants.MISSING_REQUIRED_STRING;
+        }
+        if (description == null) {
+            description = Constants.MISSING_REQUIRED_STRING;
+        }
+        return Pair.create(title, description);
     }
 
     /**
