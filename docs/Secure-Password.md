@@ -134,7 +134,7 @@ console.log(`empty is ${empty}`);           // prints 'empty is true'
 
 ## Testing PIN strength
 
-If password object contains digits only, then you can test the strength of tored PIN:
+If password object contains digits only, then you can test the strength of stored PIN:
 
 ```javascript
 try {
