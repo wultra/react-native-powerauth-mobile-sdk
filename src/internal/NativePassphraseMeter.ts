@@ -23,7 +23,7 @@ import { PinTestResult, RawPassword } from '../index'
 export interface PowerAuthPassphraseMeterIfc {
     /**
      * Test strength of PIN.
-     * @param pin PIN to test. You can provide string or `PowerAuthPassword` object containing numbers only. 
+     * @param pin PIN to test.
      * @returns `PinTestResult` object.
      * @throws `PowerAuthErrorCode.WRONG_PARAM` if PIN contains other characters than digits or length is less than 4.
      */

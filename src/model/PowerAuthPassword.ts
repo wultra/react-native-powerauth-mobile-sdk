@@ -220,12 +220,11 @@ export class PowerAuthPassword {
     }
 
     /**
-     * Convert this password object into RawPassword object that can be passed safely
-     * to native call.
+     * Convert this password object into RawPassword object that can be passed safely to a native call.
      * @returns RawPassword object.
      */
-    toRawPassword(): RawPassword {
-        return { passwordObjectId: this.passwordObjectId }
+    toRawPassword(): Promise<RawPassword> {
+        return this.withObjectId(id => Promise.resolve({ passwordObjectId: id }))
     }
 
     /**

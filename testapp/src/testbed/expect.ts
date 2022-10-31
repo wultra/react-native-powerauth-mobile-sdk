@@ -303,7 +303,8 @@ export const expect = (received: any) => ({
         return _R(received, expected, (r) => r.evaluate((received, expected) => {
             const isArr = Array.isArray(received)
             const isMapOrSet = received instanceof Map || received instanceof Set
-            expected.forEach((item: any) => {
+            const arrayToIterate = Array.isArray(expected[0]) ? expected[0] : expected
+            arrayToIterate.forEach((item: any) => {
                 let found = false
                 if (isArr) {
                     found = received.indexOf(item) >= 0
@@ -322,7 +323,8 @@ export const expect = (received: any) => ({
         return _R(received, expected, (r) => r.evaluate((received, expected) => {
             const isArr = Array.isArray(received)
             const isMapOrSet = received instanceof Map || received instanceof Set
-            expected.forEach((item: any) => {
+            const arrayToIterate = Array.isArray(expected[0]) ? expected[0] : expected
+            arrayToIterate.forEach((item: any) => {
                 let found = false
                 if (isArr) {
                     found = received.indexOf(item) >= 0

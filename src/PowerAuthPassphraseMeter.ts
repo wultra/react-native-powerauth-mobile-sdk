@@ -18,6 +18,9 @@ import { PasswordType, PowerAuthPassword } from "./index";
 import { NativePassphraseMeter } from './internal/NativePassphraseMeter'
 import { NativeWrapper } from "./internal/NativeWrapper";
 
+/**
+ * Issues found during the PIN strength test.
+ */
 export enum PinTestIssue {
     /**
      * Not enough unique digits found.
@@ -68,7 +71,7 @@ export class PowerAuthPassphraseMeter {
      */
     static async testPin(pin: PasswordType): Promise<PinTestResult> {
         try {
-            return await NativePassphraseMeter.testPin(typeof pin == 'string' ? pin : pin.toRawPassword())
+            return await NativePassphraseMeter.testPin(typeof pin == 'string' ? pin : await pin.toRawPassword())
         } catch (error) {
             throw NativeWrapper.processException(error)
         }
