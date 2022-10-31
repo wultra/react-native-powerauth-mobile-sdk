@@ -39,10 +39,15 @@ public class PowerAuthReactPackage implements ReactPackage {
     @NonNull
     @Override
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
-        List<NativeModule> modules = new ArrayList<>();
+        // Object register
         final ObjectRegister objectRegister = new ObjectRegister();
-        modules.add(new PowerAuthModule(reactContext, objectRegister));
+        // Password module
+        final PowerAuthPasswordModule passwordModule = new PowerAuthPasswordModule(objectRegister);
+        // Create a list of modules
+        final List<NativeModule> modules = new ArrayList<>();
+        modules.add(new PowerAuthModule(reactContext, objectRegister, passwordModule));
         modules.add(new PowerAuthPasswordModule(objectRegister));
+        modules.add(new PowerAuthPassphraseMeterModule(passwordModule));
         modules.add(objectRegister);
         return modules;
     }

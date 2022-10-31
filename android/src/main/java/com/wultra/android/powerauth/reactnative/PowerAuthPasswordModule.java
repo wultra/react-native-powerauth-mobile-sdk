@@ -17,15 +17,18 @@
 package com.wultra.android.powerauth.reactnative;
 
 import com.facebook.react.bridge.BaseJavaModule;
+import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.annotation.Nonnull;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,6 +50,8 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
     public String getName() {
         return "PowerAuthPassword";
     }
+
+    // JavaScript methods
 
     @ReactMethod
     public void initialize(boolean destroyOnUse, @Nullable String ownerId, int autoreleaseTime, Promise promise) {
@@ -137,6 +142,65 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
         });
     }
 
+    // Native methods
+
+    /**
+     * Function translate dynamic object type into core Password object. The password object is
+     * marked as used or touched depending on required action.
+     * @param anyPassword Dynamic object representing a password.
+     * @param use If true then password is marked as used, otherwise just is touched.
+     * @return Resolved core password.
+     * @throws WrapperException In case that Password cannot be created.
+     */
+    @Nonnull
+    private Password findPassword(Dynamic anyPassword, boolean use) throws WrapperException {
+        if (anyPassword != null) {
+            if (anyPassword.getType() == ReadableType.String) {
+                // Direct string was provided
+                return new Password(anyPassword.asString());
+            }
+            if (anyPassword.getType() == ReadableType.Map) {
+                // Object is provided
+                final ReadableMap map = anyPassword.asMap();
+                final String passwordObjectId = map.getString("passwordObjectId");
+                if (passwordObjectId == null) {
+                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword is not initialized");
+                }
+                Password password = use
+                        ? objectRegister.useObject(passwordObjectId, Password.class)
+                        : objectRegister.touchObject(passwordObjectId, Password.class);
+                if (password == null) {
+                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword object is no longer valid");
+                }
+                return password;
+            }
+        }
+        throw new WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required");
+    }
+
+    /**
+     * Function translate dynamic object type into core Password object. The password object is
+     * marked as used in the object register if exists.
+     * @param anyPassword Dynamic object representing a password.
+     * @return Resolved core password.
+     * @throws WrapperException In case that Password cannot be created.
+     */
+    @Nonnull
+    Password usePassword(Dynamic anyPassword) throws WrapperException {
+        return findPassword(anyPassword, true);
+    }
+
+    /**
+     * Function translate dynamic object type into core Password object. The password object is
+     * marked as touched in the object register if exists.
+     * @param anyPassword Dynamic object representing a password.
+     * @return Resolved core password.
+     * @throws WrapperException In case that Password cannot be created.
+     */
+    @Nonnull
+    Password touchPassword(Dynamic anyPassword) throws WrapperException {
+        return findPassword(anyPassword, false);
+    }
     // Private methods
 
     /**

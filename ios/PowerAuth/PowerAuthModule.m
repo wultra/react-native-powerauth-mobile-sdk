@@ -417,11 +417,11 @@ RCT_REMAP_METHOD(unsafeChangePassword,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * coreOldPassword = [self resolvePassword:oldPassword reject:reject];
+    PowerAuthCorePassword * coreOldPassword = UsePassword(oldPassword, _objectRegister, reject);
     if (!coreOldPassword) {
         return;
     }
-    PowerAuthCorePassword * newCorePassword = [self resolvePassword:newPassword reject:reject];
+    PowerAuthCorePassword * newCorePassword = UsePassword(newPassword, _objectRegister, reject);
     if (!newCorePassword) {
         return;
     }
@@ -438,11 +438,11 @@ RCT_REMAP_METHOD(changePassword,
                  changePasswordReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * coreOldPassword = [self resolvePassword:oldPassword reject:reject];
+    PowerAuthCorePassword * coreOldPassword = UsePassword(oldPassword, _objectRegister, reject);
     if (!coreOldPassword) {
         return;
     }
-    PowerAuthCorePassword * newCorePassword = [self resolvePassword:newPassword reject:reject];
+    PowerAuthCorePassword * newCorePassword = UsePassword(newPassword, _objectRegister, reject);
     if (!newCorePassword) {
         return;
     }
@@ -474,7 +474,7 @@ RCT_REMAP_METHOD(addBiometryFactor,
         reject(EC_PENDING_ACTIVATION, nil, nil);
         return;
     }
-    PowerAuthCorePassword * corePassword = [self resolvePassword:password reject:reject];
+    PowerAuthCorePassword * corePassword = UsePassword(password, _objectRegister, reject);
     if (!corePassword) {
         return;
     }
@@ -610,7 +610,7 @@ RCT_REMAP_METHOD(validatePassword,
                  validatePasswordReject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * corePassword = [self resolvePassword:password reject:reject];
+    PowerAuthCorePassword * corePassword = UsePassword(password, _objectRegister, reject);
     if (!corePassword) {
         return;
     }
@@ -933,7 +933,7 @@ RCT_REMAP_METHOD(generateHeaderForToken,
 /// @param callback Callback to call with a valid PowerAuthSDK instance.
 - (void) usePowerAuth:(NSString *)instanceId
                reject:(RCTPromiseRejectBlock)reject
-             callback:(void(^)(PowerAuthSDK *sdk))callback
+             callback:(NS_NOESCAPE void(^)(PowerAuthSDK *sdk))callback
 {
     if ([self validateInstanceId:instanceId reject:reject]) {
         PowerAuthSDK* sdk = [_objectRegister findObjectWithId:instanceId expectedClass:[PowerAuthSDK class]];
@@ -956,7 +956,7 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     id userPassword = dict[@"password"];
     if (commit) {
         // Activation commit
-        PowerAuthCorePassword * password = [self resolvePassword:userPassword reject:reject];
+        PowerAuthCorePassword * password = UsePassword(userPassword, _objectRegister, reject);
         if (!password) {
             return nil;
         }
@@ -969,7 +969,7 @@ RCT_REMAP_METHOD(generateHeaderForToken,
     } else {
         // Data signing
         if (userPassword) {
-            PowerAuthCorePassword * password = [self resolvePassword:userPassword reject:reject];
+            PowerAuthCorePassword * password = UsePassword(userPassword, _objectRegister, reject);
             if (!password) {
                 return nil;
             }
@@ -999,38 +999,6 @@ RCT_REMAP_METHOD(generateHeaderForToken,
             return [PowerAuthAuthentication possession];
         }
     }
-}
-
-/// Method translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
-/// report an error.
-/// @param anyPassword Object to convert into PowerAuthCorePassword.
-/// @param reject Reject function to call in case of failure
-/// @return PowerAuthCorePassword or nil if no such conversion is possible.
-- (PowerAuthCorePassword*) resolvePassword:(id)anyPassword
-                                    reject:(RCTPromiseRejectBlock)reject
-{
-    if ([anyPassword isKindOfClass:[NSString class]]) {
-        // Password is in form of string
-        return [PowerAuthCorePassword passwordWithString:anyPassword];
-    }
-    if ([anyPassword isKindOfClass:[NSDictionary class]]) {
-        // It appears that this is an object
-        id passwordObjectId = [(NSDictionary*)anyPassword objectForKey:@"passwordObjectId"];
-        if (!passwordObjectId) {
-            // Object identifier is not present in the object. This means that wrong object is passed to call,
-            // or PowerAuthPassword javascript object is not initialized yet.
-            reject(EC_WRONG_PARAMETER, @"PowerAuthPassword is not initialized", nil);
-            return nil;
-        }
-        PowerAuthCorePassword * password = [_objectRegister useObjectWithId:passwordObjectId expectedClass:[PowerAuthCorePassword class]];
-        if (!password) {
-            reject(EC_INVALID_NATIVE_OBJECT, @"PowerAuthPassword object is no longer valid", nil);
-            return nil;
-        }
-        return password;
-    }
-    reject(EC_WRONG_PARAMETER, @"PowerAuthPassword or string is required", nil);
-    return nil;
 }
 
 /// Method translates `PowerAuthActivationState` into string representation.

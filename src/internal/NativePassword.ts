@@ -19,7 +19,7 @@ import { NativeModules } from "react-native"
 /**
  * Password interface implemented in the native code.
  */
-interface PowerAuthPasswordIfc {
+export interface PowerAuthPasswordIfc {
     
     /**
      * Initialize native password object.

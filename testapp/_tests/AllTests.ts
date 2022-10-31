@@ -32,6 +32,7 @@ import { PowerAuth_Example } from "./PowerAuth_Example";
 import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
 import { PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
+import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
@@ -47,6 +48,7 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
         new PowerAuthPasswordTests(),
+        new PowerAuthPassphraseMeterTests(),
         new PowerAuth_LegacyAuthTests(),
         new NativeObjectRegisterTests(),
     ]
