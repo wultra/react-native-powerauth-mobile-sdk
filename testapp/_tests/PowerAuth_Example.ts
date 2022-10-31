@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthActivationCodeUtil, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithServer } from "./helpers/TestWithServer";
 
@@ -149,12 +149,7 @@ export class PowerAuth_Example extends TestWithServer {
             promptTitle: 'Please authenticate with biometry',
             promptMessage: 'Please authenticate to create an activation supporting biometry'
         });
-        commitAuthentication.userPassword = password
-        commitAuthentication.useBiometry = true
-
-        commitAuthentication.biometryTitle = 'Please authenticate with biometry'
-        commitAuthentication.biometryMessage = 'Please authenticate to create an activation supporting biometry'
-
+        
         // Now finally commit the activation.
         await this.powerAuth.commitActivation(commitAuthentication)
         
