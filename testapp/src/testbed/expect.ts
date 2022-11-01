@@ -299,6 +299,63 @@ export const expect = (received: any) => ({
             }
         }))
     },
+    toContain: (...expected: any[]): ExpectResult => {
+        return _R(received, expected, (r) => r.evaluate((received, expected) => {
+            const isArr = Array.isArray(received)
+            const isMapOrSet = received instanceof Map || received instanceof Set
+            const arrayToIterate = Array.isArray(expected[0]) ? expected[0] : expected
+            arrayToIterate.forEach((item: any) => {
+                let found = false
+                if (isArr) {
+                    found = received.indexOf(item) >= 0
+                } else if (isMapOrSet) {
+                    found = received.has(item)
+                } else {
+                    throw new Error(`Expcted to be array, map or set, but received '${received}'`)
+                }
+                if (!found) {
+                    throw new Error(`Expected to contain '${item}' but received '${received}'`)
+                }
+            })
+        }))
+    },
+    toNotContain: (...expected: any[]): ExpectResult => {
+        return _R(received, expected, (r) => r.evaluate((received, expected) => {
+            const isArr = Array.isArray(received)
+            const isMapOrSet = received instanceof Map || received instanceof Set
+            const arrayToIterate = Array.isArray(expected[0]) ? expected[0] : expected
+            arrayToIterate.forEach((item: any) => {
+                let found = false
+                if (isArr) {
+                    found = received.indexOf(item) >= 0
+                } else if (isMapOrSet) {
+                    found = received.has(item)
+                } else {
+                    throw new Error(`Expcted to be array, map or set, but received '${received}'`)
+                }
+                if (found) {
+                    throw new Error(`Expected to not contain '${item}' but received '${received}'`)
+                }
+            })
+        }))
+    },
+    toBeEmpty: (): ExpectResult => {
+        return _R(received, undefined, (r) => r.evaluate((received, _) => {
+            let empty = false
+            if (Array.isArray(received)) {
+                empty = received.length == 0
+            } else if (received instanceof Map || received instanceof Set) {
+                empty = received.size == 0
+            } else if (typeof received === 'string') {
+                empty = received.length == 0
+            } else {
+                throw new Error(`Expcted to be string, array, map or set, but received '${received}'`)
+            }
+            if (!empty) {
+                throw new Error(`Expected to be empty but received '${received}'`)
+            }
+        }))
+    },
     toThrow: (expected: ExpectedError = undefined): ExpectResult => {
         return _R(received, expected, (r) => r.evaluateFail((failure, expected) => {
             evaluateError(failure, expected)

@@ -9,15 +9,15 @@
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNModule.java",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/PowerAuthRNPackage.java",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/WrapperException.java",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
     "android/build.gradle",
     "lib/*.*",
     "lib/internal/*.js",
     "lib/model/*.*",
+    "lib/debug/*.*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],

@@ -17,6 +17,7 @@
     "lib/debug/*.*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],

@@ -132,6 +132,27 @@ empty = await password.isEmpty();           // prints 'Automatic cleanup'
 console.log(`empty is ${empty}`);           // prints 'empty is true'
 ```
 
+## Testing PIN strength
+
+If password object contains digits only, then you can test the strength of stored PIN:
+
+```javascript
+try {
+    const result = password.testPinStrength();
+    if (result.shouldWarnUserAboutWeakPin) {
+        // You should warn user about weak PIN.
+        // You can also adjust warning message according to issues found in PIN.
+        console.warn(`PIN is weak. Issues = ${JSON.stringify(result.issues)}`);
+    }
+} catch (e) {
+    if (e.code === PowerAuthErrorCode.WRONG_PARAM) {
+        // PIN is too short, or passowrd object contains other than digit characters.
+    }
+}
+```
+
+The PIN testing algorigthm is based on [Passphrase Meter](https://github.com/wultra/passphrase-meter) library.
+
 ## Read Next
 
 - [Biometry Setup](Biometry-Setup.md)

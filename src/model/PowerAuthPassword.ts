@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import { PowerAuthError, PowerAuthErrorCode } from "../index"
+import { PinTestResult, PowerAuthError, PowerAuthErrorCode, PowerAuthPassphraseMeter } from "../index"
+import { NativePassphraseMeter } from "../internal/NativePassphraseMeter"
 import { NativePassword } from "../internal/NativePassword"
 import { NativeWrapper } from "../internal/NativeWrapper"
+
 
 /**
  * Type representing an user's password. You can use `PowerAuthPassword` object or
@@ -179,6 +181,16 @@ export class PowerAuthPassword {
     }
 
     /**
+     * If object contains numeric digits only, then you can test the streingt of PIN
+     * stored in the object.
+     * @returns `PinTestResult` object.
+     * @throws `PowerAuthErrorCode.WRONG_PARAM` if PIN contains other characters than digits or its length is less than 4. 
+     */
+    testPinStrength(): Promise<PinTestResult> {
+        return this.withObjectId(id => NativePassphraseMeter.testPin({ passwordObjectId: id }))
+    }
+
+    /**
      * Acquire native password object ID and execute action with this identifier.
      * @param action Action to execute after objectId is acquired.
      * @param recoveringFromError If true, then this is 2nd attempt to execute action after recovery from action.
@@ -208,6 +220,14 @@ export class PowerAuthPassword {
     }
 
     /**
+     * Convert this password object into RawPassword object that can be passed safely to a native call.
+     * @returns RawPassword object.
+     */
+    toRawPassword(): Promise<RawPassword> {
+        return this.withObjectId(id => Promise.resolve({ passwordObjectId: id }))
+    }
+
+    /**
      * If true, then the underlying native password will be destroyed immediately after is used
      * for the cryptographic operation.
      */
@@ -228,6 +248,17 @@ export class PowerAuthPassword {
      * Underlying native object's identifier.
      */
     private passwordObjectId?: string
+}
+
+/**
+ * Object representing a simple native password identifier wrapped in the object.
+ * We need this auxiliary object due to a problematic call to passphrase meter.
+ */
+export interface RawPassword {
+    /**
+     * Native password's identifier.
+     */
+    passwordObjectId?: string
 }
 
 /**

@@ -33,7 +33,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
@@ -68,11 +67,13 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext context;
     private final ObjectRegister objectRegister;
+    private final PowerAuthPasswordModule passwordModule;
 
-    public PowerAuthModule(ReactApplicationContext context, @NonNull ObjectRegister objectRegister) {
+    public PowerAuthModule(ReactApplicationContext context, @NonNull ObjectRegister objectRegister, @NonNull PowerAuthPasswordModule passwordModule) {
         super(context);
         this.context = context;
         this.objectRegister = objectRegister;
+        this.passwordModule = passwordModule;
     }
 
     // React integration
@@ -527,8 +528,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void unsafeChangePassword(String instanceId, final Dynamic oldPassword, final Dynamic newPassword, final Promise promise) {
         this.usePowerAuth(instanceId, promise, sdk -> {
-            final Password coreOldPassword = resolvePassword(oldPassword);
-            final Password coreNewPassword = resolvePassword(newPassword);
+            final Password coreOldPassword = passwordModule.usePassword(oldPassword);
+            final Password coreNewPassword = passwordModule.usePassword(newPassword);
             promise.resolve(sdk.changePasswordUnsafe(coreOldPassword, coreNewPassword));
         });
     }
@@ -537,8 +538,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void changePassword(String instanceId, final Dynamic oldPassword, final Dynamic newPassword, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuth(instanceId, promise, sdk -> {
-            final Password coreOldPassword = resolvePassword(oldPassword);
-            final Password coreNewPassword = resolvePassword(newPassword);
+            final Password coreOldPassword = passwordModule.usePassword(oldPassword);
+            final Password coreNewPassword = passwordModule.usePassword(newPassword);
             sdk.changePassword(context, coreOldPassword, coreNewPassword, new IChangePasswordListener() {
                 @Override
                 public void onPasswordChangeSucceed() {
@@ -557,7 +558,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void addBiometryFactor(String instanceId, final Dynamic password, final ReadableMap prompt, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
-            final Password corePassword = resolvePassword(password);
+            final Password corePassword = passwordModule.usePassword(password);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 try {
                     final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
@@ -719,7 +720,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void validatePassword(String instanceId, final Dynamic password, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuth(instanceId, promise, sdk -> {
-            final Password corePassword = resolvePassword(password);
+            final Password corePassword = passwordModule.usePassword(password);
             sdk.validatePassword(context, corePassword, new IValidatePasswordListener() {
                 @Override
                 public void onPasswordValid() {
@@ -1096,7 +1097,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         }
         final Password password;
         if (map.hasKey("password")) {
-            password = resolvePassword(map.getDynamic("password"));
+            password = passwordModule.usePassword(map.getDynamic("password"));
         } else {
             password = null;
         }
@@ -1144,36 +1145,6 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
             description = Constants.MISSING_REQUIRED_STRING;
         }
         return Pair.create(title, description);
-    }
-
-    /**
-     * Function translate dynamic object type into core Password object.
-     * @param anyPassword Dynamic object representing a password.
-     * @return Resolved core password.
-     * @throws WrapperException In case that Password cannot be created.
-     */
-    @NonNull
-    private Password resolvePassword(@Nullable Dynamic anyPassword) throws WrapperException {
-        if (anyPassword != null) {
-            if (anyPassword.getType() == ReadableType.String) {
-                // Direct string was provided
-                return new Password(anyPassword.asString());
-            }
-            if (anyPassword.getType() == ReadableType.Map) {
-                // Object is provided
-                final ReadableMap map = anyPassword.asMap();
-                final String passwordObjectId = map.getString("passwordObjectId");
-                if (passwordObjectId == null) {
-                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword is not initialized");
-                }
-                Password password = objectRegister.useObject(passwordObjectId, Password.class);
-                if (password == null) {
-                    throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword object is no longer valid");
-                }
-                return password;
-            }
-        }
-        throw new WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required");
     }
 
     // PowerAuthBlock instance

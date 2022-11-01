@@ -17,6 +17,11 @@
 		BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65A728F810880093A45A /* PowerAuthData.m */; };
 		BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */ = {isa = PBXBuildFile; fileRef = BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */; };
 		BF1F65AE28F9581F0093A45A /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = BF1F65AC28F9581F0093A45A /* Constants.h */; };
+		BF41C402290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BF41C400290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF41C403290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.m in Sources */ = {isa = PBXBuildFile; fileRef = BF41C401290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.m */; };
+		BF41C408290BD76D00A8AA54 /* pin_tester.h in Headers */ = {isa = PBXBuildFile; fileRef = BF41C405290BD76D00A8AA54 /* pin_tester.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF41C409290BD76D00A8AA54 /* wpm_types.h in Headers */ = {isa = PBXBuildFile; fileRef = BF41C406290BD76D00A8AA54 /* wpm_types.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BF41C40A290BD76D00A8AA54 /* pin_tester.c in Sources */ = {isa = PBXBuildFile; fileRef = BF41C407290BD76D00A8AA54 /* pin_tester.c */; };
 		BFAEDB6C29017F5E00E65B40 /* PowerAuthPasswordModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		BFAEDB6D29017F5E00E65B40 /* PowerAuthPasswordModule.m in Sources */ = {isa = PBXBuildFile; fileRef = BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */; };
 		CAC0BE336028DD00272CEB09 /* libPods-PowerAuth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */; };
@@ -37,6 +42,11 @@
 		BF1F65A728F810880093A45A /* PowerAuthData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthData.m; sourceTree = "<group>"; };
 		BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "PowerAuthObjectRegister+JS.m"; sourceTree = "<group>"; };
 		BF1F65AC28F9581F0093A45A /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		BF41C400290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthPassphraseMeterModule.h; sourceTree = "<group>"; };
+		BF41C401290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthPassphraseMeterModule.m; sourceTree = "<group>"; };
+		BF41C405290BD76D00A8AA54 /* pin_tester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_tester.h; sourceTree = "<group>"; };
+		BF41C406290BD76D00A8AA54 /* wpm_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wpm_types.h; sourceTree = "<group>"; };
+		BF41C407290BD76D00A8AA54 /* pin_tester.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pin_tester.c; sourceTree = "<group>"; };
 		BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PowerAuthPasswordModule.h; sourceTree = "<group>"; };
 		BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PowerAuthPasswordModule.m; sourceTree = "<group>"; };
 		D3CE2470A643546DD46BA726 /* libPods-PowerAuth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PowerAuth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +85,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		BF41C404290BD6E900A8AA54 /* PassphraseMeterImpl */ = {
+			isa = PBXGroup;
+			children = (
+				BF41C405290BD76D00A8AA54 /* pin_tester.h */,
+				BF41C407290BD76D00A8AA54 /* pin_tester.c */,
+				BF41C406290BD76D00A8AA54 /* wpm_types.h */,
+			);
+			name = PassphraseMeterImpl;
+			sourceTree = "<group>";
+		};
 		DCEDF07C249E59EF00918481 = {
 			isa = PBXGroup;
 			children = (
@@ -96,6 +116,7 @@
 		DCEDF088249E59EF00918481 /* PowerAuth */ = {
 			isa = PBXGroup;
 			children = (
+				BF41C404290BD6E900A8AA54 /* PassphraseMeterImpl */,
 				BF1F65AC28F9581F0093A45A /* Constants.h */,
 				BF1F65A228F80CF80093A45A /* Utilities.h */,
 				BF1F65A328F80CF80093A45A /* Utilities.m */,
@@ -106,6 +127,8 @@
 				BF1F659A28F587B40093A45A /* PowerAuthObjectRegister.h */,
 				BF1F659B28F587B40093A45A /* PowerAuthObjectRegister.m */,
 				BF1F65AA28F8464B0093A45A /* PowerAuthObjectRegister+JS.m */,
+				BF41C400290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.h */,
+				BF41C401290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.m */,
 				BFAEDB6A29017F5E00E65B40 /* PowerAuthPasswordModule.h */,
 				BFAEDB6B29017F5E00E65B40 /* PowerAuthPasswordModule.m */,
 				DCEDF089249E59EF00918481 /* PowerAuthModule.h */,
@@ -125,7 +148,10 @@
 				DCEDF08B249E59EF00918481 /* PowerAuthModule.h in Headers */,
 				BF1F65A828F810880093A45A /* PowerAuthData.h in Headers */,
 				BF1F65AE28F9581F0093A45A /* Constants.h in Headers */,
+				BF41C409290BD76D00A8AA54 /* wpm_types.h in Headers */,
+				BF41C408290BD76D00A8AA54 /* pin_tester.h in Headers */,
 				BF1F65A428F80CF80093A45A /* Utilities.h in Headers */,
+				BF41C402290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.h in Headers */,
 				BF1F65A028F6EF900093A45A /* Errors.h in Headers */,
 				BFAEDB6C29017F5E00E65B40 /* PowerAuthPasswordModule.h in Headers */,
 				BF1F659C28F587B40093A45A /* PowerAuthObjectRegister.h in Headers */,
@@ -246,10 +272,12 @@
 			files = (
 				BF1F659D28F587B40093A45A /* PowerAuthObjectRegister.m in Sources */,
 				BF1F65A928F810880093A45A /* PowerAuthData.m in Sources */,
+				BF41C40A290BD76D00A8AA54 /* pin_tester.c in Sources */,
 				DCEDF092249E5A8600918481 /* PowerAuthModule.m in Sources */,
 				BF1F65A528F80CF80093A45A /* Utilities.m in Sources */,
 				BF1F65AB28F8464B0093A45A /* PowerAuthObjectRegister+JS.m in Sources */,
 				BF1F65A128F6EF900093A45A /* Errors.m in Sources */,
+				BF41C403290BD25800A8AA54 /* PowerAuthPassphraseMeterModule.m in Sources */,
 				BFAEDB6D29017F5E00E65B40 /* PowerAuthPasswordModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

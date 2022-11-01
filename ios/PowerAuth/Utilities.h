@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
 
 #ifdef __cplusplus
     // C++
@@ -62,3 +62,21 @@ PA_EXTERN_C id GetValueAtPathFromDict(NSDictionary * dict, NSString * path, Clas
 /// @param key Key for value to extract from the dictionary.
 /// @return NSData extracted from the dictionary.
 PA_EXTERN_C NSData * GetNSDataValueFromDict(NSDictionary * dict, NSString * key);
+
+@class PowerAuthCorePassword, PowerAuthObjectRegister;
+
+/// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
+/// report an error. The password object is marked as used if found in register.
+/// @param anyPassword Object to convert into PowerAuthCorePassword.
+/// @param objectRegister Object register instance.
+/// @param reject Reject function to call in case of failure
+/// @return PowerAuthCorePassword or nil if no such conversion is possible.
+PA_EXTERN_C PowerAuthCorePassword * UsePassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
+
+/// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
+/// report an error.
+/// @param anyPassword Object to convert into PowerAuthCorePassword.
+/// @param objectRegister Object register instance.
+/// @param reject Reject function to call in case of failure
+/// @return PowerAuthCorePassword or nil if no such conversion is possible.
+PA_EXTERN_C PowerAuthCorePassword * TouchPassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
