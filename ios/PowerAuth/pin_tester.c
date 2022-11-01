@@ -17,6 +17,7 @@
 #include "pin_tester.h"
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 #include <string.h>
 
 #pragma mark - PRIVATE
@@ -99,41 +100,199 @@ static bool arrayEqualsInv(const char *ar1, const size_t ar1start, const char *a
 /**
  Checks if the year in the date should be considered as a pattern.
  
- @param date Date with a year
+ @param year Year to test
  @return Is the year ok?
  */
-static bool isYearOK(const struct tm *date, bool fromShortFormat)
+static bool isYearOK(int year, bool isShort)
 {
-    #ifdef CONSISTENCY_TEST_TIME
-        time_t t = CONSISTENCY_TEST_TIME; // When the consistency test reference file was generated.
-    #else
-        time_t t = time(NULL); // In other cases, use the current time.
-    #endif
+#ifdef CONSISTENCY_TEST_TIME
+    time_t t = CONSISTENCY_TEST_TIME; // When the consistency test reference file was generated.
+#else
+    time_t t = time(NULL); // In other cases, use the current time.
+#endif
     struct tm *currentDate = localtime(&t);
-    int year = date->tm_year;
-    // When a short format for the date was used (for example 90 for 1990)
-    // and date is bigger than current, just assume user thinks about the date in past.
-    if (fromShortFormat && year > currentDate->tm_year) {
+    int currentYear = 1900 + currentDate->tm_year;
+    // We don't expect future dates, so if year is greater than current, then
+    // just assume it's in past.
+    if (isShort && year > currentYear) {
         year -= 100;
     }
     // Check if the year is more than the current year on less than current minus 90.
-    return year < currentDate->tm_year - 90 || year > currentDate->tm_year;
+    return (year >= currentYear - 90) && (year <= currentYear);
 }
 
+/**
+ * Parse integer from PIN.
+ * @param date PIN to parse as integer.
+ * @param size Lenght of characters.
+ * @return Integer parsed from PIN.
+ */
+int parseInt(const char * date, int size)
+{
+    int value = 0;
+    while (*date && size-- > 0) {
+        if (!isnumber(*date)) {
+            break;
+        }
+        int digit = *date++ - '0';
+        value = value * 10 + digit;
+    }
+    // Return -1 if date string is shorter than expected.
+    return size > 0 ? -1 : value;
+}
+
+/**
+ * Parse a year from PIN.
+ * @param date Input PIN.
+ * @return Parsed year or -1 if value is out of expected range.
+ */
+static int parseYear(const char * date)
+{
+    int year = parseInt(date, 4);
+    if (year < 0) {
+        return -1;
+    }
+    return isYearOK(year, false) ? year : -1;
+}
+
+/**
+ * Parse a year in short form from PIN.
+ * @param date Input PIN.
+ * @return Parsed year or -1 if value is out of expected range.
+ */
+static int parseShortYear(const char * date)
+{
+    int shortYear = parseInt(date, 2);
+    if (shortYear < 0) {
+        return -1;
+    }
+    // The "Year 2000: The Millennium Rollover" paper suggests that
+    // values in the range 69-99 refer to the twentieth century.
+    // Ref: https://sources.debian.org/src/glibc/2.35-2/time/strptime_l.c/#L755
+    int year = shortYear >= 69 ? 1900 + shortYear : 2000 + shortYear;
+    return isYearOK(year, true) ? year : -1;
+}
+
+/**
+ * Parse month from PIN.
+ * @param date Input PIN.
+ * @return Parsed month or -1 if parsed value is not a month.
+ */
+static int parseMonth(const char * date)
+{
+    int m = parseInt(date, 2);
+    if (m < 1 || m > 12) {
+        return -1;
+    }
+    return m;
+}
+
+/**
+ * Parse day from PIN.
+ * @param date Input PIN.
+ * @return Parsed day or -1 if parsed value is not a day.
+ */
+static int parseDay(const char * date)
+{
+    int d = parseInt(date, 2);
+    if (d < 1 || d > 31) {
+        return -1;
+    }
+    return d;
+}
+
+/**
+ * Determine whether year is a leap year.
+ * @param year Year to test.
+ * @return true if year is a leap year.
+ */
+bool isLeapYear(int year)
+{
+    if (year % 4 != 0) {
+        // Not divisible by 4, so it's not leap year.
+        return false;
+    }
+    if (year % 100 != 0) {
+        // divisible by 4, but not divisible by 100
+        return true;
+    }
+    // If is also divisible by also 400, then it's leap year.
+    return (year % 400) == 0;
+}
+
+/**
+ * Determine whether day in month is OK.
+ * @param day Day in month to test.
+ * @param month Month to test.
+ * @param year Year, if -1, then year is not known.
+ * @return true if day in month is withing accepted range.
+ */
+static bool isDayInMonthOK(int day, int month, int year)
+{
+    if (day < 1) {
+        return false;
+    }
+    switch (month) {
+        case 4:  // april
+        case 6:  // june
+        case 9:  // september
+        case 11: // november
+            return day <= 30;
+
+        case 2: // feb
+            if (year < 0) {
+                // If year is not provided, then both variants are valid
+                return day <= 29;
+            }
+            return day <= (isLeapYear(year) ? 29 : 28);
+
+        default:
+            return day <= 31;
+    }
+}
 
 /**
  Parsing given date in chosen format. Parsing is successful only when
  the whole string is used.
-
- @param format Format of the date
  @param date Date string
- @param r Structure to fill
+ @param format Format of the date
  @return If parsing was successful
  */
-static bool parseDate(const char *format, const char *date, struct tm *r) {
-    char *ptr = strptime(date, format, r);
-    if (ptr == NULL || ptr[0] != '\0' || r->tm_mday == 0) { // r->tm_mday == 0 is check because of a bug in iOS that can parse 00 day
-        return false;
+static bool parseDate(const char *date, const char *format)
+{
+    int year = -1, month = -1, day = -1;
+    while (*format && *date) {
+        switch (*format++) {
+            case 'Y':
+                if ((year = parseYear(date)) < 0) {
+                    return false;
+                }
+                date += 4;
+                break;
+            case 'y':
+                if ((year = parseShortYear(date)) < 0) {
+                    return false;
+                }
+                date += 2;
+                break;
+            case 'm':
+                if ((month = parseMonth(date)) < 0) {
+                    return false;
+                }
+                date += 2;
+                break;
+            case 'd':
+                if ((day = parseDay(date)) < 0) {
+                    return false;
+                }
+                date += 2;
+                break;
+            default:
+                return false;
+        }
+    }
+    if (day > 0 && month > 0) {
+        return isDayInMonthOK(day, month, year);
     }
     return true;
 }
@@ -340,39 +499,20 @@ static bool isPatternOK(const char *digits, const size_t pinLength)
 static bool isDateOK(const char *pin, const size_t pinLength) {
     
     // only check for pins with even length
-    
-    if (pinLength == 4) {
-        
-        struct tm r;
-        
-        // If the PIN could be date like 0304 (3rd of April or 4th of March)
-        if (parseDate("%d%m", pin, &r) || parseDate("%m%d", pin, &r)) {
-            return false;
-        }
-        
-        // If the PIN could be valid year (like 1982), that could be year of birth
-        if (parseDate("%Y", pin, &r) && !isYearOK(&r, false)) {
-            return false;
-        }
-        
-    } else if (pinLength == 6) {
-        
-        struct tm r;
-        // If the PIN could be a date with a year (like 121091 that could be 12th of October or 10th of December 1991)
-        if ((parseDate("%d%m%y", pin, &r) || parseDate("%m%d%y", pin, &r)) && !isYearOK(&r, true)) {
-            return false;
-        }
-        
-    } else if (pinLength == 8) {
-        
-        struct tm r;
-        // If the PIN could be a date with a year (like 12101991 that could be 12th of October or 10th of December 1991)
-        if ((parseDate("%d%m%Y", pin, &r) || parseDate("%m%d%Y", pin, &r)) && !isYearOK(&r, false)) {
-            return false;
-        }
+    switch (pinLength) {
+        case 4:
+            // If the PIN could be date like 0304 (3rd of April or 4th of March)
+            // If the PIN could be valid year (like 1982), that could be year of birth
+            return !(parseDate(pin, "dm") || parseDate(pin, "md") || parseDate(pin, "Y"));
+        case 6:
+            // If the PIN could be a date with a year (like 121091 that could be 12th of October or 10th of December 1991)
+            return !(parseDate(pin, "dmy") || parseDate(pin, "mdy"));
+        case 8:
+            // If the PIN could be a date with a year (like 12101991 that could be 12th of October or 10th of December 1991)
+            return !(parseDate(pin, "dmY") || parseDate(pin, "mdY"));
+        default:
+            return true;
     }
-    
-    return true;
 }
 
 

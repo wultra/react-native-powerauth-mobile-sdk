@@ -80,9 +80,12 @@ export class PowerAuthPassphraseMeterTests extends TestSuite {
     async testPinDates() {
         const dates = [
             "0304", "1012", "3101", "1998", "2005", "150990", "241065", "16021998", "03122001",
-            "2902", "2802"
+            "0101", "3101", "0131", "2902", "2802", "12312000", "28022001"
         ]
-        const noDates = ["1313", "0028", "1287", "9752", "151590", "001297", "41121987"]
+        const noDates = [
+            "1313", "0028", "1287", "9752", "151590", "001297", "41121987", "3002", "3102",
+            "29022001", "3104"
+        ]
 
         for (let i = 0; i < dates.length; i++) {
             let result = await PowerAuthPassphraseMeter.testPin(dates[i])
