@@ -17,6 +17,7 @@
 import { NativeModules, Platform } from 'react-native';
 import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../debug/PowerAuthDebug';
+import { PowerAuthAuthentication } from '../index';
 
 interface StaticCallTrampoline {
     call<T>(name: string, args: any[]): Promise<T>
@@ -58,7 +59,7 @@ class DefaultThisCall implements ThisCallTrampoline {
 class DebugStaticCall implements StaticCallTrampoline {
     constructor(private traceCall: boolean, private traceFail: boolean) {}
     async call<T>(name: string, args: any[]): Promise<T> {
-        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(args)})` : undefined
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(name, args)})` : undefined
         try {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
@@ -84,7 +85,7 @@ class DebugStaticCall implements StaticCallTrampoline {
 class DebugThisCall implements ThisCallTrampoline {
     constructor(private traceCall: boolean, private traceFail: boolean) {}
     async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
-        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs([instanceId, ...args])})` : undefined
+        const msg = this.traceCall || this.traceFail ? `PowerAuth.${name}(${prettyArgs(name, [instanceId, ...args])})` : undefined
         try {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
@@ -284,10 +285,46 @@ export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T
 
 /**
  * Function translate array of arguments into pretty string.
+ * @param fname Function name.
  * @param args Array with arguments.
  * @returns Pretty string created from arguments array.
  */
-function prettyArgs(args: any[]): string {
+function prettyArgs(fname: string, args: any[]): string {
+    switch (fname) {
+        case 'changePassword':
+        case 'unsafeChangePassword': 
+            args[1] = args[2] = '***' 
+            break
+        case 'validatePassword':
+        case 'addBiometryFactor':
+            args[1] = '***'
+            break
+        default:
+            break
+    }
+    let authIndex = 0
+    if (args[1] instanceof PowerAuthAuthentication) {
+        authIndex = 1
+    } else if (args[2] instanceof PowerAuthAuthentication) {
+        authIndex = 2
+    }
+    if (authIndex > 0) {
+        const auth = args[authIndex]
+        args[authIndex] = {
+            password: auth.password ? '***' : undefined,
+            biometricPrompt: auth.biometricPrompt,
+            isCommit: auth.isCommit,
+            isBiometry: auth.isBiometry,
+            biometryKeyId: auth.biometryKeyId,
+            // deprecated
+            usePossession: auth.usePossession,
+            useBiometry: auth.useBiometry,
+            userPassword: auth.userPassword ? '***' : undefined,
+            biometryMessage: auth.biometryMessage,
+            biometryTitle: auth.biometryTitle
+        }
+    }
+
     const v = JSON.stringify(args)
     return v.slice(1, v.length - 1)
 }
