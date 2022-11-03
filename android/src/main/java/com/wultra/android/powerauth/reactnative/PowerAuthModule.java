@@ -792,12 +792,39 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         });
     }
 
+    /**
+     * Validate biometric status before use.
+     * @param sdk PowerAuthSDK instance
+     * @throws WrapperException In case that biometry is not available for any reason.
+     */
+    private void validateBiometryBeforeUse(PowerAuthSDK sdk) throws WrapperException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            switch (BiometricAuthentication.canAuthenticate(context)) {
+                case BiometricStatus.OK:
+                    if (sdk.hasValidActivation() && !sdk.hasBiometryFactor(context)) {
+                        // Has valid activation, but factor is not set
+                        throw new WrapperException(Errors.EC_BIOMETRY_NOT_CONFIGURED, "Biometry factor is not configured");
+                    }
+                    break;
+                case BiometricStatus.NOT_AVAILABLE:
+                    throw new WrapperException(Errors.EC_BIOMETRY_NOT_AVAILABLE, "Biometry is not available");
+                case BiometricStatus.NOT_ENROLLED:
+                    throw new WrapperException(Errors.EC_BIOMETRY_NOT_ENROLLED, "Biometry is not enrolled on device");
+                case BiometricStatus.NOT_SUPPORTED:
+                    throw new WrapperException(Errors.EC_BIOMETRY_NOT_SUPPORTED, "Biometry is not supported");
+            }
+        } else {
+            throw new WrapperException(Errors.EC_BIOMETRY_NOT_SUPPORTED, "Biometry is not supported");
+        }
+    }
+
     @ReactMethod
     public void authenticateWithBiometry(String instanceId, final ReadableMap prompt, final boolean makeReusable, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 try {
+                    validateBiometryBeforeUse(sdk);
                     final FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
                     if (fragmentActivity == null) {
                         throw new WrapperException(Errors.EC_REACT_NATIVE_ERROR, "Current fragment activity is not available");
@@ -831,7 +858,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
 
                             @Override
                             public void onBiometricDialogFailed(@NonNull PowerAuthErrorException error) {
-                                promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed");
+                                Errors.rejectPromise(promise, error);
                             }
                         }
                     );

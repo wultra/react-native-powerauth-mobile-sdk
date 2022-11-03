@@ -58,8 +58,9 @@ To sign data with biomtry simply create different authentication object:
 ```javascript
 // 2FA signature, uses device related key and biometry
 const auth = PowerAuthAuthentication.biometry({
-    promptTitle: 'Authenticate',
-    promptMessage: 'Authenticate to process payment'
+    promptMessage: 'Authenticate to process payment',   // Required on both platforms
+    promptTitle: 'Authenticate',    // Android specific, not used on iOS
+    fallbackButton: 'Enter PIN'     // iOS specific, if provided, then the fallback button is displayed
 });
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
@@ -70,6 +71,8 @@ try {
 } catch(e) {
     if (e.code === PowerAuthErrorCode.BIOMETRY_CANCEL) {
         // User did cancel the dialog
+    } else if (e.code === PowerAuthErrorCode.BIOMETRY_FALLBACK) {
+        // iOS specific, can occur only if you provide the fallback button
     } else {
         // other errors
     }

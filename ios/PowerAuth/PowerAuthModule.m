@@ -679,7 +679,48 @@ RCT_REMAP_METHOD(confirmRecoveryCode,
     PA_BLOCK_END
 }
 
-
+/// Function validate the status of biometry before the biometry is used. The function also
+/// validate whether activation is present, or whether biometry key is configured.
+/// - Parameters:
+///   - sdk: PowerAuthSDK instance
+///   - reject: Reject promise in case that biometry cannot be used.
+/// - Returns: YES in case biometry can be used.
+- (BOOL) validateBiometryStatusBeforeUse:(PowerAuthSDK*)sdk reject:(RCTPromiseRejectBlock)reject
+{
+    // Determine the biometry state in advance. This is due to fact that iOS impl.
+    // doesn't support all biometry related error codes such as Android.
+    // This will be fixed in 1.8.x release, so this code will be obsolete.
+    NSString * errorCode = nil;
+    NSString * errorMessage = nil;
+    switch ([PowerAuthKeychain biometricAuthenticationInfo].currentStatus) {
+        case PowerAuthBiometricAuthenticationStatus_Available:
+            if ([sdk hasValidActivation] && ![sdk hasBiometryFactor]) {
+                // Has activation, but biometry factor is not set
+                errorCode = EC_BIOMETRY_NOT_CONFIGURED; errorMessage = @"Biometry factor is not configured";
+            }
+            break;
+        case PowerAuthBiometricAuthenticationStatus_NotEnrolled:
+            errorCode = EC_BIOMETRY_NOT_ENROLLED; errorMessage = @"Biometry is not enrolled on device";
+            break;
+        case PowerAuthBiometricAuthenticationStatus_NotSupported:
+            errorCode = EC_BIOMETRY_NOT_SUPPORTED; errorMessage = @"Biometry is not supported";
+            break;
+        case PowerAuthBiometricAuthenticationStatus_NotAvailable:
+            errorCode = EC_BIOMETRY_NOT_AVAILABLE; errorMessage = @"Biometry is not available";
+            break;
+        case PowerAuthBiometricAuthenticationStatus_Lockout:
+            errorCode = EC_BIOMETRY_LOCKOUT; errorMessage = @"Biometry is locked out";
+            break;
+        default:
+            break;
+    }
+    if (errorCode) {
+        reject(errorCode, errorMessage, nil);
+        return NO;
+    } else {
+        return YES;
+    }
+}
 
 RCT_REMAP_METHOD(authenticateWithBiometry,
                  instanceId:(nonnull NSString*)instanceId
@@ -689,9 +730,16 @@ RCT_REMAP_METHOD(authenticateWithBiometry,
                  reject:(RCTPromiseRejectBlock)reject)
 {
     PA_BLOCK_START
+    if (![self validateBiometryStatusBeforeUse:powerAuth reject:reject]) {
+        return;
+    }
+    NSString * promptMessage = GetNSStringValueFromDict(prompt, @"promptMessage");
+    NSString * cancelButton = GetNSStringValueFromDict(prompt, @"cancelButton");
+    NSString * fallbackButton = GetNSStringValueFromDict(prompt, @"fallbackButton");
     LAContext * context = [[LAContext alloc] init];
-    context.localizedReason = GetNSStringValueFromDict(prompt, @"promptMessage");
-    context.localizedCancelTitle = GetNSStringValueFromDict(prompt, @"cancelButton");
+    context.localizedReason = promptMessage;
+    context.localizedCancelTitle = cancelButton;
+    context.localizedFallbackTitle = fallbackButton ? fallbackButton : @""; // empty string hides the button
     [powerAuth authenticateUsingBiometryWithContext:context callback:^(PowerAuthAuthentication * authentication, NSError * error) {
         if (authentication) {
             // Allocate native object

@@ -76,9 +76,9 @@ PODS:
   - hermes-engine (0.11.0)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
-  - PowerAuth2 (1.7.4):
-    - PowerAuthCore (~> 1.7.4)
-  - PowerAuthCore (1.7.4)
+  - PowerAuth2 (1.7.5):
+    - PowerAuthCore (~> 1.7.5)
+  - PowerAuthCore (1.7.5)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -304,7 +304,7 @@ PODS:
   - React-logger (0.68.3):
     - glog
   - react-native-powerauth-mobile-sdk (2.3.0):
-    - PowerAuth2 (~> 1.7.4)
+    - PowerAuth2 (~> 1.7.5)
     - React
   - React-perflogger (0.68.3)
   - React-RCTActionSheet (0.68.3):
@@ -546,8 +546,8 @@ SPEC CHECKSUMS:
   hermes-engine: 84e3af1ea01dd7351ac5d8689cbbea1f9903ffc3
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  PowerAuth2: c597eecdb348b231a024a527bf49237573819448
-  PowerAuthCore: d7e5e8cb9307da8033c1d41694cb5cbb35ec332a
+  PowerAuth2: 00a96bf634778dbf633742cdd832c9386a76d6a8
+  PowerAuthCore: 58eb5ccea0d45a3e39ef18df1927ce5d2a600bee
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: b8caca023d386d43740dfb94c2cf68f695fa5e77
   RCTTypeSafety: ec44ea1d6ad1e5cd6447b22159ff40c2ebbd23b1
@@ -562,7 +562,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: a5043e9e1e1bd13b80b58b228c6901b3721a4f54
   React-jsinspector: 86e89b9f135787a2e8eb74b3fc00ec61e9a80ae1
   React-logger: f790bd10f86b38012e108fb4b564023602702270
-  react-native-powerauth-mobile-sdk: 662c6a4308f1b0df87450e4a0bc9123910a600a1
+  react-native-powerauth-mobile-sdk: abebc39fedcad7d51c2bf81b8261ee3eddb2401a
   React-perflogger: fa15d1d29ff7557ee25ea48f7f59e65896fb3215
   React-RCTActionSheet: e83515333352a3cc19c146e3c7a63a8a9269da8f
   React-RCTAnimation: 8032daa2846e3db7ac28c4c5a207d0bfb5e1e3ad
@@ -579,6 +579,6 @@ SPEC CHECKSUMS:
   Yoga: 2f6a78c58dcc2963bd8e34d96a4246d9dff2e3a7
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 798ade193b192739c56fa9685aae4ab878bc665b
+PODFILE CHECKSUM: 0dcee07469475ae9ac81ecdbf46851560fbc79de
 
 COCOAPODS: 1.11.3

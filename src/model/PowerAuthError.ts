@@ -82,9 +82,6 @@ export enum PowerAuthErrorCode {
     /** Error code for error that occurs when pending activation is present and work with completed activation is required. */
     PENDING_ACTIVATION = "PENDING_ACTIVATION",
 
-    /** Error code for situation when biometric prompt is canceled by the user. */
-    BIOMETRY_CANCEL = "BIOMETRY_CANCEL",
-
     /**
      * Error code for canceled operation. This kind of error may occur in situations, when SDK
      * needs to cancel an asynchronous operation, but the cancel is not initiated by the application
@@ -111,15 +108,32 @@ export enum PowerAuthErrorCode {
     /** The requested function is not available during the protocol upgrade. You can retry the operation, after the upgrade is finished. */
     PENDING_PROTOCOL_UPGRADE = "PENDING_PROTOCOL_UPGRADE",
 
-    /** The biometric authentication cannot be processed due to lack of required hardware or due to a missing support from the operating system. */
+
+    /**
+     * Error code for situation when biometric prompt is canceled by the user. 
+     */
+    BIOMETRY_CANCEL = "BIOMETRY_CANCEL",
+    /**
+     * Error code for situation when biometric prompt is canceled by the user with using the fallback button.
+     * iOS specific, may occur only if you configure `PowerAuthBiometricPrompt` with a fallback title.
+     */
+    BIOMETRY_FALLBACK = "BIOMETRY_FALLBACK",
+    /** 
+     * The biometric authentication cannot be processed due to lack of required hardware or due to a missing support from the operating system. 
+     */
     BIOMETRY_NOT_SUPPORTED = "BIOMETRY_NOT_SUPPORTED",
-
-    /** The biometric authentication is temporarily unavailable. */
+    /** 
+     * The biometric authentication is temporarily unavailable. 
+     */
     BIOMETRY_NOT_AVAILABLE = "BIOMETRY_NOT_AVAILABLE",
-
-    /** The biometric authentication is not configured in this PowerAuth instance. You should call `addBiometryFactor()` to add biometry. */
+    /** 
+     * The biometric authentication is not configured in this PowerAuth instance. You should call `addBiometryFactor()` to configure the biometric factor. 
+     */
     BIOMETRY_NOT_CONFIGURED = "BIOMETRY_NOT_CONFIGURED",
-    
+    /** 
+     * The biometric authentication is not enrolled on the device. 
+     */
+    BIOMETRY_NOT_ENROLLED = "BIOMETRY_NOT_ENROLLED",
     /**
      * The biometric authentication is locked out due to too many failed attempts.
      * 
@@ -129,8 +143,10 @@ export enum PowerAuthErrorCode {
      * authentication (PIN, password, pattern).
      */
     BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT",
-
-    /** The biometric authentication did not recognize the biometric image (fingerprint, face, etc...) */
+    /** 
+     * The biometric authentication did not recognize the biometric image (fingerprint, face, etc...)
+     * Supported only on Android, during the activation commit with biometry.
+     */
     BIOMETRY_NOT_RECOGNIZED = "BIOMETRY_NOT_RECOGNIZED",
 
     /**

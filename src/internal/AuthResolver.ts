@@ -14,8 +14,7 @@
 // limitations under the License.
 //
 
-import { Platform } from 'react-native';
-import { PowerAuthAuthentication, PowerAuthBiometricPrompt, PowerAuthError, PowerAuthErrorCode } from '../index';
+import { PowerAuthAuthentication, PowerAuthError, PowerAuthErrorCode } from '../index';
 import { NativeWrapper } from './NativeWrapper';
 import { NativeObject } from './NativeObject';
 
@@ -35,7 +34,6 @@ export class AuthResolver {
      * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
      * The method should be used only for the signing purposes.
      * @param authentication Authentication configuration
-     * @param forCommit If true, then resolve authentication for activation commit.
      * @param makeReusable if the object should be forced to be reusable
      * @returns configured authorization object
      */
@@ -50,14 +48,9 @@ export class AuthResolver {
         }
         // Validate whether biometric key is set
         const useBiometry = privateAuth.isBiometry
-        if (useBiometry && !await NativeWrapper.thisCallBool('hasBiometryFactor', this.instanceId)) {
-            // Biometry is requested but there's no biometry factor set
-            throw new PowerAuthError(undefined, "Biometry factor is not configured", PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED)
-        }
-        // On android, we need to fetch the key for every biometric authentication.
-        // If the key is already set, use it (we're processing reusable biometric authentication)
-        if ((Platform.OS == 'android' && useBiometry && (!privateAuth.biometryKeyId || makeReusable)) ||
-            (Platform.OS == 'ios' && makeReusable)) {
+        // On both platforms we need to fetch the key for every biometric authentication.
+        // If the key is already set, use it.
+        if (useBiometry && !privateAuth.biometryKeyId) {
             try {
                 const prompt = correctAuth.biometricPrompt
                 // Acquire biometry key. The function returns ID to underlying data object with a limited validity.

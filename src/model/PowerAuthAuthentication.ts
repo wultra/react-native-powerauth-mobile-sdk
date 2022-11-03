@@ -36,6 +36,10 @@ export interface PowerAuthBiometricPrompt {
      * iOS specific title for a cancel button, displayed to the user.
      */
     cancelButton?: string
+    /**
+     * iOS specific title for a fallback button, displayed to the user.
+     */
+    fallbackButton?: string
 }
 
 /**
@@ -86,11 +90,11 @@ export class PowerAuthAuthentication {
 
     /**
      * Create object configured to authenticate with combination of possession and biometry factors.
-     * @param biometricPrompt Prompt to be displayed. Parameter is required on Android platform.
+     * @param biometricPrompt Prompt to be displayed.
      * @returns Authentication object configured to authenticate with possession and biometry factors.
      */
-    static biometry(biometricPrompt: PowerAuthBiometricPrompt | undefined = undefined): PowerAuthAuthentication {
-        return new PowerAuthAuthentication(undefined, biometricPrompt).configure(false, true)
+    static biometry(biometricPrompt: PowerAuthBiometricPrompt): PowerAuthAuthentication {
+        return new PowerAuthAuthentication(undefined, biometricPrompt ?? FALLBACK_PROMPT).configure(false, true)
     }
 
     /**
@@ -113,9 +117,9 @@ export class PowerAuthAuthentication {
 
     /**
      * Create object configured to commit activation with password and biometry.
-     * @param password 
-     * @param biometricPrompt 
-     * @returns 
+     * @param password User's password. You can provide string or `PowerAuthPassword` object.
+     * @param biometricPrompt Required on Android, only when biometry config has `authenticateOnBiometricKeySetup` set to `true`.
+     * @returns Object configured to commit activation with password and biometry.
      */
     static commitWithPasswordAndBiometry(password: PasswordType, biometricPrompt: PowerAuthBiometricPrompt | undefined = undefined): PowerAuthAuthentication {
         return new PowerAuthAuthentication(password, biometricPrompt).configure(true, true)
@@ -155,27 +159,17 @@ export class PowerAuthAuthentication {
     /**
      * Construct `PowerAuthBiometricPrompt` object from data available in this authentication object.
      * This is a temporary solution for compatibility with older apps that still use old way of authentication setup.
-     * The method is used in `AuthResolver.ts` implementation.
      * @returns PowerAuthBiometricPrompt object.
      */
     private getBiometricPrompt(): PowerAuthBiometricPrompt {
         if (this.biometricPrompt) {
-            // Test whether prompt fulfil requirements on all platforms
-            if (this.biometricPrompt.promptTitle) {
-                return this.biometricPrompt
-            }
-            // Otherwise construct a copy
-            return {
-                promptMessage: this.biometricPrompt.promptMessage,
-                cancelButton: this.biometricPrompt.cancelButton,
-                promptTitle: '< missing title >'
-            }
+            return this.biometricPrompt
         }
         // Authentication object was constructed in legacy mode,
         // so create a fallback object.
         return {
-            promptMessage: this.biometryMessage ?? '< missing message >',
-            promptTitle: this.biometryTitle ?? '< missing title >'
+            promptMessage: this.biometryMessage ?? FALLBACK_MESSAGE,
+            promptTitle: this.biometryTitle ?? FALLBACK_TITLE
         }
     }
 
@@ -229,4 +223,13 @@ export class PowerAuthAuthentication {
      * @deprecated Direct access to property is now deprecated, use new static methods to construct `PowerAuthAuthentication` object.
      */
     biometryTitle?: string
-};
+}
+
+// Fallback strings
+
+const FALLBACK_TITLE = '< missing title >'
+const FALLBACK_MESSAGE = '< missing message >'
+const FALLBACK_PROMPT: PowerAuthBiometricPrompt = {
+    promptMessage: FALLBACK_MESSAGE,
+    promptTitle: FALLBACK_TITLE
+}

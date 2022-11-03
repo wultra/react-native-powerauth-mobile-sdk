@@ -34,9 +34,13 @@ NSString * const EC_PROTOCOL_UPGRADE            = @"PROTOCOL_UPGRADE";
 NSString * const EC_PENDING_PROTOCOL_UPGRADE    = @"PENDING_PROTOCOL_UPGRADE";
 NSString * const EC_WATCH_CONNECTIVITY          = @"WATCH_CONNECTIVITY";
 NSString * const EC_BIOMETRY_CANCEL             = @"BIOMETRY_CANCEL";
-NSString * const EC_BIOMETRY_NOT_AVAILABLE      = @"BIOMETRY_NOT_AVAILABLE";
+NSString * const EC_BIOMETRY_FALLBACK           = @"BIOMETRY_FALLBACK";
 NSString * const EC_BIOMETRY_FAILED             = @"BIOMETRY_FAILED";
+NSString * const EC_BIOMETRY_LOCKOUT            = @"BIOMETRY_LOCKOUT";
+NSString * const EC_BIOMETRY_NOT_AVAILABLE      = @"BIOMETRY_NOT_AVAILABLE";
+NSString * const EC_BIOMETRY_NOT_SUPPORTED      = @"BIOMETRY_NOT_SUPPORTED";
 NSString * const EC_BIOMETRY_NOT_CONFIGURED     = @"BIOMETRY_NOT_CONFIGURED";
+NSString * const EC_BIOMETRY_NOT_ENROLLED       = @"BIOMETRY_NOT_ENROLLED";
 NSString * const EC_AUTHENTICATION_ERROR        = @"AUTHENTICATION_ERROR";
 NSString * const EC_RESPONSE_ERROR              = @"RESPONSE_ERROR";
 NSString * const EC_UNKNOWN_ERROR               = @"UNKNOWN_ERROR";
@@ -74,6 +78,7 @@ NSString * TranslatePAErrorCode(PowerAuthErrorCode code)
         case PowerAuthErrorCode_BiometryNotAvailable: return EC_BIOMETRY_NOT_AVAILABLE;
         case PowerAuthErrorCode_WatchConnectivity: return EC_WATCH_CONNECTIVITY;
         case PowerAuthErrorCode_BiometryFailed: return EC_BIOMETRY_FAILED;
+        case PowerAuthErrorCode_BiometryFallback: return EC_BIOMETRY_FALLBACK;
         default: return [[NSString alloc] initWithFormat:@"UNKNOWN_%li", code];
     }
 }
