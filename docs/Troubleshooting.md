@@ -1,5 +1,9 @@
 # Troubleshooting
 
+## Upgrading SDK
+
+If you upgraded SDK to a newer major or minor version and encounter some problems, then please follow the [Migration Instructions](Migration-Instructions.md) first.
+
 ## Enable debug log
 
 In case you encounter a problem with this library, then try to turn-on a detailed debug log to provide a more information for the library developers:
