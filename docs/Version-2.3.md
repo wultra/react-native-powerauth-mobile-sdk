@@ -19,7 +19,7 @@ import { PowerAuth, PowerAuthActivation, PowerAuthActivationCodeUtil } from 'rea
 The previous imports still works but we cannot guarantee that paths remain the same in the future SDK release.
 
 
-## New `PowerAuthAuthentication` instantation
+## New `PowerAuthAuthentication` instantiation
 
 The `PowerAuthAuthentication` has now its constructor and all public properties marked as deprecated. The object now provide a new static functions to its proper instantiation. Here's the example for data signing: 
 
