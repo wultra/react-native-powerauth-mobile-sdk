@@ -19,5 +19,8 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 - [Token Based Authentication](Token-Based-Authentication.md)
 
 ## Additional Topics
+
+- [Troubleshooting](Troubleshooting.md)
+- [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
 <!-- end -->

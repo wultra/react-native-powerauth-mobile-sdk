@@ -77,7 +77,7 @@ You can acquire biometry credentials in advance in case that business processes 
 
 Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
 
-In order to obtain biometry credentials for the future sig  nature calculation, call the following code:
+In order to obtain biometry credentials for the future signature calculation, call the following code:
 
 ```javascript
 // Authenticate user with biometry and obtain PowerAuthAuthentication credentials for future signature calculation.
