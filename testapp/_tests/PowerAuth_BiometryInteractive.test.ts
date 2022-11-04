@@ -17,7 +17,7 @@
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { expect, UserPromptDuration } from "../src/testbed";
-import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { ActivationStatus } from "powerauth-js-test-client";
 import { Platform } from "react-native";
 
@@ -41,10 +41,11 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
     customPrepareData(): CustomActivationHelperPrepareData {
         // Use auth on setup
         const n = this.context.testName
-        const authOnKeySetup = n == 'testCreateActivationWithSymmetricKey'
+
         // Use config that allows create activation with biometry key with no user's interaction
         const config = new PowerAuthBiometryConfiguration()
-        config.authenticateOnBiometricKeySetup = authOnKeySetup
+        config.authenticateOnBiometricKeySetup = n == 'testCreateActivationWithSymmetricKey'
+        config.fallbackToDevicePasscode = n == 'iosTestFallbackToPasscode'
         return {
             useConfigObjects: true,
             useBiometry: true,
@@ -114,15 +115,6 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         await this.sdk.tokenStore.removeAccessToken('biometric-token')
     }
 
-    async testBiometricSignature_NoPrompt() {
-        await this.showPrompt('Please authenticate - Dialog without strings')
-
-        expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        const auth = PowerAuthAuthentication.biometry()
-        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
-        await this.sdk.tokenStore.removeAccessToken('biometric-token')
-    }
-
     async testLegacyBiometricSignature() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please authenticate with biometry to request access token')
@@ -149,7 +141,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
     async testGroupedBiometricAuthentication() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        await this.showPrompt('Please authenticate with biometry.')
+        await this.showPrompt('Please authenticate for group operation.')
         await this.sdk.groupedBiometricAuthentication(this.credentials.biometry, async reusableAuth => {
             //
             await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
@@ -169,6 +161,15 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
             result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
             expect(result).toBe(true)
+
+            await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
+            // Calculate yet another signature and verify
+            data = '{"value":false}'
+            uriId = '/another/uriId'
+
+            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
+            expect(result).toBe(true)
         })
     }
 
@@ -178,12 +179,48 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         await this.sdk.removeActivationWithAuthentication(this.credentials.biometry)
     }
     
+    async testCancelBiometry() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please CANCEL authentication dialog')
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please cancel", promptMessage: "Please CANCEL this dialog", cancelButton: "super cancel"})
+        await expect(async () => this.sdk.requestSignature(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_CANCEL })
+    }
 
-    // TODO: On iOS emulator you cannot cancel biometry
+    async testFailedBiometry() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        const isFaceId = !this.isAndoid && (await this.sdk.getBiometryInfo()).biometryType == PowerAuthBiometryType.FACE
+        if (isFaceId) {
+            await this.showPrompt('This test is not supported on FaceID')
+            return
+        }
 
-    // async testCancelBiometry() {
-    //     expect(await this.sdk.hasBiometryFactor()).toBe(true)
-    //     await this.showPrompt('Please cancel authentication dialog')    
-    //     await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_CANCEL })
-    // }
+        await this.showPrompt('Please FAIL authentication dialog')
+        
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use wrong biometry to fail"})
+        // At biometry fail, the fake key is generated and the signature will be invalid
+        let uriId = '/some/failed/uriId'
+        let body = '{ failedApi: true }'
+        const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
+        const result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, body, header.value)
+        expect(result).toBe(false)
+    }
+
+    async iosTestFallbackToPasscode() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please FAIL authentication and use device passcode')
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode"})
+        // At biometry passcode fallback, everything should work properly
+        let uriId = '/some/fallback/uriId'
+        let body = '{ fallbackApi: true }'
+        const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
+        const result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, body, header.value)
+        expect(result).toBe(true)
+    }
+
+    async iosTestFallbackButton() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please FAIL authentication and use fallback button')
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode", fallbackButton: 'fallback button'})
+        await expect(async () => this.sdk.requestSignature(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_FALLBACK })
+    }
 }

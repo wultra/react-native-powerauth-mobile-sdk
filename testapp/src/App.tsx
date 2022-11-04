@@ -21,6 +21,8 @@ import {
   View,
   SafeAreaView,
   Button,
+  Appearance,
+  NativeEventSubscription,
 } from 'react-native'
 import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
 import { getTestConfig } from './Config'
@@ -67,6 +69,7 @@ class TestExecutor implements UserInteraction {
 }
 
 interface AppState {
+  isDark: boolean
   inProgress: boolean
   promptMessage?: string
 
@@ -83,6 +86,7 @@ const Separator = () => (
 class App extends Component<{}, AppState> {
   
   state = {
+    isDark: Appearance.getColorScheme() === 'dark',
     inProgress: false, 
     promptMessage: undefined,
     testsDone: 0,
@@ -90,6 +94,8 @@ class App extends Component<{}, AppState> {
     testsFailed: 0,
     testsCount: 0
   }
+
+  subscription?: NativeEventSubscription
 
   executor = new TestExecutor(async (_context, message, duration) => {
     this.setState({ promptMessage: message })
@@ -124,6 +130,16 @@ class App extends Component<{}, AppState> {
     this.setState({inProgress: false})
   }
 
+  componentDidMount() {
+    this.subscription = Appearance.addChangeListener((preferences) => {
+      this.setState({isDark: Appearance.getColorScheme() === 'dark'})
+    })
+  }
+
+  componentWillUnmount() {
+    this.subscription?.remove()
+  }
+
   render() {
     return (
       <SafeAreaView style={styles.container}>
@@ -133,7 +149,7 @@ class App extends Component<{}, AppState> {
           </Text>
         </View>
         <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>
+          <Text style={this.state.isDark ? styles.progressTextDark : styles.progressTextLight}>
             {this.state.testsDone + this.state.testsFailed + this.state.testsSkipped} / {this.state.testsCount}
           </Text>
         </View>
@@ -180,10 +196,14 @@ class App extends Component<{}, AppState> {
   progressContainer: {
     height: 40
   },
-  progressText: {
+  progressTextDark: {
     textAlign: 'center',
+    color: '#FFFFFF'
+  },
+  progressTextLight: {
+    textAlign: 'center',
+    color: '#000000'
   }
-
 })
  
 export default App;
