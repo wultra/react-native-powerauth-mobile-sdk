@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
+import { PowerAuthDebug } from "../debug/PowerAuthDebug";
+
 /**
  * PowerAuthError is a wrapper error that is thrown by every API in this module.
  */
 export class PowerAuthError {
 
-    /** Original exception thrown by the native layer (iOS or Android). If null, then error was created in TypeScript. */
-    originalException: any;
+    /** Original exception thrown by the native layer (iOS or Android). If undefined, then error was created in TypeScript. */
+    originalException: any
 
     /** Code of the error. */
-    code?: PowerAuthErrorCode;
+    code?: PowerAuthErrorCode
     /** Message of the error. */
-    message?: string;
+    message?: string
     /** Additional error data. */
-    errorData?: any;
+    errorData?: any
 
-    constructor(exception: any, message: string = null, code: PowerAuthErrorCode = null, errorData: any = null) {
-        this.originalException = exception;
-        this.code = code ?? exception?.code ?? null;
-        this.message = message ?? exception?.message ?? null;
-        this.errorData = errorData ?? exception?.userInfo ?? null;
+    constructor(exception: any, message: string | undefined = undefined, code: PowerAuthErrorCode | undefined = undefined, errorData: any = undefined) {
+        this.originalException = exception ?? undefined
+        this.code = code ?? exception?.code ?? undefined
+        this.message = message ?? exception?.message ?? undefined
+        this.errorData = errorData ?? exception?.userInfo ?? undefined
     }
 
     print(): string {
-        return `code: ${this.code}\nmessage: ${this.message}`;
+        return PowerAuthDebug.describeError(this)
     }
 };
 
@@ -80,9 +82,6 @@ export enum PowerAuthErrorCode {
     /** Error code for error that occurs when pending activation is present and work with completed activation is required. */
     PENDING_ACTIVATION = "PENDING_ACTIVATION",
 
-    /** Error code for situation when biometric prompt is canceled by the user. */
-    BIOMETRY_CANCEL = "BIOMETRY_CANCEL",
-
     /**
      * Error code for canceled operation. This kind of error may occur in situations, when SDK
      * needs to cancel an asynchronous operation, but the cancel is not initiated by the application
@@ -109,12 +108,32 @@ export enum PowerAuthErrorCode {
     /** The requested function is not available during the protocol upgrade. You can retry the operation, after the upgrade is finished. */
     PENDING_PROTOCOL_UPGRADE = "PENDING_PROTOCOL_UPGRADE",
 
-    /** The biometric authentication cannot be processed due to lack of required hardware or due to a missing support from the operating system. */
+
+    /**
+     * Error code for situation when biometric prompt is canceled by the user. 
+     */
+    BIOMETRY_CANCEL = "BIOMETRY_CANCEL",
+    /**
+     * Error code for situation when biometric prompt is canceled by the user with using the fallback button.
+     * iOS specific, may occur only if you configure `PowerAuthBiometricPrompt` with a fallback title.
+     */
+    BIOMETRY_FALLBACK = "BIOMETRY_FALLBACK",
+    /** 
+     * The biometric authentication cannot be processed due to lack of required hardware or due to a missing support from the operating system. 
+     */
     BIOMETRY_NOT_SUPPORTED = "BIOMETRY_NOT_SUPPORTED",
-
-    /** The biometric authentication is temporarily unavailable. */
+    /** 
+     * The biometric authentication is temporarily unavailable. 
+     */
     BIOMETRY_NOT_AVAILABLE = "BIOMETRY_NOT_AVAILABLE",
-
+    /** 
+     * The biometric authentication is not configured in this PowerAuth instance. You should call `addBiometryFactor()` to configure the biometric factor. 
+     */
+    BIOMETRY_NOT_CONFIGURED = "BIOMETRY_NOT_CONFIGURED",
+    /** 
+     * The biometric authentication is not enrolled on the device. 
+     */
+    BIOMETRY_NOT_ENROLLED = "BIOMETRY_NOT_ENROLLED",
     /**
      * The biometric authentication is locked out due to too many failed attempts.
      * 
@@ -124,8 +143,10 @@ export enum PowerAuthErrorCode {
      * authentication (PIN, password, pattern).
      */
     BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT",
-
-    /** The biometric authentication did not recognize the biometric image (fingerprint, face, etc...) */
+    /** 
+     * The biometric authentication did not recognize the biometric image (fingerprint, face, etc...)
+     * Supported only on Android, during the activation commit with biometry.
+     */
     BIOMETRY_NOT_RECOGNIZED = "BIOMETRY_NOT_RECOGNIZED",
 
     /**
@@ -159,7 +180,10 @@ export enum PowerAuthErrorCode {
     /** Biometric authentication failed */
     BIOMETRY_FAILED = "BIOMETRY_FAILED",
 
-    /** When password is not set during activation commit */
+    /**
+     * When password is not set during activation commit.
+     * @deprecated "WRONG_PARAM" is returned in this case.
+     */
     PASSWORD_NOT_SET = "PASSWORD_NOT_SET",
 
     /** Error when invalid activation object is provided during activation */
@@ -167,4 +191,10 @@ export enum PowerAuthErrorCode {
 
     /** Failed with unexpected error. */
     UNKNOWN_ERROR = "UNKNOWN_ERROR",
+
+    /** 
+     * Underlying native object is no longer valid. This may happen in situations
+     * when you're using 
+     */
+    INVALID_NATIVE_OBJECT = "INVALID_NATIVE_OBJECT",
 }

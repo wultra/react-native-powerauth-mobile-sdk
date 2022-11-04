@@ -6,9 +6,10 @@
     "declaration": true,
     "target": "ES5",
     "skipLibCheck": true,
-    "lib": ["ES2015"],
+    "lib": ["ES2016"],
     "outDir": "lib",
+    "strict": true
   },
   "exclude": [ "node_modules" ],
-  "include": [ "src/*.ts", "src/model/*.ts" ]
+  "include": [ "src/*.ts", "src/model/*.ts", "src/debug/*.ts" ]
 }

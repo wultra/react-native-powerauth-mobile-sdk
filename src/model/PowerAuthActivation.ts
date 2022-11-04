@@ -22,20 +22,28 @@
 
     /** parameters that are filled by create* methods  */ 
 
-    activationName: string;
-    activationCode?: string;
-    recoveryCode?: string;
-    recoveryPuk?: string;
-    identityAttributes?: any;
+    activationName: string
+    activationCode?: string
+    recoveryCode?: string
+    recoveryPuk?: string
+    identityAttributes: any
     
     /** Extra attributes of the activation, used for application specific purposes (for example, info about the clientdevice or system). This extras string will be associated with the activation record on PowerAuth Server. */
-    extras?: string;
+    extras?: string
 
     /** Custom attributes object that are processed on Intermediate Server Application. Note that this custom data will not be associated with the activation record on PowerAuth Server */
-    customAttributes?: any;
+    customAttributes: any
 
     /** Additional activation OTP that can be used only with a regular activation, by activation code */
-    additionalActivationOtp?: string;
+    additionalActivationOtp?: string
+
+    /**
+     * Private constructor, used internally.
+     * @param activationName Activation name to be assigned to new activation.
+     */
+    private constructor(activationName: string) {
+        this.activationName = activationName;
+    }
 
     /**
      * Create an instance of `PowerAuthActivation` configured with the activation code. The activation code may contain
@@ -46,10 +54,10 @@
      * 
      * @param activationCode Activation code, obtained either via QR code scanning or by manual entry.
      * @param name Activation name to be used for the activation.
-     * @return New instance of `PowerAuthActivation`.
+     * @returns New instance of `PowerAuthActivation`.
      */
     static createWithActivationCode(activationCode: string, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.activationCode = activationCode;
         return a;
@@ -64,10 +72,10 @@
      * @param recoveryCode Recovery code, obtained either via QR code scanning or by manual entry.
      * @param recoveryPuk PUK obtained by manual entry.
      * @param name Activation name to be used for the activation.
-     * @return New instance of `PowerAuthActivation`.
+     * @returns New instance of `PowerAuthActivation`.
      */
     static createWithRecoveryCode(recoveryCode: string, recoveryPuk: string, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.recoveryCode = recoveryCode;
         a.recoveryPuk = recoveryPuk;
@@ -82,10 +90,10 @@
      * 
      * @param identityAttributes Custom activation parameters that are used to prove identity of a user (each object value is serialized and used).
      * @param name Activation name to be used for the activation.
-     * @return New instance of `PowerAuthActivation`.
+     * @returns New instance of `PowerAuthActivation`.
      */
     static createWithIdentityAttributes(identityAttributes: any, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation();
+        const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.identityAttributes = identityAttributes;
         return a;

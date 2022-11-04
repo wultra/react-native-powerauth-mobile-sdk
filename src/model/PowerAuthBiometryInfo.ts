@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/**
+ * Object contains complex information about type and state of biometry on the device.
+ */
 export interface PowerAuthBiometryInfo {
     /** 
      * Evaluate whether the biometric authentication is supported on the system. 
@@ -21,16 +24,16 @@ export interface PowerAuthBiometryInfo {
      * Note that the property contains "false" on iOS if biometry is not enrolled or if it has been locked down. 
      * To distinguish between an availability and lockdown you can use `biometryType` and `canAuthenticate`.
      */
-    isAvailable: boolean;
+    isAvailable: boolean
     /** 
      * Return type of biometry supported on the system. 
      */
-    biometryType: PowerAuthBiometryType;
+    biometryType: PowerAuthBiometryType
     /** 
      * Check whether biometric authentication is available on this authenticator and biometric data
      * are enrolled on the system. 
      */
-    canAuthenticate: PowerAuthBiometryStatus;
+    canAuthenticate: PowerAuthBiometryStatus
 }
 
 /**

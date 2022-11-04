@@ -13,20 +13,14 @@ To sign request data, you need to first obtain user credentials (password, PIN c
 
 ```javascript
 // 2FA signature, uses device-related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = false;
+const auth = PowerAuthAuthentication.password("1234");
 ```
 
 When signing `POST`, `PUT` or `DELETE` requests, use request body bytes (UTF-8) as request data and the following code:
 
 ```javascript
 // 2FA signature, uses device related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = false;
+const auth = PowerAuthAuthentication.password("1234");
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
 try {
@@ -42,10 +36,7 @@ When signing `GET` requests, use the same code as above with normalized request 
 
 ```javascript
 // 2FA signature, uses device related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = false;
+const auth = PowerAuthAuthentication.password("1234");
 
 // Sign GET call with provided query parameters made to URI with custom identifier "/payment/create"
 const params = {
@@ -62,6 +53,32 @@ try {
 }
 ```
 
+To sign data with biomtry simply create different authentication object:
+
+```javascript
+// 2FA signature, uses device related key and biometry
+const auth = PowerAuthAuthentication.biometry({
+    promptMessage: 'Authenticate to process payment',   // Required on both platforms
+    promptTitle: 'Authenticate',    // Android specific, not used on iOS
+    fallbackButton: 'Enter PIN'     // iOS specific, if provided, then the fallback button is displayed
+});
+
+// Sign POST call with provided data made to URI with custom identifier "/payment/create"
+try {
+    const signature = await powerAuth.requestSignature(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
+    const httpHeaderKey = signature.key;
+    const httpHeaderValue = signature.value;
+} catch(e) {
+    if (e.code === PowerAuthErrorCode.BIOMETRY_CANCEL) {
+        // User did cancel the dialog
+    } else if (e.code === PowerAuthErrorCode.BIOMETRY_FALLBACK) {
+        // iOS specific, can occur only if you provide the fallback button
+    } else {
+        // other errors
+    }
+}
+```
+
 ### Request Synchronization
 
 It is recommended that your application executes only one signed request at the time. The reason for that is that our signature scheme is using a counter as a representation of logical time. In other words, the order of request validation on the server is very important. If you issue more than one signed request at the same time, then the order is not guaranteed and therefore one from the requests may fail.
@@ -74,10 +91,7 @@ This process is completely transparent on the SDK level. To compute an asymmetri
 
 ```javascript
 // 2FA signature, uses device-related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = false;
+const auth = PowerAuthAuthentication.password("1234");
 
 // Unlock the secure vault, fetch the private key and perform data signing
 try {
@@ -94,11 +108,7 @@ This type of signature is very similar to [Symmetric Multi-Factor Signature](#sy
 
 ```javascript
 // 2FA signature, uses device related key and user PIN code
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
-auth.userPassword = "1234";
-auth.useBiometry = false;
-
+const auth = PowerAuthAuthentication.password("1234");
 try {
     const signature = await powerAuth.offlineSignature(auth, "/confirm/offline/operation", data, nonce);
     console.log("Signature is " + signature)

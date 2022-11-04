@@ -12,9 +12,9 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "8.0" }
   s.source       = { :git => "https://github.com/wultra/react-native-powerauth-mobile-sdk.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/PowerAuth/*.{h,m}"
+  s.source_files = "ios/PowerAuth/*.{h,m,c}"
   s.requires_arc = true
 
   s.dependency "React"
-  s.dependency "PowerAuth2", "1.6.1"
+  s.dependency "PowerAuth2", "~> 1.7.5"
 end

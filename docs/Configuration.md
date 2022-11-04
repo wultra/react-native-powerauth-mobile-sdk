@@ -77,11 +77,12 @@ In case that you need an advanced configuration, then you can import and use the
 The following code snipped shows usage of the advanced configuration:
 
 ```javascript
-import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthClientConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthBiometryConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk';
+import {
+    PowerAuth,
+    PowerAuthConfiguration,
+    PowerAuthClientConfiguration,
+    PowerAuthBiometryConfiguration,
+    PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk';
 import { Component } from 'react';
 
 export default class AppMyApplication extends Component {
@@ -96,15 +97,15 @@ export default class AppMyApplication extends Component {
             console.log("PowerAuth was already configured.");
         } else {
             try {
-              let configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
-              let clientConfiguration = new PowerAuthClientConfiguration()
+              const configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
+              const clientConfiguration = new PowerAuthClientConfiguration()
               clientConfiguration.enableUnsecureTraffic = false
-              let biometryConfiguration = new PowerAuthBiometryConfiguration()
+              const biometryConfiguration = new PowerAuthBiometryConfiguration()
               biometryConfiguration.linkItemsToCurrentSet = true
-              let keychainConfiguration = new PowerAuthKeychainConfiguration()
+              const keychainConfiguration = new PowerAuthKeychainConfiguration()
               keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
               await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
-                console.log("PowerAuth configuration successfull.");
+              console.log("PowerAuth configuration successfull.");
             } catch(e) {
                 console.log(`PowerAuth failed to configure: ${e.code}`);
             }

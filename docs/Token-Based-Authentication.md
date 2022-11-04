@@ -21,8 +21,7 @@ To get an access token, you can use the following code:
 
 ```javascript
 // 1FA signature, uses device related key
-const auth = new PowerAuthAuthentication();
-auth.usePossession = true;
+const auth = PowerAuthAuthentication.possession();
 
 try {
     const token = await powerAuth.tokenStore.requestAccessToken("MyToken", auth);
@@ -76,3 +75,7 @@ try {
 ```
 
 Note that by removing tokens locally, you will lose control of the tokens stored on the server.
+
+## Read Next
+
+- [Troubleshooting](Troubleshooting.md)

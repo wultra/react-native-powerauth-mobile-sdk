@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { __NativeWrapper } from "./internal/NativeWrapper";
+import { NativeWrapper } from "./internal/NativeWrapper";
 
 /**
  * The `PowerAuthActivationCodeUtil` provides various set of methods for parsing and validating
@@ -46,22 +46,22 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * Parses an input |activationCode| (which may or may not contain an optional signature) and returns PowerAuthOtp 
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      * 
-     * @return Activation code object
+     * @returns Activation code object
      * @throws error when not valid 
      */
     static parseActivationCode(activationCode: string): Promise<PowerAuthActivationCode> {
-        return __NativeWrapper.call("parseActivationCode", activationCode);
+        return NativeWrapper.staticCall("parseActivationCode", activationCode);
     }
 
     /**
      * Parses an input |recoveryCode| (which may or may not contain an optional "R:" prefix) and returns PowerAuthOtp 
      * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
      * 
-     * @return Activation code object
+     * @returns Activation code object
      * @throws error when not valid 
      */
     static parseRecoveryCode(recoveryCode: string): Promise<PowerAuthActivationCode> {
-        return __NativeWrapper.call("parseRecoveryCode", recoveryCode);
+        return NativeWrapper.staticCall("parseRecoveryCode", recoveryCode);
     }
 
     /**
@@ -69,7 +69,7 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * You can use this method to validate a whole user-typed activation code at once.
      */
     static validateActivationCode(activationCode: string): Promise<boolean> {
-        return __NativeWrapper.call("validateActivationCode", activationCode);
+        return NativeWrapper.staticCall("validateActivationCode", activationCode);
     }
 
     /**
@@ -77,7 +77,7 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * a whole user-typed recovery code at once. The input code may contain "R:" prefix, if code is scanned from QR code.
      */
     static validateRecoveryCode(recoveryCode: string): Promise<boolean> {
-        return __NativeWrapper.call("validateRecoveryCode", recoveryCode);
+        return NativeWrapper.staticCall("validateRecoveryCode", recoveryCode);
     }
 
     /**
@@ -85,7 +85,7 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * a whole user-typed recovery PUK at once. In current version, only 10 digits long string is considered as a valid PUK.
      */
     static validateRecoveryPuk(puk: string): Promise<boolean> {
-        return __NativeWrapper.call("validateRecoveryPuk", puk);
+        return NativeWrapper.staticCall("validateRecoveryPuk", puk);
     }
 
     /**
@@ -93,7 +93,7 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * The method strictly checks whether the character is from [A-Z2-7] characters range.
      */
     static validateTypedCharacter(character: number): Promise<boolean> {
-        return __NativeWrapper.call("validateTypedCharacter", character);
+        return NativeWrapper.staticCall("validateTypedCharacter", character);
     }
 
     /**
@@ -107,7 +107,7 @@ import { __NativeWrapper } from "./internal/NativeWrapper";
      * - '1' is corrected to 'I'
      */
     static correctTypedCharacter(character: number): Promise<number> {
-        return __NativeWrapper.call("correctTypedCharacter", character);
+        return NativeWrapper.staticCall("correctTypedCharacter", character);
     }
 }
 
