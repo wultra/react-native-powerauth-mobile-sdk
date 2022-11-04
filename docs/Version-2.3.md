@@ -66,6 +66,11 @@ auth = PowerAuthAuthentication.commitWithPasswordAndBiometry("1234", {
 });
 ```
 
+## Changes in `PowerAuthToken`
+
+The `PowerAuthToken` interface no longer contains `isValid` and `canGenerateHeader` properties. Such properties were always set to `true`.
+
+
 ## Changes in Grouped biometric authentication
 
 The reusable authentication created with `PowerAuth.groupedBiometricAuthentication()` has now a limited lifetime. The expiration time is set to 10 seconds from the last reusable authentication use. The result is that once the previously acquired biometry key is expired, then the biometry dialog is displayed for one more time. For example, if you're calculating signature for two requests and first take more than 10 seconds to execute, then the biometric authentication is displayed again. 
