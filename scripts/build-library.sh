@@ -1,69 +1,117 @@
 #!/bin/bash
 
-set -e # stop sript when error occures
-set -u # stop when undefined variable is used
-#set -x # print all execution (good for debugging)
+TOP=$(dirname $0)
+source "$TOP/common-functions.sh"
+SRC="${TOP}/.."
 
-echo '------------------------------------------------------------'
-echo 'Installing dependencies'
-echo '------------------------------------------------------------'
+DO_TSC=1
+DO_ANDROID=1
+DO_IOS=1
+
+if [ ! -z $1 ]; then
+    case $1 in
+        android) 
+            DO_TSC=0
+            DO_ANDROID=1
+            DO_IOS=0
+            ;;
+        ios) 
+            DO_TSC=0
+            DO_ANDROID=0
+            DO_IOS=1
+            ;;
+        tsc | typescript) 
+            DO_TSC=1
+            DO_ANDROID=0
+            DO_IOS=0
+            ;;
+        *) 
+            FAILURE "Unknown build target $1" ;;
+    esac
+fi
+
+LOG '------------------------------------------------------------'
+LOG 'Installing dependencies'
+LOG '------------------------------------------------------------'
+
 export NPM_TOKEN="DUMMY" # dummy variable to silence npm error
 
-TOP=$(dirname $0)
-
 # jump to top-project-folder
-pushd "${TOP}/.."
+PUSH_DIR "${SRC}"
 
 # instal npm dependencies
 npm i
 
-echo '------------------------------------------------------------'
-echo 'Building iOS platform'
-echo '------------------------------------------------------------'
+if [ x$DO_IOS == x1 ]; then
+    LOG '------------------------------------------------------------'
+    LOG 'Building iOS platform'
+    LOG '------------------------------------------------------------'
 
-npx pod-install
+    npx pod-install
 
-pushd ios
+    PUSH_DIR ios
 
-echo '------------------------------------------------------------'
-echo 'Compiling iOS Release'
-echo '------------------------------------------------------------'
+    LOG '------------------------------------------------------------'
+    LOG 'Compiling iOS Release'
+    LOG '------------------------------------------------------------'
 
-xcrun xcodebuild \
-    -workspace "PowerAuth.xcworkspace" \
-    -scheme "PowerAuth" \
-    -configuration "Release" \
-    -sdk "iphonesimulator" \
-    -arch x86_64 \
-    build
+    xcrun xcodebuild \
+        -workspace "PowerAuth.xcworkspace" \
+        -scheme "PowerAuth" \
+        -configuration "Release" \
+        -sdk "iphonesimulator" \
+        -arch x86_64 \
+        build
 
-echo '------------------------------------------------------------'
-echo 'Compiling iOS Debug'
-echo '------------------------------------------------------------'
+    LOG '------------------------------------------------------------'
+    LOG 'Compiling iOS Debug'
+    LOG '------------------------------------------------------------'
 
-xcrun xcodebuild \
-    -workspace "PowerAuth.xcworkspace" \
-    -scheme "PowerAuth" \
-    -configuration "Debug" \
-    -sdk "iphonesimulator" \
-    -arch x86_64 \
-    build
+    xcrun xcodebuild \
+        -workspace "PowerAuth.xcworkspace" \
+        -scheme "PowerAuth" \
+        -configuration "Debug" \
+        -sdk "iphonesimulator" \
+        -arch x86_64 \
+        build
 
-popd
+    POP_DIR
 
-echo '------------------------------------------------------------'
-echo 'Building Android platform'
-echo '------------------------------------------------------------'
+fi # DO_IOS
 
-pushd android
+if [ x$DO_ANDROID == x1 ]; then
+    LOG '------------------------------------------------------------'
+    LOG 'Building Android platform'
+    LOG '------------------------------------------------------------'
 
-./gradlew clean build
+    PUSH_DIR android
 
-echo '------------------------------------------------------------'
-echo 'Building Typescript'
-echo '------------------------------------------------------------'
-popd
-tsc --build
+    ./gradlew clean build
+    
+    POP_DIR
+
+fi # DO_ANDROID
+
+if [ x$DO_TSC == x1 ]; then
+    LOG '------------------------------------------------------------'
+    LOG 'Building library'
+    LOG '------------------------------------------------------------'
+
+    tsc --build
+
+    PUSH_DIR testapp
+    
+    LOG '------------------------------------------------------------'
+    LOG 'Building testapp'
+    LOG '------------------------------------------------------------'
+
+    tsc --build
+
+    POP_DIR
+
+fi # DO_TSC
+
+POP_DIR
 
 # THIS IS TEMPORARY DISABLED - FOR SOME REASON, GIT STATUS IS DIFFERENT IN PODS THAN IN LOCAL ENV.
 # check if the git status is clean (there should be no changs)
@@ -76,6 +124,4 @@ tsc --build
 #   exit 1
 # fi
 
-echo '------------------------------------------------------------'
-echo 'SUCCESS'
-echo ''
+EXIT_SUCCESS

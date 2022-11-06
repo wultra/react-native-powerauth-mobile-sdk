@@ -1,4 +1,4 @@
-name: build
+name: build library
 
 on:
   push:
@@ -10,8 +10,8 @@ on:
     - cron: '25 6 * * *'
 
 jobs:
-  buildnrun:
-    name: Build iOS and Android library
+  build-android:
+    name: Build Android library
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
@@ -24,5 +24,37 @@ jobs:
           cache: 'gradle'
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
+      - name: Build native Android libraries
+        run: sh scripts/build-library.sh android
+  build-ios:
+    name: Build iOS library
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      - name: Setup NPM tools
+        run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
+      - name: Build native iOS libraries
+        run: sh scripts/build-library.sh ios
+  build-tsc:
+    name: Build iOS library
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      - name: Setup NPM tools
+        run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Build native libraries
-        run: sh scripts/build-library.sh
+        run: sh scripts/build-library.sh tsc
