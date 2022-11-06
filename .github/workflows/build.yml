@@ -25,7 +25,8 @@ jobs:
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Build native Android libraries
-        run: sh scripts/build-library.sh android
+        run: bash scripts/build-library.sh android
+        
   build-ios:
     name: Build iOS library
     runs-on: macos-latest
@@ -41,10 +42,11 @@ jobs:
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Build native iOS libraries
-        run: sh scripts/build-library.sh ios
+        run: bash scripts/build-library.sh ios
+
   build-tsc:
     name: Compile typescript
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
