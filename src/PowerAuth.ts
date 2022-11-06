@@ -38,25 +38,29 @@ import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
  */
 export class PowerAuth {
     /**
-     * Configuration used to configure this instance of class. Note that modifying this property has no effect, but the
-     * stored object is useful for the debugging purposes.
+     * Configuration used to configure this instance of class.
      */
-    configuration?: PowerAuthConfiguration
+    get configuration(): PowerAuthConfiguration | undefined {
+        return configRegister.get(this.instanceId)?.instanceConfiguration
+    }
     /**
-     * Client configuration used to configure this instance of class. Note that modifying this property has no effect, but the
-     * stored object is useful for the debugging purposes.
+     * Client configuration used to configure this instance of class.
      */
-    clientConfiguration?: PowerAuthClientConfiguration
+    get clientConfiguration(): PowerAuthClientConfiguration | undefined {
+        return configRegister.get(this.instanceId)?.clientConfiguration
+    }
     /**
-     * Biometry configuration used to configure this instance of class. Note that modifying this property has no effect, but the
-     * stored object is useful for the debugging purposes.
+     * Biometry configuration used to configure this instance of class.
      */
-    biometryConfiguration?: PowerAuthBiometryConfiguration
+    get biometryConfiguration(): PowerAuthBiometryConfiguration | undefined {
+        return configRegister.get(this.instanceId)?.biometryConfiguration
+    }
     /**
-     * Keychain configuration used to configure this instance of class. Note that modifying this property has no effect, but the
-     * stored object is useful for the debugging purposes.
+     * Keychain configuration used to configure this instance of class.
      */
-    keychainConfiguration?: PowerAuthKeychainConfiguration
+    get keychainConfiguration(): PowerAuthKeychainConfiguration | undefined {
+        return configRegister.get(this.instanceId)?.keychainConfiguration
+    }
 
     /**
      * Object for managing access tokens.
@@ -122,10 +126,12 @@ export class PowerAuth {
             biometryConfiguration = PowerAuthBiometryConfiguration.default()
             keychainConfiguration = PowerAuthKeychainConfiguration.default()
         }
-        this.configuration = configuration
-        this.clientConfiguration = clientConfiguration
-        this.biometryConfiguration = biometryConfiguration
-        this.keychainConfiguration = keychainConfiguration
+        configRegister.set(this.instanceId, {
+            instanceConfiguration: configuration,
+            clientConfiguration: clientConfiguration,
+            biometryConfiguration: biometryConfiguration,
+            keychainConfiguration: keychainConfiguration
+        })
         return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
     }
 
@@ -133,11 +139,8 @@ export class PowerAuth {
      * Deconfigures the instance
      */
     deconfigure(): Promise<boolean> {
-        this.configuration = undefined
-        this.clientConfiguration = undefined
-        this.biometryConfiguration = undefined
-        this.keychainConfiguration = undefined
-        return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
+        configRegister.delete(this.instanceId)
+        return NativeWrapper.thisCallBool("deconfigure", this.instanceId)
     }
 
     /**
@@ -523,3 +526,12 @@ export class PowerAuth {
 
     private authResolver: AuthResolver
 }
+
+interface InstanceConfigurations {
+    instanceConfiguration: PowerAuthConfiguration
+    clientConfiguration: PowerAuthClientConfiguration
+    biometryConfiguration: PowerAuthBiometryConfiguration
+    keychainConfiguration: PowerAuthKeychainConfiguration
+}
+
+const configRegister = new Map<string, InstanceConfigurations>()

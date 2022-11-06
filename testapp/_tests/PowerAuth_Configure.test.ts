@@ -45,7 +45,7 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         // Create helpers. The function also instantiate and configure PowerAuth instance
         const helper1 = await this.getHelper1()
         const helper2 = await this.getHelper2()
-        // SDK instances from helpers should be afailable
+        // SDK instances from helpers should be available
         const sdk1 = helper1.powerAuthSdk
         const sdk2 = helper2.powerAuthSdk
 
@@ -65,15 +65,15 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         // keeping only essential values
         expect(await pa1.isConfigured()).toBe(true)
         expect(await pa2.isConfigured()).toBe(true)
-        // Unline instances created in helper, pa1 & pa2
-        expect(pa1.configuration).toBeUndefined()
-        expect(pa2.configuration).toBeUndefined()
-        expect(pa1.keychainConfiguration).toBeUndefined()
-        expect(pa2.keychainConfiguration).toBeUndefined()
-        expect(pa1.clientConfiguration).toBeUndefined()
-        expect(pa2.clientConfiguration).toBeUndefined()
-        expect(pa1.biometryConfiguration).toBeUndefined()
-        expect(pa2.biometryConfiguration).toBeUndefined()
+        // Online instances created in helper, pa1 & pa2
+        expect(pa1.configuration).toBeDefined()
+        expect(pa2.configuration).toBeDefined()
+        expect(pa1.keychainConfiguration).toBeDefined()
+        expect(pa2.keychainConfiguration).toBeDefined()
+        expect(pa1.clientConfiguration).toBeDefined()
+        expect(pa2.clientConfiguration).toBeDefined()
+        expect(pa1.biometryConfiguration).toBeDefined()
+        expect(pa2.biometryConfiguration).toBeDefined()
     }
 
     async testReconfigureWhileActive() {
