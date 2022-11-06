@@ -22,6 +22,10 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
           cache: 'gradle'
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Build native Android libraries
@@ -39,6 +43,10 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
           cache: 'gradle'
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Build native iOS libraries
@@ -56,6 +64,10 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
           cache: 'gradle'
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
       - name: Compile sources
