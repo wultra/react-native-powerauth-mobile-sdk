@@ -43,7 +43,7 @@ jobs:
       - name: Build native iOS libraries
         run: sh scripts/build-library.sh ios
   build-tsc:
-    name: Build iOS library
+    name: Compile typescript
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
@@ -56,5 +56,5 @@ jobs:
           cache: 'gradle'
       - name: Setup NPM tools
         run: npm install -g pod-install && npm install -g react-native && npm install -g typescript
-      - name: Build native libraries
-        run: sh scripts/build-library.sh tsc
+      - name: Compile sources
+        run: bash scripts/build-library.sh tsc
