@@ -30,9 +30,9 @@ if [ ! -z $1 ]; then
     esac
 fi
 
-LOG '------------------------------------------------------------'
+LOG_LINE
 LOG 'Installing dependencies'
-LOG '------------------------------------------------------------'
+LOG_LINE
 
 export NPM_TOKEN="DUMMY" # dummy variable to silence npm error
 
@@ -43,17 +43,17 @@ PUSH_DIR "${SRC}"
 npm i
 
 if [ x$DO_IOS == x1 ]; then
-    LOG '------------------------------------------------------------'
+    LOG_LINE
     LOG 'Building iOS platform'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
 
     npx pod-install
 
     PUSH_DIR ios
 
-    LOG '------------------------------------------------------------'
+    LOG_LINE
     LOG 'Compiling iOS Release'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
 
     xcrun xcodebuild \
         -workspace "PowerAuth.xcworkspace" \
@@ -63,9 +63,9 @@ if [ x$DO_IOS == x1 ]; then
         -arch x86_64 \
         build
 
-    LOG '------------------------------------------------------------'
+    LOG_LINE
     LOG 'Compiling iOS Debug'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
 
     xcrun xcodebuild \
         -workspace "PowerAuth.xcworkspace" \
@@ -80,9 +80,10 @@ if [ x$DO_IOS == x1 ]; then
 fi # DO_IOS
 
 if [ x$DO_ANDROID == x1 ]; then
-    LOG '------------------------------------------------------------'
+    LOG_LINE
     LOG 'Building Android platform'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
+
 
     PUSH_DIR android
 
@@ -93,17 +94,23 @@ if [ x$DO_ANDROID == x1 ]; then
 fi # DO_ANDROID
 
 if [ x$DO_TSC == x1 ]; then
-    LOG '------------------------------------------------------------'
+    LOG_LINE
     LOG 'Building library'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
 
     tsc --build
 
     PUSH_DIR testapp
-    
-    LOG '------------------------------------------------------------'
+
+    LOG_LINE
+    LOG 'Updating testapp dependencies'
+    LOG_LINE
+
+    "${TOP}/update-apps.sh"
+
+    LOG_LINE
     LOG 'Building testapp'
-    LOG '------------------------------------------------------------'
+    LOG_LINE
 
     tsc --build
 
