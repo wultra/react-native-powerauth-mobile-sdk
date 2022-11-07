@@ -48,7 +48,6 @@
     "react-native": ">=0.64"
   },
   "devDependencies": {
-    "@tsconfig/react-native": "^2.0.2",
     "@types/react-native": ">=0.64",
     "lodash": "^4.17.21",
     "react-native": ">=0.64"
