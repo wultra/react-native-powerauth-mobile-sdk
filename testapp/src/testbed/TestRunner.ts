@@ -53,12 +53,21 @@ export class TestRunner {
     }
 
     async runTests(tests: TestSuite[]): Promise<boolean> {
+        if (this.testsInProgress) {
+            console.error(`Tests are still running...`)
+            return false
+        }
         try {
+            this.testsInProgress = true
+            this.requestCancel = false
             if (!this.beforeBatch(tests)) {
                 return false
             }
             for (const i in tests) {
                 await this.runTestSuite(tests[i])
+                if (this.requestCancel) {
+                    break
+                }
             }
             this.afterBatch()
             return this.allSuitesCounter.failed == 0    
@@ -68,6 +77,30 @@ export class TestRunner {
                 console.error(`${describeError(e, true)}`)
             }
             return false
+        } finally {
+            this.testsInProgress = false
+            this.requestCancel = false
+            this.cancelCompletion?.forEach(callback => callback())
+            this.cancelCompletion = undefined
+        }
+    }
+
+    private testsInProgress = false
+    private requestCancel = false
+    private cancelCompletion?: Array<()=>void>
+
+    get isRunning(): boolean {
+        return this.testsInProgress
+    }
+
+    cancelRunningTests(callback: (() => void) | undefined = undefined) {
+        this.requestCancel = true
+        if (callback) {
+            if (!this.cancelCompletion) {
+                this.cancelCompletion = new Array<() => void>(callback)
+            } else {
+                this.cancelCompletion.push(callback)
+            }    
         }
     }
 
@@ -91,13 +124,15 @@ export class TestRunner {
     }
 
     private afterBatch() {
-        if (this.allTestsCounter.skipped == this.allTestsCounter.total) {
-            this.monitor.reportEvent(TestEvent.batchFail(this.batchName, "All tests were skipped."))
+        if (this.requestCancel) {
+            this.monitor.reportEvent(TestEvent.batchInfo(this.batchName, "⛔️ Cancelled."))
+        } else if (this.allTestsCounter.skipped == this.allTestsCounter.total) {
+            this.monitor.reportEvent(TestEvent.batchFail(this.batchName, "💥 All tests were skipped."))
         } else {
             if (this.allSuitesCounter.failed == 0 && this.allTestsCounter.failed == 0) {
-                this.monitor.reportEvent(TestEvent.batchInfo(this.batchName, "All tests succeeded."))
+                this.monitor.reportEvent(TestEvent.batchInfo(this.batchName, "✅ All tests succeeded."))
             } else {
-                this.monitor.reportEvent(TestEvent.batchFail(this.batchName, `Failed ${this.allSuitesCounter.failed} from ${this.allSuitesCounter.total} test suites.`))
+                this.monitor.reportEvent(TestEvent.batchFail(this.batchName, `💥 Failed ${this.allSuitesCounter.failed} from ${this.allSuitesCounter.total} test suites.`))
             }
         }
     }
@@ -118,6 +153,9 @@ export class TestRunner {
 
         // Iterate over all test methods
         for (const i in testMethods) {
+            if (this.requestCancel) {
+                break
+            }
             const methodName = testMethods[i]
             // Call "beforeEach()"
             await ctx.beforeEach(methodName, async (context) => { 
@@ -475,7 +513,18 @@ class RunnerContext implements TestInteraction {
             }
             return this.interaction.showPrompt(context, message, duration)
         }, () => {
-            return `showPrompt('${message}')`
+            return `showPrompt('${message}', ${duration})`
+        })
+    }
+
+    async sleepWithProgress(context: TestContext, durationMs: number): Promise<void> {
+        await this.validateContext(context, undefined, async () => {
+            if (!this.interaction) {
+                throw new Error(`Interaction the user is not allowed for this test.`)
+            }
+            return this.interaction.sleepWithProgress(context, durationMs)
+        }, () => {
+            return `sleepFor(${durationMs})`
         })
     }
     

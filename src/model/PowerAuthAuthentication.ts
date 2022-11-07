@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { RawAuthentication } from "../internal/NativeTypes"
 import { PasswordType } from "./PowerAuthPassword"
 
 /**
@@ -25,21 +26,21 @@ export interface PowerAuthBiometricPrompt {
      * 
      * For example: "Please authorize the payment with the biometric sensor"
      */
-    promptMessage: string
+    readonly promptMessage: string
     /**
      * Android specific title, displayed to the user. You have to provide this value on Android platform.
      * 
      * For example: "Payment authorization"
      */
-    promptTitle?: string
+    readonly promptTitle?: string
     /**
      * iOS specific title for a cancel button, displayed to the user.
      */
-    cancelButton?: string
+     readonly cancelButton?: string
     /**
      * iOS specific title for a fallback button, displayed to the user.
      */
-    fallbackButton?: string
+     readonly fallbackButton?: string
 }
 
 /**
@@ -78,6 +79,7 @@ export class PowerAuthAuthentication {
         this.password = password
         this.biometricPrompt = biometricPrompt
         this.isBiometry = biometricPrompt !== undefined
+        this.isReusable = false
     }
 
     /**
@@ -133,11 +135,13 @@ export class PowerAuthAuthentication {
      * application developers. We'll fix this once we remove the deprecated properties in the next major release.
      * @param commit Value for isCommit property. 
      * @param biometry Value for isBiometry property.
+     * @param reusable Value for isReusable property. If not provided, then false is used.
      * @returns this
      */
-    private configure(commit: boolean | undefined, biometry: boolean = false): PowerAuthAuthentication {
+    private configure(commit: boolean | undefined, biometry: boolean = false, reusable: boolean = false): PowerAuthAuthentication {
         this.isCommit = commit
         this.isBiometry = biometry
+        this.isReusable = reusable
         return this
     }
 
@@ -150,6 +154,10 @@ export class PowerAuthAuthentication {
      * Indicate that object use biometric authentication.
      */
     private isBiometry: boolean
+    /**
+     * Indicate that this object has reusable biometry.
+     */
+    private isReusable: boolean
     /**
      * Contains identifier for data object containing biometry key, allocated 
      * in native code. Check `AuthResolver.ts` for more details.
@@ -190,7 +198,7 @@ export class PowerAuthAuthentication {
             // the native code will reach to all new properties.
             const prompt = this.useBiometry ? this.getBiometricPrompt() : undefined
             return new PowerAuthAuthentication(this.userPassword, prompt)
-                        .configure(forCommit, this.useBiometry)
+                        .configure(forCommit, this.useBiometry, this.isReusable)
         }
         return this
     }
@@ -223,6 +231,26 @@ export class PowerAuthAuthentication {
      * @deprecated Direct access to property is now deprecated, use new static methods to construct `PowerAuthAuthentication` object.
      */
     biometryTitle?: string
+
+    /**
+     * Function convert authentication object into immutable object that can be passed to the natrive bridge.
+     * You suppose not use this function in the application code.
+     * 
+     * @returns Frozen object with data for authentication.
+     */
+    async toRawAuthentication(): Promise<RawAuthentication> {
+        const rawPassword = this.password !== undefined
+                    ? (typeof this.password === 'string' ? this.password  : await this.password.toRawPassword()) 
+                    : undefined
+        return Object.freeze({
+            password: rawPassword,
+            biometricPrompt: this.biometricPrompt,
+            biometryKeyId: this.biometryKeyId,
+            isCommit: this.isCommit,
+            isReusable: this.isReusable,
+            isBiometry: this.isBiometry,
+        })
+    }
 }
 
 // Fallback strings

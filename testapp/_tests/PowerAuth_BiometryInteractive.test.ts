@@ -113,6 +113,9 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         })
         await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
         await this.sdk.tokenStore.removeAccessToken('biometric-token')
+
+        // Try to reuse already used auth object
+        await expect(async () => await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
     }
 
     async testLegacyBiometricSignature() {
@@ -163,6 +166,29 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             expect(result).toBe(true)
 
             await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
+            // Calculate yet another signature and verify
+            data = '{"value":false}'
+            uriId = '/another/uriId'
+
+            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
+            expect(result).toBe(true)
+
+            // Now sleep for 10 seconds
+
+            await this.sleepWithProgress(10000)
+
+            await this.showPrompt('Biometric dialog should be displayed again.')
+
+            // Calculate yet another signature and verify
+            data = '{"value":false, "something":true}'
+            uriId = '/another/uriId'
+
+            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
+            expect(result).toBe(true)
+
+            await this.showPrompt('Biometric dialog should not be displayed again.', UserPromptDuration.QUICK)
             // Calculate yet another signature and verify
             data = '{"value":false}'
             uriId = '/another/uriId'

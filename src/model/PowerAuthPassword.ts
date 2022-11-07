@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { PinTestResult, PowerAuthError, PowerAuthErrorCode, PowerAuthPassphraseMeter } from "../index"
+import { PinTestResult, PowerAuthError, PowerAuthErrorCode } from "../index"
 import { NativePassphraseMeter } from "../internal/NativePassphraseMeter"
 import { NativePassword } from "../internal/NativePassword"
+import { RawPassword } from "../internal/NativeTypes"
 import { NativeWrapper } from "../internal/NativeWrapper"
 
 
@@ -221,10 +222,10 @@ export class PowerAuthPassword {
 
     /**
      * Convert this password object into RawPassword object that can be passed safely to a native call.
-     * @returns RawPassword object.
+     * @returns Frozen RawPassword object.
      */
     toRawPassword(): Promise<RawPassword> {
-        return this.withObjectId(id => Promise.resolve({ passwordObjectId: id }))
+        return this.withObjectId(id => Promise.resolve(Object.freeze({ passwordObjectId: id })))
     }
 
     /**
@@ -248,17 +249,6 @@ export class PowerAuthPassword {
      * Underlying native object's identifier.
      */
     private passwordObjectId?: string
-}
-
-/**
- * Object representing a simple native password identifier wrapped in the object.
- * We need this auxiliary object due to a problematic call to passphrase meter.
- */
-export interface RawPassword {
-    /**
-     * Native password's identifier.
-     */
-    passwordObjectId?: string
 }
 
 /**

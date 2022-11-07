@@ -166,6 +166,15 @@ export class TestSuite {
     }
 
     /**
+     * Show prompt to the user.
+     * @param duration How long will function sleep, in milliseconds.
+     */
+    sleepWithProgress(duration: number): Promise<void> {
+        this.debugInfo(`Going to sleep for ${duration} ms`)
+        return this.interaction.sleepWithProgress(this.context, duration)
+    }
+
+    /**
      * Report debug information from the test. The information is reported only if `printInfoMessages` is `true`.
      * @param message Information to report.
      */

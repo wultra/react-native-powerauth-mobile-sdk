@@ -32,6 +32,7 @@ import { NativeWrapper } from "./internal/NativeWrapper";
 import { AuthResolver } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
 import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
+import { RawAuthentication } from './internal/NativeTypes';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -489,7 +490,7 @@ export class PowerAuth {
             throw new PowerAuthError(undefined, "Authentication object is not configured for biometric factor", PowerAuthErrorCode.WRONG_PARAMETER);
         }
         try {
-            const reusable = await this.authenticate(authentication, true);
+            const reusable = await this.authResolver.resolve(authentication, true);
             try {
                 // integrator defined chain of authorization calls with reusable authentication
                 await groupedAuthenticationCalls(reusable);
@@ -517,11 +518,10 @@ export class PowerAuth {
      * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
      * 
      * @param authentication authentication configuration
-     * @param makeReusable if the object should be forced to be reusable
      * @returns configured authorization object
      */
-    private authenticate(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-        return this.authResolver.resolve(authentication, makeReusable)
+    private async authenticate(authentication: PowerAuthAuthentication): Promise<RawAuthentication> {
+        return (await this.authResolver.resolve(authentication, false)).toRawAuthentication()
     }
 
     private authResolver: AuthResolver

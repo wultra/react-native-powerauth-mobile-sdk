@@ -15,8 +15,8 @@
  */
 
 import { NativeModules } from "react-native"
-import { PinTestResult, RawPassword } from '../index'
-
+import { PinTestResult } from '../index'
+import { RawPassword } from './NativeTypes';
 /**
  * Password interface implemented in the native code.
  */
