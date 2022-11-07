@@ -235,10 +235,7 @@ public class ObjectRegister extends BaseJavaModule {
      * @return true if provided object identifier is valid and can be used in
      */
     boolean isValidObjectId(@Nullable String objectId) {
-        if (objectId == null || objectId.length() == 0) {
-            return false;
-        }
-        return !objectId.startsWith(GENERATED_ID_PREFIX) && !objectId.startsWith(OWN_ID_PREFIX);
+        return objectId != null && objectId.length() != 0;
     }
 
     /**
@@ -420,23 +417,15 @@ public class ObjectRegister extends BaseJavaModule {
     }
 
     /**
-     * Constant used as a prefix for all random generated object identifiers.
-     */
-    private static final String GENERATED_ID_PREFIX = "N47|V3^";
-    /**
-     * Constant used as a prefix for all application provided object identifiers.
-     */
-    private static final String OWN_ID_PREFIX       = "08]3[7^";
-
-    /**
      * Generate new unique identifier for object.
      * @return New unique object identifier.
      */
     private @NonNull String generateIdentifier() {
-        final byte[] randomBytes = new byte[9];
+        final int numberOfBytes = 3 * (3 + randomGenerator.nextInt(6));
+        final byte[] randomBytes = new byte[numberOfBytes];
         while (true) {
             randomGenerator.nextBytes(randomBytes);
-            final String identifier = GENERATED_ID_PREFIX + Base64.encodeToString(randomBytes, Base64.NO_WRAP);
+            final String identifier = Base64.encodeToString(randomBytes, Base64.NO_WRAP);
             if (!register.containsKey(identifier)) {
                 return identifier;
             }
@@ -452,10 +441,7 @@ public class ObjectRegister extends BaseJavaModule {
         if (identifier == null || identifier.length() == 0) {
             return null;
         }
-        if (identifier.startsWith(GENERATED_ID_PREFIX)) {
-            return identifier;
-        }
-        return OWN_ID_PREFIX + identifier;
+        return identifier;
     }
 
     // Objects cleanup

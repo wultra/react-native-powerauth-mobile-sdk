@@ -92,7 +92,7 @@ class ManagedAny<T> implements IManagedObject {
      * @return New instance of ManagedAny class capturing the object exposed to JavaScript.
      */
     @NonNull
-    static <T> ManagedAny<T> wrap(@NonNull T instance, @NonNull Cleanup<T> cleanup) {
+    static <T> ManagedAny<T> wrap(@NonNull T instance, @Nullable Cleanup<T> cleanup) {
         return new ManagedAny<>(instance, cleanup);
     }
 
