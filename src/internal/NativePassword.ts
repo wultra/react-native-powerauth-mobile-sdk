@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,14 +71,14 @@ export interface PowerAuthPasswordIfc {
     insertCharacter(objectId: string, character: number, position: number): Promise<number>
 
     /**
-     * Remove character 
+     * Remove character at given position.
      * @param objectId Underlying object identifier.
      * @param position 
      */
     removeCharacter(objectId: string, position: number): Promise<number>
     
     /**
-     * 
+     * Remove last character.
      * @param objectId Underlying object identifier.
      */
     removeLastCharacter(objectId: string): Promise<number>

@@ -66,6 +66,10 @@ auth = PowerAuthAuthentication.commitWithPasswordAndBiometry("1234", {
 });
 ```
 
+<!-- begin box warning -->
+Be aware that you should always create new `PowerAuthAuthentication` object for each authentication attempt.
+<!-- end -->
+
 ## Changes in `PowerAuthToken`
 
 The `PowerAuthToken` interface no longer contains `isValid` and `canGenerateHeader` properties. Such properties were always set to `true`.
@@ -73,8 +77,18 @@ The `PowerAuthToken` interface no longer contains `isValid` and `canGenerateHead
 
 ## Changes in Grouped biometric authentication
 
-The reusable authentication created with `PowerAuth.groupedBiometricAuthentication()` has now a limited lifetime. The expiration time is set to 10 seconds from the last reusable authentication use. The result is that once the previously acquired biometry key is expired, then the biometry dialog is displayed for one more time. For example, if you're calculating signature for two requests and first take more than 10 seconds to execute, then the biometric authentication is displayed again. 
+The reusable authentication created with `PowerAuth.groupedBiometricAuthentication()` has now a limited lifetime. The expiration time is set to 10 seconds from the last reusable authentication use. The result is that once the previously acquired biometry key is expired, then the biometry dialog is displayed for one more time. For example, if you're calculating signature for two requests and first take more than 10 seconds to execute, then the biometric authentication is displayed again.
 
 ## New `PowerAuthPassword` object
 
 If your application's using PIN for users' knowledge factor then you can improve your application's runtime security by adopting new `PowerAuthPassword` object. You can read more details in [Working with passwords securely](Secure-Password.md) chapter.
+
+## Changes in `PowerAuthErrorCode`
+
+- `PowerAuthErrorCode.BIOMETRY_FALLBACK`, reported on iOS, when user cancel the biometric dialog with the fallback button.
+- `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`, reported when native object bridged to JavaScript is no longer valid. This error can be returned when you for example re-use `PowerAuthAuthentication` configured for biometry.
+- `PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED` is reported when you try to use biometric authentication but the `PowerAuth` instance has no biometry key configured.
+- `PowerAuthErrorCode.BIOMETRY_NOT_ENROLLED` is reported when there's not enrolled biometry on the device.
+- `PowerAuthErrorCode.PASSWORD_NOT_SET` is now `deprecated` and is never returned from the SDK. You can use `WRONG_PARAM` code as a replacement.
+
+Be aware, that `BIOMETRY_*` error codes are now fully supported on both platforms.
