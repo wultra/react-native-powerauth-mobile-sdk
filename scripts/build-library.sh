@@ -1,69 +1,124 @@
 #!/bin/bash
 
-set -e # stop sript when error occures
-set -u # stop when undefined variable is used
-#set -x # print all execution (good for debugging)
+TOP=$(dirname $0)
+source "$TOP/common-functions.sh"
+SRC="${TOP}/.."
 
-echo '------------------------------------------------------------'
-echo 'Installing dependencies'
-echo '------------------------------------------------------------'
+DO_TSC=1
+DO_ANDROID=1
+DO_IOS=1
+
+if [ ! -z $1 ]; then
+    case $1 in
+        android) 
+            DO_TSC=0
+            DO_ANDROID=1
+            DO_IOS=0
+            ;;
+        ios) 
+            DO_TSC=0
+            DO_ANDROID=0
+            DO_IOS=1
+            ;;
+        tsc | typescript) 
+            DO_TSC=1
+            DO_ANDROID=0
+            DO_IOS=0
+            ;;
+        *) 
+            FAILURE "Unknown build target $1" ;;
+    esac
+fi
+
+LOG_LINE
+LOG 'Installing dependencies'
+LOG_LINE
+
 export NPM_TOKEN="DUMMY" # dummy variable to silence npm error
 
-TOP=$(dirname $0)
-
 # jump to top-project-folder
-pushd "${TOP}/.."
+PUSH_DIR "${SRC}"
 
 # instal npm dependencies
 npm i
 
-echo '------------------------------------------------------------'
-echo 'Building iOS platform'
-echo '------------------------------------------------------------'
+if [ x$DO_IOS == x1 ]; then
+    LOG_LINE
+    LOG 'Building iOS platform'
+    LOG_LINE
 
-npx pod-install
+    npx pod-install
 
-pushd ios
+    PUSH_DIR ios
 
-echo '------------------------------------------------------------'
-echo 'Compiling iOS Release'
-echo '------------------------------------------------------------'
+    LOG_LINE
+    LOG 'Compiling iOS Release'
+    LOG_LINE
 
-xcrun xcodebuild \
-    -workspace "PowerAuth.xcworkspace" \
-    -scheme "PowerAuth" \
-    -configuration "Release" \
-    -sdk "iphonesimulator" \
-    -arch x86_64 \
-    build
+    xcrun xcodebuild \
+        -workspace "PowerAuth.xcworkspace" \
+        -scheme "PowerAuth" \
+        -configuration "Release" \
+        -sdk "iphonesimulator" \
+        -arch x86_64 \
+        build
 
-echo '------------------------------------------------------------'
-echo 'Compiling iOS Debug'
-echo '------------------------------------------------------------'
+    LOG_LINE
+    LOG 'Compiling iOS Debug'
+    LOG_LINE
 
-xcrun xcodebuild \
-    -workspace "PowerAuth.xcworkspace" \
-    -scheme "PowerAuth" \
-    -configuration "Debug" \
-    -sdk "iphonesimulator" \
-    -arch x86_64 \
-    build
+    xcrun xcodebuild \
+        -workspace "PowerAuth.xcworkspace" \
+        -scheme "PowerAuth" \
+        -configuration "Debug" \
+        -sdk "iphonesimulator" \
+        -arch x86_64 \
+        build
 
-popd
+    POP_DIR
 
-echo '------------------------------------------------------------'
-echo 'Building Android platform'
-echo '------------------------------------------------------------'
+fi # DO_IOS
 
-pushd android
+if [ x$DO_ANDROID == x1 ]; then
+    LOG_LINE
+    LOG 'Building Android platform'
+    LOG_LINE
 
-./gradlew clean build
 
-echo '------------------------------------------------------------'
-echo 'Building Typescript'
-echo '------------------------------------------------------------'
-popd
-tsc --build
+    PUSH_DIR android
+
+    ./gradlew clean build
+    
+    POP_DIR
+
+fi # DO_ANDROID
+
+if [ x$DO_TSC == x1 ]; then
+    LOG_LINE
+    LOG 'Building library'
+    LOG_LINE
+
+    tsc --build
+
+    PUSH_DIR testapp
+
+    LOG_LINE
+    LOG 'Updating testapp dependencies'
+    LOG_LINE
+
+    "${TOP}/update-apps.sh"
+
+    LOG_LINE
+    LOG 'Building testapp'
+    LOG_LINE
+
+    tsc --build
+
+    POP_DIR
+
+fi # DO_TSC
+
+POP_DIR
 
 # THIS IS TEMPORARY DISABLED - FOR SOME REASON, GIT STATUS IS DIFFERENT IN PODS THAN IN LOCAL ENV.
 # check if the git status is clean (there should be no changs)
@@ -76,6 +131,4 @@ tsc --build
 #   exit 1
 # fi
 
-echo '------------------------------------------------------------'
-echo 'SUCCESS'
-echo ''
+EXIT_SUCCESS

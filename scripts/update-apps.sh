@@ -8,13 +8,17 @@ REQUIRE_COMMAND "npm"
 
 LIB='react-native-powerauth-mobile-sdk'
 
-DO_TEST=1
-DO_RUN=0
+DO_TEST=1   # apply for testapp
+DO_RUN=0    # start platform apps
+DO_PODS=0   # do pod install in project
+
 case $1 in
     test | testapp) 
         DO_TEST=1 ;;
     run | -r)
         DO_RUN=1 ;;
+    pods | --cp)
+        DO_PODS=1 ;;
     *) 
         DO_TEST=1 ;;
 esac
@@ -59,13 +63,15 @@ function UPDATE_DEPENDENCIES
 
     POP_DIR
 
-    LOG_LINE
-    LOG 'Updating CocoaPods...'
-    LOG_LINE
+    if [ x$DO_PODS == x1 ]; then
+        LOG_LINE
+        LOG 'Updating CocoaPods...'
+        LOG_LINE
 
-    PUSH_DIR "${SRC}/${APP_NAME}/ios"
-    pod install
-    POP_DIR
+        PUSH_DIR "${SRC}/${APP_NAME}/ios"
+        pod install
+        POP_DIR
+    fi
 
     if [ x$DO_RUN == x1 ]; then
         PUSH_DIR "${SRC}/${APP_NAME}"
