@@ -78,9 +78,10 @@ NSNumber * RP_EXPIRE(NSUInteger timeIntervalMs) {
     return @(rp.numericValue);
 }
 
-static NSString * _GetRandomString(NSUInteger length)
+static NSString * _GetRandomString()
 {
-    NSMutableData * data = [NSMutableData dataWithLength:length];
+    uint32_t count = 3 * (3 + arc4random_uniform(6));
+    NSMutableData * data = [NSMutableData dataWithLength:count];
     arc4random_buf(data.mutableBytes, data.length);
     return [data base64EncodedStringWithOptions:0];
 }
@@ -121,9 +122,6 @@ static NSString * _GetRandomString(NSUInteger length)
 }
 
 RCT_EXPORT_MODULE(PowerAuthObjectRegister);
-
-static NSString * const _GeneratedIdPrefix = @"N47|V3^";
-static NSString * const _OwnIdPrefix       = @"08]3[7^";
 
 #define OPT_NONE        0    // no options
 #define OPT_SET_USE     1    // set object as used
@@ -233,9 +231,6 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
     if (stringId.length == 0) {
         return NO;
     }
-    if ([stringId hasPrefix:_GeneratedIdPrefix] || [stringId hasPrefix:_OwnIdPrefix]) {
-        return NO;
-    }
     return YES;
 }
 
@@ -288,10 +283,7 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
     if (stringId.length == 0) {
         return nil;
     }
-    if ([stringId hasPrefix:_GeneratedIdPrefix]) {
-        return objectId;
-    }
-    return [_OwnIdPrefix stringByAppendingString:stringId];
+    return stringId;
 }
 
 /// Find object in the object register.
@@ -377,7 +369,7 @@ static NSString * const _OwnIdPrefix       = @"08]3[7^";
 - (NSString*) generateIdentifier
 {
     while(true) {
-        NSString * identifier = [_GeneratedIdPrefix stringByAppendingString:_GetRandomString(9)];
+        NSString * identifier = _GetRandomString();
         if (![_register objectForKey:identifier]) {
             return identifier;
         }
