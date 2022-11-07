@@ -24,6 +24,7 @@ export enum UserPromptDuration {
 
 export interface UserInteraction {
     showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void>
+    sleepWithProgress(context: TestContext, durationMs: number): Promise<void>
 }
 
 export interface TestInteraction extends UserInteraction {

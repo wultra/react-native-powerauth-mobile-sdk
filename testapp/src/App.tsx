@@ -35,14 +35,19 @@ import { TestRunner } from './testbed/TestRunner'
 class TestExecutor implements UserInteraction {
 
   private isRunning = false
-  private readonly onShowPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>
+  private readonly onShowPrompt: (context: TestContext, message: string, duration: number) => Promise<void>
   private readonly onProgress: TestProgressObserver
+  private readonly onCompletion: (inProgress: boolean) => void
+  private testRunner?: TestRunner
+  
 
   constructor(
-    onShowPrompt: (context: TestContext, message: string, duration: UserPromptDuration) => Promise<void>,
-    onProgress: TestProgressObserver) {
+    onShowPrompt: (context: TestContext, message: string, duration: number) => Promise<void>,
+    onProgress: TestProgressObserver,
+    onCompletion: (inProgress: boolean)=>void) {
     this.onShowPrompt = onShowPrompt
     this.onProgress = onProgress
+    this.onCompletion = onCompletion
     this.runTests(false)
   }
   
@@ -51,20 +56,58 @@ class TestExecutor implements UserInteraction {
       console.warn('Tests are still in progress...');
       return
     }
+    this.onCompletion(true)
     this.isRunning = true
     
     const cfg = await getTestConfig()
     const logger = new TestLog()
     const monitor = new TestMonitorGroup([ logger ])
-    const runner = new TestRunner('Automatic tests', cfg, monitor, this)
+    const runner = this.testRunner = new TestRunner('Automatic tests', cfg, monitor, this)
     runner.allTestsCounter.addObserver(this.onProgress)
     const tests = interactive ? getInteractiveLibraryTests() :  getLibraryTests().concat(getTestbedTests())
     await runner.runTests(tests)
     this.isRunning = false
+    this.testRunner = undefined
+    this.onCompletion(false)
+  }
+
+  cancelTests() {
+    this.testRunner?.cancelRunningTests()
+  }
+
+  stillRunnint(): boolean {
+    return this.isRunning
   }
 
   async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
-    return await this.onShowPrompt(context, message, duration)
+    let sleepDuration: number
+    if (duration === UserPromptDuration.QUICK) {
+       sleepDuration = 500
+    } else if (duration === UserPromptDuration.SHORT) {
+      sleepDuration = 2000
+    } else {
+      sleepDuration = 5000
+    }
+    return await this.onShowPrompt(context, message, sleepDuration)
+  }
+
+  async sleepWithProgress(context: TestContext, durationMs: number): Promise<void> {
+    let remaining = durationMs
+    while (remaining > 0) {
+      if (remaining >= 1000) {
+        const timeInSeconds = Math.round(remaining * 0.001)
+        if (timeInSeconds > 1) {
+          await this.onShowPrompt(context, `Sleeping for ${timeInSeconds} seconds...`, 1000)
+        } else {
+          await this.onShowPrompt(context, `Finishing sleep...`, 1000)
+        }
+        remaining -= 1000
+      } else {
+        // Otherwise just sleep for the remaining time
+        await new Promise<void>(resolve => setTimeout(resolve, remaining)) 
+        remaining = 0
+      }
+    }
   }
 }
 
@@ -96,48 +139,46 @@ class App extends Component<{}, AppState> {
   }
 
   subscription?: NativeEventSubscription
+  executor?: TestExecutor
 
-  executor = new TestExecutor(async (_context, message, duration) => {
-    this.setState({ promptMessage: message })
-    let sleepDuration: number
-    if (duration === UserPromptDuration.QUICK) {
-       sleepDuration = 500
-    } else if (duration === UserPromptDuration.SHORT) {
-      sleepDuration = 2000
-    } else {
-      sleepDuration = 5000
-    }
-    await new Promise<void>(resolve => setTimeout(resolve, sleepDuration)) 
-    this.setState({ promptMessage: ' '})
-  }, (progress) => {
-    this.setState({
-      testsCount: progress.total,
-      testsDone: progress.succeeded,
-      testsSkipped: progress.skipped,
-      testsFailed: progress.failed
-    })
-  })
-
-  onPressNotInteractive = async () => {
-    this.setState({inProgress: true})
-    await this.executor.runTests(false)
-    this.setState({inProgress: false})
+  onPressNotInteractive = () => {
+    this.executor?.runTests(false)
   }
 
-  onPressInteractive = async () => {
-    this.setState({inProgress: true})
-    await this.executor.runTests(true)
-    this.setState({inProgress: false})
+  onPressInteractive = () => {
+    this.executor?.runTests(true)
+  }
+
+  onPressCancel = () => {
+    this.executor?.cancelTests()
   }
 
   componentDidMount() {
+    // Patch appearance
     this.subscription = Appearance.addChangeListener((preferences) => {
       this.setState({isDark: Appearance.getColorScheme() === 'dark'})
+    })
+    // Create test executor
+    this.executor = new TestExecutor(async (_context, message, duration) => {
+      this.setState({ promptMessage: message })
+      await new Promise<void>(resolve => setTimeout(resolve, duration)) 
+      this.setState({ promptMessage: ' '})
+    }, (progress) => {
+      this.setState({
+        testsCount: progress.total,
+        testsDone: progress.succeeded,
+        testsSkipped: progress.skipped,
+        testsFailed: progress.failed
+      })
+    }, (progress) => {
+      this.setState({inProgress: progress})
     })
   }
 
   componentWillUnmount() {
     this.subscription?.remove()
+    this.executor?.cancelTests()
+    this.executor = undefined
   }
 
   render() {
@@ -154,16 +195,15 @@ class App extends Component<{}, AppState> {
           </Text>
         </View>
         <Separator />
-        <View style={styles.fixToText}>
-          <Button
-            title="Run regular"
-            onPress={() => this.onPressNotInteractive() }
-          />
-          <Button
-            title="Run interactive"
-            onPress={() => this.onPressInteractive() }
-          />
-        </View>
+        { !this.state.inProgress ? 
+            <View style={styles.fixToText}>
+              <Button title="Run regular" onPress={() => this.onPressNotInteractive() } />
+              <Button title="Run interactive" onPress={() => this.onPressInteractive() } />
+            </View> :
+            <View style={styles.fixToText}>
+              <Button title="Cancel" onPress={() => this.onPressCancel() } />
+            </View>
+        }
       </SafeAreaView>
      )
    }

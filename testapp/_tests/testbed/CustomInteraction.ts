@@ -18,7 +18,7 @@ import { TestContext, UserInteraction, UserPromptDuration } from "../../src/test
 
 export interface PromptWithDuration {
     prompt: string
-    duration: UserPromptDuration
+    duration: UserPromptDuration | "CUSTOM"
 }
 
 export class CustomInteraction implements UserInteraction {
@@ -28,7 +28,13 @@ export class CustomInteraction implements UserInteraction {
         this.promptList = []
     }
 
-    async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
+    showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
         this.promptList.push({prompt: message, duration: duration})
+        return Promise.resolve()
+    }
+
+    sleepWithProgress(context: TestContext, durationMs: number): Promise<void> {
+        this.promptList.push({prompt: `Sleep for ${durationMs} ms`, duration: "CUSTOM" })
+        return Promise.resolve()
     }
 }
