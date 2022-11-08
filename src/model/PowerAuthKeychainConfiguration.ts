@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Interface that representing the keychain settings.
+ */
+export interface PowerAuthKeychainConfigurationData {
+    /**
+     * ### iOS specific
+     * 
+     * Access group name used by the `PowerAuth` keychain instances. This property
+     * has no default value, so the application shoud provide a valid access group,
+     * if such group should be used.
+     */
+    readonly accessGroupName?: string
+    /**
+     * ### iOS specific
+     * 
+     * Suite name used by the `UserDefaults` that check for Keychain data presence.
+     * 
+     * If the value is not set, `UserDefaults.standardUserDefaults` are used. Otherwise,
+     * user defaults with given suite name are created. In case a developer started using SDK
+     * with no suite name specified, the developer is responsible for migrating data
+     * to the new `UserDefaults` before using the SDK with the new suite name.
+     */
+    readonly userDefaultsSuiteName?: string
+    /**
+     * ### Android specific
+     * 
+     * Set minimal required keychain protection level that must be supported on the current device. Note that
+     * if you enforce protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target
+     * at least Android 6.0.
+     */
+    readonly minimalRequiredKeychainProtection: PowerAuthKeychainProtection
+}
+
+/**
+ * The type that representing the keychain settings. Unline `KeychainConfigurationData`, this type
+ * has all properties optional.
+ */
+export type PowerAuthKeychainConfigurationType = Partial<PowerAuthKeychainConfigurationData>
 
 /**
  * ### Android specific
@@ -58,37 +97,31 @@ export enum PowerAuthKeychainProtection {
 /**
  * Class representing the keychain settings.
  */
-export class PowerAuthKeychainConfiguration {
-    /**
-     * ### iOS specific
-     * 
-     * Access group name used by the `PowerAuth` keychain instances.
-     */
+export class PowerAuthKeychainConfiguration implements PowerAuthKeychainConfigurationType {
     accessGroupName?: string
-    /**
-     * ### iOS specific
-     * 
-     * Suite name used by the `UserDefaults` that check for Keychain data presence.
-     * 
-     * If the value is not set, `UserDefaults.standardUserDefaults` are used. Otherwise,
-     * user defaults with given suite name are created. In case a developer started using SDK
-     * with no suite name specified, the developer is responsible for migrating data
-     * to the new `UserDefaults` before using the SDK with the new suite name.
-     */
     userDefaultsSuiteName?: string
-    /**
-     * ### Android specific
-     * 
-     * Set minimal required keychain protection level that must be supported on the current device. Note that
-     * if you enforce protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target
-     * at least Android 6.0.
-     */
-    minimalRequiredKeychainProtection: PowerAuthKeychainProtection = PowerAuthKeychainProtection.NONE
+    minimalRequiredKeychainProtection: PowerAuthKeychainProtection
+    constructor() {
+        this.minimalRequiredKeychainProtection = buildKeychainConfiguration().minimalRequiredKeychainProtection
+    }
 
     /**
      * @returns `PowerAuthKeychainConfiguration` with default values.
      */
-    public static default(): PowerAuthKeychainConfiguration {
-        return new PowerAuthKeychainConfiguration()
+    public static default(): PowerAuthKeychainConfigurationType {
+        return buildKeychainConfiguration()
     }
+}
+
+/**
+ * Function create a frozen object implementing `KeychainConfigurationData` with all required properties set.
+ * @param input Optional application's configuration. If not provided, then the default values are set.
+ * @returns 
+ */
+export function buildKeychainConfiguration(input: PowerAuthKeychainConfigurationType | undefined = undefined): PowerAuthKeychainConfigurationData {
+    return Object.freeze({
+        accessGroupName: input?.accessGroupName,
+        userDefaultsSuiteName: input?.userDefaultsSuiteName,
+        minimalRequiredKeychainProtection: input?.minimalRequiredKeychainProtection ?? PowerAuthKeychainProtection.NONE
+    })
 }

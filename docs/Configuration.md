@@ -47,15 +47,15 @@ export default class AppMyApplication extends Component {
 
 ### Advanced configuration
 
-In case that you need an advanced configuration, then you can import and use the following configuration classes:
-- `PowerAuthConfiguration` - co configure instance of `PowerAuth` class. This configuration object contains almost the same parameters you provide to basic configuration.
+In case that you need an advanced configuration, then you can import and use the following configuration classes or interfaces:
+- `PowerAuthConfiguration` class or `PowerAuthConfigurationType` interface － to configure instance of `PowerAuth` class. This configuration object contains almost the same parameters you provide to basic configuration.
 
-- `PowerAuthClientConfiguration` - to configure internal HTTP client. You can alter the following parameters:
+- `PowerAuthClientConfiguration` class or `PowerAuthClientConfigurationType` interface － to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
   - `connectionTimeout` - timeout in seconds. The default value is `20` seconds.
   - `readTimeout` - timeout in seconds, effective only on Androd platform. The default value is `20` seconds.
 
-- `PowerAuthBiometryConfiguration` - to configure biometic authentication. You can alter the following parameters:
+- `PowerAuthBiometryConfiguration` class or `PowerAuthBiometryConfigurationType` interface － to configure biometic authentication. You can alter the following parameters:
   - `linkItemsToCurrentSet` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value depends on plafrom:
     - On Android is set to `true`
     - On iOS  is set to `false`
@@ -63,7 +63,7 @@ In case that you need an advanced configuration, then you can import and use the
   - `confirmBiometricAuthentication` - Android specific, if set to `true`, then the user's confirmation will be required after the successful biometric authentication. The default value is `false`.
   - `authenticateOnBiometricKeySetup` - Android specific, if set to `true`, then the biometric key setup always require a biometric authentication. See note<sup>1</sup> below. The default value is `true`.
 
-- `PowerAuthKeychainConfiguration` to configure an internal secure data storage. You can alter the following parameters:
+- `PowerAuthKeychainConfiguration` class or `PowerAuthKeychainConfigurationType` interface － to configure an internal secure data storage. You can alter the following parameters:
   - `accessGroupName` - iOS specific, defines access group name used by the `PowerAuth` keychain instances. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
   - `userDefaultsSuiteName` - iOS specific, defines suite name used by the `UserDefaults` that check for Keychain data presence. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
   - `minimalRequiredKeychainProtection` - Android specific, defines minimal required keychain protection level that must be supported on the current device. The default value is `PowerAuthKeychainProtection.NONE`. See note<sup>3</sup> below.
@@ -79,10 +79,7 @@ The following code snipped shows usage of the advanced configuration:
 ```javascript
 import {
     PowerAuth,
-    PowerAuthConfiguration,
-    PowerAuthClientConfiguration,
-    PowerAuthBiometryConfiguration,
-    PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk';
+    PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk';
 import { Component } from 'react';
 
 export default class AppMyApplication extends Component {
@@ -98,13 +95,10 @@ export default class AppMyApplication extends Component {
         } else {
             try {
               const configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
-              const clientConfiguration = new PowerAuthClientConfiguration()
-              clientConfiguration.enableUnsecureTraffic = false
-              const biometryConfiguration = new PowerAuthBiometryConfiguration()
-              biometryConfiguration.linkItemsToCurrentSet = true
-              const keychainConfiguration = new PowerAuthKeychainConfiguration()
-              keychainConfiguration.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
-              await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+              const clientConfiguration = { enableUnsecureTraffic: false };
+              const biometryConfiguration = { linkItemsToCurrentSet: true };
+              const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
+              await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration);
               console.log("PowerAuth configuration successfull.");
             } catch(e) {
                 console.log(`PowerAuth failed to configure: ${e.code}`);

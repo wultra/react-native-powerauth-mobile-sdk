@@ -33,9 +33,11 @@ import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
 import { PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
+import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
+        new ConfigurationObjectsTests(),
         new PowerAuth_Example(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ActivationTests(),

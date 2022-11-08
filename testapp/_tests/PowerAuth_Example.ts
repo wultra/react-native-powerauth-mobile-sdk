@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithServer } from "./helpers/TestWithServer";
 
@@ -58,24 +58,23 @@ export class PowerAuth_Example extends TestWithServer {
         // You normally get this constants from the backend developers or an infrastructure
         // guys who prepare such data for you.
         const applicationSetup = await this.serverApi.prepareApplicationFromConfiguration()
-        const appKey = applicationSetup.appKey
-        const appSecret = applicationSetup.appSecret
-        const masterKey = applicationSetup.masterServerPublicKey
-        const baseUrl = this.config.enrollment.baseUrl
 
-        // Prepare PowerAuthConfiguration
-        const configuration = new PowerAuthConfiguration(appKey, appSecret, masterKey, baseUrl)
+        // Prepare configuration, you can use PowerAuthConfiguration class, or ConfigurationType interface.
+        const configuration = {
+            applicationKey: applicationSetup.appKey,
+            applicationSecret: applicationSetup.appSecret,
+            masterServerPublicKey: applicationSetup.masterServerPublicKey,
+            baseEndpointUrl: this.config.enrollment.baseUrl
+        }
 
-        // Prepare PowerAuthClientConfiguration
+        // Prepare client configuration.
         //   - make sure we can connect to unsecured endpoints. This option should be always
         //     set to false on the production application.
-        const clientConfiguration = new PowerAuthClientConfiguration()
-        clientConfiguration.enableUnsecureTraffic = baseUrl.startsWith('http://') 
+        const clientConfiguration = { enableUnsecureTraffic: configuration.baseEndpointUrl.startsWith('http://') }
 
         // You can also alter how biometry behave in the SDK. This is an automatic test, so we don't
         // want to display an biometric dialog when an activation is being commited.
-        const biometryConfiguration = new PowerAuthBiometryConfiguration()
-        biometryConfiguration.authenticateOnBiometricKeySetup = false
+        const biometryConfiguration = { authenticateOnBiometricKeySetup: false }
 
         // Confitgure SDK
         if (!await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration)) {

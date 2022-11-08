@@ -16,6 +16,12 @@
 
 import { PowerAuthError } from "react-native-powerauth-mobile-sdk";
 
+/**
+ * Function translate an error object into string.
+ * @param error Error to describe.
+ * @param curlyBrackets If true, then the description is wrapped into curly brackets.
+ * @returns String description from given error.
+ */
 export function describeError(error: any, curlyBrackets: boolean = false): string {
     if (error instanceof PowerAuthError) {
         const components: string[] = []

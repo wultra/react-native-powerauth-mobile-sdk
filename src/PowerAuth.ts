@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { PowerAuthConfiguration } from './model/PowerAuthConfiguration';
-import { PowerAuthClientConfiguration } from './model/PowerAuthClientConfiguration';
-import { PowerAuthBiometryConfiguration } from './model/PowerAuthBiometryConfiguration';
-import { PowerAuthKeychainConfiguration } from './model/PowerAuthKeychainConfiguration';
+import { PowerAuthConfiguration, PowerAuthConfigurationType, buildConfiguration } from './model/PowerAuthConfiguration';
+import { buildClientConfiguration, PowerAuthClientConfigurationType } from './model/PowerAuthClientConfiguration';
+import { buildBiometryConfiguration, PowerAuthBiometryConfigurationType } from './model/PowerAuthBiometryConfiguration';
+import { buildKeychainConfiguration, PowerAuthKeychainConfigurationType } from './model/PowerAuthKeychainConfiguration';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 import { PowerAuthActivationStatus } from './model/PowerAuthActivationStatus';
 import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/PowerAuthAuthentication';
@@ -41,25 +41,25 @@ export class PowerAuth {
     /**
      * Configuration used to configure this instance of class.
      */
-    get configuration(): PowerAuthConfiguration | undefined {
-        return configRegister.get(this.instanceId)?.instanceConfiguration
+    get configuration(): PowerAuthConfigurationType | undefined {
+        return configRegister.get(this.instanceId)?.configuration
     }
     /**
      * Client configuration used to configure this instance of class.
      */
-    get clientConfiguration(): PowerAuthClientConfiguration | undefined {
+    get clientConfiguration(): PowerAuthClientConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.clientConfiguration
     }
     /**
      * Biometry configuration used to configure this instance of class.
      */
-    get biometryConfiguration(): PowerAuthBiometryConfiguration | undefined {
+    get biometryConfiguration(): PowerAuthBiometryConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.biometryConfiguration
     }
     /**
      * Keychain configuration used to configure this instance of class.
      */
-    get keychainConfiguration(): PowerAuthKeychainConfiguration | undefined {
+    get keychainConfiguration(): PowerAuthKeychainConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.keychainConfiguration
     }
 
@@ -91,11 +91,16 @@ export class PowerAuth {
      * Prepares the PowerAuth instance with an advanced configuration. The method needs to be called before before any other method.
      * 
      * @param configuration Configuration object with basic parameters for `PowerAuth` class.
-     * @param clientConfiguration  Configuration for internal HTTP client. If `undefined` is provided, then `PowerAuthClientConfiguration.default()` is used.
-     * @param biometryConfiguration Biometry configuration. If `undefined` is provided, then `PowerAuthBiometryConfiguration.default()` is used.
-     * @param keychainConfiguration Configuration for internal keychain storage. If `undefined` is provided, then `PowerAuthKeychainConfiguration.default()` is used.
+     * @param clientConfiguration  Configuration for internal HTTP client. If `undefined`, then the default configuration is used.
+     * @param biometryConfiguration Biometry configuration. If `undefined`, then the default configuration is used.
+     * @param keychainConfiguration Configuration for internal keychain storage. If `undefined`, then the default configuration is used.
      */
-    configure(configuration: PowerAuthConfiguration, clientConfiguration?: PowerAuthClientConfiguration, biometryConfiguration?: PowerAuthBiometryConfiguration, keychainConfiguration?: PowerAuthKeychainConfiguration): Promise<boolean>;
+    configure(
+        configuration: PowerAuthConfigurationType,
+        clientConfiguration?: PowerAuthClientConfigurationType,
+        biometryConfiguration?: PowerAuthBiometryConfigurationType,
+        keychainConfiguration?: PowerAuthKeychainConfigurationType
+    ): Promise<boolean>;
 
     /**
      * Prepares the PowerAuth instance with a basic configuration. The method needs to be called before before any other method.
@@ -108,27 +113,36 @@ export class PowerAuth {
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
-    configure(appKey: string, appSecret: string, masterServerPublicKey: string, baseEndpointUrl: string, enableUnsecureTraffic: boolean): Promise<boolean>;
+    configure(
+        appKey: string,
+        appSecret: string,
+        masterServerPublicKey: string,
+        baseEndpointUrl: string,
+        enableUnsecureTraffic: boolean
+    ): Promise<boolean>;
 
     configure(param1: PowerAuthConfiguration | string, ...args: Array<any>): Promise<boolean> {
-        let configuration: PowerAuthConfiguration
-        let clientConfiguration: PowerAuthClientConfiguration
-        let biometryConfiguration: PowerAuthBiometryConfiguration
-        let keychainConfiguration: PowerAuthKeychainConfiguration
-        if (param1 instanceof PowerAuthConfiguration) {
-            configuration = param1
-            clientConfiguration = args[0] as PowerAuthClientConfiguration ?? PowerAuthClientConfiguration.default()
-            biometryConfiguration = args[1] as PowerAuthBiometryConfiguration ?? PowerAuthBiometryConfiguration.default()
-            keychainConfiguration = args[2] as PowerAuthKeychainConfiguration ?? PowerAuthKeychainConfiguration.default()
+        let configuration: PowerAuthConfigurationType
+        let clientConfiguration: PowerAuthClientConfigurationType
+        let biometryConfiguration: PowerAuthBiometryConfigurationType
+        let keychainConfiguration: PowerAuthKeychainConfigurationType
+        if (typeof param1 === 'string') {
+            configuration = buildConfiguration({
+                applicationKey: param1,
+                applicationSecret: args[0],
+                masterServerPublicKey: args[1],
+                baseEndpointUrl: args[2]})
+            clientConfiguration = buildClientConfiguration({enableUnsecureTraffic: args[3]})
+            biometryConfiguration = buildBiometryConfiguration()
+            keychainConfiguration = buildKeychainConfiguration()
         } else {
-            configuration = new PowerAuthConfiguration(param1, args[0], args[1], args[2])
-            clientConfiguration = PowerAuthClientConfiguration.default()
-            clientConfiguration.enableUnsecureTraffic = args[3]
-            biometryConfiguration = PowerAuthBiometryConfiguration.default()
-            keychainConfiguration = PowerAuthKeychainConfiguration.default()
+            configuration = buildConfiguration(param1)
+            clientConfiguration = buildClientConfiguration(args[0])
+            biometryConfiguration = buildBiometryConfiguration(args[1])
+            keychainConfiguration = buildKeychainConfiguration(args[2])
         }
         configRegister.set(this.instanceId, {
-            instanceConfiguration: configuration,
+            configuration: configuration,
             clientConfiguration: clientConfiguration,
             biometryConfiguration: biometryConfiguration,
             keychainConfiguration: keychainConfiguration
@@ -527,11 +541,17 @@ export class PowerAuth {
     private authResolver: AuthResolver
 }
 
+/**
+ * Interface containing all configurations associated to `PowerAuth` instance.
+ */
 interface InstanceConfigurations {
-    instanceConfiguration: PowerAuthConfiguration
-    clientConfiguration: PowerAuthClientConfiguration
-    biometryConfiguration: PowerAuthBiometryConfiguration
-    keychainConfiguration: PowerAuthKeychainConfiguration
+    configuration: PowerAuthConfigurationType
+    clientConfiguration: PowerAuthClientConfigurationType
+    biometryConfiguration: PowerAuthBiometryConfigurationType
+    keychainConfiguration: PowerAuthKeychainConfigurationType
 }
 
+/**
+ * Configurations register.
+ */
 const configRegister = new Map<string, InstanceConfigurations>()

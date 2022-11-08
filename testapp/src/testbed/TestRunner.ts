@@ -166,7 +166,7 @@ export class TestRunner {
             await ctx.each(async (context) => { 
                 testSuite._assignContext(context)
                 const suiteObj = testSuite as any
-                const result = (suiteObj[methodName] as TestMethod)()
+                const result = suiteObj[methodName].call(testSuite)
                 if (result instanceof Promise) {
                     await result
                 }
