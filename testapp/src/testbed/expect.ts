@@ -189,28 +189,42 @@ export const expect = (received: any) => ({
     toBe: (expected: any): ExpectResult => {
         return _R(received, expected, (r) => r.evaluate((received, expected) => {
             if (received !== expected) {
-                throw new Error(`Expected '${expected}' but received '${received}'`)
+                throw new Error(`Expected ${_D(expected)} but received ${_D(received)}`)
             }            
         }))
     },
     toNotBe: (expected: any) => {
         return _R(received, expected, (r) => r.evaluate((received, expected) => {
             if (received === expected) {
-                throw new Error(`Expected to be different than '${expected}' but is equal`)
+                throw new Error(`Expected to be different than ${_D(expected)} but is equal`)
             }
+        }))
+    },
+    toEqual: (expected: any) => {
+        return _R(received, expected, (r) => r.evaluate((received, expected) => {
+            if (!isEqualObjects(expected, received)) {
+                throw new Error(`Expected ${_D(expected)} to be equal, but received ${_D(received)}`)
+            }            
+        }))
+    },
+    toNotEqual: (expected: any) => {
+        return _R(received, expected, (r) => r.evaluate((received, expected) => {
+            if (isEqualObjects(expected, received)) {
+                throw new Error(`Expected to be different than ${_D(expected)}, but objects are equal.`)
+            }            
         }))
     },
     toBeTruthy: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received != true) {
-                throw new Error(`Expected true but received '${received}'`)
+                throw new Error(`Expected true but received ${_D(received)}`)
             }
         }))
     },
     toBeFalsy: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received != false) {
-                throw new Error(`Expected false but received '${received}'`)
+                throw new Error(`Expected false but received ${_D(received)}`)
             }
         }))
     },
@@ -224,28 +238,28 @@ export const expect = (received: any) => ({
     toBeUndefined: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received !== undefined) {
-                throw new Error(`Expected to be undefined but received '${received}'`)
+                throw new Error(`Expected to be undefined but received ${_D(received)}`)
             }
         }))
     },
     toBeNullish: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received !== undefined && received !== null) {
-                throw new Error(`Expected to be undefined or null but received '${received}'`)
+                throw new Error(`Expected to be undefined or null but received ${_D(received)}`)
             }
         }))
     },
     toBeNotNullish: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received === undefined || received === null) {
-                throw new Error(`Expected to be other that undefined or null but received '${received}'`)
+                throw new Error(`Expected to be other that undefined or null but received ${_D(received)}`)
             }
         }))
     },
     toBeNull: (): ExpectResult => {
         return _R(received, undefined, (r) => r.evaluate((received, _) => {
             if (received !== null) {
-                throw new Error(`Expected null but received '${received}'`)
+                throw new Error(`Expected null but received ${_D(received)}`)
             }
         }))
     },
@@ -265,7 +279,7 @@ export const expect = (received: any) => ({
                 throw new Error(`Expected number but received '${typeof(received)}'`)
             }
             if (received >= expected) {
-                throw new Error(`Expected less than '${expected}' but received '${received}'`)
+                throw new Error(`Expected less than ${_D(expected)} but received ${_D(received)}`)
             }
         }))
     },
@@ -275,7 +289,7 @@ export const expect = (received: any) => ({
                 throw new Error(`Expected number but received '${typeof(received)}'`)
             }
             if (received > expected) {
-                throw new Error(`Expected less or equal than '${expected}' but received '${received}'`)
+                throw new Error(`Expected less or equal than ${_D(expected)} but received ${_D(received)}`)
             }
         }))
     },
@@ -285,7 +299,7 @@ export const expect = (received: any) => ({
                 throw new Error(`Expected number but received '${typeof(received)}'`)
             }
             if (received <= expected) {
-                throw new Error(`Expected less than '${expected}' but received '${received}'`)
+                throw new Error(`Expected less than ${_D(expected)} but received ${_D(received)}`)
             }
         }))
     },
@@ -295,7 +309,7 @@ export const expect = (received: any) => ({
                 throw new Error(`Expected number but received '${typeof(received)}'`)
             }
             if (received < expected) {
-                throw new Error(`Expected less or equal than '${expected}' but received '${received}'`)
+                throw new Error(`Expected less or equal than ${_D(expected)} but received ${_D(received)}`)
             }
         }))
     },
@@ -311,10 +325,10 @@ export const expect = (received: any) => ({
                 } else if (isMapOrSet) {
                     found = received.has(item)
                 } else {
-                    throw new Error(`Expcted to be array, map or set, but received '${received}'`)
+                    throw new Error(`Expcted to be array, map or set, but received ${_D(received)}`)
                 }
                 if (!found) {
-                    throw new Error(`Expected to contain '${item}' but received '${received}'`)
+                    throw new Error(`Expected to contain ${_D(item)} but received ${_D(received)}`)
                 }
             })
         }))
@@ -331,10 +345,10 @@ export const expect = (received: any) => ({
                 } else if (isMapOrSet) {
                     found = received.has(item)
                 } else {
-                    throw new Error(`Expcted to be array, map or set, but received '${received}'`)
+                    throw new Error(`Expcted to be array, map or set, but received ${_D(received)}`)
                 }
                 if (found) {
-                    throw new Error(`Expected to not contain '${item}' but received '${received}'`)
+                    throw new Error(`Expected to not contain ${_D(item)} but received ${_D(received)}`)
                 }
             })
         }))
@@ -349,10 +363,10 @@ export const expect = (received: any) => ({
             } else if (typeof received === 'string') {
                 empty = received.length == 0
             } else {
-                throw new Error(`Expcted to be string, array, map or set, but received '${received}'`)
+                throw new Error(`Expcted to be string, array, map or set, but received ${_D(received)}`)
             }
             if (!empty) {
-                throw new Error(`Expected to be empty but received '${received}'`)
+                throw new Error(`Expected to be empty but received ${_D(received)}`)
             }
         }))
     },
@@ -429,4 +443,32 @@ function evaluateError(error: any, expected: ExpectedError) {
         const ei = errorInfo(expectedErrorName, expectedErrorCode, expectedMessage)
         throw new Error(`Expected ${ei} but received ${ri}`)
     }
+}
+
+function isEqualObjects(a: any, b: any): boolean {
+    if (Object.is(a, b)) {
+        return true
+    }
+    if (Array.isArray(a)) {
+        if (!Array.isArray(b) || a.length !== b.length) return false
+        // Deep compare
+        for (const index in a) {
+            if (!isEqualObjects(a[index], b[index])) return false
+        }
+        return true
+    }
+    if ((a instanceof Object) && (b instanceof Object)) {
+        for (const key in a) {
+            if (!isEqualObjects(a[key], b[key])) return false
+        }
+        return true
+    }
+    return false
+}
+
+function _D(object: any): string {
+    if (typeof object === 'function') {
+        return `${object}`
+    }
+    return JSON.stringify(object)
 }
