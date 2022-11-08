@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,35 @@
  */
 
 /**
- * Class representing a configuration of a single `PowerAuth` instance.
+ * Interface that contains configuration data for a single `PowerAuth` instance.
  */
-export class PowerAuthConfiguration {
+export interface PowerAuthConfigurationType {
     /**
      * `APPLICATION_KEY` as defined in PowerAuth specification - a key identifying an application version.
      */
-    applicationKey: string
+    readonly applicationKey: string
     /**
      * `APPLICATION_SECRET` as defined in PowerAuth specification - a secret associated with an application version.
      */
-    applicationSecret: string
+    readonly applicationSecret: string
     /**
      * `KEY_SERVER_MASTER_PUBLIC` as defined in PowerAuth specification - a master server public key.
      */
-    masterServerPublicKey: string
+    readonly masterServerPublicKey: string
     /**
      * Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
      */
+    readonly baseEndpointUrl: string
+}
+
+/**
+ * Class representing a configuration of a single `PowerAuth` instance. The class implements
+ * `ConfigurationType` interface, so can be used 
+ */
+export class PowerAuthConfiguration implements PowerAuthConfigurationType {
+    applicationKey: string
+    applicationSecret: string
+    masterServerPublicKey: string
     baseEndpointUrl: string
      
     /**
@@ -49,4 +60,18 @@ export class PowerAuthConfiguration {
         this.masterServerPublicKey = masterServerPublicKey
         this.baseEndpointUrl = baseEndpointUrl
     }
+}
+
+/**
+ * Create frozen configuration from provided configuration object.
+ * @param input Application provided configuration.
+ * @returns Frozen configuration object.
+ */
+export function buildConfiguration(input: PowerAuthConfigurationType): PowerAuthConfigurationType {
+    return Object.freeze({
+        applicationKey: input.applicationKey,
+        applicationSecret: input.applicationSecret,
+        masterServerPublicKey: input.masterServerPublicKey,
+        baseEndpointUrl: input.baseEndpointUrl
+    })
 }

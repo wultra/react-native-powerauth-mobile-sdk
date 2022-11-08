@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 import { Platform } from "react-native"
 
 /**
- * Class that is used to provide biomety configuration for `PowerAuth` class.
+ * Interface that is used to provide biomety configuration for `PowerAuth` class.
  */
-export class PowerAuthBiometryConfiguration {
+export interface PowerAuthBiometryConfigurationType {
     /**
      * Set whether the key protected with the biometry is invalidated if fingers are added or
      * removed, or if the user re-enrolls for face. The default value depends on plafrom:
      * - On Android is set to `true`
      * - On iOS  is set to `false`
      */
-    linkItemsToCurrentSet: boolean
+    readonly linkItemsToCurrentSet?: boolean
     /**
      * ### iOS specific
      * 
@@ -34,13 +34,13 @@ export class PowerAuthBiometryConfiguration {
      * If set, then `linkItemsToCurrentSet` option has no effect. The default is `false`, so fallback
      * to device's passcode is not enabled.
      */
-    fallbackToDevicePasscode: boolean
+    readonly fallbackToDevicePasscode?: boolean
     /**
      * ### Android specific
      * 
      * If set to `true`, then the user's confirmation will be required after the successful biometric authentication.
      */
-    confirmBiometricAuthentication: boolean
+    readonly confirmBiometricAuthentication?: boolean
     /**
      * ### Android specific
      * 
@@ -58,30 +58,51 @@ export class PowerAuthBiometryConfiguration {
      * 
      * The default value is `false`.
      */
+    readonly authenticateOnBiometricKeySetup?: boolean
+}
+
+/**
+ * Class that is used to provide biomety configuration for `PowerAuth` class.
+ */
+export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigurationType {
+    linkItemsToCurrentSet: boolean
+    fallbackToDevicePasscode: boolean
+    confirmBiometricAuthentication: boolean
     authenticateOnBiometricKeySetup: boolean
 
     /**
      * The default class constructor, respecting a platform specific differences.
      */
     public constructor() {
-        // The following platform switch is required due to fact that the native SDK has by default a different
-        // configuration for this attribute. This was not configurable in the previous version of RN wrapper, 
-        // so the old behavior must be emulated. If we enforce true or false, then app developers may encounter 
-        // a weird behavior after the library update.
-        if (Platform.OS == "android") {
-            this.linkItemsToCurrentSet = true
-        } else {
-            this.linkItemsToCurrentSet = false
-        }
-        this.fallbackToDevicePasscode = false
-        this.confirmBiometricAuthentication = false
-        this.authenticateOnBiometricKeySetup = true
+        const d = buildBiometryConfiguration()
+        this.linkItemsToCurrentSet = d.linkItemsToCurrentSet
+        this.fallbackToDevicePasscode = d.fallbackToDevicePasscode
+        this.confirmBiometricAuthentication = d.confirmBiometricAuthentication
+        this.authenticateOnBiometricKeySetup = d.authenticateOnBiometricKeySetup
     }
 
     /**
      * @returns `PowerAuthBiometryConfiguration` with default configuration. 
      */
-    public static default(): PowerAuthBiometryConfiguration {
-        return new PowerAuthBiometryConfiguration()
+    public static default(): PowerAuthBiometryConfigurationType {
+        return buildBiometryConfiguration()
     }
+}
+
+/**
+ * Function create a frozen object implementing `BiometryConfigurationType` with all properties set.
+ * @param input Optional application's configuration. If not provided, then the default values are set.
+ * @returns Frozen `BiometryConfigurationType` interface with all properties set.
+ */
+export function buildBiometryConfiguration(input: PowerAuthBiometryConfigurationType | undefined = undefined): Required<PowerAuthBiometryConfigurationType> {
+    return Object.freeze({
+        // The following platform switch is required due to fact that the native SDK has by default a different
+        // configuration for this attribute. This was not configurable in the previous version of RN wrapper, 
+        // so the old behavior must be emulated. If we enforce true or false, then app developers may encounter 
+        // a weird behavior after the library update.
+        linkItemsToCurrentSet: input?.linkItemsToCurrentSet ?? Platform.OS === 'android',
+        fallbackToDevicePasscode: input?.fallbackToDevicePasscode ?? false,
+        confirmBiometricAuthentication: input?.confirmBiometricAuthentication ?? false,
+        authenticateOnBiometricKeySetup: input?.authenticateOnBiometricKeySetup ?? true
+    })
 }

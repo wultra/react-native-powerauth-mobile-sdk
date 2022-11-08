@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,55 @@
  */
 
 /**
- * Class that is used to provide RESTful API client configuration.
+ * Interface that contains configuration for RESTful API client used internally by SDK.
  */
-export class PowerAuthClientConfiguration {
+export interface PowerAuthClientConfigurationType {
     /**
-     * Defines whether unsecured connection is allowed.
+     * Defines whether unsecured connection is allowed. If not provided, then `false` is applied.
      */
-    enableUnsecureTraffic: boolean = false
+    readonly enableUnsecureTraffic?: boolean
     /**
-     * Connection timeout in seconds.
+     * Connection timeout in seconds. If not provided, then the connection timeout is set to 20 seconds.
      */
-    connectionTimeout: number = 20.0
+    readonly connectionTimeout?: number
     /**
      * Read timeout in seconds. Be aware that this parameter is ignored on Apple platforms.
+     * If not provided, then the read timeout is set to 20 seconds.
      */
-    readTimeout: number = 20.0
+    readonly readTimeout?: number
+}
 
+/**
+ * Class that is used to provide RESTful API client configuration.
+ */
+export class PowerAuthClientConfiguration implements PowerAuthClientConfigurationType {
+    enableUnsecureTraffic: boolean
+    connectionTimeout: number
+    readTimeout: number
+
+    constructor() {
+        const d = buildClientConfiguration()
+        this.enableUnsecureTraffic = d.enableUnsecureTraffic
+        this.connectionTimeout = d.connectionTimeout
+        this.readTimeout = d.readTimeout
+    }
     /**
      * @returns `PowerAuthClientConfiguration` with default values.
      */
-    public static default(): PowerAuthClientConfiguration {
-        return new PowerAuthClientConfiguration()
+    public static default(): PowerAuthClientConfigurationType {
+        return buildClientConfiguration()
     }
+}
+
+/**
+ * Function create a frozen object implementing `ClientConfigurationType` with all properties set.
+ * @param input Optional application's configuration. If not provided, then the default values are set.
+ * @returns Frozen `ClientConfigurationType` interface with all properties set.
+ */
+export function buildClientConfiguration(input: PowerAuthClientConfigurationType | undefined = undefined): Required<PowerAuthClientConfigurationType> {
+    return Object.freeze({
+        enableUnsecureTraffic: input?.enableUnsecureTraffic ?? false,
+        connectionTimeout: input?.connectionTimeout ?? 20.0,
+        readTimeout: input?.readTimeout ?? 20.0
+    })
 }
