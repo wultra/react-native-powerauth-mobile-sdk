@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { Config, VerboseLevel } from "powerauth-js-test-client";
+import { Config, ServerVersion, VerboseLevel } from "powerauth-js-test-client";
 import { Platform } from "react-native";
 
 export interface EnrollmentConfig {
@@ -53,7 +53,10 @@ function defaultConfig(): TestConfig {
     }
     return {
         connection: {
-            baseUrl: `http://${host}:8080/powerauth-java-server`,
+            baseUrl: `https://powerauth-dev.westeurope.cloudapp.azure.com/powerauth-java-server`,
+            password: '031fb79b-6b33-487d-b93c-ef5d942ec770',
+            username: 'd8fa2091-1a60-4cba-b253-4a72cdcc2954',
+            serverVersion: ServerVersion.V1_4_0,
             autoCommit: true
         },
         application: {
@@ -67,7 +70,7 @@ function defaultConfig(): TestConfig {
             externalUserId: `${defaultPrefix}-ExternalUser`
         },
         enrollment: {
-            baseUrl: `http://${defaultHost}:8080/enrollment-server`
+            baseUrl: `https://powerauth-dev.westeurope.cloudapp.azure.com/enrollment-server`
         },
         instance: {
             powerAuthInstanceId: `${defaultPrefix}-instanceId`

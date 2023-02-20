@@ -11,21 +11,24 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.6",
-    "react": "17.0.2",
-    "react-native": "0.68.5",
-    "react-native-powerauth-mobile-sdk": "^2.3.1"
+    "powerauth-js-test-client": "^0.2.8",
+    "react": "18.2.0",
+    "react-native": "0.71.3",
+    "react-native-powerauth-mobile-sdk": "file:../react-native-powerauth-mobile-sdk-2.3.1.tgz"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.2",
-    "@babel/runtime": "^7.20.1",
-    "@babel/eslint-parser": "^7.19.1",
-    "@react-native-community/eslint-config": "^2.0.0",
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
+    "@react-native-community/eslint-config": "^3.2.0",
     "@tsconfig/react-native": "^2.0.2",
-    "@types/react-native": "^0.68.5",
-    "eslint": "^7.32.0",
-    "metro-react-native-babel-preset": "^0.68.0",
-    "react-test-renderer": "17.0.2",
-    "typescript": "^4.8.2"
+    "@types/react": "^18.0.24",
+    "@types/react-native": "^0.71.2",
+    "@types/react-test-renderer": "^18.0.0",
+    "babel-jest": "^29.2.1",
+    "eslint": "^8.19.0",
+    "metro-react-native-babel-preset": "0.73.7",
+    "react-test-renderer": "18.2.0",
+    "typescript": "^4.8.4"
   }
 }
