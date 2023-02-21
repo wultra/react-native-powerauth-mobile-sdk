@@ -1,3 +1,15 @@
+ext {
+  //
+  // Defaults for the standalone build
+  //
+  PowerAuthSdkRN_kotlinVersion = "1.7.0"
+  PowerAuthSdkRN_minSdkVersion = 21
+  PowerAuthSdkRN_targetSdkVersion = 31
+  PowerAuthSdkRN_compileSdkVersion = 31
+  PowerAuthSdkRN_ndkversion = "21.4.7075529"
+  PowerAuthSdkRN_reactNativeVersion = "0.71.3"
+}
+
 buildscript {
   repositories {
     mavenCentral()
@@ -5,7 +17,7 @@ buildscript {
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:7.2.1"
+    classpath("com.android.tools.build:gradle:7.2.1")
   }
 }
 
@@ -20,11 +32,11 @@ if (isNewArchitectureEnabled()) {
 }
 
 def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["PowerAuthSdkRN_" + name]
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.ext["PowerAuthSdkRN_" + name]
 }
 
 def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["PowerAuthSdkRN_" + name]).toInteger()
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.ext["PowerAuthSdkRN_" + name]).toInteger()
 }
 
 android {
@@ -57,11 +69,16 @@ repositories {
 }
 
 dependencies {
-  // For < 0.71, this will be from the local maven repo
-  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-android"
   api "com.wultra.android.powerauth:powerauth-sdk:1.7.7"
+
+  if (project == rootProject) {
+    // The standalone build require to specify exact version of RN
+    def rnVersion = getExtOrDefault("reactNativeVersion")
+    implementation "com.facebook.react:react-android:${rnVersion}"
+  } else {
+    // This works for RN versions > 0.71
+    implementation "com.facebook.react:react-android"
+  }
 }
 
 if (isNewArchitectureEnabled()) {
