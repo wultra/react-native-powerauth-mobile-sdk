@@ -88,9 +88,6 @@ if [ x$DO_ANDROID == x1 ]; then
 
     PUSH_DIR android
     
-    # Increase JVM size to properly process a massive 'react-android' dependency
-    #GRADLE_ARGS=-Dorg.gradle.jvmargs=-Xmx2048M
-
     ./gradlew clean build
     
     POP_DIR
