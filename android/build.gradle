@@ -1,7 +1,7 @@
 buildscript {
   repositories {
-    google()
     mavenCentral()
+    google()
   }
 
   dependencies {
@@ -60,14 +60,14 @@ dependencies {
   // For < 0.71, this will be from the local maven repo
   // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
   //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native"
+  implementation "com.facebook.react:react-android"
   api "com.wultra.android.powerauth:powerauth-sdk:1.7.7"
 }
 
 if (isNewArchitectureEnabled()) {
   react {
     jsRootDir = file("../lib/")
-    libraryName = "PowerAuthModule"
+    libraryName = "PowerAuthReactNative"
     codegenJavaPackageName = "com.wultra.android.powerauth.reactnative"
   }
 }
