@@ -4,30 +4,30 @@ TOP=$(dirname $0)
 source "$TOP/common-functions.sh"
 SRC="${TOP}/.."
 
-DO_TSC=1
-DO_ANDROID=1
-DO_IOS=1
+DO_TSC=0
+DO_ANDROID=0
+DO_IOS=0
 
 if [ ! -z $1 ]; then
     case $1 in
         android) 
-            DO_TSC=0
             DO_ANDROID=1
-            DO_IOS=0
             ;;
         ios) 
-            DO_TSC=0
-            DO_ANDROID=0
             DO_IOS=1
             ;;
         tsc | typescript) 
             DO_TSC=1
-            DO_ANDROID=0
-            DO_IOS=0
             ;;
         *) 
             FAILURE "Unknown build target $1" ;;
     esac
+fi
+
+if [[ $DO_TSC$DO_ANDROID$DO_IOS == '000' ]]; then
+    DO_TSC=1
+    DO_ANDROID=1
+    DO_IOS=1
 fi
 
 LOG_LINE
@@ -40,6 +40,7 @@ export NPM_TOKEN="DUMMY" # dummy variable to silence npm error
 PUSH_DIR "${SRC}"
 
 # instal npm dependencies
+[[ -d "node_modules" ]] && rm -rf node_modules
 npm i
 
 if [ x$DO_IOS == x1 ]; then
@@ -86,7 +87,7 @@ if [ x$DO_ANDROID == x1 ]; then
 
 
     PUSH_DIR android
-
+    
     ./gradlew clean build
     
     POP_DIR
