@@ -57,7 +57,7 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    api "com.wultra.android.powerauth:powerauth-sdk:1.7.5"
+    api "com.wultra.android.powerauth:powerauth-sdk:1.7.7"
 }
 
 allprojects {
