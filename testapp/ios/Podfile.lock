@@ -76,9 +76,9 @@ PODS:
   - hermes-engine (0.11.0)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
-  - PowerAuth2 (1.7.5):
-    - PowerAuthCore (~> 1.7.5)
-  - PowerAuthCore (1.7.5)
+  - PowerAuth2 (1.7.7):
+    - PowerAuthCore (~> 1.7.7)
+  - PowerAuthCore (1.7.7)
   - RCT-Folly (2021.06.28.00-v2):
     - boost
     - DoubleConversion
@@ -303,8 +303,8 @@ PODS:
   - React-jsinspector (0.68.5)
   - React-logger (0.68.5):
     - glog
-  - react-native-powerauth-mobile-sdk (2.3.0):
-    - PowerAuth2 (~> 1.7.5)
+  - react-native-powerauth-mobile-sdk (2.3.2):
+    - PowerAuth2 (~> 1.7.7)
     - React
   - React-perflogger (0.68.5)
   - React-RCTActionSheet (0.68.5):
@@ -546,8 +546,8 @@ SPEC CHECKSUMS:
   hermes-engine: 84e3af1ea01dd7351ac5d8689cbbea1f9903ffc3
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  PowerAuth2: 00a96bf634778dbf633742cdd832c9386a76d6a8
-  PowerAuthCore: 58eb5ccea0d45a3e39ef18df1927ce5d2a600bee
+  PowerAuth2: 8403297bab718992e410c56051e3c319bbb91ba8
+  PowerAuthCore: ef4fbff87702980846083b3043365a47fe3409e7
   RCT-Folly: 4d8508a426467c48885f1151029bc15fa5d7b3b8
   RCTRequired: 0f06b6068f530932d10e1a01a5352fad4eaacb74
   RCTTypeSafety: b0ee81f10ef1b7d977605a2b266823dabd565e65
@@ -562,7 +562,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 45c0496ca8cef6b02d9fa0274c25cf458fe91a56
   React-jsinspector: eb202e43b3879aba9a14f3f65788aec85d4e1ea9
   React-logger: 98f663b292a60967ebbc6d803ae96c1381183b6d
-  react-native-powerauth-mobile-sdk: abebc39fedcad7d51c2bf81b8261ee3eddb2401a
+  react-native-powerauth-mobile-sdk: 30485e8d37186069e85d398a086697c305be6e3f
   React-perflogger: 0458a87ea9a7342079e7a31b0d32b3734fb8415f
   React-RCTActionSheet: 22538001ea2926dea001111dd2846c13a0730bc9
   React-RCTAnimation: 732ce66878d4aa151d56a0d142b1105aa12fd313
