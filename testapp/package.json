@@ -6,14 +6,16 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
+    "pods": "pushd ios; pod install; popd",
     "test": "echo Just run this app; exit 1",
     "lint": "eslint ."
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.8",
+    "powerauth-js-test-client": "^0.2.9",
     "react": "18.2.0",
-    "react-native": "0.71.3",
+    "react-native": "0.71.6",
+    "react-native-config": "^1.5.0",
     "react-native-powerauth-mobile-sdk": "^2.4.0"
   },
   "devDependencies": {
@@ -23,7 +25,7 @@
     "@react-native-community/eslint-config": "^3.2.0",
     "@tsconfig/react-native": "^2.0.2",
     "@types/react": "^18.0.24",
-    "@types/react-native": "^0.71.2",
+    "@types/react-native": "^0.71.6",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
     "eslint": "^8.19.0",

@@ -14,8 +14,9 @@
 // limitations under the License.
 //
 
-import { Config, VerboseLevel } from "powerauth-js-test-client";
+import { Config, ServerVersion, VerboseLevel } from "powerauth-js-test-client";
 import { Platform } from "react-native";
+import { Config as EnvConfig } from 'react-native-config';
 
 export interface EnrollmentConfig {
     baseUrl: string
@@ -75,11 +76,42 @@ function defaultConfig(): TestConfig {
         debug: {
             pasVerboseLevel: VerboseLevel.Warning,
             pasDebugRequestResponse: false
-
         }
     }
 }
 
+function isSet(value: any): boolean {
+    if (typeof value == 'string') {
+        return value.length > 0
+    }
+    return false
+}
+
 export async function getTestConfig(): Promise<TestConfig> {
-    return defaultConfig()
+    let cfg = defaultConfig()
+
+    // Alter confing from .env variable
+
+    // ENROLLMENT_SERVER_*
+    if (isSet(EnvConfig.ENROLLMENT_SERVER_URL)) {
+        cfg.enrollment = { baseUrl: EnvConfig.ENROLLMENT_SERVER_URL! }
+    }
+    // POWERAUTH_SERVER_*
+    if (isSet(EnvConfig.POWERAUTH_SERVER_URL)) {
+        cfg.connection = { ...cfg.connection, baseUrl: EnvConfig.POWERAUTH_SERVER_URL! }
+    }
+    if (isSet(EnvConfig.POWERAUTH_SERVER_USERNAME)) {
+        cfg.connection = { ...cfg.connection, username: EnvConfig.POWERAUTH_SERVER_USERNAME! }
+    }
+    if (isSet(EnvConfig.POWERAUTH_SERVER_PASSWORD)) {
+        cfg.connection = { ...cfg.connection, password: EnvConfig.POWERAUTH_SERVER_PASSWORD }
+    }
+    if (isSet(EnvConfig.POWERAUTH_SERVER_VERSION)) {
+        cfg.connection = { ...cfg.connection, serverVersion: ServerVersion.fromString(EnvConfig.POWERAUTH_SERVER_VERSION) }
+    }
+    if (isSet(EnvConfig.POWERAUTH_SERVER_AUTOCOMMIT)) {
+        cfg.connection = { ...cfg.connection, autoCommit: EnvConfig.POWERAUTH_SERVER_AUTOCOMMIT === 'true' }
+    }
+    
+    return cfg
 }
