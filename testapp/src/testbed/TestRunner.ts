@@ -21,7 +21,7 @@ import { getAllObjectMethods } from "./private/ObjectHelper";
 import { TestInteraction, UserInteraction, UserPromptDuration } from "./TestInteraction";
 import { TestEvent, TestMonitor } from "./TestMonitor";
 import { TestCounter } from "./TestProgress";
-import { TestContext, TestMethod, TestSuite } from "./TestSuite";
+import { TestContext, TestSuite } from "./TestSuite";
 
 export class TestRunner {
     readonly batchName: string
@@ -58,6 +58,14 @@ export class TestRunner {
             return false
         }
         try {
+            if (this.config.debug?.singleTestSuite) {
+                const suiteIndex = tests.findIndex(suite => suite.suiteName === this.config.debug?.singleTestSuite)
+                const suite = tests[suiteIndex]
+                tests = [suite]
+                if (this.config.debug?.singleTestName) {
+                    suite.runOnlyOneTest = this.config.debug?.singleTestName
+                }
+            }    
             this.testsInProgress = true
             this.requestCancel = false
             if (!this.beforeBatch(tests)) {

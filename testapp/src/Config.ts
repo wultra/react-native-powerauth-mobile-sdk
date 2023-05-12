@@ -29,6 +29,11 @@ export interface InstanceConfig {
 export interface DebugConfig {
     pasVerboseLevel?: VerboseLevel
     pasDebugRequestResponse?: boolean
+    sdkTraceError?: boolean
+    sdkTraceCall?: boolean
+
+    singleTestSuite?: string
+    singleTestName?: string
 }
 
 export interface TestConfig extends Config {
@@ -75,7 +80,9 @@ function defaultConfig(): TestConfig {
         },
         debug: {
             pasVerboseLevel: VerboseLevel.Warning,
-            pasDebugRequestResponse: false
+            pasDebugRequestResponse: false,
+            //sdkTraceError: true,
+            //singleTestSuite: "PowerAuth_Example",
         }
     }
 }
