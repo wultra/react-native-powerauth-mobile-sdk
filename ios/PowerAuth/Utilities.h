@@ -63,7 +63,33 @@ PA_EXTERN_C id GetValueAtPathFromDict(NSDictionary * dict, NSString * path, Clas
 /// @return NSData extracted from the dictionary.
 PA_EXTERN_C NSData * GetNSDataValueFromDict(NSDictionary * dict, NSString * key);
 
-@class PowerAuthCorePassword, PowerAuthObjectRegister;
+
+/// Specifies data format requested by the application.
+typedef NS_ENUM(NSInteger, DataFormat) {
+    DF_ERROR    = 0,    /// Unsupported data format.
+    DF_UTF8     = 1,    /// Plain string
+    DF_BASE64   = 2     /// Base64 encoded string
+};
+
+/// Convert data format into DataFormat enumeration.
+/// @param format Format to convert.
+/// @param reject Optional reject block, called in case of invalid format is provided.
+PA_EXTERN_C DataFormat GetPowerAuthDataFormat(NSString * format, RCTPromiseRejectBlock reject);
+
+/// Convert provided value into NSData object, depending on data format.
+/// @param dataValue Value containaing encoded data. If nil is provided, then function returns empty data object.
+/// @param dataFormat Requested data format.
+/// @param reject Optional reject block, called in case of invalid format is provided, or conversion failed.
+/// @return NSData converted from data value or nil in case of error.
+PA_EXTERN_C NSData * DecodeNSDataValue(NSString * dataValue, DataFormat dataFormat, RCTPromiseRejectBlock reject);
+
+/// Convert provided data into string representation depending on data format.
+/// @param dataValue Value to encode. If nil is provided, then function returns empty string.
+/// @param dataFormat Requested data format.
+PA_EXTERN_C NSString * EncodeNSDataValue(NSData * dataValue, DataFormat dataFormat, RCTPromiseRejectBlock reject);
+
+
+@class PowerAuthCorePassword, PowerAuthObjectRegister, PowerAuthSDK;
 
 /// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
 /// report an error. The password object is marked as used if found in register.
@@ -80,3 +106,11 @@ PA_EXTERN_C PowerAuthCorePassword * UsePassword(id anyPassword, PowerAuthObjectR
 /// @param reject Reject function to call in case of failure
 /// @return PowerAuthCorePassword or nil if no such conversion is possible.
 PA_EXTERN_C PowerAuthCorePassword * TouchPassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
+
+/// Function translate object identifier into PowerAuthSDK instance. If such conversion is not possible, then use reject promise
+/// to report an error.
+/// @param anyId Object to convert into PowerAuthSDK.
+/// @param objectRegister Object register instance.
+/// @param reject Reject function to call in case of failure
+/// @return PowerAuthSDK or nil if such instance is not configured.
+PA_EXTERN_C PowerAuthSDK * GetPowerAuthSdk(id anyId, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);

@@ -162,7 +162,7 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
             if (anyPassword.getType() == ReadableType.Map) {
                 // Object is provided
                 final ReadableMap map = anyPassword.asMap();
-                final String passwordObjectId = map.getString("passwordObjectId");
+                final String passwordObjectId = map.getString("objectId");
                 if (passwordObjectId == null) {
                     throw new WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword is not initialized");
                 }

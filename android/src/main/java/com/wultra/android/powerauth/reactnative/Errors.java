@@ -60,6 +60,7 @@ class Errors {
     static final String EC_OPERATION_CANCELED = "OPERATION_CANCELED";
     static final String EC_INVALID_ACTIVATION_CODE = "INVALID_ACTIVATION_CODE";
     static final String EC_INVALID_TOKEN = "INVALID_TOKEN";
+    static final String EC_INVALID_ENCRYPTOR = "INVALID_ENCRYPTOR";
     static final String EC_ENCRYPTION_ERROR = "ENCRYPTION_ERROR";
     static final String EC_WRONG_PARAMETER = "WRONG_PARAMETER";
     static final String EC_PROTOCOL_UPGRADE = "PROTOCOL_UPGRADE";
@@ -70,7 +71,8 @@ class Errors {
     static final String EC_BIOMETRY_NOT_CONFIGURED = "BIOMETRY_NOT_CONFIGURED";
     static final String EC_BIOMETRY_NOT_ENROLLED = "BIOMETRY_NOT_ENROLLED";
     static final String EC_INSUFFICIENT_KEYCHAIN_PROTECTION = "INSUFFICIENT_KEYCHAIN_PROTECTION";
-    static final String EC_BIOMETRY_LOCKOUT = "BIOMETRY_LOCKpublic OUT";
+    static final String EC_BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT";
+    static final String EC_UNKNOWN_ERROR = "UNKNOWN_ERROR";
 
     /**
      * Translate {@code PowerAuthErrorCodes} error constant into string representation.

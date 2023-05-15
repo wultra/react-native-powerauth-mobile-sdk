@@ -50,6 +50,6 @@
   "devDependencies": {
     "@types/react-native": "0.70.0",
     "lodash": "^4.17.21",
-    "react-native": "0.71.3"
+    "react-native": "0.71.6"
   }
 }

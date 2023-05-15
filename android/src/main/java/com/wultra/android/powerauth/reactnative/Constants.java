@@ -42,6 +42,14 @@ class Constants {
      */
     static final int PASSWORD_KEY_KEEP_ALIVE_TIME    = 5 * 60 * 1_000;
     /**
+     * Time interval in milliseconds to keep encryptor object valid in memory.
+     */
+    static final int ENCRYPTOR_KEY_KEEP_ALIVE_TIME    = 5 * 60 * 1_000;
+    /**
+     * Time interval in milliseconds to keep decryptor object valid in memory.
+     */
+    static final int DECRYPTOR_KEY_KEEP_ALIVE_TIME    = 5 * 60 * 1_000;
+    /**
      * Upper limit for Unicode Code Point.
      */
     static final int CODEPOINT_MAX                   = 0x10FFFF;

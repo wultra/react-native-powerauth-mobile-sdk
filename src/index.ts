@@ -28,6 +28,7 @@ export * from './model/PowerAuthActivationState';
 export * from './model/PowerAuthActivationStatus';
 export * from './model/PowerAuthAuthentication';
 export * from './model/PowerAuthAuthorizationHttpHeader';
+export * from './model/PowerAuthEncryptionHttpHeader';
 export * from './model/PowerAuthBiometryConfiguration';
 export * from './model/PowerAuthBiometryInfo';
 export * from './model/PowerAuthClientConfiguration';
@@ -38,6 +39,9 @@ export * from './model/PowerAuthError';
 export * from './model/PowerAuthKeychainConfiguration';
 export * from './model/PowerAuthRecoveryActivationData';
 export * from './model/PowerAuthPassword';
+export * from './model/PowerAuthEncryptor';
+export * from './model/PowerAuthDataFormat';
+export * from './model/BaseNativeObject';
 
 // Debug features
 

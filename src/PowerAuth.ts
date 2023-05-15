@@ -27,12 +27,13 @@ import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
 import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
-import { PowerAuthTokenStore } from "./PowerAuthTokenStore"
+import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
+import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { AuthResolver } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
 import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
-import { RawAuthentication } from './internal/NativeTypes';
+import { RawAuthentication, toRawPassword } from './internal/NativeTypes';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -214,8 +215,8 @@ export class PowerAuth {
      * 
      * @param authentication An authentication instance specifying what factors should be stored.
      */
-    commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("commitActivation", this.instanceId, authentication.convertLegacyObject(true));
+    async commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
+        return NativeWrapper.thisCall("commitActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
     }
 
     /**
@@ -313,8 +314,8 @@ export class PowerAuth {
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
-    changePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("changePassword", this.instanceId, oldPassword, newPassword);
+    async changePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<void> {
+        return NativeWrapper.thisCall("changePassword", this.instanceId, await toRawPassword(oldPassword), await toRawPassword(newPassword));
     }
 
     /**
@@ -328,8 +329,8 @@ export class PowerAuth {
      @param newPassword New password, to be set in case authentication with old password passes.
      @returns Returns true in case password was changed without error, false otherwise.
      */
-    unsafeChangePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
-        return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, oldPassword, newPassword);
+    async unsafeChangePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
+        return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, await toRawPassword(oldPassword), await toRawPassword(newPassword));
     }
 
     /**
@@ -357,14 +358,14 @@ export class PowerAuth {
      */
     addBiometryFactor(password: PasswordType, title: string, description: string): Promise<void>
 
-    addBiometryFactor(password: PasswordType,  ...args: any[]): Promise<void> {
+    async addBiometryFactor(password: PasswordType,  ...args: any[]): Promise<void> {
         let prompt: PowerAuthBiometricPrompt | undefined
         if (typeof args[0] === 'string' && typeof args[1] === 'string') {
             prompt = { promptTitle: args[0], promptMessage: args[1] }
         } else {
             prompt = args[0]
         }
-        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, password, prompt);
+        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, await toRawPassword(password), prompt);
     }
 
     /** 
@@ -424,8 +425,8 @@ export class PowerAuth {
      * 
      * @param password Password to be verified.
      */
-    validatePassword(password: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("validatePassword", this.instanceId, password);
+    async validatePassword(password: PasswordType): Promise<void> {
+        return NativeWrapper.thisCall("validatePassword", this.instanceId, await toRawPassword(password));
     }
 
     /**
@@ -526,6 +527,26 @@ export class PowerAuth {
      */
     createPassword(destroyOnUse: boolean = true, onAutomaticCleanup: (() => void) | undefined = undefined): PowerAuthPassword {
         return new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, this.instanceId)
+    }
+
+    // End-To-End Encryption
+
+    /**
+     * Creates a new instance of encryptor suited for application's general end-to-end encryption purposes.
+     * The returned encryptor is cryptographically bounded to the PowerAuth configuration, so it can be used
+     * with or without a valid activation.
+     */
+    getEncryptorForApplicationScope(): PowerAuthEncryptor {
+        return new PowerAuthEncryptorImpl('APPLICATION', this.instanceId)
+    }
+
+    /**
+     * Creates a new instance of encryptor suited for application's general end-to-end encryption purposes.
+     * The returned encryptor is cryptographically bounded to a device's activation, so it can be used only
+     * when this instance has a valid activation.
+     */
+    getEncryptorForActivationScope(): PowerAuthEncryptor {
+        return new PowerAuthEncryptorImpl('ACTIVATION', this.instanceId)
     }
 
     /**

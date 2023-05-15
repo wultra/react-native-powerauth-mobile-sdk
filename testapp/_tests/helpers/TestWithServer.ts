@@ -16,6 +16,7 @@
 
 import { Logger, PowerAuthTestServer, VerboseLevel } from "powerauth-js-test-client";
 import { TestSuite } from "../../src/testbed";
+import { PowerAuthDebug } from "react-native-powerauth-mobile-sdk";
 
 /**
  * Test suite base for tests that require connection to PowerAuth Server RESTFul API. 
@@ -36,8 +37,14 @@ export class TestWithServer extends TestSuite {
 
     async beforeAll() {
         await super.beforeAll()
-        Logger.setVerboseLevel(this.context.config.debug?.pasVerboseLevel ?? VerboseLevel.Warning)
-        Logger.setDebugRequestResponse(this.context.config.debug?.pasDebugRequestResponse ?? false)
+        const debugConf = this.context.config.debug
+        Logger.setVerboseLevel(debugConf?.pasVerboseLevel ?? VerboseLevel.Warning)
+        Logger.setDebugRequestResponse(debugConf?.pasDebugRequestResponse ?? false)
+        if (debugConf?.sdkTraceCall) {
+            PowerAuthDebug.traceNativeCodeCalls(true, true)
+        } else if (debugConf?.sdkTraceError) {
+            PowerAuthDebug.traceNativeCodeCalls(true, false)
+        }
         if (this.printDebugMessages) this.debugInfo('Connecting to server...')
         const server = new PowerAuthTestServer(this.config)
         await server.connect()
@@ -47,5 +54,6 @@ export class TestWithServer extends TestSuite {
     async afterAll() {
         await super.afterAll()
         this.serverInstance = undefined
+        PowerAuthDebug.traceNativeCodeCalls(false, false)
     }
 }

@@ -174,16 +174,16 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(p1, p2)
 
         // Right after construct the identifier is not set
-        const id1AfterCreate = ((p1 as any).passwordObjectId)
-        const id2AfterCreate = ((p2 as any).passwordObjectId)
+        const id1AfterCreate = ((p1 as any).objectId)
+        const id2AfterCreate = ((p2 as any).objectId)
         expect(id1AfterCreate).toBeUndefined()
         expect(id2AfterCreate).toBeUndefined()
         // We have to call at least some function to create underlying native object
         expect(await p1.isEmpty()).toBe(true)
         expect(await p2.length()).toBe(0)
         // Now identifiers are available, but no cleanup was called
-        const id1AfterAccess = ((p1 as any).passwordObjectId)!
-        const id2AfterAccess = ((p2 as any).passwordObjectId)!
+        const id1AfterAccess = ((p1 as any).objectId)!
+        const id2AfterAccess = ((p2 as any).objectId)!
         expect(id1AfterAccess).toBeDefined()
         expect(id2AfterAccess).toBeDefined()
         expect(p1CleanupCalled).toBe(0)
@@ -202,14 +202,14 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await Register.findObject(id1AfterAccess, 'password')).toBe(true)
         expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
         // native p2 is no longer valid, but its identifier is still set in JS object
-        expect(((p2 as any).passwordObjectId)).toBeDefined()
+        expect(((p2 as any).objectId)).toBeDefined()
         // Now extend p1 again
         expect(await p1.isEmpty()).toBe(false)
         // And access p2 again. The callback function should be called now
         expect(await p2.isEmpty()).toBe(true)
         expect(p2CleanupCalled).toBe(1)
 
-        const id2AfterRestore = ((p2 as any).passwordObjectId)!
+        const id2AfterRestore = ((p2 as any).objectId)!
         expect(id2AfterRestore).toNotBe(id2AfterAccess)
         // Now sleep for another 100ms, so both passwords will be released
         await this.sleep(100)
@@ -218,8 +218,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEmpty()).toBe(true)
         expect(p1CleanupCalled).toBe(1)
         expect(p2CleanupCalled).toBe(2)
-        expect(((p1 as any).passwordObjectId)).toNotBe(id1AfterAccess)
-        expect(((p2 as any).passwordObjectId)).toNotBe(id2AfterRestore)
+        expect(((p1 as any).objectId)).toNotBe(id1AfterAccess)
+        expect(((p2 as any).objectId)).toNotBe(id2AfterRestore)
     }
 
     async testReleaseAfterUse() {
@@ -235,8 +235,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(p1CleanupCalled).toBe(0)
         expect(p2CleanupCalled).toBe(0)
 
-        const id1AfterAccess = ((p1 as any).passwordObjectId)!
-        const id2AfterAccess = ((p2 as any).passwordObjectId)!
+        const id1AfterAccess = ((p1 as any).objectId)!
+        const id2AfterAccess = ((p2 as any).objectId)!
 
         expect(await Register.useObject(id1AfterAccess, 'password')).toBe(true)
         expect(await Register.useObject(id2AfterAccess, 'password')).toBe(true)
@@ -269,8 +269,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
 
-        const id1AfterAccess = ((p1 as any).passwordObjectId)!
-        const id2AfterAccess = ((p2 as any).passwordObjectId)!
+        const id1AfterAccess = ((p1 as any).objectId)!
+        const id2AfterAccess = ((p2 as any).objectId)!
         expect(id1AfterAccess).toBeDefined()
         expect(id2AfterAccess).toBeDefined()
 
@@ -338,8 +338,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(p1CleanupCalled).toBe(0)
         expect(p2CleanupCalled).toBe(0)
 
-        const id1AfterAccess = ((p1 as any).passwordObjectId)!
-        const id2AfterAccess = ((p2 as any).passwordObjectId)!
+        const id1AfterAccess = ((p1 as any).objectId)!
+        const id2AfterAccess = ((p2 as any).objectId)!
         
         expect(await Register.findObject(id1AfterAccess, 'password')).toBe(true)
         expect(await Register.findObject(id2AfterAccess, 'password')).toBe(true)

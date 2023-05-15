@@ -15,7 +15,7 @@
 //
 
 import { TestConfig } from '../../src/Config'
-import { ActivationHelper, ActivationHelperPrepareData, PowerAuthTestServer } from 'powerauth-js-test-client'
+import { ActivationHelper, ActivationHelperPrepareData, ApplicationConfig, ApplicationSetup, PowerAuthTestServer } from 'powerauth-js-test-client'
 import {
     PowerAuth,
     PowerAuthActivation,
@@ -25,6 +25,7 @@ import {
     PowerAuthConfiguration,
     PowerAuthCreateActivationResult,
     PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk'
+import { RNHttpClient } from './RNHttpClient'
 
 /**
  * Method that can customize `PowerAuthActivation` object before the activation creation. 
@@ -34,7 +35,30 @@ export type RNActivationCustomization = (activation: PowerAuthActivation) => voi
 /**
  * ActivationHelper specialized with React Native PowerAuth objects. 
  */
-export type RNActivationHelper = ActivationHelper<PowerAuth, PowerAuthCreateActivationResult>
+//export type RNActivationHelper = ActivationHelper<PowerAuth, PowerAuthCreateActivationResult>
+export class RNActivationHelper extends ActivationHelper<PowerAuth, PowerAuthCreateActivationResult> {
+    /**
+     * Instance of HTTP client
+     */
+    readonly httpClient: RNHttpClient
+
+    /**
+     * Construct custom application helper.
+     * @param server 
+     * @param testConfig 
+     * @param appSetup 
+     */
+    constructor(server: PowerAuthTestServer, testConfig: TestConfig, appSetup: ApplicationSetup) {
+        super(server, appSetup)
+        this.httpClient = new RNHttpClient(testConfig)
+    }
+
+    static async createCustom(server: PowerAuthTestServer, cfg: TestConfig): Promise<RNActivationHelper> {
+        await server.connect()
+        const appSetup = await server.prepareApplicationFromConfiguration(cfg.application)
+        return new RNActivationHelper(server, cfg, appSetup)
+    }
+}
 
 /**
  * Additional data provided to prepare function.
@@ -78,7 +102,7 @@ export interface CustomActivationHelperPrepareData extends ActivationHelperPrepa
  * @returns Promise with NRActivationHelper 
  */
 export async function createActivationHelper(server: PowerAuthTestServer, cfg: TestConfig, customizeActivation: RNActivationCustomization): Promise<RNActivationHelper> {
-    const helper: RNActivationHelper = await ActivationHelper.create(server, cfg.application)
+    const helper = await RNActivationHelper.createCustom(server, cfg)
     helper.createSdk = async (appSetup, prepareData) => {
         // Prepare instanceId. We're using custom data in prepare interface to keep instance id.
         const pd = prepareData as CustomActivationHelperPrepareData

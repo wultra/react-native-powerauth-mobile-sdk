@@ -130,3 +130,12 @@ PA_EXTERN_C NSNumber * _Nonnull RP_KEEP_ALIVE(NSUInteger timeIntervalMs);
  Creates a new release policy configured to release object after a required time.
  */
 PA_EXTERN_C NSNumber * _Nonnull RP_EXPIRE(NSUInteger timeIntervalMs);
+/**
+ Convert JS number into time interval in milliseconds, required for `RP_KEEP_ALIVE()` or `RP_EXPIRE()` modes.
+ The function is implemented only for DEBUG build. For release build it's always converted to defaultValue.
+ */
+#if DEBUG
+    PA_EXTERN_C NSUInteger RP_TIME_INTERVAL(id _Nullable anyValue, NSUInteger defaultValue);
+#else
+    #define RP_TIME_INTERVAL(anyValue, defaultValue) (defaultValue)
+#endif

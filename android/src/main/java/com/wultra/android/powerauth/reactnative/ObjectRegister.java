@@ -285,7 +285,7 @@ public class ObjectRegister extends BaseJavaModule {
     private static final int OPT_REMOVE     = 3;    // remove object
 
     /**
-     * Finc object with given identifier and do an additional operation with the object.
+     * Find object with given identifier and do an additional operation with the object.
      * @param objectId Object identifier.
      * @param expectedClass Expected class.
      * @param options Additional operation that should be performed with the object's entry. Use {@code OPT_*} constants.

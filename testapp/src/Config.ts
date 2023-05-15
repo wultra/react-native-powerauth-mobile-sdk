@@ -82,7 +82,7 @@ function defaultConfig(): TestConfig {
             pasVerboseLevel: VerboseLevel.Warning,
             pasDebugRequestResponse: false,
             //sdkTraceError: true,
-            //singleTestSuite: "PowerAuth_Example",
+            //singleTestSuite: "PowerAuth_EncryptorTests",
         }
     }
 }
