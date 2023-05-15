@@ -31,25 +31,27 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             expect(await encryptor.canEncryptRequest()).toBe(true)
             const requestData = '{}'
             const encrypted = await encryptor.encryptRequest(requestData)
+            const decryptor = encrypted.decryptor
             expect(encrypted.cryptogram).toBeDefined()
             expect(encrypted.header).toBeDefined()
-            expect(encrypted.decryptor).toBeDefined()
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(decryptor).toBeDefined()
+            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Let's use "user info" service for the test.
             const headers = new Headers()
             headers.set(encrypted.header.key, encrypted.header.value)
             const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Decrypt response
-            const decrypted = await encrypted.decryptor.decryptResponse(response as PowerAuthCryptogram)
+            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram)
             expect(decrypted).toBeDefined()
             const decryptedObject = JSON.parse(decrypted)
 
             // Response contains 'sub' key which should be equal to user-id
             expect(decryptedObject.sub).toEqual(this.activation.userId)
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(false)
+            expect(await decryptor.canDecryptResponse()).toBe(false)
         }
     }
 
@@ -63,25 +65,27 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             expect(await encryptor.canEncryptRequest()).toBe(true)
             const requestData = '{}'
             const encrypted = await encryptor.encryptRequest(requestData, "UTF8")
+            const decryptor = encrypted.decryptor
             expect(encrypted.cryptogram).toBeDefined()
             expect(encrypted.header).toBeDefined()
-            expect(encrypted.decryptor).toBeDefined()
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(decryptor).toBeDefined()
+            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Let's use "user info" service for the test.
             const headers = new Headers()
             headers.set(encrypted.header.key, encrypted.header.value)
             const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Decrypt response
-            const decrypted = await encrypted.decryptor.decryptResponse(response as PowerAuthCryptogram, "UTF8")
+            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, "UTF8")
             expect(decrypted).toBeDefined()
             const decryptedObject = JSON.parse(decrypted)
 
             // Response contains 'sub' key which should be equal to user-id
             expect(decryptedObject.sub).toEqual(this.activation.userId)
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(false)
+            expect(await decryptor.canDecryptResponse()).toBe(false)
         }
     }
 
@@ -95,24 +99,26 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             expect(await encryptor.canEncryptRequest()).toBe(true)
             const data = Buffer.from("{}").toString('utf8')
             const encrypted = await encryptor.encryptRequest(data, 'BASE64')
+            const decryptor = encrypted.decryptor
             expect(encrypted.cryptogram).toBeDefined()
             expect(encrypted.header).toBeDefined()
-            expect(encrypted.decryptor).toBeDefined()
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(decryptor).toBeDefined()
+            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
     
             // Let's use "user info" service for the test
             const headers = new Headers()
             headers.set(encrypted.header.key, encrypted.header.value)
             const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+            expect(await decryptor.canDecryptResponse()).toBe(true)
     
             // Decrypt response
-            const decrypted = await encrypted.decryptor.decryptResponse(response as PowerAuthCryptogram, 'BASE64')
+            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, 'BASE64')
             expect(decrypted).toBeDefined()
             const decryptedObject = JSON.parse(Buffer.from(decrypted, 'base64').toString('utf8'))
             expect(decryptedObject.sub).toEqual(this.activation.userId)
     
-            expect(await encrypted.decryptor.canDecryptResponse()).toBe(false)    
+            expect(await decryptor.canDecryptResponse()).toBe(false)    
         }
     }
 
@@ -126,13 +132,14 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
 
         const data = Buffer.from("{}").toString('utf8')
         const encrypted = await encryptor.encryptRequest(data, 'BASE64')
+        const decryptor = encrypted.decryptor
         expect(encrypted.cryptogram).toBeDefined()
         expect(encrypted.header).toBeDefined()
-        expect(encrypted.decryptor).toBeDefined()
-        expect(await encrypted.decryptor.canDecryptResponse()).toBe(true)
+        expect(decryptor).toBeDefined()
+        expect(await decryptor.canDecryptResponse()).toBe(true)
 
-        await encrypted.decryptor.release()
-        expect(await encrypted.decryptor.canDecryptResponse()).toBe(false)
+        await decryptor.release()
+        expect(await decryptor.canDecryptResponse()).toBe(false)
         await encryptor.release()
         // POlling for the state automatically restore the native object.
         expect(await encryptor.canEncryptRequest()).toBe(true)

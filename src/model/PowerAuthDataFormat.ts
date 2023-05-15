@@ -15,8 +15,8 @@
  */
 
 /**
- * Input or output data formatting specification for the cryptographic operation:
- * - `UTF8` - data is formatted as a plain string that will be converted into UTF-8 before the operation.
+ * Input or output data format specification for the cryptographic operation:
+ * - `UTF8` - data is formatted as a plain string that will be converted into UTF-8 encoded sequence of bytes before the operation.
  * - `BASE64` - binary data encoded into Base64 string.
  */
 export type PowerAuthDataFormat = 'UTF8' | 'BASE64'

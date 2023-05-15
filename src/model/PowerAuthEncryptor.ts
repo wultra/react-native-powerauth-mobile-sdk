@@ -72,7 +72,7 @@ export interface PowerAuthEncryptedRequestData {
 
 /**
  * Interface that implements End-To-End encryption. Use `PowerAuth` class to get instnace 
- * of properly scoped encryptor.
+ * of encryptor.
  */
 export interface PowerAuthEncryptor {
     /**
@@ -114,6 +114,10 @@ export interface PowerAuthEncryptor {
  */
 export interface PowerAuthDecryptor {
     /**
+     * Scope of this decryptor.
+     */
+    readonly decryptorScope: PowerAuthEncryptorScope
+    /**
      * Determine whether object is able to decrypt the response.
      */
     canDecryptResponse(): Promise<boolean>
@@ -123,6 +127,7 @@ export interface PowerAuthDecryptor {
      * 
      * @param cryptogram Cryptogram containing encrypted response from the server.
      * @param outputDataFormat Data format expected at the output. If not used, then 'UTF8' is applied.
+     * @returns Decrypted data in specified format.
      */
     decryptResponse(cryptogram: PowerAuthCryptogram, outputDataFormat: PowerAuthDataFormat): Promise<string>
 
@@ -130,6 +135,7 @@ export interface PowerAuthDecryptor {
      * Decrypt response received from the server into plain string. The underlying native object is automatically 
      * released after this call.
      * @param cryptogram Cryptogram containing encrypted response from the server.
+     * @returns Decrypted string.
      */
     decryptResponse(cryptogram: PowerAuthCryptogram): Promise<string>
     /**
@@ -154,7 +160,7 @@ export class PowerAuthEncryptorImpl extends BaseNativeObject implements PowerAut
             return {
                 cryptogram: result.cryptogram,
                 header: result.header,
-                decryptor: new PowerAuthDecryptorImpl(result.decryptorId)
+                decryptor: new PowerAuthDecryptorImpl(this.encryptorScope, result.decryptorId)
             }
         })
     }
@@ -218,10 +224,15 @@ class PowerAuthDecryptorImpl implements PowerAuthDecryptor {
     }
 
     release(): Promise<void> {
-        return this.withObjectId(objectId => NativeEncryptor.release(objectId))
+        return NativeEncryptor.release(this.objectId)
     }
 
-    constructor(private objectId: string) {}
+    /**
+     * Construct decryptor with original scope and existing native object identifier.
+     * @param decryptorScope Original scope used in the encryptor.
+     * @param objectId Native object identifier.
+     */
+    constructor(public readonly decryptorScope: PowerAuthEncryptorScope, private objectId: string) {}
 
     private async withObjectId<T>(action: (objectId: string) => Promise<T>): Promise<T> {
         try {
