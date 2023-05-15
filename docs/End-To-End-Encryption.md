@@ -37,6 +37,7 @@ The following steps are typically required for a full E2EE request and response 
 
 1. Encrypt your request data:
    ```typescript
+   // 2nd parameter is optional parameter with 'UTF8' default.
    const encryptedData = await encryptor.encryptRequest(requestData, requestDataFormat);
    // Keep decryptor object for later, to properly decrpyt response from the server.
    const decryptor = encryptedData.decryptor;
@@ -69,7 +70,10 @@ The following steps are typically required for a full E2EE request and response 
 
 1. Now decrypt the response. Depending on what type of data you expect, you can specify `'UTF8'` or `'BASE64'` output data format:
    ```typescript
-   const decryptedData = await decryptor.decryptResponse(responseObject, 'UTF8');
+   const responseDataFormat = 'UTF8';
+   // 2nd parameter is optional, with 'UTF8' as default.
+   const decryptedData = await decryptor.decryptResponse(responseObject, responseDataFormat);
+   const responseObject = JSON.parse(decryptedData);
    ```
 
 ## Sign encrypted request
@@ -88,10 +92,12 @@ Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlyi
 
 - `PowerAuthDecryptor`
   - Decryption is always one-time operation, so by callling `decryptResponse()` is underlying native object released.
-  - Object is released when its parent `PowerAuth` instance is deconfigured. 
+  - Object is released when its parent `PowerAuth` instance is deconfigured.
   - If decryptor is activation scoped and parent `PowerAuth` instance has no activation, then decryption is not available.
-  - Release its internal native object after 5 minutes of inactivity. You cannot recovery from this state.
+  - Release its internal native object after 5 minutes of inactivity.
   - You can use `canDecryptResponse()` function to test whether decryption is available.
+
+As you can see, you can use encryptor as for many times as you want, but the decryptor is always bound to the one particular response from the server.
 
 ## Read Next
 
