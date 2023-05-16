@@ -90,7 +90,6 @@ Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlyi
   - Object is released when its parent `PowerAuth` instance is deconfigured. After this, encryption is no loner available.
   - If encryptor is activation scoped and parent `PowerAuth` instance has no activation, then encryption is not available.
   - You can use `canEncryptRequest()` function to test whether encryption is available.
-  - You can call `release()` to manually release the native object.
 
 - `PowerAuthDecryptor`
   - Decryption is always one-time operation, so by callling `decryptResponse()` is underlying native object released.
@@ -98,9 +97,8 @@ Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlyi
   - If decryptor is activation scoped and parent `PowerAuth` instance has no activation, then decryption is not available.
   - Release its internal native object after 5 minutes of inactivity.
   - You can use `canDecryptResponse()` function to test whether decryption is available.
-  - You can call `release()` to manually release the native object.
 
-As you can see, you can use encryptor as for many times as you want, but the decryptor is always bound to the one particular response from the server.
+On both object you can call `release()` function to manually release the underlying native object.
 
 ## Read Next
 
