@@ -16,10 +16,27 @@
 
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthCryptogram } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthCryptogram, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Buffer } from 'buffer'
 
 export class PowerAuth_EncryptorTests extends TestWithActivation {
+
+    override shouldCreateActivationBeforeTest(): boolean {
+        const n = this.context.testName
+        return !(n == 'testEncryptorWithoutActivation')
+    }
+
+    async testEncryptorWithoutActivation() {
+        expect(await this.sdk.hasValidActivation()).toBe(false)
+        const activationScoped = this.sdk.getEncryptorForActivationScope()
+        expect(await activationScoped.canEncryptRequest()).toBe(false)
+
+        const applicationScoped = this.sdk.getEncryptorForApplicationScope()
+        expect(await applicationScoped.canEncryptRequest()).toBe(true)
+
+        await expect(async () => await activationScoped.encryptRequest("{}")).toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
+        await expect(async () => await applicationScoped.encryptRequest("{}")).toBeDefined()
+    }
 
     async testActivationScopedEncryption_Default() {
         // Acquire encryptor

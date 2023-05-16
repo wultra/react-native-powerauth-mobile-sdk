@@ -19,9 +19,19 @@ import { NativeWrapper } from '../internal/NativeWrapper';
 import { RawNativeObject } from '../internal/NativeTypes';
 
 /**
+ * Base interface for objects that use releasable underlying native object.
+ */
+export interface BaseReleasableObject {
+    /**
+     * Release the underlying native object.
+     */
+    release(): Promise<void>
+}
+
+/**
  * Internal class that implements automatic native object re-creation.
  */
-export class BaseNativeObject {
+export class BaseNativeObject implements BaseReleasableObject {
     /**
      * Construct object with optional object identifier. If identifier is not provided,
      * then it's created in the next call to `withObjectId()` method.
@@ -101,10 +111,7 @@ export class BaseNativeObject {
         return Object.freeze({objectId: this.objectId})
     }
 
-    /**
-     * Release the underlying native object.
-     */
-    public release(): Promise<void> {
+    release(): Promise<void> {
         if (this.objectId) {
             const objId = this.objectId
             this.objectId = undefined

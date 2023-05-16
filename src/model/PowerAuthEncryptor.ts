@@ -15,7 +15,7 @@
  */
 
 import { NativeEncryptor } from "../internal/NativeEncryptor"
-import { BaseNativeObject } from "./BaseNativeObject"
+import { BaseNativeObject, BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthEncryptionHttpHeader } from "../index"
 import { NativeWrapper } from "../internal/NativeWrapper"
 import { PowerAuthDataFormat } from "./PowerAuthDataFormat"
@@ -74,7 +74,7 @@ export interface PowerAuthEncryptedRequestData {
  * Interface that implements End-To-End encryption. Use `PowerAuth` class to get instnace 
  * of encryptor.
  */
-export interface PowerAuthEncryptor {
+export interface PowerAuthEncryptor extends BaseReleasableObject {
     /**
      * Scope of this encryptor.
      */
@@ -99,11 +99,6 @@ export interface PowerAuthEncryptor {
      * @returns Object containing encrypted data, HTTP header and decryptor for the response decryption.
      */
     encryptRequest(body: string, bodyFormat: PowerAuthDataFormat): Promise<PowerAuthEncryptedRequestData>
-    /**
-     * Release underlying native object. You can still use the encryptor, because the native object is
-     * re-created after the next call to `canEncryptRequest()` or `encryptRequest()` functions.
-     */
-    release(): Promise<void>
 }
 
 /**
@@ -112,7 +107,7 @@ export interface PowerAuthEncryptor {
  * Be aware that the native underlying object has a limited lifetime set to 5 minutes. If you don't decrypt
  * the resposne within this time interval, then the information required for the request decryption is lost.
  */
-export interface PowerAuthDecryptor {
+export interface PowerAuthDecryptor extends BaseReleasableObject {
     /**
      * Scope of this decryptor.
      */
@@ -138,10 +133,6 @@ export interface PowerAuthDecryptor {
      * @returns Decrypted string.
      */
     decryptResponse(cryptogram: PowerAuthCryptogram): Promise<string>
-    /**
-     * Release decryptor and its underlying native object.
-     */
-    release(): Promise<void>
 }
 
 /**
@@ -150,8 +141,12 @@ export interface PowerAuthDecryptor {
  */
 export class PowerAuthEncryptorImpl extends BaseNativeObject implements PowerAuthEncryptor {
 
-    canEncryptRequest(): Promise<boolean> {
-        return this.withObjectId(objjectId => NativeEncryptor.canEncryptRequest(objjectId))
+    async canEncryptRequest(): Promise<boolean> {
+        try {
+            return await this.withObjectId(objjectId => NativeEncryptor.canEncryptRequest(objjectId))
+        } catch {
+            return false
+        }
     }
 
     encryptRequest(body: string, bodyFormat: PowerAuthDataFormat = 'UTF8'): Promise<PowerAuthEncryptedRequestData> {

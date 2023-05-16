@@ -17,16 +17,16 @@ The following steps are typically required for a full E2EE request and response 
    const encryptor = powerAuth.getEncryptorForActivationScope()
    ```
 
-1. Serialize your request payload, if needed, into a sequence of bytes. You can use plain string or Base64 encoded data:
+1. Encode the plaintext body into format that best fit your purpose. You can use plain string or Base64 encoded data:
    ```typescript
    let requestData: string;
    let requestDataFormat: PowerAuthDataFormat;
    if (binaryData) {
-       // If you need to encrypt binary data, such as image, then you can encode it as BASE64
+       // If you need encrypt the binary data, such as image, then you can encode it as BASE64
        requestFormat = 'BASE64';
        requestData = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==';
    } else {
-       // Reqular JSON request can be encryted as a plain string
+       // Reqular JSON request can be encrypted as a plain string
        requestDataFormat = 'UTF8'
        requestData = JSON.stringify({
           message: "Hello World!",
@@ -35,11 +35,12 @@ The following steps are typically required for a full E2EE request and response 
    }
    ```
 
-1. Encrypt your request data:
+1. Encrypt the plaintext request data:
    ```typescript
-   // 2nd parameter is optional parameter with 'UTF8' default.
+   // 2nd parameter is optional, if not provided, then 'UTF8' is applied.
    const encryptedData = await encryptor.encryptRequest(requestData, requestDataFormat);
-   // Keep decryptor object for later, to properly decrpyt response from the server.
+   // Keep decryptor object for later to properly decrpyt response from the server.
+   // The decryptor is always unique for each request.
    const decryptor = encryptedData.decryptor;
    // Cryptogram contains actual encrypted data
    const cryptogram = encryptedData.cryptogram;
@@ -64,14 +65,14 @@ The following steps are typically required for a full E2EE request and response 
    if (!response.ok) {
       throw new Error(`HTTP status code ${response.status}`)
    }
-   // The response object is typically also cryptogram
+   // The response object is typically also PowerAuthCryptogram
    const responseObject = await response.json();
    ```
 
 1. Now decrypt the response. Depending on what type of data you expect, you can specify `'UTF8'` or `'BASE64'` output data format:
    ```typescript
    const responseDataFormat = 'UTF8';
-   // 2nd parameter is optional, with 'UTF8' as default.
+   // 2nd parameter is optional, if not provided, then 'UTF8' is applied.
    const decryptedData = await decryptor.decryptResponse(responseObject, responseDataFormat);
    const responseObject = JSON.parse(decryptedData);
    ```
@@ -89,6 +90,7 @@ Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlyi
   - Object is released when its parent `PowerAuth` instance is deconfigured. After this, encryption is no loner available.
   - If encryptor is activation scoped and parent `PowerAuth` instance has no activation, then encryption is not available.
   - You can use `canEncryptRequest()` function to test whether encryption is available.
+  - You can call `release()` to manually release the native object.
 
 - `PowerAuthDecryptor`
   - Decryption is always one-time operation, so by callling `decryptResponse()` is underlying native object released.
@@ -96,6 +98,7 @@ Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlyi
   - If decryptor is activation scoped and parent `PowerAuth` instance has no activation, then decryption is not available.
   - Release its internal native object after 5 minutes of inactivity.
   - You can use `canDecryptResponse()` function to test whether decryption is available.
+  - You can call `release()` to manually release the native object.
 
 As you can see, you can use encryptor as for many times as you want, but the decryptor is always bound to the one particular response from the server.
 

@@ -16,6 +16,7 @@
 
 #import "PowerAuthObjectRegister.h"
 #import "PowerAuthData.h"
+#import "PowerAuthEncryptorModule.h"
 
 #import <React/RCTConvert.h>
 #import <React/RCTInvalidating.h>
@@ -79,6 +80,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
         objectClass = [NSNumber class];
     } else if ([@"password" isEqual:objectType]) {
         objectClass = [PowerAuthCoreMutablePassword class];
+    } else if ([@"encryptor" isEqual:objectType]) {
+        objectClass = [PowerAuthJsEncryptor class];
     }
     if ([@"create" isEqual:command]) {
         // The "create" command creates a new instance of managed object
@@ -121,7 +124,8 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
         }
     } else if ([@"release" isEqual:command]) {
         // The "release" command release object with given identifier and returns true / false whether object was removed.
-        if (objectClass && objectId) {
+        if (objectId) {
+            // release allows to release any object
             resolve([self removeObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
             return;
         }
