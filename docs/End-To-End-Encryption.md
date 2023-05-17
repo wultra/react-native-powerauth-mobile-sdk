@@ -1,6 +1,6 @@
 # End-To-End Encryption
 
-Currently, PowerAuth SDK supports two basic modes of end-to-end encryption, based on the ECIES scheme:
+The PowerAuth SDK supports two basic modes of end-to-end encryption, based on the ECIES scheme:
 
 - In an "application" scope, the encryptor can be acquired and used during the whole lifetime of the application.
 - In an "activation" scope, the encryptor can be acquired only if `PowerAuth` instance has a valid activation. The encryptor created for this mode is cryptographically bound to the parameters agreed during the activation process. You can combine this encryption with [PowerAuth Symmetric Multi-Factor Signature](Data-Signing.md#symmetric-multi-factor-signature) in "encrypt-then-sign" mode.
@@ -42,17 +42,16 @@ The following steps are typically required for a full E2EE request and response 
    // Keep decryptor object for later to properly decrpyt response from the server.
    // The decryptor is always unique for each request.
    const decryptor = encryptedData.decryptor;
-   // Cryptogram contains actual encrypted data
+   // Cryptogram contains encrypted data
    const cryptogram = encryptedData.cryptogram;
-   // Append header to the HTTP request
+   // Content of HTTP header
    const header = encryptedData.header;
    ```
 
 1. Construct and execute the HTTP request:
    ```typescript
    // Headers
-   const headers = new Headers();
-   headers.set(header.key, header.value);
+   const headers = new Headers([[header.key, header.value]]);
    // Request body
    // This may depend on the endpoint, but the cryptogram is typically serialized as-is, or it's embedded
    // in another structure, such as:
@@ -79,26 +78,26 @@ The following steps are typically required for a full E2EE request and response 
 
 ## Sign encrypted request
 
-If the endpoint require also PowerAuth Signature, then you have to encrypt your request data first, and then sign data of request cryptogram. In this case it's not necessary to set header from `encryptedData.header`, but you have to add header from the signature calculation instead.
+If the endpoint require also [PowerAuth Signature](Data-Signing.md#symmetric-multi-factor-signature), then you have to encrypt your request data first, construct the request body with using the cryptogram and then sign the whole body. In this case, the encryption header can be omitted, because the header from the signature calculation contains already enough information to process the request on the server.
 
 ## Native object lifetime
 
 Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlying native objects with the limited lifetime behind the scene. The following rules are applied:
 
-- `PowerAuthEncryptor` 
-  - Release its internal native object after 5 minutes of inactivity. If used again, then native object is re-created automatically.
+- `PowerAuthEncryptor`
+  - Releases its internal native object after 5 minutes of inactivity. If used again, then native object is re-created automatically.
   - Object is released when its parent `PowerAuth` instance is deconfigured. After this, encryption is no loner available.
   - If encryptor is activation scoped and parent `PowerAuth` instance has no activation, then encryption is not available.
-  - You can use `canEncryptRequest()` function to test whether encryption is available.
+  - You can use `canEncryptRequest()` function to test whether the encryption is available.
 
 - `PowerAuthDecryptor`
   - Decryption is always one-time operation, so by callling `decryptResponse()` is underlying native object released.
   - Object is released when its parent `PowerAuth` instance is deconfigured.
   - If decryptor is activation scoped and parent `PowerAuth` instance has no activation, then decryption is not available.
-  - Release its internal native object after 5 minutes of inactivity.
-  - You can use `canDecryptResponse()` function to test whether decryption is available.
+  - Releases its internal native object after 5 minutes of inactivity.
+  - You can use `canDecryptResponse()` function to test whether the decryption is available.
 
-On both object you can call `release()` function to manually release the underlying native object.
+Both objects provide `release()` function to manually release the underlying native object.
 
 ## Read Next
 

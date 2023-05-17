@@ -203,13 +203,12 @@ export class PowerAuthEncryptorImpl extends BaseNativeObject implements PowerAut
  */
 class PowerAuthDecryptorImpl implements PowerAuthDecryptor {
 
-    canDecryptResponse(): Promise<boolean> {
-        return this.withObjectId(async objectId => {
-            if (await NativeObject.isValidNativeObject(objectId)) {
-                return NativeEncryptor.canDecryptResponse(objectId)
-            }
+    async canDecryptResponse(): Promise<boolean> {
+        try {
+            return await this.withObjectId(async objectId => NativeEncryptor.canDecryptResponse(objectId))
+        } catch (error: any) {
             return false
-        })
+        }
     }
 
     decryptResponse(cryptogram: PowerAuthCryptogram): Promise<string>;

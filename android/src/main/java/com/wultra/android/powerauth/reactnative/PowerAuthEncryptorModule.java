@@ -156,6 +156,8 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
             final byte[] data = format.decodeBytes(body);
             // Test whether this is encryptor
             if (!canEncrypt(instanceData, promise)) {
+                // If encryption is not available, then remove the object from the register.
+                objectRegister.removeObject(encryptorId, InstanceData.class);
                 return;
             }
             // Encrypt
@@ -231,6 +233,8 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
             final DataFormat dataFormat = DataFormat.fromString(outputFormat);
             // Test whether this is decryptor
             if (!canDecrypt(instanceData, promise)) {
+                // Remove object from the register if decryption is no longer available.
+                objectRegister.removeObject(encryptorId, InstanceData.class);
                 return;
             }
             // Decrypt

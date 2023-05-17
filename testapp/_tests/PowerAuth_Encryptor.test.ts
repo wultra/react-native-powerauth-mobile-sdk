@@ -56,8 +56,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Let's use "user info" service for the test.
-            const headers = new Headers()
-            headers.set(encrypted.header.key, encrypted.header.value)
+            const headers = new Headers([[encrypted.header.key, encrypted.header.value]])
             const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
             expect(await decryptor.canDecryptResponse()).toBe(true)
 
@@ -164,5 +163,54 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         // Remove activation also deactivate the encryptor
         await this.sdk.removeActivationWithAuthentication(this.credentials.knowledge)
         expect(await encryptor.canEncryptRequest()).toBe(false)
+   }
+
+   async testEncryptorAfterActivationRemove() {
+        // Acquire encryptor
+        const encryptor = this.sdk.getEncryptorForActivationScope()
+        expect(encryptor.encryptorScope).toBe('ACTIVATION')
+
+        // Encrypt request
+        expect(await encryptor.canEncryptRequest()).toBe(true)
+
+        const data = Buffer.from("{}").toString('utf8')
+        const encrypted = await encryptor.encryptRequest(data, 'BASE64')
+        const decryptor = encrypted.decryptor
+        expect(encrypted.cryptogram).toBeDefined()
+        expect(encrypted.header).toBeDefined()
+        expect(decryptor).toBeDefined()
+        expect(await decryptor.canDecryptResponse()).toBe(true)
+
+        await this.sdk.removeActivationLocal()
+        expect(await encryptor.canEncryptRequest()).toBe(false)
+        expect(await decryptor.canDecryptResponse()).toBe(false)
+    }
+
+   async testEncryptorAfterDeconfigure() {
+        // Acquire encryptor
+        const encryptor = this.sdk.getEncryptorForActivationScope()
+        expect(encryptor.encryptorScope).toBe('ACTIVATION')
+
+        // Encrypt request
+        expect(await encryptor.canEncryptRequest()).toBe(true)
+
+        const data = Buffer.from("{}").toString('utf8')
+        const encrypted = await encryptor.encryptRequest(data, 'BASE64')
+        const decryptor = encrypted.decryptor
+        expect(encrypted.cryptogram).toBeDefined()
+        expect(encrypted.header).toBeDefined()
+        expect(decryptor).toBeDefined()
+        expect(await decryptor.canDecryptResponse()).toBe(true)
+
+        const configuration = this.sdk.configuration
+        expect(configuration).toBeDefined()
+
+        await this.sdk.deconfigure()
+        expect(await encryptor.canEncryptRequest()).toBe(false)
+        expect(await decryptor.canDecryptResponse()).toBe(false)
+
+        // Encryptor can be used after re-configure
+        await this.sdk.configure(configuration!)
+        expect(await encryptor.canEncryptRequest()).toBe(true)
    }
 }

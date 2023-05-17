@@ -183,6 +183,8 @@ RCT_EXPORT_METHOD(encryptRequest:(NSString*)encryptorId
         }
         // Test whether this is encryptor
         if (!CanEncrypt(encryptor, _objectRegister, reject)) {
+            // If encryption is not available, then remove the object from the register.
+            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
             return;
         }
         // Encrypt
@@ -272,6 +274,8 @@ RCT_EXPORT_METHOD(decryptResponse:(NSString*)encryptorId
         }
         // Test whether this is decryptor
         if (!CanDecrypt(encryptor, _objectRegister, reject)) {
+            // Remove object from the register if decryption is no longer available.
+            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
             return;
         }
         // Decrypt

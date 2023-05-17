@@ -81,8 +81,10 @@ function defaultConfig(): TestConfig {
         debug: {
             pasVerboseLevel: VerboseLevel.Warning,
             pasDebugRequestResponse: false,
-            //sdkTraceError: true,
             //singleTestSuite: "PowerAuth_EncryptorTests",
+            //singleTestName: "testEncryptorAfterDeconfigure",
+            //sdkTraceError: true,
+            //sdkTraceCall: true
         }
     }
 }
