@@ -212,5 +212,6 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         // Encryptor can be used after re-configure
         await this.sdk.configure(configuration!)
         expect(await encryptor.canEncryptRequest()).toBe(true)
+        expect(await decryptor.canDecryptResponse()).toBe(false)
    }
 }
