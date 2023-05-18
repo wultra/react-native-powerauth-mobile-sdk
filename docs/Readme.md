@@ -27,11 +27,15 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 
 ## Support and compatibility
 
-| Version | React-Native    | Native SDK   | Server version | Support Status    |
+| Version | React-Native<sup>1</sup> | Native SDK   | Server version | Support Status    |
 |---------|-----------------|--------------|----------------|-------------------|
 | `2.4.x` | `0.71+`         | `1.7.x`      | `0.24+`        | Fully supported   |
 | `2.3.x` | `0.64` - `0.70` | `1.7.x`      | `0.24+`        | Security bugfixes |
 | `2.2.x` |                 | `1.6.x`      | `0.24+`        | Not supported     |
+
+<!-- begin box info -->
+> Note 1: The library may work also with other React-Native versions but we don't guarantee the compatibility. The specified version is version that we use for the development and for the tests.
+<!-- end -->
 
 ## License
 
