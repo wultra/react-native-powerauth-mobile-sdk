@@ -34,8 +34,8 @@ public enum DataFormat {
     BASE64;
 
     /**
-     * Convert format string int this enumeration.
-     * @param format Specified data format.
+     * Convert format string into this enumeration.
+     * @param format Specified data format. If `null` then `UTF8` is returned.
      * @return Enumeration with data format.
      * @throws WrapperException In case of uknown format is specified.
      */

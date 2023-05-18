@@ -532,18 +532,18 @@ export class PowerAuth {
     // End-To-End Encryption
 
     /**
-     * Creates a new instance of encryptor suited for application's general end-to-end encryption purposes.
-     * The returned encryptor is cryptographically bounded to the PowerAuth configuration, so it can be used
-     * with or without a valid activation.
+     * Creates a new instance of encryptor suited for general end-to-end encryption purposes. The returned 
+     * encryptor is cryptographically bounded to the PowerAuth configuration, so it can be used with or
+     * without a valid activation.
      */
     getEncryptorForApplicationScope(): PowerAuthEncryptor {
         return new PowerAuthEncryptorImpl('APPLICATION', this.instanceId)
     }
 
     /**
-     * Creates a new instance of encryptor suited for application's general end-to-end encryption purposes.
-     * The returned encryptor is cryptographically bounded to a device's activation, so it can be used only
-     * when this instance has a valid activation.
+     * Creates a new instance of encryptor suited for general end-to-end encryption purposes. The returned
+     * encryptor is cryptographically bounded to a device's activation, so it can be used only when this
+     * instance has a valid activation.
      */
     getEncryptorForActivationScope(): PowerAuthEncryptor {
         return new PowerAuthEncryptorImpl('ACTIVATION', this.instanceId)
