@@ -285,9 +285,9 @@ public class ObjectRegister extends BaseJavaModule {
     private static final int OPT_REMOVE     = 3;    // remove object
 
     /**
-     * Finc object with given identifier and do an additional operation with the object.
+     * Find object with given identifier and do an additional operation with the object.
      * @param objectId Object identifier.
-     * @param expectedClass Expected class.
+     * @param expectedClass Expected class, or null if any object can be returned (in case of remove)
      * @param options Additional operation that should be performed with the object's entry. Use {@code OPT_*} constants.
      * @param <T> Expected object's type.
      * @return instance of object with given identifier or null if no such object exists in register.
@@ -300,7 +300,7 @@ public class ObjectRegister extends BaseJavaModule {
             RegisterEntry managedObject = register.get(registrationId);
             if (managedObject != null) {
                 final Object instance = managedObject.object.managedInstance();
-                if (expectedClass.isInstance(instance)) {
+                if (expectedClass == null || expectedClass.isInstance(instance)) {
                     if (managedObject.isStillValid()) {
                         // Object is still valid
                         if (options == OPT_SET_USE) {
@@ -701,6 +701,8 @@ public class ObjectRegister extends BaseJavaModule {
                 objectClass = Integer.class;
             } else if ("password".equals(objectType)) {
                 objectClass = Password.class;
+            } else if ("encryptor".equals(objectType)) {
+                objectClass = PowerAuthEncryptorModule.InstanceData.class;
             }
             if ("create".equals(command)) {
                 // The "create" command creates a new instance of managed object
@@ -743,7 +745,7 @@ public class ObjectRegister extends BaseJavaModule {
                 }
             } else if ("release".equals(command)) {
                 // The "release" command release object with given identifier and returns true / false whether object was removed.
-                if (objectClass != null && objectId != null) {
+                if (objectId != null) {
                     promise.resolve(removeObject(objectId, objectClass) != null);
                     return;
                 }

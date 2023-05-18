@@ -17,15 +17,25 @@
 import { PasswordType, PowerAuthBiometricPrompt } from '../index'
 
 /**
- * Object representing a simple native password identifier wrapped in the object.
+ * Interface representing a simple native object identified by string identifier.
+ */
+export interface RawNativeObject {
+    /**
+     * Object's identifier.
+     */
+    objectId?: string
+}
+
+/**
+ * Type representing a simple native password identifier wrapped in the object.
  * We need this auxiliary object due to a problematic call to passphrase meter.
  */
- export interface RawPassword {
-    /**
-     * Native password's identifier.
-     */
-    passwordObjectId?: string
-}
+export type RawPassword = RawNativeObject;
+
+/**
+ * Type representing a raw password object passable to native interface.
+ */
+export type RawPasswordType = RawPassword | string
 
 /**
  * Object representing a data pased to native methods requiring PowerAuthAuthentication
@@ -39,4 +49,16 @@ export interface RawAuthentication {
     readonly isBiometry: boolean
     isReusable: boolean
     biometryKeyId?: string    
+}
+
+/**
+ * Convert public password type into type passable into native interface.
+ * @param password Public password object type.
+ * @returns Raw password object type.
+ */
+export function toRawPassword(password: PasswordType): Promise<RawPasswordType> {
+    if (typeof password === 'string') {
+        return Promise.resolve(password)
+    }
+    return password.toRawPassword()
 }

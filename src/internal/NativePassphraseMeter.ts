@@ -16,7 +16,7 @@
 
 import { NativeModules } from "react-native"
 import { PinTestResult } from '../index'
-import { RawPassword } from './NativeTypes';
+import { RawPasswordType } from './NativeTypes';
 /**
  * Password interface implemented in the native code.
  */
@@ -27,7 +27,7 @@ export interface PowerAuthPassphraseMeterIfc {
      * @returns `PinTestResult` object.
      * @throws `PowerAuthErrorCode.WRONG_PARAM` if PIN contains other characters than digits or length is less than 4.
      */
-    testPin(pin: RawPassword | string): Promise<PinTestResult>
+    testPin(pin: RawPasswordType): Promise<PinTestResult>
 }
 
 export const NativePassphraseMeter = NativeModules.PowerAuthPassphraseMeter as PowerAuthPassphraseMeterIfc

@@ -231,7 +231,8 @@ export class TestWithActivation extends TestWithServer {
             return
         }
         const sdk = await this.helperInstance.getPowerAuthSdk(prepareData)
-        const activationId = await sdk.getActivationIdentifier()
+        const configured = await sdk.isConfigured()
+        const activationId = configured ? await sdk.getActivationIdentifier() : undefined
         if (activationId) {
             this.debugInfo(`Removing activation ${activationId}`)
             const status = (await this.serverApi.getActivationDetil(activationId)).activationStatus
@@ -244,7 +245,7 @@ export class TestWithActivation extends TestWithServer {
         }
         // Otherwise just cleanup the activation if activation is in right state.
         await this.helperInstance.cleanup()
-        if (after) {
+        if (after && configured) {
             // Deconfigure SDK after the test
             await sdk.deconfigure()
         }

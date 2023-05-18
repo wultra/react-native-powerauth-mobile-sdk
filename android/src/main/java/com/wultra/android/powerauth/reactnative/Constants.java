@@ -24,7 +24,7 @@ class Constants {
     /**
      * Minimum allowed period for automatic objects cleanup job.
      */
-    static final int CLEANUP_PERIOD_MIN             =    100;
+    static final int CLEANUP_PERIOD_MIN             = 100;
     /**
      * Maximum allowed period for automatic objects cleanup job.
      */
@@ -32,7 +32,7 @@ class Constants {
     /**
      * Keep object in memory for one more second after the explicit remove.
      */
-    static final int CLEANUP_REMOVE_DELAY           =  1_000;
+    static final int CLEANUP_REMOVE_DELAY           = 1_000;
     /**
      * Time interval in milliseconds to keep pre-authorized biometric key in memory.
      */
@@ -40,13 +40,25 @@ class Constants {
     /**
      * Time interval in milliseconds to keep password object valid in memory.
      */
-    static final int PASSWORD_KEY_KEEP_ALIVE_TIME    = 5 * 60 * 1_000;
+    static final int PASSWORD_KEY_KEEP_ALIVE_TIME   = 5 * 60 * 1_000;
+    /**
+     * Time interval in milliseconds to keep encryptor object valid in memory.
+     */
+    static final int ENCRYPTOR_KEY_KEEP_ALIVE_TIME  = 5 * 60 * 1_000;
+    /**
+     * Time interval in milliseconds to keep decryptor object valid in memory.
+     */
+    static final int DECRYPTOR_KEY_KEEP_ALIVE_TIME  = 5 * 60 * 1_000;
     /**
      * Upper limit for Unicode Code Point.
      */
-    static final int CODEPOINT_MAX                   = 0x10FFFF;
+    static final int CODEPOINT_MAX                  = 0x10FFFF;
 
     // Fallback strings
 
-    static final String MISSING_REQUIRED_STRING   = "< missing >";
+    /**
+     * Fallback string used in biometric authentication when no title is
+     * provided to authentication dialog.
+     */
+    static final String MISSING_REQUIRED_STRING     = "< missing >";
 }

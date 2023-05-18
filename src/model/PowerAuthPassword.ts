@@ -15,10 +15,10 @@
  */
 
 import { PinTestResult, PowerAuthError, PowerAuthErrorCode } from "../index"
+import { BaseNativeObject } from "./BaseNativeObject"
 import { NativePassphraseMeter } from "../internal/NativePassphraseMeter"
 import { NativePassword } from "../internal/NativePassword"
 import { RawPassword } from "../internal/NativeTypes"
-import { NativeWrapper } from "../internal/NativeWrapper"
 
 
 /**
@@ -67,7 +67,7 @@ export type CharacterType = string | number
  * the memory, then you can follow the [Working with passwords securely](https://developers.wultra.com/components/powerauth-mobile-sdk/1.7.x/documentation/PowerAuth-SDK-for-iOS#working-with-passwords-securely)
  * chapter from the PowerAuth mobile SDK.
  */
-export class PowerAuthPassword {
+export class PowerAuthPassword extends BaseNativeObject {
     /**
      * Construct password object and specify whether it's re-usable and/or should be destroyed 
      * together with the owning PowerAuth class instance.
@@ -81,10 +81,11 @@ export class PowerAuthPassword {
         onAutomaticCleanup: (() => void) | undefined = undefined,
         powerAuthInstanceId: string | undefined = undefined,
         autoreleaseTime: number = 0) {
+        super()
         this.destroyOnUse = destroyOnUse
         this.powerAuthInstanceId = powerAuthInstanceId
         this.autoreleaseTime = autoreleaseTime
-        this.onAutomaticCleanup = onAutomaticCleanup
+        this.automaticCleanupCallback = onAutomaticCleanup
     }
 
     /**
@@ -170,54 +171,13 @@ export class PowerAuthPassword {
     }
 
     /**
-     * Release the underlying native password object.
-     */
-    release(): Promise<void> {
-        if (this.passwordObjectId) {
-            const objId = this.passwordObjectId
-            this.passwordObjectId = undefined
-            return NativePassword.release(objId)
-        }
-        return Promise.resolve()
-    }
-
-    /**
      * If object contains numeric digits only, then you can test the streingt of PIN
      * stored in the object.
      * @returns `PinTestResult` object.
      * @throws `PowerAuthErrorCode.WRONG_PARAM` if PIN contains other characters than digits or its length is less than 4. 
      */
-    testPinStrength(): Promise<PinTestResult> {
-        return this.withObjectId(id => NativePassphraseMeter.testPin({ passwordObjectId: id }))
-    }
-
-    /**
-     * Acquire native password object ID and execute action with this identifier.
-     * @param action Action to execute after objectId is acquired.
-     * @param recoveringFromError If true, then this is 2nd attempt to execute action after recovery from action.
-     * @returns Promise result type.
-     */
-    private async withObjectId<T>(action: (objectId: string) => Promise<T>, recoveringFromError: boolean = false): Promise<T> {
-        try {
-            if (!this.passwordObjectId) {
-                this.passwordObjectId = await NativePassword.initialize(this.destroyOnUse, this.powerAuthInstanceId, this.autoreleaseTime)
-            }
-            return await action(this.passwordObjectId)
-        } catch (error: any) {
-            if (!recoveringFromError && error.code == PowerAuthErrorCode.INVALID_NATIVE_OBJECT) {
-                // Underlying native password has been already destroyed.
-                // We can recover from this situation by resetting identifier and retry the operation
-                this.passwordObjectId = undefined
-                // Call cleanup callback if it's defined
-                if (this.onAutomaticCleanup != undefined) {
-                    this.onAutomaticCleanup()
-                }
-                // Now try to repeat action.
-                return this.withObjectId(action, true)
-            }
-            // Otherwise simply process the exception and report the error.
-            throw NativeWrapper.processException(error)
-        }
+    async testPinStrength(): Promise<PinTestResult> {
+        return this.withObjectId(_ => NativePassphraseMeter.testPin(this.toRawObject()))
     }
 
     /**
@@ -225,7 +185,7 @@ export class PowerAuthPassword {
      * @returns Frozen RawPassword object.
      */
     toRawPassword(): Promise<RawPassword> {
-        return this.withObjectId(id => Promise.resolve(Object.freeze({ passwordObjectId: id })))
+        return this.resolveRawObject()
     }
 
     /**
@@ -244,11 +204,23 @@ export class PowerAuthPassword {
     /**
      * Closure called when native object is restored and the content of previously stored password is lost.
      */
-    private readonly onAutomaticCleanup?: () => void
-    /**
-     * Underlying native object's identifier.
-     */
-    private passwordObjectId?: string
+    private readonly automaticCleanupCallback?: () => void
+
+    // BaseNativeObject impl.
+
+    protected override onCreate(): Promise<string> {
+        return NativePassword.initialize(this.destroyOnUse, this.powerAuthInstanceId, this.autoreleaseTime)
+    }
+
+    protected override onRelease(objectId: string): Promise<void> {
+        return NativePassword.release(objectId)
+    }
+
+    protected override onAutomaticCleanup(): void {
+        if (this.automaticCleanupCallback != undefined) {
+            this.automaticCleanupCallback()
+        }
+    }
 }
 
 /**

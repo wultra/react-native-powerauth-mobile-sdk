@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Wultra s.r.o.
+ * Copyright 2023 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-
 /**
- Bridge module implementing PowerAuthPassword JavaScript class.
+ * Object representing encryption HTTP header with data required for PowerAuth End-To-End encrypted request.
  */
-@interface PowerAuthPasswordModule : NSObject<RCTBridgeModule, RCTInitializing>
-
-@end
+export interface PowerAuthEncryptionHttpHeader {
+    /**
+     * Property representing PowerAuth HTTP Authorization Header. The current implementation
+     * contains value "X-PowerAuth-Encryption" for standard encryption.
+     */
+    readonly key: string
+    /** 
+     * Computed value of the PowerAuth HTTP Encryption Header, to be used in HTTP request "as is". 
+     */
+    readonly value: string
+}

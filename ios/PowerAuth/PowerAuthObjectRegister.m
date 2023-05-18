@@ -78,7 +78,25 @@ NSNumber * RP_EXPIRE(NSUInteger timeIntervalMs) {
     return @(rp.numericValue);
 }
 
-static NSString * _GetRandomString()
+#if DEBUG
+NSUInteger RP_TIME_INTERVAL(id _Nullable anyValue, NSUInteger defaultValue)
+{
+    NSNumber * time = [RCTConvert NSNumber:anyValue];
+    if (time) {
+        NSUInteger timeValue = [time unsignedIntegerValue];
+        // Ignore zero result and make sure that time doesn't exceed 5 minutes
+        if (timeValue) {
+            return MIN(timeValue, defaultValue);
+        } else {
+            return defaultValue;
+        }
+    }
+    return defaultValue;
+}
+#endif
+
+
+static NSString * _GetRandomString(void)
 {
     uint32_t count = 3 * (3 + arc4random_uniform(6));
     NSMutableData * data = [NSMutableData dataWithLength:count];
@@ -227,11 +245,7 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
 
 - (BOOL) isValidObjectId:(id)objectId
 {
-    NSString * stringId = CAST_TO(objectId, NSString);
-    if (stringId.length == 0) {
-        return NO;
-    }
-    return YES;
+    return [CAST_TO(objectId, NSString) length] > 0;
 }
 
 - (void) setCleanupPeriod:(NSInteger)period

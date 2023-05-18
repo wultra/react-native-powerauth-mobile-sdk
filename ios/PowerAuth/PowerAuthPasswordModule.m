@@ -59,19 +59,7 @@ RCT_EXPORT_METHOD(initialize:(BOOL)destroyAfterUse
         reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is not configured", nil);
         return;
     }
-    NSUInteger releaseTime = PASSWORD_KEY_KEEP_ALIVE_TIME;
-#if DEBUG
-    autoreleaseTime = [RCTConvert NSNumber:autoreleaseTime];
-    if (autoreleaseTime) {
-        releaseTime = [autoreleaseTime unsignedIntegerValue];
-        // Ignore zero result and make sure that time doesn't exceed 5 minutes
-        if (releaseTime) {
-            releaseTime = MIN(releaseTime, PASSWORD_KEY_KEEP_ALIVE_TIME);
-        } else {
-            releaseTime = PASSWORD_KEY_KEEP_ALIVE_TIME;
-        }
-    }
-#endif // DEBUG
+    NSUInteger releaseTime = RP_TIME_INTERVAL(autoreleaseTime, PASSWORD_KEY_KEEP_ALIVE_TIME);
     // Now create and register a new password object
     NSArray * policies = destroyAfterUse
         ? @[ RP_KEEP_ALIVE(releaseTime), RP_AFTER_USE(1) ]

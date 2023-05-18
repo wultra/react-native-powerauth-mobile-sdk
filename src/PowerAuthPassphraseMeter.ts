@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { PasswordType, PowerAuthPassword } from "./index";
+import { PasswordType } from "./index";
 import { NativePassphraseMeter } from './internal/NativePassphraseMeter'
+import { toRawPassword } from "./internal/NativeTypes";
 import { NativeWrapper } from "./internal/NativeWrapper";
 
 /**
@@ -71,7 +72,7 @@ export class PowerAuthPassphraseMeter {
      */
     static async testPin(pin: PasswordType): Promise<PinTestResult> {
         try {
-            return await NativePassphraseMeter.testPin(typeof pin == 'string' ? pin : await pin.toRawPassword())
+            return await NativePassphraseMeter.testPin(await toRawPassword(pin))
         } catch (error) {
             throw NativeWrapper.processException(error)
         }

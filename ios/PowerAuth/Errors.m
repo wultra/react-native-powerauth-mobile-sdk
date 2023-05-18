@@ -28,6 +28,7 @@ NSString * const EC_MISSING_ACTIVATION          = @"MISSING_ACTIVATION";
 NSString * const EC_PENDING_ACTIVATION          = @"PENDING_ACTIVATION";
 NSString * const EC_OPERATION_CANCELED          = @"OPERATION_CANCELED";
 NSString * const EC_INVALID_TOKEN               = @"INVALID_TOKEN";
+NSString * const EC_INVALID_ENCRYPTOR           = @"INVALID_ENCRYPTOR";
 NSString * const EC_ENCRYPTION_ERROR            = @"ENCRYPTION_ERROR";
 NSString * const EC_WRONG_PARAMETER             = @"WRONG_PARAMETER";
 NSString * const EC_PROTOCOL_UPGRADE            = @"PROTOCOL_UPGRADE";

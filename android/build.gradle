@@ -7,7 +7,7 @@ ext {
   PowerAuthSdkRN_targetSdkVersion = 31
   PowerAuthSdkRN_compileSdkVersion = 31
   PowerAuthSdkRN_ndkversion = "21.4.7075529"
-  PowerAuthSdkRN_reactNativeVersion = "0.71.3"
+  PowerAuthSdkRN_reactNativeVersion = "0.71.6"
 }
 
 buildscript {
@@ -69,7 +69,7 @@ repositories {
 }
 
 dependencies {
-  api "com.wultra.android.powerauth:powerauth-sdk:1.7.7"
+  api "com.wultra.android.powerauth:powerauth-sdk:1.7.8"
 
   if (project == rootProject) {
     // The standalone build require to specify exact version of RN

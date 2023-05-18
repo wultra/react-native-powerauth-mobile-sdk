@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Wultra s.r.o.
+ * Copyright 2023 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-
 /**
- Bridge module implementing PowerAuthPassword JavaScript class.
+ * Input or output data format specification for the cryptographic operation:
+ * - `UTF8` - data is formatted as a plain string that will be converted into UTF-8 encoded sequence of bytes before the operation.
+ * - `BASE64` - binary data encoded into Base64 string.
  */
-@interface PowerAuthPasswordModule : NSObject<RCTBridgeModule, RCTInitializing>
-
-@end
+export type PowerAuthDataFormat = 'UTF8' | 'BASE64'

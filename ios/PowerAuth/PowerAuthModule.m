@@ -983,13 +983,9 @@ RCT_REMAP_METHOD(generateHeaderForToken,
                reject:(RCTPromiseRejectBlock)reject
              callback:(NS_NOESCAPE void(^)(PowerAuthSDK *sdk))callback
 {
-    if ([self validateInstanceId:instanceId reject:reject]) {
-        PowerAuthSDK* sdk = [_objectRegister findObjectWithId:instanceId expectedClass:[PowerAuthSDK class]];
-        if (sdk) {
-            callback(sdk);
-        } else {
-            reject(EC_INSTANCE_NOT_CONFIGURED, @"This instance is not configured.", nil);
-        }
+    PowerAuthSDK* sdk = GetPowerAuthSdk(instanceId, _objectRegister, reject);
+    if (sdk) {
+        callback(sdk);
     }
 }
 

@@ -17,7 +17,7 @@
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
-export class PowerAuth_EncryptionTests extends TestWithActivation {
+export class PowerAuth_KDFTests extends TestWithActivation {
     async testFetchEncryptionKey() {
         const key1a = await this.sdk.fetchEncryptionKey(this.credentials.knowledge, 1000)
         expect(key1a).toBeDefined()

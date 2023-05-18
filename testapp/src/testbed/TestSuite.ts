@@ -144,7 +144,7 @@ export class TestSuite {
     async beforeEach() {
         this.debugInfo('beforeEach()')
         if (this.runOnlyOneTest !== undefined && this.currentTestName !== this.runOnlyOneTest) {
-            this.reportSkip(`Skipped, bevause only ${this.runOnlyOneTest} is allowed to run`)
+            this.reportSkip(`Skipped, because only ${this.runOnlyOneTest} is allowed to run`)
         }
     }
 
