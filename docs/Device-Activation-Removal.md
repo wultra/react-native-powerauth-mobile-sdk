@@ -52,6 +52,5 @@ try {
 
 ## Read Next
 
-- [Secure Vault](Secure-Vault.md)
-<!-- - [End-To-End Encryption](End-To-End-Encryption.md) -->
+- [End-To-End Encryption](End-To-End-Encryption.md)
 
