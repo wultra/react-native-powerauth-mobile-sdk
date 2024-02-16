@@ -30,7 +30,8 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 
 | Version | React-Native<sup>1</sup> | Native SDK   | Server version | Support Status    |
 |---------|-----------------|--------------|----------------|-------------------|
-| `2.4.x` | `0.71+`         | `1.7.x`      | `0.24+`        | Fully supported   |
+| `2.5.x` | `0.73+`         | `1.7.x`      | `0.24+`        | Fully supported   |
+| `2.4.x` | `0.71+`         | `1.7.x`      | `0.24+`        | Security bugfixes |
 | `2.3.x` | `0.64` - `0.70` | `1.7.x`      | `0.24+`        | Security bugfixes |
 | `2.2.x` |                 | `1.6.x`      | `0.24+`        | Not supported     |
 
