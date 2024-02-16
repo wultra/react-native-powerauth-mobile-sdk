@@ -9,7 +9,7 @@
     "lib": ["ES2016"],
     "outDir": "lib",
     "strict": true,
-    "moduleResolution":"node"
+    "moduleResolution": "node"
   },
   "exclude": [ "node_modules" ],
   "include": [ "src/*.ts", "src/model/*.ts", "src/debug/*.ts" ]
