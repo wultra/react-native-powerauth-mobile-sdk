@@ -171,7 +171,8 @@ RCT_REMAP_METHOD(fetchActivationStatus,
                 @"state": [self getStatusCode:status.state],
                 @"failCount": [[NSNumber alloc] initWithUnsignedInt:status.failCount],
                 @"maxFailCount": [[NSNumber alloc] initWithUnsignedInt:status.maxFailCount],
-                @"remainingAttempts": [[NSNumber alloc] initWithUnsignedInt:status.remainingAttempts]
+                @"remainingAttempts": [[NSNumber alloc] initWithUnsignedInt:status.remainingAttempts],
+                @"customObject": status.customObject ? [RCTConvert NSDictionary:status.customObject] : [NSNull null]
             };
             resolve(response);
         } else {
