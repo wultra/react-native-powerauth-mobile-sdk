@@ -4,10 +4,10 @@ ext {
   //
   PowerAuthSdkRN_kotlinVersion = "1.7.0"
   PowerAuthSdkRN_minSdkVersion = 21
-  PowerAuthSdkRN_targetSdkVersion = 31
-  PowerAuthSdkRN_compileSdkVersion = 31
+  PowerAuthSdkRN_targetSdkVersion = 33
+  PowerAuthSdkRN_compileSdkVersion = 33
   PowerAuthSdkRN_ndkversion = "21.4.7075529"
-  PowerAuthSdkRN_reactNativeVersion = "0.71.6"
+  PowerAuthSdkRN_reactNativeVersion = "0.73.4"
 }
 
 buildscript {
