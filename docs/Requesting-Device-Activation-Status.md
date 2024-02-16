@@ -50,6 +50,8 @@ if (await powerAuth.hasValidActivation()) {
         const currentFailCount = status.failCount;
         const maxAllowedFailCount = status.maxFailCount;
         const remainingFailCount = status.remainingAttempts;
+        // Custom object contains any proprietary server specific data
+        const customObject = status.customObject;
     } catch (e) {
         console.log("An error occurred, report it to the user");
     }
