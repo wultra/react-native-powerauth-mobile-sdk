@@ -1,14 +1,15 @@
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
-platform :ios, '12.4'
+platform :ios, '13.4'
 
 project 'PowerAuth'
 
 target 'PowerAuth' do
   config = use_native_modules!
   use_react_native!(
-    :path => config[:reactNativePath]
+    :path => config[:reactNativePath],
+    :hermes_enabled => false
   )
   pod 'PowerAuth2', '~> 1.7.8'
   # Uncomment to use not-published SDK in project. This is effective only if you manually open 'ios/PowerAuth.xcworkspace'

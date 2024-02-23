@@ -36,4 +36,8 @@ export interface PowerAuthActivationStatus {
      * Contains `(maxFailCount - failCount)` if state is `ACTIVE`, otherwise 0.
      */
     remainingAttempts: number
+    /**
+     * Contains custom object returned from the server. The value is optional and PowerAuth Application Server must support this custom object.
+     */
+    customObject?: any
 }

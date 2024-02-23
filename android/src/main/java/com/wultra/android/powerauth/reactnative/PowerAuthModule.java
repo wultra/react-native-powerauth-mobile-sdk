@@ -279,6 +279,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                         map.putInt("failCount", status.failCount);
                         map.putInt("maxFailCount", status.maxFailCount);
                         map.putInt("remainingAttempts", status.getRemainingAttempts());
+                        map.putMap("customObject", Arguments.makeNativeMap(status.getCustomObject()));
                         promise.resolve(map);
                     }
 
