@@ -78,6 +78,7 @@ export class PowerAuthDebug {
             const components = [ 'PowerAuthError' ]
             if (error.code) components.push(error.code)
             if (error.message) components.push(error.message)
+            if (error.errorData) components.push(`ErrorData = { ${error.errorData} }`)
             if (error.originalException) components.push(`Reason = { ${this.describeError(error.originalException)} }`)
             return components.join(': ')
         }
