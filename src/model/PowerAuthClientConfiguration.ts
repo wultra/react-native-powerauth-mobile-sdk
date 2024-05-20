@@ -34,12 +34,31 @@ export interface PowerAuthClientConfigurationType {
     /**
      * Custom HTTP headers that will be added to each HTTP request produced by this library.
      */
-    readonly customHttpHeaders?: HttpHeader[];
+    readonly customHttpHeaders?: PowerAuthHttpHeader[] | null;
+    /**
+     * Basic HTTP Authentication that will be added to each HTTP request produced by this library.
+     */
+    readonly basicHttpAuthentication?: PowerAuthBasicHttpAuthentication | null;
 }
 
-export interface HttpHeader {
+/**
+ * Custom HTTP header data.
+ */
+export interface PowerAuthHttpHeader {
+    /** Key of the HTTP header. */
     key: string
+    /** Value of the HTTP header. */
     value: string
+}
+
+/**
+ * Basic HTTP Authentication data.
+ */
+export interface PowerAuthBasicHttpAuthentication {
+    /** Basic HTTP Authentication user name. */
+    username: string
+    /** Basic HTTP Authentication password. */
+    password: string
 }
 
 /**
@@ -49,7 +68,8 @@ export class PowerAuthClientConfiguration implements PowerAuthClientConfiguratio
     enableUnsecureTraffic: boolean
     connectionTimeout: number
     readTimeout: number
-    customHttpHeaders: HttpHeader[]
+    customHttpHeaders?: PowerAuthHttpHeader[] | null = null
+    basicHttpAuthentication?: PowerAuthBasicHttpAuthentication | null = null
 
     constructor() {
         const d = buildClientConfiguration()
@@ -57,6 +77,7 @@ export class PowerAuthClientConfiguration implements PowerAuthClientConfiguratio
         this.connectionTimeout = d.connectionTimeout
         this.readTimeout = d.readTimeout
         this.customHttpHeaders = d.customHttpHeaders
+        this.basicHttpAuthentication = d.basicHttpAuthentication
     }
     /**
      * @returns `PowerAuthClientConfiguration` with default values.
@@ -76,6 +97,7 @@ export function buildClientConfiguration(input: PowerAuthClientConfigurationType
         enableUnsecureTraffic: input?.enableUnsecureTraffic ?? false,
         connectionTimeout: input?.connectionTimeout ?? 20.0,
         readTimeout: input?.readTimeout ?? 20.0,
-        customHttpHeaders: input?.customHttpHeaders ?? []
+        customHttpHeaders: input?.customHttpHeaders ?? null,
+        basicHttpAuthentication: input?.basicHttpAuthentication ?? null
     })
 }

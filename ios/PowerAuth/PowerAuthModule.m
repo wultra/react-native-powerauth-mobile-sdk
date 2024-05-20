@@ -27,6 +27,7 @@
 #import <PowerAuth2/PowerAuthKeychain.h>
 #import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
 #import <PowerAuth2/PowerAuthCustomHeaderRequestInterceptor.h>
+#import <PowerAuth2/PowerAuthBasicHttpAuthenticationRequestInterceptor.h>
 
 @import PowerAuthCore;
 
@@ -96,16 +97,32 @@ RCT_REMAP_METHOD(configure,
     if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
         [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
     }
-    NSArray * httpHeaders = CAST_TO(clientConfiguration[@"customHttpHeaders"], NSArray);
+    
+    // Interceptors
     NSMutableArray * interceptors = [[NSMutableArray alloc] init];
-    for (id object in httpHeaders) {
-        NSDictionary * map = CAST_TO(object, NSDictionary);
-        NSString * key = CAST_TO(map[@"key"], NSString);
-        NSString * value = CAST_TO(map[@"value"], NSString);
-        if (key && value) {
-            [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:key value:value]];
+    
+    // Custom HTTP headers
+    NSArray * httpHeaders = CAST_TO(clientConfiguration[@"customHttpHeaders"], NSArray);
+    if (httpHeaders) {
+        for (id object in httpHeaders) {
+            NSDictionary * map = CAST_TO(object, NSDictionary);
+            NSString * key = CAST_TO(map[@"key"], NSString);
+            NSString * value = CAST_TO(map[@"value"], NSString);
+            if (key && value) {
+                [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:key value:value]];
+            }
         }
     }
+    // Basic Authentication
+    NSDictionary * basicAuth = CAST_TO(clientConfiguration[@"basicHttpAuthentication"], NSDictionary);
+    if (basicAuth) {
+        NSString * username = CAST_TO(basicAuth[@"username"], NSString);
+        NSString * password = CAST_TO(basicAuth[@"password"], NSString);
+        if (username && password) {
+            [interceptors addObject:[[PowerAuthBasicHttpAuthenticationRequestInterceptor alloc] initWithUsername:username password:password]];
+        }
+    }
+    
     [clientConfig setRequestInterceptors: interceptors];
     
     PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];

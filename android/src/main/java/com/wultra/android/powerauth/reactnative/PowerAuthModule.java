@@ -54,6 +54,7 @@ import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
 import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
 import io.getlime.security.powerauth.keychain.KeychainProtection;
+import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor;
 import io.getlime.security.powerauth.sdk.*;
 import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy;
 import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor;
@@ -183,10 +184,13 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
      * @return {@link PowerAuthClientConfiguration} created from given map.
      */
     private static @NonNull PowerAuthClientConfiguration getPowerAuthClientConfigurationFromMap(final ReadableMap map) {
+
         final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") ? map.getBoolean("enableUnsecureTraffic") : PowerAuthClientConfiguration.DEFAULT_ALLOW_UNSECURED_CONNECTION;
         final int connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT;
         final int readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT;
-        final ReadableArray customHeaders = map.hasKey("customHttpHeaders") ? map.getArray("customHttpHeaders") : null;
+        final ReadableArray customHeaders = map.getArray("customHttpHeaders");
+        final ReadableMap basicAuth = map.getMap("basicHttpAuthentication");
+
         final PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
         if (enableUnsecureTraffic) {
             paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
@@ -200,6 +204,13 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 if (key != null && value != null) {
                     paClientConfigBuilder.requestInterceptor(new CustomHeaderRequestInterceptor(key, value));
                 }
+            }
+        }
+        if (basicAuth != null) {
+            String username = basicAuth.getString("username");
+            String password = basicAuth.getString("password");
+            if (username != null && password != null) {
+                paClientConfigBuilder.requestInterceptor(new BasicHttpAuthenticationRequestInterceptor(username, password));
             }
         }
         paClientConfigBuilder.timeouts(connectionTimeout, readTimeout);
