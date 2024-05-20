@@ -31,6 +31,15 @@ export interface PowerAuthClientConfigurationType {
      * If not provided, then the read timeout is set to 20 seconds.
      */
     readonly readTimeout?: number
+    /**
+     * Custom HTTP headers that will be added to each HTTP request produced by this library.
+     */
+    readonly customHttpHeaders?: HttpHeader[];
+}
+
+export interface HttpHeader {
+    key: string
+    value: string
 }
 
 /**
@@ -40,12 +49,14 @@ export class PowerAuthClientConfiguration implements PowerAuthClientConfiguratio
     enableUnsecureTraffic: boolean
     connectionTimeout: number
     readTimeout: number
+    customHttpHeaders: HttpHeader[]
 
     constructor() {
         const d = buildClientConfiguration()
         this.enableUnsecureTraffic = d.enableUnsecureTraffic
         this.connectionTimeout = d.connectionTimeout
         this.readTimeout = d.readTimeout
+        this.customHttpHeaders = d.customHttpHeaders
     }
     /**
      * @returns `PowerAuthClientConfiguration` with default values.
@@ -64,6 +75,7 @@ export function buildClientConfiguration(input: PowerAuthClientConfigurationType
     return Object.freeze({
         enableUnsecureTraffic: input?.enableUnsecureTraffic ?? false,
         connectionTimeout: input?.connectionTimeout ?? 20.0,
-        readTimeout: input?.readTimeout ?? 20.0
+        readTimeout: input?.readTimeout ?? 20.0,
+        customHttpHeaders: input?.customHttpHeaders ?? []
     })
 }

@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -36,7 +37,6 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
-import java.lang.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,7 +55,8 @@ import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
 import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
 import io.getlime.security.powerauth.keychain.KeychainProtection;
 import io.getlime.security.powerauth.sdk.*;
-import io.getlime.security.powerauth.networking.ssl.*;
+import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy;
+import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor;
 import io.getlime.security.powerauth.networking.response.*;
 import io.getlime.security.powerauth.core.*;
 import io.getlime.security.powerauth.exception.*;
@@ -185,10 +186,21 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         final boolean enableUnsecureTraffic = map.hasKey("enableUnsecureTraffic") ? map.getBoolean("enableUnsecureTraffic") : PowerAuthClientConfiguration.DEFAULT_ALLOW_UNSECURED_CONNECTION;
         final int connectionTimeout = map.hasKey("connectionTimeout") ? map.getInt("connectionTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT;
         final int readTimeout = map.hasKey("readTimeout") ? map.getInt("readTimeout") * 1000 : PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT;
+        final ReadableArray customHeaders = map.hasKey("customHttpHeaders") ? map.getArray("customHttpHeaders") : null;
         final PowerAuthClientConfiguration.Builder paClientConfigBuilder = new PowerAuthClientConfiguration.Builder();
         if (enableUnsecureTraffic) {
             paClientConfigBuilder.clientValidationStrategy(new HttpClientSslNoValidationStrategy());
             paClientConfigBuilder.allowUnsecuredConnection(true);
+        }
+        if (customHeaders != null && customHeaders.size() > 0) {
+            for (int i = 0; i < customHeaders.size(); i++) {
+                ReadableMap object = customHeaders.getMap(i);
+                String key = object.getString("key");
+                String value = object.getString("value");
+                if (key != null && value != null) {
+                    paClientConfigBuilder.requestInterceptor(new CustomHeaderRequestInterceptor(key, value));
+                }
+            }
         }
         paClientConfigBuilder.timeouts(connectionTimeout, readTimeout);
         return paClientConfigBuilder.build();
