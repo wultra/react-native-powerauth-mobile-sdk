@@ -26,6 +26,7 @@
 #import <PowerAuth2/PowerAuthErrorConstants.h>
 #import <PowerAuth2/PowerAuthKeychain.h>
 #import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
+#import <PowerAuth2/PowerAuthCustomHeaderRequestInterceptor.h>
 
 @import PowerAuthCore;
 
@@ -95,6 +96,17 @@ RCT_REMAP_METHOD(configure,
     if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
         [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
     }
+    NSArray * httpHeaders = CAST_TO(clientConfiguration[@"customHttpHeaders"], NSArray);
+    NSMutableArray * interceptors = [[NSMutableArray alloc] init];
+    for (id object in httpHeaders) {
+        NSDictionary * map = CAST_TO(object, NSDictionary);
+        NSString * key = CAST_TO(map[@"key"], NSString);
+        NSString * value = CAST_TO(map[@"value"], NSString);
+        if (key && value) {
+            [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:key value:value]];
+        }
+    }
+    [clientConfig setRequestInterceptors: interceptors];
     
     PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
     // Keychain specific
