@@ -106,10 +106,10 @@ RCT_REMAP_METHOD(configure,
     if (httpHeaders) {
         for (id object in httpHeaders) {
             NSDictionary * map = CAST_TO(object, NSDictionary);
-            NSString * key = CAST_TO(map[@"key"], NSString);
+            NSString * name = CAST_TO(map[@"name"], NSString);
             NSString * value = CAST_TO(map[@"value"], NSString);
-            if (key && value) {
-                [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:key value:value]];
+            if (name && value) {
+                [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:name value:value]];
             }
         }
     }

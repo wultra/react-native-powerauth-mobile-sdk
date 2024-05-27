@@ -45,8 +45,8 @@ export interface PowerAuthClientConfigurationType {
  * Custom HTTP header data.
  */
 export interface PowerAuthHttpHeader {
-    /** Key of the HTTP header. */
-    key: string
+    /** Name of the HTTP header. */
+    name: string
     /** Value of the HTTP header. */
     value: string
 }

@@ -199,10 +199,10 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         if (customHeaders != null && customHeaders.size() > 0) {
             for (int i = 0; i < customHeaders.size(); i++) {
                 ReadableMap object = customHeaders.getMap(i);
-                String key = object.getString("key");
+                String name = object.getString("name");
                 String value = object.getString("value");
-                if (key != null && value != null) {
-                    paClientConfigBuilder.requestInterceptor(new CustomHeaderRequestInterceptor(key, value));
+                if (name != null && value != null) {
+                    paClientConfigBuilder.requestInterceptor(new CustomHeaderRequestInterceptor(name, value));
                 }
             }
         }
