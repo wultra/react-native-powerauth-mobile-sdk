@@ -176,7 +176,8 @@ export class TestWithActivation extends TestWithServer {
      */
     customPrepareData(): CustomActivationHelperPrepareData {
         return {
-            password: this.credentials.validPassword
+            password: this.credentials.validPassword,
+            useConfigObjects: true
         }
     }
 

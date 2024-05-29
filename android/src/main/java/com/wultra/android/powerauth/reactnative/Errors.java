@@ -149,9 +149,17 @@ class Errors {
                 userInfo.putString("serverResponseCode", errorResponseApiException.getErrorResponse().getCode());
                 userInfo.putString("serverResponseMessage", errorResponseApiException.getErrorResponse().getMessage());
             }
-        } else if (t instanceof IOException) {
-            // This is wrong, PowerAuth SDK should wrap such exception and report network related failure.
-            code = EC_NETWORK_ERROR;
+        } else {
+
+            userInfo = Arguments.createMap();
+            // When we don't process the exception, at least pass the original name of the exception for logging and troubleshooting purposes.
+            userInfo.putString("nativeExceptionTypeName", t.getClass().getSimpleName());
+
+            if (t instanceof IOException) {
+                // Consider IOExceptions a network error
+                // Usually its something like UnknownHostException, ConnectException or SocketException.
+                code = EC_NETWORK_ERROR;
+            }
         }
 
         if (message != null && userInfo != null) {

@@ -6,7 +6,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 ## Documentation
 
-The documentation is available at the [Wultra Developer Portal](https://developers.wultra.com/products/mobile-security-suite/develop/react-native-powerauth-mobile-sdk/) or inside the [docs](docs) folder.
+The documentation is available at the [Wultra Developer Portal](https://developers.wultra.com/components/react-native-powerauth-mobile-sdk/) or inside the [docs](docs) folder.
 
 ## Support and compatibility
 
@@ -18,7 +18,7 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 | `2.2.x` |                 | `1.6.x`      | `0.24+`        | Not supported     |
 
 <!-- begin box info -->
-> Note 1: The library may work also with other React-Native versions but we don't guarantee the compatibility. The specified version is version that we use for the development and for the tests.
+> Note 1: The library may also work with other React-Native versions but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
 <!-- end -->
 
 ## License

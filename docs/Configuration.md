@@ -54,6 +54,8 @@ In case that you need an advanced configuration, then you can import and use the
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
   - `connectionTimeout` - timeout in seconds. The default value is `20` seconds.
   - `readTimeout` - timeout in seconds, effective only on Androd platform. The default value is `20` seconds.
+  - `customHttpHeaders` - custom HTTP headers that will be added to each HTTP request produced by the PowerAuth instance.
+  - `basicHttpAuthentication` - basic HTTP Authentication will be added to each HTTP request produced by the PowerAuth instance.
 
 - `PowerAuthBiometryConfiguration` class or `PowerAuthBiometryConfigurationType` interface － to configure biometic authentication. You can alter the following parameters:
   - `linkItemsToCurrentSet` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value depends on plafrom:
