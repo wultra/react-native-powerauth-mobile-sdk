@@ -89,7 +89,16 @@ const tmpDir = ".build";
     const CDV_buildDir = `${buildDir}/cdv`;
     const CDV_tempDir = `${tmpDir}/cdv`
     // order matters in sources!
-    const CDV_sources = [ "src/internal/NativePowerAuth.ts", "src/internal/NativeModulesProvider.ts", "src/debug/*.ts", "src/internal/*.ts", "src/model/*.ts", "src/PowerAuth**.ts", "src/custom/ModuleExport.ts" ];
+    const CDV_sources = [ 
+        "src/internal/NativeCordovaModule.ts", 
+        "src/internal/NativePowerAuth.ts", 
+        "src/internal/NativeModulesProvider.ts", 
+        "src/debug/*.ts", 
+        "src/internal/*.ts", 
+        "src/model/*.ts", 
+        "src/PowerAuth**.ts", 
+        "src/custom/ModuleExport.ts" 
+    ];
     const CDV_libDir = "lib";
     const CDV_outFileDir = `${CDV_buildDir}/${CDV_libDir}`;
 

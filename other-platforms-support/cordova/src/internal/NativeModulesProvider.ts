@@ -22,30 +22,109 @@ import { PowerAuthEncryptorIfc } from "./NativeEncryptor";
 import { NativeObject } from "./NativeObject";
 import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
+import { NativeCordovaModule } from "./NativeCordovaModule";
 
 class Provider implements NativeModulesProviderIfc {
     PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
-    PowerAuthEncryptor = {} as PowerAuthEncryptorIfc;
-    PowerAuthPassphraseMeter = {} as PowerAuthPassphraseMeterIfc;
-    PowerAuthPassword = {} as PowerAuthPasswordIfc;
+    PowerAuthEncryptor = new NativePowerAuthEncryptorImpl() as PowerAuthEncryptorIfc;
+    PowerAuthPassphraseMeter = new PowerAuthPassphraseMeterImpl() as PowerAuthPassphraseMeterIfc;
+    PowerAuthPassword = new PowerAuthPasswordImpl() as PowerAuthPasswordIfc;
     PowerAuth = new NativePowerAuth();
 }
 
-class NativeObjectRegisterImpl implements NativeObjectRegisterIfc {
+class NativeObjectRegisterImpl extends NativeCordovaModule implements NativeObjectRegisterIfc {
+
+    readonly pluginName = "PowerAuthObjectRegister";
 
     async debugDump(instanceId: string | undefined): Promise<Array<any>> {
-        console.log("debugDump not implemented yet")
-        return []
+        return await callNative("debugDump", instanceId)
     }
-    /**
-     * Manipulate with object register. The function is implemented in DEBUG build of the library.
-     * @param command Command to execute.
-     * @param data Command data.
-     * @returns Command result.
-     */
+    
     async debugCommand(command: any, data: any): Promise<any> {
-        console.log("debugCommand not implemented yet")
-        return "not implemented yet";
+        return await callNative("debugCommand", command, data)
+    }
+
+    async isValidNativeObject(objectId: string): Promise<boolean> {
+        return await callNative("isValidNativeObject", objectId)
+    }
+}
+
+class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerAuthEncryptorIfc {
+
+    readonly pluginName = "PowerAuthEncryptorModule";
+
+    async initialize(scope: string, ownerId: string, autoreleaseTime: number): Promise<string> {
+        return await callNative("initialize", scope, ownerId, autoreleaseTime)
+    }
+
+    async release(encryptorId: string): Promise<void> {
+        return await callNative("release", encryptorId);
+    }
+
+    async canEncryptRequest(encryptorId: string): Promise<boolean> {
+        return await callNative("canEncryptRequest", encryptorId);
+    }
+
+    async encryptRequest(encryptorId: string, data: string | undefined, format: string | undefined): Promise<EncryptedRequestData> {
+        return await callNative("encryptRequest", encryptorId, data, format);
+    }
+
+    async canDecryptResponse(encryptorId: string): Promise<boolean> {
+        return await callNative("canDecryptResponse", encryptorId);
+    }
+
+    async decryptResponse(encryptorId: string, cryptogram: PowerAuthCryptogram, outputFormat: string | undefined): Promise<string> {
+        return await callNative("decryptResponse", encryptorId, cryptogram, outputFormat);
+    }
+}
+
+class PowerAuthPassphraseMeterImpl extends NativeCordovaModule implements PowerAuthPassphraseMeterIfc {
+
+    readonly pluginName = "PowerAuthPassphraseMeterModule";
+    
+    async testPin(pin: RawPasswordType): Promise<PinTestResult> {
+        return await callNative("testPin", pin);
+    }
+}
+
+class PowerAuthPasswordImpl extends NativeCordovaModule implements PowerAuthPasswordIfc {
+
+    readonly pluginName = "PowerAuthPasswordModule";
+
+    async initialize(destroyOnUse: boolean, ownerId: string | undefined, autoreleaseTime: number): Promise<string> {
+        return await callNative("initialize", destroyOnUse, ownerId, autoreleaseTime);
+    }
+
+    async release(objectId: string): Promise<void> {
+        return await callNative("release", objectId);
+    }
+
+    async clear(objectId: string): Promise<void> {
+        return await callNative("clear", objectId);
+    }
+    
+    async length(objectId: string): Promise<number> {
+        return await callNative("length", objectId);
+    }
+
+    async isEqual(objectId1: string, objectId2: string): Promise<boolean> {
+        return await callNative("isEqual", objectId1, objectId2);
+    }
+
+    async addCharacter(objectId: string, character: number): Promise<number> {
+        return await callNative("addCharacter", objectId, character);
+    }
+    
+    async insertCharacter(objectId: string, character: number, position: number): Promise<number> {
+        return await callNative("insertCharacter", objectId, character, position);
+    }
+
+    async removeCharacter(objectId: string, position: number): Promise<number> {
+        return await callNative("removeCharacter", objectId, position);
+    }
+    
+    async removeLastCharacter(objectId: string): Promise<number> {
+        return await callNative("removeLastCharacter", objectId);
     }
 }
 

@@ -16,33 +16,9 @@
 
 //@ts-nocheck
 
-import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
+import { NativeCordovaModule } from "./NativeCordovaModule";
 
-export class NativePowerAuth implements NativePowerAuthIfc {
+export class NativePowerAuth extends NativeCordovaModule {
 
-    private readonly pluginName = "PowerAuthModule";
-
-    callNative<T>(name: string, ...args): Promise<T> {
-        return new Promise<T>(
-            (resolve, reject) => {
-                cordova.exec(
-                    // success callback
-                    (response) => { 
-                        const parsed = JSON.parse(response);
-                        resolve(parsed.result); 
-                    },
-                    // error callback
-                    (error) => { 
-                        reject(error) 
-                    },
-                    // native platform plugin name
-                    this.pluginName,
-                    // function name
-                    name,
-                    // function arguments
-                    ...args
-                );
-            }
-        );
-    }
+    readonly pluginName = "PowerAuthModule";
 }
