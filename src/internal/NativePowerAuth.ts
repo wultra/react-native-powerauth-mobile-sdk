@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Wultra s.r.o.
+ * Copyright 2024 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-import { NativeModulesProvider } from "./NativeModulesProvider"
+import { NativeModules } from "react-native";
+import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
 
-/**
- * Low level interface provided by native PowerAuthObjectRegister.
- */
-export interface NativeObject {
-    /**
-     * Test whether underlying native object register still contains object with given ID.
-     * @param objectId Object identifier to test.
-     */
-    isValidNativeObject(objectId: string): Promise<boolean>
+export class NativePowerAuth implements NativePowerAuthIfc {
+    callNative<T>(name: string, ...args): Promise<T> {
+        return (NativeModules.PowerAuth[name] as Function).apply(null, ...args);
+    }
 }
-
-export const NativeObject = NativeModulesProvider.PowerAuthObjectRegister as NativeObject

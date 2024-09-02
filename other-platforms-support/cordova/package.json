@@ -1,8 +1,8 @@
 {
-  "name": "react-native-powerauth-mobile-sdk",
-  "title": "PowerAuth SDK for React Native Mobile Apps",
+  "name": "cordova-powerauth-mobile-sdk",
+  "title": "PowerAuth SDK for Cordova Mobile Apps",
   "version": "2.5.0",
-  "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
+  "description": "Wultra PowerAuth Mobile SDK Cordova component for iOS and Android",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index",
@@ -11,12 +11,11 @@
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
     "android/build.gradle",
-    "lib/*.*",
-    "lib/internal/*.js",
-    "lib/model/*.*",
-    "lib/debug/*.*",
+    "lib/powerauth.js",
+    "lib/powerauth.d.ts",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.mm",
     "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
@@ -45,7 +44,6 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@capacitor/core": "^6.1.2",
     "gulp": "^5.0.0",
     "gulp-footer": "^2.1.0",
     "gulp-strip-import-export": "^1.0.0",

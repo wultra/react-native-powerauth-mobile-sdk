@@ -1,8 +1,8 @@
 {
-  "name": "react-native-powerauth-mobile-sdk",
-  "title": "PowerAuth SDK for React Native Mobile Apps",
+  "name": "capacitor-powerauth-mobile-sdk",
+  "title": "PowerAuth SDK for Capacitor.js Mobile Apps",
   "version": "2.5.0",
-  "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
+  "description": "Wultra PowerAuth Mobile SDK Capacitor.js component for iOS and Android",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index",
@@ -45,7 +45,6 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@capacitor/core": "^6.1.2",
     "gulp": "^5.0.0",
     "gulp-footer": "^2.1.0",
     "gulp-strip-import-export": "^1.0.0",

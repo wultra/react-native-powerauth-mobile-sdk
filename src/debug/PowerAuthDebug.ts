@@ -17,6 +17,7 @@
 import { PowerAuthError } from "../index";
 import { NativeWrapper } from "../internal/NativeWrapper";
 import { NativeObjectRegister } from "./NativeObjectRegister";
+import { Utils } from "../internal/Utils";
 
 /**
  * The `PowerAuthDebug` class provides a various functionality that can
@@ -30,7 +31,7 @@ export class PowerAuthDebug {
      * @param traceEachCall If set to `true`, then SDK will print a detailed information about each call to the native code.
      */
     static traceNativeCodeCalls(traceFailure: boolean, traceEachCall: boolean = false) {
-        if (__DEV__) {
+        if (Utils.isDev) {
             NativeWrapper.setDebugFeatures(traceFailure, traceEachCall)
         }
     }
@@ -41,7 +42,7 @@ export class PowerAuthDebug {
      * @param instanceId If provided, then prints only objects that belongs to PowerAuth instance with given identifier.
      */
     static async dumpNativeObjects(instanceId: string | undefined = undefined): Promise<void> {
-        if (__DEV__) {
+        if (Utils.isDev) {
             if (instanceId) {
                 console.log(`List of native objects associated with instance '${instanceId}' = [`)
             } else {

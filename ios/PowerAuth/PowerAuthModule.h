@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
-#import "PowerAuthObjectRegister.h"
+#import "PAJS.h"
 
-@interface PowerAuthModule: NSObject<RCTBridgeModule, RCTInitializing>
+PAJS_MODULE(PowerAuthModule)
 
 @end

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Platform } from "react-native"
+import { Utils } from "../internal/Utils"
 
 /**
  * Interface that is used to provide biomety configuration for `PowerAuth` class.
@@ -100,7 +100,7 @@ export function buildBiometryConfiguration(input: PowerAuthBiometryConfiguration
         // configuration for this attribute. This was not configurable in the previous version of RN wrapper, 
         // so the old behavior must be emulated. If we enforce true or false, then app developers may encounter 
         // a weird behavior after the library update.
-        linkItemsToCurrentSet: input?.linkItemsToCurrentSet ?? Platform.OS === 'android',
+        linkItemsToCurrentSet: input?.linkItemsToCurrentSet ?? Utils.platformOs === 'android',
         fallbackToDevicePasscode: input?.fallbackToDevicePasscode ?? false,
         confirmBiometricAuthentication: input?.confirmBiometricAuthentication ?? false,
         authenticateOnBiometricKeySetup: input?.authenticateOnBiometricKeySetup ?? true

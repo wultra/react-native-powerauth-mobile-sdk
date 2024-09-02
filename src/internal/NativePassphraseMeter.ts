@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { NativeModules } from "react-native"
 import { PinTestResult } from '../index'
+import { NativeModulesProvider } from './NativeModulesProvider';
 import { RawPasswordType } from './NativeTypes';
 /**
  * Password interface implemented in the native code.
@@ -30,4 +30,4 @@ export interface PowerAuthPassphraseMeterIfc {
     testPin(pin: RawPasswordType): Promise<PinTestResult>
 }
 
-export const NativePassphraseMeter = NativeModules.PowerAuthPassphraseMeter as PowerAuthPassphraseMeterIfc
+export const NativePassphraseMeter = NativeModulesProvider.PowerAuthPassphraseMeter;

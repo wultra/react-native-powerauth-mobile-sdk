@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { NativeModulesProvider } from './NativeModulesProvider';
 import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../debug/PowerAuthDebug';
 import { PowerAuthAuthentication } from '../index';
+import { Utils } from "../internal/Utils";
 
 interface StaticCallTrampoline {
     call<T>(name: string, args: any[]): Promise<T>
@@ -33,7 +34,7 @@ interface ThisCallTrampoline {
 class DefaultStaticCall implements StaticCallTrampoline {
     async call<T>(name: string, args: any[]): Promise<T> {
         try {
-            return await ((NativeModules.PowerAuth[name] as Function).apply(null, args));
+            return await NativeModulesProvider.PowerAuth.callNative(name, args);
         } catch (e) {
             throw NativeWrapper.processException(e);
         }
@@ -46,7 +47,7 @@ class DefaultStaticCall implements StaticCallTrampoline {
 class DefaultThisCall implements ThisCallTrampoline {
     async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
         try {
-            return await ((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]));
+            return await NativeModulesProvider.PowerAuth.callNative(name, [instanceId, ...args]);
         } catch (e) {
             throw NativeWrapper.processException(e);
         }
@@ -64,7 +65,7 @@ class DebugStaticCall implements StaticCallTrampoline {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
             }
-            const r = await ((NativeModules.PowerAuth[name] as Function).apply(null, args))
+            const r = await NativeModulesProvider.PowerAuth.callNative<T>(name, args)
             if (this.traceCall) {
                 console.log(` ret ${msg} => ${JSON.stringify(r)}`)
             }
@@ -90,7 +91,7 @@ class DebugThisCall implements ThisCallTrampoline {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
             }
-            const r = await ((NativeModules.PowerAuth[name] as Function).apply(null, [instanceId, ...args]))
+            const r = await NativeModulesProvider.PowerAuth.callNative<T>(name, [instanceId, ...args])
             if (this.traceCall) {
                 console.log(` ret ${msg} => ${JSON.stringify(r)}`)
             }
@@ -185,7 +186,7 @@ export class NativeWrapper {
      * @param traceCall If true, then each call to native code will be printed with a detailed information.
      */
     static setDebugFeatures(traceFail: boolean, traceCall: boolean) {
-        if (__DEV__) {
+        if (Utils.isDev) {
             if (traceCall || traceFail) {
                 this.thisTrampoline = new DebugThisCall(traceCall, traceFail)
                 this.staticTrampoline = new DebugStaticCall(traceCall, traceFail)
@@ -220,9 +221,9 @@ export class NativeWrapper {
             return new PowerAuthError(exception, message)
         } 
         // Otherwise handle the platform specific cases.
-        if (Platform.OS == "android") {
+        if (Utils.platformOs == "android") {
             return this.processAndroidException(exception, message)
-        } else if (Platform.OS == "ios") {
+        } else if (Utils.platformOs == "ios") {
             return this.processIosException(exception, message)
         } else {
             return new PowerAuthError(undefined, "Unsupported platform")
@@ -259,7 +260,7 @@ export class NativeWrapper {
  * @returns Patched promise that always resolve to true or false.
  */
 export function patchBool(originalPromise: Promise<boolean>): Promise<boolean> {
-    if (Platform.OS === 'android') {
+    if (Utils.platformOs === 'android') {
         return originalPromise
     }
     return new Promise((resolved, rejected) => {

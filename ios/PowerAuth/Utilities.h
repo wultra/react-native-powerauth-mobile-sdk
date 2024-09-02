@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
+#import "PAJS.h"
 
 #ifdef __cplusplus
     // C++

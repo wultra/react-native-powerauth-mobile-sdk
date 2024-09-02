@@ -16,10 +16,8 @@
 
 #import "PowerAuthObjectRegister.h"
 #import "PowerAuthData.h"
+#import "PAJS.h"
 #import "PowerAuthEncryptorModule.h"
-
-#import <React/RCTConvert.h>
-#import <React/RCTInvalidating.h>
 
 @import PowerAuthCore;
 
@@ -27,16 +25,16 @@
  This class category exports several debug methods to JavaScript.
  The 'debug' methods are available only if library is compiled in DEBUG configuration.
  */
-@interface PowerAuthObjectRegister (JS) <RCTInvalidating>
+@interface PowerAuthObjectRegister (JS) PAJS_MODULE_INVALIDATING
 @end
 
 @implementation PowerAuthObjectRegister (JS)
 
 // MARK: - JS interface
 
-- (void) invalidate
+// TODO: fixme
+- (void) PAJS_INVALIDATE_METHOD
 {
-    // RCTInvalidating
     // This is invoked by RN bridge when devmode reload is requested.
     // We should remove all objects from the register.
     [self removeAllObjectsWithTag:nil];
@@ -47,28 +45,27 @@
     return NO;
 }
 
-RCT_EXPORT_METHOD(isValidNativeObject:(id)objectId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(isValidNativeObject,
+                  PAJS_ARGUMENT(objectId, id))
 {
     resolve(@([self containsObjectWithId:objectId]));
 }
+PAJS_METHOD_END
 
 #if DEBUG
 
 // MARK: - JS DEBUG
 
-RCT_EXPORT_METHOD(debugDump:(id)instanceId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(debugDump,
+                  PAJS_ARGUMENT(instanceId, id))
 {
     resolve([self debugDumpObjectsWithTag:[RCTConvert NSString:instanceId]]);
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(debugCommand:(NSString*)command
-                  options:(NSDictionary*)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(debugCommand,
+                  PAJS_ARGUMENT(command, NSString*)
+                  PAJS_ARGUMENT(options, NSDictionary*))
 {
     NSString * objectId     = [RCTConvert NSString:options[@"objectId"]];
     NSString * objectTag    = [RCTConvert NSString:options[@"objectTag"]];
@@ -160,25 +157,27 @@ RCT_EXPORT_METHOD(debugCommand:(NSString*)command
     }
     reject(EC_WRONG_PARAMETER, [NSString stringWithFormat:@"Wrong parameter for cmd %@, %@", command, options], nil);
 }
+PAJS_METHOD_END
 
 #else
 
 // MARK: - JS RELEASE
 
-RCT_EXPORT_METHOD(debugDump:(id)instanceId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(debugDump,
+                  PAJS_ARGUMENT(instanceId, NSString*))
 {
     resolve(nil);
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(debugCommand:(NSString*)command
-                  options:(NSDictionary*)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(debugCommand,
+                  PAJS_ARGUMENT(command, NSString*)
+                  PAJS_ARGUMENT(options, NSDictionary*))
 {
     resolve(nil);
 }
+PAJS_METHOD_END
+
 #endif // DEBUG
 
 @end

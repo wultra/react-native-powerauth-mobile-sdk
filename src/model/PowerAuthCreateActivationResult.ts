@@ -19,7 +19,7 @@ import {PowerAuthRecoveryActivationData} from "./PowerAuthRecoveryActivationData
 /**
  * Success object returned by "createActivation" call.
  */
- export interface PowerAuthCreateActivationResult {
+export interface PowerAuthCreateActivationResult {
     /**
      * Decimalized fingerprint calculated from device's and server's public keys.
      */
