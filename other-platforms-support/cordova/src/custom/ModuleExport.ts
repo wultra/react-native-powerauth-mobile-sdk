@@ -16,40 +16,59 @@
 
 // @ts-nocheck
 
+interface PowerAuthPluginType {
+    PowerAuth: typeof PowerAuth,
+    PowerAuthActivation: typeof PowerAuthActivation,
+    PowerAuthAuthentication: typeof PowerAuthAuthentication,
+    PowerAuthActivationCodeUtil: typeof PowerAuthActivationCodeUtil,
+    PowerAuthTokenStore: typeof PowerAuthTokenStore,
+    PowerAuthPassphraseMeter: typeof PowerAuthPassphraseMeter,
+    PowerAuthActivationState: typeof PowerAuthActivationState,
+    PowerAuthBiometryConfiguration: typeof PowerAuthBiometryConfiguration,
+    PowerAuthClientConfiguration: typeof PowerAuthClientConfiguration,
+    PowerAuthConfiguration: typeof PowerAuthConfiguration,
+    PowerAuthError: typeof PowerAuthError,
+    PowerAuthKeychainConfiguration: typeof PowerAuthKeychainConfiguration,
+    PowerAuthPassword: typeof PowerAuthPassword,
+    BaseNativeObject: typeof BaseNativeObject,
+
+    // Debug features
+
+    PowerAuthDebug: typeof PowerAuthDebug,
+    NativeObjectRegister: typeof NativeObjectRegister
+}
+
 module.exports = {
     PowerAuth: PowerAuth,
     PowerAuthActivation: PowerAuthActivation,
-    PowerAuthAuthentication: PowerAuthAuthentication
+    PowerAuthAuthentication: PowerAuthAuthentication,
+    PowerAuthActivationCodeUtil: PowerAuthActivationCodeUtil,
+    PowerAuthTokenStore: PowerAuthTokenStore,
+    PowerAuthPassphraseMeter: PowerAuthPassphraseMeter,
+    PowerAuthActivationState: PowerAuthActivationState,
+    PowerAuthBiometryConfiguration: PowerAuthBiometryConfiguration,
+    PowerAuthClientConfiguration: PowerAuthClientConfiguration,
+    PowerAuthConfiguration: PowerAuthConfiguration,
+    PowerAuthError: PowerAuthError,
+    PowerAuthKeychainConfiguration: PowerAuthKeychainConfiguration,
+    PowerAuthPassword: PowerAuthPassword,
+    BaseNativeObject: BaseNativeObject,
+
+    // Debug features
+
+    PowerAuthDebug: PowerAuthDebug,
+    NativeObjectRegister: NativeObjectRegister,
+
+    // Following types are interfaces so we don't need to expose them in an "object" manner
+    // PowerAuthEncryptor: PowerAuthEncryptor,
+    // PowerAuthDataFormat: PowerAuthDataFormat,
+    // PowerAuthConfirmRecoveryCodeDataResult: PowerAuthConfirmRecoveryCodeDataResult,
+    // PowerAuthCreateActivationResult: PowerAuthCreateActivationResult,
+    // PowerAuthRecoveryActivationData: PowerAuthRecoveryActivationData,
+    // PowerAuthBiometryInfo: PowerAuthBiometryInfo,
+    // PowerAuthActivationStatus: PowerAuthActivationStatus,
+    // PowerAuthAuthorizationHttpHeader: PowerAuthAuthorizationHttpHeader,
+    // PowerAuthEncryptionHttpHeader: PowerAuthEncryptionHttpHeader,
+
+
 }
-
-// export * from './PowerAuth';
-// export * from './PowerAuthActivationCodeUtil';
-// export * from './PowerAuthTokenStore';
-// export * from './PowerAuthPassphraseMeter';
-
-// // Model objects
-
-// export * from './model/PowerAuthActivation';
-// export * from './model/PowerAuthActivationState';
-// export * from './model/PowerAuthActivationStatus';
-// export * from './model/PowerAuthAuthentication';
-// export * from './model/PowerAuthAuthorizationHttpHeader';
-// export * from './model/PowerAuthEncryptionHttpHeader';
-// export * from './model/PowerAuthBiometryConfiguration';
-// export * from './model/PowerAuthBiometryInfo';
-// export * from './model/PowerAuthClientConfiguration';
-// export * from './model/PowerAuthConfiguration';
-// export * from './model/PowerAuthConfirmRecoveryCodeDataResult';
-// export * from './model/PowerAuthCreateActivationResult';
-// export * from './model/PowerAuthError';
-// export * from './model/PowerAuthKeychainConfiguration';
-// export * from './model/PowerAuthRecoveryActivationData';
-// export * from './model/PowerAuthPassword';
-// export * from './model/PowerAuthEncryptor';
-// export * from './model/PowerAuthDataFormat';
-// export * from './model/BaseNativeObject';
-
-// // Debug features
-
-// export * from './debug/PowerAuthDebug';
-// export * from './debug/NativeObjectRegister';

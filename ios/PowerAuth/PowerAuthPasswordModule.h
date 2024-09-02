@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
+#import "PAJS.h"
 
 /**
  Bridge module implementing PowerAuthPassword JavaScript class.
  */
-@interface PowerAuthPasswordModule : NSObject<RCTBridgeModule, RCTInitializing>
+PAJS_MODULE(PowerAuthPasswordModule)
 
 @end

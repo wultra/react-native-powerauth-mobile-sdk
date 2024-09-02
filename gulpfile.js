@@ -113,6 +113,12 @@ const tmpDir = ".build";
             .pipe(ts(CDV_tsConfig))
             .pipe(gulp.dest(CDV_outFileDir));
 
+    const patchCDVDTSfileTask = () =>
+        gulp
+            .src(`${CDV_outFileDir}/powerauth.d.ts`)
+            .pipe(footer("declare var PowerAuthPlugin: PowerAuthPluginType;"))
+            .pipe(gulp.dest(CDV_outFileDir));
+
     const copyCDVFiles = () =>
         gulp
             .src(JSON.parse(fs.readFileSync(CDV_packageJson, 'utf8')).files.filter((file) => !file.startsWith(`${CDV_libDir}/`) && !file != "plugin.xml"), { base: "." })
@@ -131,7 +137,7 @@ const tmpDir = ".build";
     const packCDVPackage = () => exec(`pushd ${CDV_buildDir} && npm pack`);
 
     // join cordova compile and modify for export task
-    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, copyCDVFiles, copyCDVPatchIOSFiles, copyCDVSupportFiles, packCDVPackage, clearCDVtemp);
+    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, patchCDVDTSfileTask, copyCDVFiles, copyCDVPatchIOSFiles, copyCDVSupportFiles, packCDVPackage, clearCDVtemp);
 }
 
 let cleanBuild = () => rimraf([ buildDir ])

@@ -18,8 +18,7 @@
 #import "PowerAuthObjectRegister.h"
 #import "Utilities.h"
 #import "Constants.h"
-
-#import <React/RCTConvert.h>
+#import "PAJS.h"
 
 @import PowerAuthCore;
 
@@ -30,14 +29,13 @@
 
 // MARK: - ReactNative bridge
 
-@synthesize moduleRegistry = _moduleRegistry;
+PAJS_MODULE_REGISTRY
 
 RCT_EXPORT_MODULE(PowerAuthPassword);
 
-- (void) initialize
+- (void) PAJS_INITIALIZE_METHOD
 {
-    // RCTInitializing protocol allows us to get module dependencies before the object is used from JS.
-    _objectRegister = [_moduleRegistry moduleForName:"PowerAuthObjectRegister"];
+    PAJS_OBJECT_REGISTER
 }
 
 + (BOOL) requiresMainQueueSetup
@@ -47,11 +45,10 @@ RCT_EXPORT_MODULE(PowerAuthPassword);
 
 // MARK: - JS interface
 
-RCT_EXPORT_METHOD(initialize:(BOOL)destroyAfterUse
-                  ownerId:(NSString*)ownerId
-                  autoreleaseTime:(nonnull NSNumber*)autoreleaseTime
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(initialize,
+                  PAJS_ARGUMENT(destroyAfterUse, BOOL)
+                  PAJS_ARGUMENT(ownerId, NSString*)
+                  PAJS_ARGUMENT(autoreleaseTime, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     NSString * powerAuthInstanceId = [RCTConvert NSString: ownerId];
     // If owning PowerAuth instnace is specified, then make sure it still exists
@@ -68,38 +65,39 @@ RCT_EXPORT_METHOD(initialize:(BOOL)destroyAfterUse
                                         tag:powerAuthInstanceId
                                    policies:policies]);
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(release:(NSString*)objectId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(release,
+                  PAJS_ARGUMENT(objectId, NSString*))
 {
     [_objectRegister removeObjectWithId:objectId expectedClass:[PowerAuthCoreMutablePassword class]];
     resolve(nil);
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(clear:(NSString*)objectId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(clear,
+                  PAJS_ARGUMENT(objectId, NSString*))
 {
     [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         [password clear];
         resolve(nil);
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(length:(NSString*)objectId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(length,
+                  PAJS_ARGUMENT(objectId, NSString*))
 {
     [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         resolve(@([password length]));
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(isEqual:(NSString*)id1
-                  id2:(NSString*)id2
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+// TODO: resolve warning
+PAJS_METHOD_START(isEqual,
+                  PAJS_ARGUMENT(id1, NSString*)
+                  PAJS_ARGUMENT(id2, NSString*))
 {
     [self withPassword:id1 rejecter:reject action:^(PowerAuthCoreMutablePassword *password1) {
         [self withPassword:id2 rejecter:reject action:^(PowerAuthCoreMutablePassword *password2) {
@@ -107,23 +105,23 @@ RCT_EXPORT_METHOD(isEqual:(NSString*)id1
         }];
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(addCharacter:(NSString*)objectId
-                  character:(nonnull NSNumber*)character
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(addCharacter,
+                  PAJS_ARGUMENT(objectId, NSString*)
+                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
         [password addCharacter:character];
         resolve(@(password.length));
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(insertCharacter:(NSString*)objectId
-                  character:(nonnull NSNumber*)character
-                  position:(nonnull NSNumber*)position
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(insertCharacter,
+                  PAJS_ARGUMENT(objectId, NSString*)
+                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*)
+                  PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
         NSInteger pos = [[RCTConvert NSNumber:position] integerValue];
@@ -135,11 +133,11 @@ RCT_EXPORT_METHOD(insertCharacter:(NSString*)objectId
         }
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(removeCharacter:(NSString*)objectId
-                  position:(nonnull NSNumber*)position
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(removeCharacter,
+                  PAJS_ARGUMENT(objectId, NSString*)
+                  PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         NSInteger pos = [[RCTConvert NSNumber:position] integerValue];
@@ -151,16 +149,17 @@ RCT_EXPORT_METHOD(removeCharacter:(NSString*)objectId
         }
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(removeLastCharacter:(NSString*)objectId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(removeLastCharacter,
+                  PAJS_ARGUMENT(objectId, NSString*))
 {
     [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         [password removeLastCharacter];
         resolve(@(password.length));
     }];
 }
+PAJS_METHOD_END
 
 // MARK: - Private interface
 

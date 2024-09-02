@@ -39,15 +39,15 @@
         <source-file src="ios/PowerAuth/PowerAuthObjectRegister+JS.m" />
         <header-file src="ios/PowerAuth/PowerAuthObjectRegister.h" />
         <source-file src="ios/PowerAuth/PowerAuthObjectRegister.m" />
-        <!-- <header-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.h" /> -->
-        <!-- <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.m" /> -->
-        <!-- <header-file src="ios/PowerAuth/PowerAuthPasswordModule.h" /> -->
-        <!-- <source-file src="ios/PowerAuth/PowerAuthPasswordModule.m" /> -->
+        <header-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.h" />
+        <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.m" />
+        <header-file src="ios/PowerAuth/PowerAuthPasswordModule.h" />
+        <source-file src="ios/PowerAuth/PowerAuthPasswordModule.m" />
         <header-file src="ios/PowerAuth/Utilities.h" />
         <source-file src="ios/PowerAuth/Utilities.m" />
-        <!-- <source-file src="pin_tester.c" /> -->
-        <!-- <header-file src="ios/PowerAuth/pin_tester.h" /> -->
-        <!-- <header-file src="ios/PowerAuth/wpm_types.h" /> -->
+        <source-file src="ios/PowerAuth/pin_tester.c" />
+        <header-file src="ios/PowerAuth/pin_tester.h" />
+        <header-file src="ios/PowerAuth/wpm_types.h" />
         <header-file src="ios/PowerAuth/PAJS.h" />
         <header-file src="ios/PowerAuth/PAJSPlatform.h" />
 
