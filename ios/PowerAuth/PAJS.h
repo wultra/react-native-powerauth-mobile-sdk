@@ -46,6 +46,8 @@
 #define PAJS_NONNULL_ARGUMENT nonnull
 #define PAJS_ARGUMENT(name, type) name:(type)name \
 
+#define PAJS_BOOL_ARGUMENT(name) PAJS_ARGUMENT(name, BOOL) \
+
 #define PAJS_METHOD_START(name, parameters) \
 RCT_REMAP_METHOD(name,\
                  parameters \
@@ -80,11 +82,14 @@ typedef void (^RCTPromiseResolveBlock)(id result);
     int paramIdx = 0; \
     parameters \
     RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
-        [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:message] callbackId: cmd.callbackId]; \
+        NSError *writeError = nil; \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
+        [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
     }; \
     RCTPromiseResolveBlock resolve = ^(id result) { \
         NSError *writeError = nil; \
-NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"result": result } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"result": result ? result : [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString] callbackId: cmd.callbackId]; \
     };
@@ -94,6 +99,7 @@ NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"result": result 
 #define PAJS_NULLABLE_ARGUMENT
 #define PAJS_NONNULL_ARGUMENT
 #define PAJS_ARGUMENT(name, type) type name = [cmd argumentAtIndex:paramIdx++];
+#define PAJS_BOOL_ARGUMENT(name) BOOL name = [[cmd argumentAtIndex:paramIdx++] boolValue];
 
 #define PAJS_MODULE_REGISTRY
 

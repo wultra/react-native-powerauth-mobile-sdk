@@ -5,10 +5,7 @@
     "removeComments": false,
     "declaration": true,
     "lib": ["ES2016"],
-    "jsx": "react-native",
     "outFile": "powerauth.js",
     "moduleResolution": "Node"
-  },
-  "exclude": [ "node_modules" ],
-  "include": [ "src/PowerAuth**.ts", "src/model/**.ts", "src/debug/**.ts" ]
+  }
 }

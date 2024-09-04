@@ -46,7 +46,7 @@ RCT_EXPORT_MODULE(PowerAuthPassword);
 // MARK: - JS interface
 
 PAJS_METHOD_START(initialize,
-                  PAJS_ARGUMENT(destroyAfterUse, BOOL)
+                  PAJS_BOOL_ARGUMENT(destroyAfterUse)
                   PAJS_ARGUMENT(ownerId, NSString*)
                   PAJS_ARGUMENT(autoreleaseTime, PAJS_NONNULL_ARGUMENT NSNumber*))
 {

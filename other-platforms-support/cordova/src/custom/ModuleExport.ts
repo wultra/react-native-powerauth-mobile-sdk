@@ -25,12 +25,19 @@ interface PowerAuthPluginType {
     PowerAuthPassphraseMeter: typeof PowerAuthPassphraseMeter,
     PowerAuthActivationState: typeof PowerAuthActivationState,
     PowerAuthBiometryConfiguration: typeof PowerAuthBiometryConfiguration,
+    PowerAuthBiometryStatus: typeof PowerAuthBiometryStatus,
     PowerAuthClientConfiguration: typeof PowerAuthClientConfiguration,
     PowerAuthConfiguration: typeof PowerAuthConfiguration,
     PowerAuthError: typeof PowerAuthError,
+    PowerAuthErrorCode: typeof PowerAuthErrorCode,
     PowerAuthKeychainConfiguration: typeof PowerAuthKeychainConfiguration,
     PowerAuthPassword: typeof PowerAuthPassword,
     BaseNativeObject: typeof BaseNativeObject,
+    PinTestIssue: typeof PinTestIssue,
+    buildConfiguration: typeof buildConfiguration,
+    buildClientConfiguration: typeof buildClientConfiguration,
+    buildBiometryConfiguration: typeof buildBiometryConfiguration,
+    buildKeychainConfiguration: typeof buildKeychainConfiguration,
 
     // Debug features
 
@@ -47,12 +54,20 @@ module.exports = {
     PowerAuthPassphraseMeter: PowerAuthPassphraseMeter,
     PowerAuthActivationState: PowerAuthActivationState,
     PowerAuthBiometryConfiguration: PowerAuthBiometryConfiguration,
+    PowerAuthBiometryStatus: PowerAuthBiometryStatus,
     PowerAuthClientConfiguration: PowerAuthClientConfiguration,
     PowerAuthConfiguration: PowerAuthConfiguration,
     PowerAuthError: PowerAuthError,
+    PowerAuthErrorCode: PowerAuthErrorCode,
     PowerAuthKeychainConfiguration: PowerAuthKeychainConfiguration,
+    PowerAuthKeychainProtection: PowerAuthKeychainProtection,
     PowerAuthPassword: PowerAuthPassword,
     BaseNativeObject: BaseNativeObject,
+    PinTestIssue: PinTestIssue,
+    buildConfiguration: buildConfiguration,
+    buildClientConfiguration: buildClientConfiguration,
+    buildBiometryConfiguration: buildBiometryConfiguration,
+    buildKeychainConfiguration: buildKeychainConfiguration,
 
     // Debug features
 

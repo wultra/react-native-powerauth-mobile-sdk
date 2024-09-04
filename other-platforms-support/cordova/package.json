@@ -3,8 +3,8 @@
   "title": "PowerAuth SDK for Cordova Mobile Apps",
   "version": "2.5.0",
   "description": "Wultra PowerAuth Mobile SDK Cordova component for iOS and Android",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/powerauth.js",
+  "types": "lib/powerauth.d.ts",
   "source": "src/index",
   "files": [
     "README.md",

@@ -22,7 +22,7 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
 
     protected abstract readonly pluginName: string;
 
-    callNative<T>(name: string, ...args): Promise<T> {
+    callNative<T>(name: string, args: any[]): Promise<T> {
         return new Promise<T>(
             (resolve, reject) => {
                 cordova.exec(
@@ -32,15 +32,15 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
                         resolve(parsed.result); 
                     },
                     // error callback
-                    (error) => { 
-                        reject(error) 
+                    (error) => {
+                        reject(JSON.parse(error)) 
                     },
                     // native platform plugin name
                     this.pluginName,
                     // function name
                     name,
                     // function arguments
-                    ...args
+                    args
                 );
             }
         );

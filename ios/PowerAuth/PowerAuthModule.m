@@ -412,7 +412,7 @@ PAJS_METHOD_START(verifyServerSignedData,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(data, PAJS_NONNULL_ARGUMENT NSString*)
                   PAJS_ARGUMENT(signature, PAJS_NONNULL_ARGUMENT NSString*)
-                  PAJS_ARGUMENT(masterKey, BOOL))
+                  PAJS_BOOL_ARGUMENT(masterKey))
 {
     PA_BLOCK_START
     BOOL result = [powerAuth verifyServerSignedData:[RCTConvert NSData:data] signature:signature masterKey:masterKey];
@@ -725,7 +725,7 @@ PAJS_METHOD_END
 PAJS_METHOD_START(authenticateWithBiometry,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(prompt, PAJS_NONNULL_ARGUMENT NSDictionary*)
-                  PAJS_ARGUMENT(makeReusable, BOOL))
+                  PAJS_BOOL_ARGUMENT(makeReusable))
 {
     PA_BLOCK_START
     if (![self validateBiometryStatusBeforeUse:powerAuth reject:reject]) {

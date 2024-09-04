@@ -37,15 +37,15 @@ class NativeObjectRegisterImpl extends NativeCordovaModule implements NativeObje
     readonly pluginName = "PowerAuthObjectRegister";
 
     async debugDump(instanceId: string | undefined): Promise<Array<any>> {
-        return await callNative("debugDump", instanceId)
+        return await this.callNative("debugDump", [instanceId])
     }
     
     async debugCommand(command: any, data: any): Promise<any> {
-        return await callNative("debugCommand", command, data)
+        return await this.callNative("debugCommand", [command, data])
     }
 
     async isValidNativeObject(objectId: string): Promise<boolean> {
-        return await callNative("isValidNativeObject", objectId)
+        return await this.callNative("isValidNativeObject", [objectId])
     }
 }
 
@@ -54,27 +54,27 @@ class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerA
     readonly pluginName = "PowerAuthEncryptorModule";
 
     async initialize(scope: string, ownerId: string, autoreleaseTime: number): Promise<string> {
-        return await callNative("initialize", scope, ownerId, autoreleaseTime)
+        return await this.callNative("initialize", [scope, ownerId, autoreleaseTime])
     }
 
     async release(encryptorId: string): Promise<void> {
-        return await callNative("release", encryptorId);
+        return await this.callNative("release", [encryptorId]);
     }
 
     async canEncryptRequest(encryptorId: string): Promise<boolean> {
-        return await callNative("canEncryptRequest", encryptorId);
+        return await this.callNative("canEncryptRequest", [encryptorId]);
     }
 
     async encryptRequest(encryptorId: string, data: string | undefined, format: string | undefined): Promise<EncryptedRequestData> {
-        return await callNative("encryptRequest", encryptorId, data, format);
+        return await this.callNative("encryptRequest", [encryptorId, data, format]);
     }
 
     async canDecryptResponse(encryptorId: string): Promise<boolean> {
-        return await callNative("canDecryptResponse", encryptorId);
+        return await this.callNative("canDecryptResponse", [encryptorId]);
     }
 
     async decryptResponse(encryptorId: string, cryptogram: PowerAuthCryptogram, outputFormat: string | undefined): Promise<string> {
-        return await callNative("decryptResponse", encryptorId, cryptogram, outputFormat);
+        return await this.callNative("decryptResponse", [encryptorId, cryptogram, outputFormat]);
     }
 }
 
@@ -83,7 +83,7 @@ class PowerAuthPassphraseMeterImpl extends NativeCordovaModule implements PowerA
     readonly pluginName = "PowerAuthPassphraseMeterModule";
     
     async testPin(pin: RawPasswordType): Promise<PinTestResult> {
-        return await callNative("testPin", pin);
+        return await this.callNative("testPin", [pin]);
     }
 }
 
@@ -92,39 +92,39 @@ class PowerAuthPasswordImpl extends NativeCordovaModule implements PowerAuthPass
     readonly pluginName = "PowerAuthPasswordModule";
 
     async initialize(destroyOnUse: boolean, ownerId: string | undefined, autoreleaseTime: number): Promise<string> {
-        return await callNative("initialize", destroyOnUse, ownerId, autoreleaseTime);
+        return await this.callNative("initialize", [destroyOnUse, ownerId, autoreleaseTime]);
     }
 
     async release(objectId: string): Promise<void> {
-        return await callNative("release", objectId);
+        return await this.callNative("release", [objectId]);
     }
 
     async clear(objectId: string): Promise<void> {
-        return await callNative("clear", objectId);
+        return await this.callNative("clear", [objectId]);
     }
     
     async length(objectId: string): Promise<number> {
-        return await callNative("length", objectId);
+        return await this.callNative("length", [objectId]);
     }
 
     async isEqual(objectId1: string, objectId2: string): Promise<boolean> {
-        return await callNative("isEqual", objectId1, objectId2);
+        return await this.callNative("isEqual", [objectId1, objectId2]);
     }
 
     async addCharacter(objectId: string, character: number): Promise<number> {
-        return await callNative("addCharacter", objectId, character);
+        return await this.callNative("addCharacter", [objectId, character]);
     }
     
     async insertCharacter(objectId: string, character: number, position: number): Promise<number> {
-        return await callNative("insertCharacter", objectId, character, position);
+        return await this.callNative("insertCharacter", [objectId, character, position]);
     }
 
     async removeCharacter(objectId: string, position: number): Promise<number> {
-        return await callNative("removeCharacter", objectId, position);
+        return await this.callNative("removeCharacter", [objectId, position]);
     }
     
     async removeLastCharacter(objectId: string): Promise<number> {
-        return await callNative("removeLastCharacter", objectId);
+        return await this.callNative("removeLastCharacter", [objectId]);
     }
 }
 
