@@ -2,6 +2,9 @@
 const gulp = require("gulp"); // gulp itself
 const ts = require("gulp-typescript"); // to be able to compiles typescript
 const replace = require('gulp-replace');
+const concat = require('gulp-concat');
+const { build } = require("esbuild");
+const stripImportExport = require("gulp-strip-import-export"); 
 const { rimraf } = require('rimraf'); // folder cleaner
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -103,7 +106,23 @@ const tmpDir = ".build";
             .src([`${CDV_patchSourcesDir}/src/**/**.ts`], { base: CDV_patchSourcesDir })
             .pipe(gulp.dest(CDV_tempDir));
 
-    const compileCDVTask = () => exec(`node_modules/esbuild/bin/esbuild ${CDV_tempDir}/src/index.ts --bundle --format=cjs --target=ios13 --outfile=${CDV_outFile}`);
+    const compileCDVTask = () => 
+        build({
+            entryPoints: [`${CDV_tempDir}/src/index.ts`],
+            outfile: CDV_outFile,
+            bundle: true,
+            format: "cjs",
+            target: "ios13",
+            minify: true
+        })
+
+    const createCDVDtsTask = () =>
+        gulp
+            .src([`${CDV_tempDir}/src/PowerAuth**.ts`, `${CDV_tempDir}/src/*/**.ts`])
+            .pipe(stripImportExport())
+            .pipe(ts({ declaration: true, emitDeclarationOnly: true }))
+            .pipe(concat(`typings.d.ts`))
+            .pipe(gulp.dest(CDV_buildDir))
 
     // TODO: extract
     const objectsToExport = [
@@ -134,7 +153,7 @@ const tmpDir = ".build";
     ]
 
     const exportModules = () => {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
             objectsToExport.forEach((v) => {
                 fs.writeFileSync(
                     `${CDV_outFileDir}/${v}.js`, 
@@ -156,15 +175,9 @@ const tmpDir = ".build";
             .src([`${CDV_patchSourcesDir}/ios/PowerAuth/**`], { base: CDV_patchSourcesDir })
             .pipe(gulp.dest(CDV_buildDir));
 
-    const copyCDVPackageJson = () => 
+    const copyCDVStaticFiles = () => 
         gulp
-            .src(CDV_packageJson)
-            .pipe(gulp.dest(CDV_buildDir));
-
-    const patchPluginXml = () => {
-
-        return gulp
-            .src(CDV_pluginXml)
+            .src([CDV_packageJson, CDV_pluginXml])
             .pipe(
                 replace(
                     "<!-- PLACEHOLDER_MODULES -->",
@@ -174,12 +187,11 @@ const tmpDir = ".build";
                 )
             )
             .pipe(gulp.dest(CDV_buildDir));
-    }
 
     const packCDVPackage = () => exec(`pushd ${CDV_buildDir} && npm pack`);
 
     // join cordova compile and modify for export task
-    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, exportModules, copyCDVFiles, copyCDVPatchIOSFiles, patchPluginXml, copyCDVPackageJson, packCDVPackage, clearCDVtemp);
+    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, createCDVDtsTask, exportModules, copyCDVFiles, copyCDVPatchIOSFiles, copyCDVStaticFiles, packCDVPackage, clearCDVtemp);
 }
 
 let cleanBuild = () => rimraf([ buildDir ])
