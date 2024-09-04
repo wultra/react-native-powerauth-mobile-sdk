@@ -15,7 +15,7 @@
     "ios/PowerAuth/*.mm",
     "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
-    "react-native-powerauth-mobile-sdk.podspec"
+    "plugin.xml"
   ],
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {

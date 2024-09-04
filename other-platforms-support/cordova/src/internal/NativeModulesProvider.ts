@@ -23,6 +23,7 @@ import { NativeObject } from "./NativeObject";
 import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
 import { NativeCordovaModule } from "./NativeCordovaModule";
+import { NativePowerAuth } from "./NativePowerAuth"
 
 class Provider implements NativeModulesProviderIfc {
     PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
