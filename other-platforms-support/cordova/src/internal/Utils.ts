@@ -15,6 +15,17 @@
  */
 
 export class Utils {
-    static isDev = true; // TODO: configurable or something else?
-    static platformOs = "ios"; // TODO: real platform
+    static isDev = false // TODO: set real value
+    static platformOs = this.detectPlatform()
+
+    // TODO: we should probably make this more robust
+    private static detectPlatform(): string {
+
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            console.log("ios detected")
+            return "ios";
+        }
+    
+        return "android"; // we consider everything else android
+    }
 }

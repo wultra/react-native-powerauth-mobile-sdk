@@ -570,7 +570,7 @@ PAJS_METHOD_END
 PAJS_METHOD_START(fetchEncryptionKey,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(authDict, NSDictionary*)
-                  PAJS_ARGUMENT(index, PAJS_NONNULL_ARGUMENT NSNumber*)) // TODO: changed from NSInteger, make sure it works
+                  PAJS_ARGUMENT(index, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     PA_BLOCK_START
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forCommit:NO];

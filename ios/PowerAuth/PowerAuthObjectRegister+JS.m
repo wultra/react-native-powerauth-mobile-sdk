@@ -32,7 +32,6 @@
 
 // MARK: - JS interface
 
-// TODO: fixme
 - (void) PAJS_INVALIDATE_METHOD
 {
     // This is invoked by RN bridge when devmode reload is requested.

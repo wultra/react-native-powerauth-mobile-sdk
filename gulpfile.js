@@ -124,7 +124,7 @@ const tmpDir = ".build";
             .pipe(concat(`typings.d.ts`))
             .pipe(gulp.dest(CDV_buildDir))
 
-    // TODO: extract
+    // TODO: extract from the code
     const objectsToExport = [
         "PowerAuth",
         "PowerAuthActivation",
