@@ -5,9 +5,7 @@
     <description>PowerAuth Mobile SDK for adds capability for authentication and transaction signing into the mobile apps</description>
     <license>Apache 2.0</license>
     <keywords>cordova,powerauth</keywords>
-    <js-module src="lib/powerauth.js" name="powerauth">
-        <clobbers target="PowerAuthPlugin" />
-    </js-module>
+<!-- PLACEHOLDER_MODULES -->
     <engines>
         <engine name="cordova" version=">=12.0.0"/>
         <engine name="cordova-android" version=">=12.0.0" />

@@ -5,7 +5,7 @@
     "removeComments": false,
     "declaration": true,
     "lib": ["ES2016"],
-    "outFile": "powerauth.js",
+    "outFile": "PowerAuthPlugin.js",
     "moduleResolution": "Node"
   }
 }
