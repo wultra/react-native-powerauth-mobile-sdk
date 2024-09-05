@@ -8,7 +8,8 @@
     "start": "react-native start",
     "pods": "pushd ios; pod install; popd",
     "test": "echo Just run this app; exit 1",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "reinstallPlugin": "npm r react-native-powerauth-mobile-sdk && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.0.tgz"
   },
   "dependencies": {
     "chalk": "^4.1.0",
