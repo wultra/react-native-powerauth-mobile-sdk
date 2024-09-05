@@ -16,7 +16,7 @@
 
 import { Config, ServerVersion, VerboseLevel } from "powerauth-js-test-client";
 import { Platform } from "react-native";
-import { Config as EnvConfig } from 'react-native-config';
+import { Config as EnvConfig } from "react-native-config";
 
 export interface EnrollmentConfig {
     baseUrl: string

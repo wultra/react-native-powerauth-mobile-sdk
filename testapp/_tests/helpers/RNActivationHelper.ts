@@ -24,7 +24,7 @@ import {
     PowerAuthClientConfiguration,
     PowerAuthConfiguration,
     PowerAuthCreateActivationResult,
-    PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk'
+    PowerAuthKeychainConfiguration } from "react-native-powerauth-mobile-sdk";
 import { RNHttpClient } from './RNHttpClient'
 
 /**

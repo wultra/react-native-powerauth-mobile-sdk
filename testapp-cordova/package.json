@@ -1,0 +1,39 @@
+{
+    "name": "com.wultra.pwatest",
+    "displayName": "PowerAuthTest",
+    "version": "1.0.0",
+    "description": "A sample Cordova application that runs PowerAuth tests.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "reinstallPlugin": "cordova plugin remove cordova-powerauth-mobile-sdk && cordova plugin add ../build/cdv",
+        "build": "node node_modules/gulp/bin/gulp.js"
+    },
+    "keywords": [
+        "ecosystem:cordova"
+    ],
+    "author": "Apache Cordova Team",
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "buffer": "^6.0.3",
+        "chalk": "^4.1.2",
+        "cordova-android": "^13.0.0",
+        "cordova-ios": "^7.1.1",
+        "cordova-powerauth-mobile-sdk": "file:../build/cdv",
+        "dotenv": "^16.4.5",
+        "esbuild": "^0.23.1",
+        "gulp": "^5.0.0",
+        "gulp-replace": "^1.1.4",
+        "powerauth-js-test-client": "^0.2.9",
+        "rimraf": "^6.0.1"
+    },
+    "cordova": {
+        "platforms": [
+            "ios",
+            "android"
+        ],
+        "plugins": {
+            "cordova-powerauth-mobile-sdk": {}
+        }
+    }
+}
