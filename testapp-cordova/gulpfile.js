@@ -22,7 +22,6 @@ class Platform {
     private static detectPlatform(): string {
 
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-            console.log("ios detected")
             return "ios";
         }
     
