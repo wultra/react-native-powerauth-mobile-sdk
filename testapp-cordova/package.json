@@ -6,6 +6,7 @@
     "main": "index.js",
     "scripts": {
         "ios": "npx cordova run ios",
+        "pods": "pushd \"platforms/ios\"; pod install; popd",
         "installPlugin": "npx cordova plugin add ../build/cdv",
         "reinstallPlugin": "(npx cordova plugin remove cordova-powerauth-mobile-sdk || true) && npm run installPlugin",
         "build": "node node_modules/gulp/bin/gulp.js"
