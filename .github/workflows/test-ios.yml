@@ -20,5 +20,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm i
+      - name: Install Cordova
+        run: npm install -g cordova
       - name: Run iOS Tests
         run: npm run buildAndRunCordovaIosTests
