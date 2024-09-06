@@ -6,7 +6,8 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "reinstallPlugin": "cordova plugin remove cordova-powerauth-mobile-sdk && cordova plugin add ../build/cdv",
+        "installPlugin": "cordova plugin add ../build/cdv",
+        "reinstallPlugin": "cordova plugin remove cordova-powerauth-mobile-sdk && npm run installPlugin",
         "build": "node node_modules/gulp/bin/gulp.js"
     },
     "keywords": [
