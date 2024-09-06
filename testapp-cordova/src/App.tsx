@@ -108,6 +108,48 @@ class TestExecutor implements UserInteraction {
 
 declare var cordova: any;
 
+class TestServer {
+
+  log(...data) {
+    this.call("log", data)
+  }
+
+  reportStatus(data) {
+    this.call("reportStatus", data)
+  }
+
+  private call(method, object) {
+    fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) })
+  }
+}
+
+const server = new TestServer();
+
+const logF = console.log;
+const warnF = console.warn;
+const errorF = console.error;
+const infoF = console.info;
+
+console.log = (...params) => {
+  server.log(params)
+  logF(...params);
+}
+
+console.warn = (...params) => {
+  server.log(params)
+  warnF(...params);
+}
+
+console.info = (...params) => {
+  server.log(params)
+  infoF(...params);
+}
+
+console.error = (...params) => {
+  server.log(params)
+  errorF(...params);
+}
+
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
@@ -127,8 +169,11 @@ function onDeviceReady() {
     console.log(message)
     await new Promise<void>(resolve => setTimeout(resolve, duration)) 
   }, (progress) => {
-    progressEl.innerHTML = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;
-  }, (progress) => {
-    statusEl.innerHTML = progress ? "Tests running" : "Tests finished";
+    const text = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;
+    console.log(text)
+    server.reportStatus(progress)
+    progressEl.innerHTML = text;
+  }, (finished) => {
+    statusEl.innerHTML = finished ? "Tests running" : "Tests finished";
   })
 }

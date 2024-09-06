@@ -52,11 +52,12 @@ const compile = () =>
         entryPoints: [`${tempDir}/src/App.tsx`],
         outfile: outFile,
         bundle: true,
+        target: "ios13",
         // minify: true // do not minify for easier debug
     })
 
 // to make sure all files are copied in the proper place
-const buildiOS = () => exec("cordova build ios")
+const prepareIOS = () => exec("cordova prepare ios")
 
 gulp.task("default", gulp.series(
     cleanTemp,
@@ -64,5 +65,5 @@ gulp.task("default", gulp.series(
     copyAppFiles,
     compile,
     cleanTemp,
-    buildiOS,
+    prepareIOS,
 ));

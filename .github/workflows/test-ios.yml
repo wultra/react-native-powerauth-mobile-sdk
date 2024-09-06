@@ -1,4 +1,4 @@
-name: Build
+name: iOS Tests
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   pull_request:
 
 jobs:
-  build-library:
-    name: Build and Pack the Library
+  test-cordova:
+    name: Test Cordova iOS
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
@@ -20,5 +20,5 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm i
-      - name: run library build
-        run: npm run build
+      - name: Run iOS Tests
+        run: npm run buildAndRunCordovaIosTests
