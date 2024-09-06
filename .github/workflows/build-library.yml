@@ -1,0 +1,24 @@
+name: build library
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  pull_request:
+
+jobs:
+  build-library:
+    name: Build and Pack the Library
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm i
+      - name: run library build
+        run: npm run build
