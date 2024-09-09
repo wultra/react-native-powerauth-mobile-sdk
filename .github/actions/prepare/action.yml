@@ -1,5 +1,11 @@
 name: Prepare PowerAuth JS environment
 
+inputs:
+  env-file:
+    description: Contents of the testapp/.env file
+    required: false
+    default: "empty"
+
 runs:
   using: composite
   steps:
@@ -8,8 +14,8 @@ runs:
         with:
           node-version: 22
       - name: Install dependencies
+        shell: bash
         run: npm i
       - name: Set .env file
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: echo -e "$ENV_TEST_FILE" > testapp/.env
+        shell: bash
+        run: echo -e "${{ inputs.env-file }}" > testapp/.env
