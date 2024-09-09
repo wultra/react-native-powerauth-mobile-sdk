@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node node_modules/gulp/bin/gulp.js",
     "buildAndRunCordovaIosTests": "npm run build && pushd testapp-cordova && npm run reinstallPlugin && npm run build && npm run ios && popd && node test-listener.js",
-    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npm run ios && popd && node test-listener.js"
+    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npx pod-install && npm run ios && popd && node test-listener.js"
   },
   "files": [
     "README.md",
@@ -58,6 +58,7 @@
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
+    "pod-install": "^0.2.2",
     "react-native": "^0.73.4",
     "rimraf": "^6.0.1"
   }
