@@ -53,7 +53,7 @@ const envConfigStr = `const EnvConfig = ${JSON.stringify(envConfig)};`
 
 const copyTestFiles = () =>
     gulp
-        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/Config.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
+        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/Config.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
         .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk";/g, ''))
         .pipe(replace('import { Platform } from "react-native";', platformClass))
         .pipe(replace('import { Config as EnvConfig } from "react-native-config";', envConfigStr))

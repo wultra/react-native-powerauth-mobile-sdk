@@ -14,143 +14,9 @@
 // limitations under the License.
 //
 
-import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
-import { getTestConfig } from './Config'
-import { TestContext, UserPromptDuration, UserInteraction, TestCounter, TestProgressObserver } from './testbed'
-import { TestLog } from './testbed/TestLog'
-import { TestMonitorGroup } from './testbed/TestMonitor'
-import { TestRunner } from './testbed/TestRunner'
- 
-// TODO: this is copied from the react native app. improve - extract instead of copy
-class TestExecutor implements UserInteraction {
+// @ts-nocheck
 
-  private isRunning = false
-  private readonly onShowPrompt: (context: TestContext, message: string, duration: number) => Promise<void>
-  private readonly onProgress: TestProgressObserver
-  private readonly onCompletion: (inProgress: boolean) => void
-  private testRunner?: TestRunner
-  
-
-  constructor(
-    onShowPrompt: (context: TestContext, message: string, duration: number) => Promise<void>,
-    onProgress: TestProgressObserver,
-    onCompletion: (inProgress: boolean)=>void) {
-    this.onShowPrompt = onShowPrompt
-    this.onProgress = onProgress
-    this.onCompletion = onCompletion
-    this.runTests(false)
-  }
-  
-  async runTests(interactive: boolean) {
-    if (this.isRunning) {
-      console.warn('Tests are still in progress...');
-      return
-    }
-    this.onCompletion(true)
-    this.isRunning = true
-    
-    const cfg = await getTestConfig()
-    const logger = new TestLog()
-    const monitor = new TestMonitorGroup([ logger ])
-    const runner = this.testRunner = new TestRunner('Automatic tests', cfg, monitor, this)
-    runner.allTestsCounter.addObserver(this.onProgress)
-    const tests = interactive ? getInteractiveLibraryTests() :  getLibraryTests().concat(getTestbedTests())
-    try {
-    await runner.runTests(tests)
-    } catch (e) {
-      console.log("Run Tests failed");
-      console.error(e);
-    }
-    this.isRunning = false
-    this.testRunner = undefined
-    this.onCompletion(false)
-  }
-
-  cancelTests() {
-    this.testRunner?.cancelRunningTests()
-  }
-
-  stillRunnint(): boolean {
-    return this.isRunning
-  }
-
-  async showPrompt(context: TestContext, message: string, duration: UserPromptDuration): Promise<void> {
-    let sleepDuration: number
-    if (duration === UserPromptDuration.QUICK) {
-       sleepDuration = 500
-    } else if (duration === UserPromptDuration.SHORT) {
-      sleepDuration = 2000
-    } else {
-      sleepDuration = 5000
-    }
-    return await this.onShowPrompt(context, message, sleepDuration)
-  }
-
-  async sleepWithProgress(context: TestContext, durationMs: number): Promise<void> {
-    let remaining = durationMs
-    while (remaining > 0) {
-      if (remaining >= 1000) {
-        const timeInSeconds = Math.round(remaining * 0.001)
-        if (timeInSeconds > 1) {
-          await this.onShowPrompt(context, `Sleeping for ${timeInSeconds} seconds...`, 1000)
-        } else {
-          await this.onShowPrompt(context, `Finishing sleep...`, 1000)
-        }
-        remaining -= 1000
-      } else {
-        // Otherwise just sleep for the remaining time
-        await new Promise<void>(resolve => setTimeout(resolve, remaining)) 
-        remaining = 0
-      }
-    }
-  }
-}
-
-declare var cordova: any;
-
-class TestServer {
-
-  log(...data) {
-    this.call("log", data)
-  }
-
-  reportStatus(data) {
-    this.call("reportStatus", data)
-  }
-
-  private call(method, object) {
-    fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) }).catch((e) => {
-      // do we need to react?
-    })
-  }
-}
-
-const server = new TestServer();
-
-const logF = console.log;
-const warnF = console.warn;
-const errorF = console.error;
-const infoF = console.info;
-
-console.log = (...params) => {
-  server.log(params)
-  logF(...params);
-}
-
-console.warn = (...params) => {
-  server.log(params)
-  warnF(...params);
-}
-
-console.info = (...params) => {
-  server.log(params)
-  infoF(...params);
-}
-
-console.error = (...params) => {
-  server.log(params)
-  errorF(...params);
-}
+import { TestExecutor } from './TestExecutor'
 
 document.addEventListener('deviceready', onDeviceReady, false);
 
@@ -163,17 +29,12 @@ function onDeviceReady() {
 
   console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
   document.getElementById('deviceready').classList.add('ready');
-  document.getElementById('deviceready').addEventListener('click', async function (e) {
-    
-  })
 
   const executor = new TestExecutor(async (_context, message, duration) => {
     console.log(message)
     await new Promise<void>(resolve => setTimeout(resolve, duration)) 
   }, (progress) => {
-    const text = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;
-    server.reportStatus(progress)
-    progressEl.innerHTML = text;
+    progressEl.innerHTML = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;;
   }, (finished) => {
     statusEl.innerHTML = finished ? "Tests running" : "Tests finished";
   })

@@ -14,17 +14,17 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v4
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm i
-      - name: Install Cordova
-        run: npm install -g cordova
-      - name: Set .env file
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: echo -e "$ENV_TEST_FILE" > testapp/.env
-      - name: Run iOS Tests
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
+      - name: Run Cordova iOS Tests
         run: npm run buildAndRunCordovaIosTests
+  test-react-native:
+    name: Test React Native iOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
+      - name: Run React-Native iOS Tests
+        run: npm run buildAndRunReactIosTests
