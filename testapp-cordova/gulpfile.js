@@ -74,7 +74,7 @@ const compile = () =>
     })
 
 // to make sure all files are copied in the proper place
-const prepareIOS = () => exec("cordova prepare ios")
+const prepareIOS = () => exec("npx cordova prepare ios")
 
 // patch testapp files
 const patchNativeFiles = () =>
