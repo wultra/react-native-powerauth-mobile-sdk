@@ -25,6 +25,6 @@ jobs:
       - name: Set .env file
         env:
           ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: echo $ENV_TEST_FILE > testapp/.env
+        run: echo "$ENV_TEST_FILE" > testapp/.env
       - name: Run iOS Tests
         run: npm run buildAndRunCordovaIosTests
