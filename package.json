@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node node_modules/gulp/bin/gulp.js",
     "buildAndRunCordovaIosTests": "npm run build && pushd testapp-cordova && npm run reinstallPlugin && npm run build && npm run ios && popd && node test-listener.js",
-    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npx pod-install && npm run ios && popd && node test-listener.js"
+    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npx pod-install && (npm run start & npm run ios) && popd && node test-listener.js"
   },
   "files": [
     "README.md",
