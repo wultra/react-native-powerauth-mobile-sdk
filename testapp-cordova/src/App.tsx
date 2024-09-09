@@ -119,7 +119,9 @@ class TestServer {
   }
 
   private call(method, object) {
-    fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) })
+    fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) }).catch((e) => {
+      // do we need to react?
+    })
   }
 }
 
@@ -170,7 +172,6 @@ function onDeviceReady() {
     await new Promise<void>(resolve => setTimeout(resolve, duration)) 
   }, (progress) => {
     const text = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;
-    console.log(text)
     server.reportStatus(progress)
     progressEl.innerHTML = text;
   }, (finished) => {

@@ -30,7 +30,7 @@ http.createServer(function (req, res) {
                     console.log("Finished with success - exit")
                     exit(0)
                 } else {
-                    console.log("Finished with success - error exit")
+                    console.log("Finished with failures - error exit")
                     exit(1)
                 }
             }

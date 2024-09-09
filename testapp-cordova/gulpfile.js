@@ -59,6 +59,12 @@ const compile = () =>
 // to make sure all files are copied in the proper place
 const prepareIOS = () => exec("cordova prepare ios")
 
+// patch testapp files
+const patchNativeFiles = () =>
+    gulp
+        .src("patch-files/platforms/**/**", { base: "patch-files" })
+        .pipe(gulp.dest("."))
+
 gulp.task("default", gulp.series(
     cleanTemp,
     copyTestFiles,
@@ -66,4 +72,5 @@ gulp.task("default", gulp.series(
     compile,
     cleanTemp,
     prepareIOS,
+    patchNativeFiles,
 ));
