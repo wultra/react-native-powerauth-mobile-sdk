@@ -41,6 +41,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasValidActivation()).toBe(false)
         expect(await sdk.getActivationIdentifier()).toBeUndefined()
         expect(await sdk.getActivationFingerprint()).toBeUndefined()
+        expect(await sdk.getExternalPendingOperation()).toBeUndefined()
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
         await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})

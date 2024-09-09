@@ -15,9 +15,9 @@ PODS:
     - hermes-engine/Pre-built (= 0.71.6)
   - hermes-engine/Pre-built (0.71.6)
   - libevent (2.1.12)
-  - PowerAuth2 (1.7.8):
-    - PowerAuthCore (~> 1.7.8)
-  - PowerAuthCore (1.7.8)
+  - PowerAuth2 (1.7.9):
+    - PowerAuthCore (~> 1.7.9)
+  - PowerAuthCore (1.7.9)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -492,8 +492,8 @@ SPEC CHECKSUMS:
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: b434cea529ad0152c56c7cb6486b0c4c0b23b5de
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
-  PowerAuth2: a48e01f00af5f5a087cdd328597e07584bd52cef
-  PowerAuthCore: 6d509d68db1cac9ac541205516f6a080d85d1195
+  PowerAuth2: 4672bfcab640cec9dd1fa53a9729fcc23867e992
+  PowerAuthCore: f228a87fb30f240f49c353fb403010d1d4ff7407
   RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
   RCTRequired: 5c6fd63b03abb06947d348dadac51c93e3485bd8
   RCTTypeSafety: 1c66daedd66f674e39ce9f40782f0d490c78b175
@@ -525,6 +525,6 @@ SPEC CHECKSUMS:
   ReactCommon: 0c43eaeaaee231d7d8dc24fc5a6e4cf2b75bf196
   Yoga: ba09b6b11e6139e3df8229238aa794205ca6a02a
 
-PODFILE CHECKSUM: ceffd6bd1db0bcf2c7de6fe69e15756895aeb9c3
+PODFILE CHECKSUM: 7bd465c750033c5e92722113bbf2c8741bb3e0c0
 
 COCOAPODS: 1.15.2
