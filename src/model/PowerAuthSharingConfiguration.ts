@@ -98,7 +98,7 @@ export function buildSharingConfiguration(input: PowerAuthSharingConfigurationTy
         appGroup: input?.appGroup ?? "",
         appIdentifier: input?.appIdentifier ?? "",
         keychainAccessGroup: input?.keychainAccessGroup ?? "",
-        sharedMemoryIdentifier: input?.sharedMemoryIdentifier ?? "",
+        sharedMemoryIdentifier: input?.sharedMemoryIdentifier,
         isProvided: input !== undefined
     })
 }
