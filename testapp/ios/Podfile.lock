@@ -273,8 +273,8 @@ PODS:
     - react-native-config/App (= 1.5.0)
   - react-native-config/App (1.5.0):
     - React-Core
-  - react-native-powerauth-mobile-sdk (2.5.0):
-    - PowerAuth2 (~> 1.7.8)
+  - react-native-powerauth-mobile-sdk (2.5.2):
+    - PowerAuth2 (~> 1.7.9)
     - React-Core
   - React-perflogger (0.71.6)
   - React-RCTActionSheet (0.71.6):
@@ -509,7 +509,7 @@ SPEC CHECKSUMS:
   React-jsinspector: d5ce2ef3eb8fd30c28389d0bc577918c70821bd6
   React-logger: 9332c3e7b4ef007a0211c0a9868253aac3e1da82
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
-  react-native-powerauth-mobile-sdk: 115eb6efa07267753b8e41796070f7b1a9a97072
+  react-native-powerauth-mobile-sdk: 6ed31fca4b6ba917b65faedd125421522d2de1fe
   React-perflogger: 43392072a5b867a504e2b4857606f8fc5a403d7f
   React-RCTActionSheet: c7b67c125bebeda9fb19fc7b200d85cb9d6899c4
   React-RCTAnimation: c2de79906f607986633a7114bee44854e4c7e2f5

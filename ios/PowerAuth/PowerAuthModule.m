@@ -191,10 +191,8 @@ PAJS_METHOD_START(hasPendingActivation,
 }
 PAJS_METHOD_END
 
-RCT_REMAP_METHOD(getExternalPendingOperation,
-                 instanceId:(NSString*)instanceId
-                 getExternalPendingOperationResolve:(RCTPromiseResolveBlock)resolve
-                 getExternalPendingOperationReject:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(getExternalPendingOperation,
+                  PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
     PowerAuthExternalPendingOperation * pendingOperation = powerAuth.externalPendingOperation;
@@ -208,6 +206,7 @@ RCT_REMAP_METHOD(getExternalPendingOperation,
     }
     PA_BLOCK_END
 }
+PAJS_METHOD_END
 
 PAJS_METHOD_START(fetchActivationStatus,
                   PAJS_ARGUMENT(instanceId, NSString*))

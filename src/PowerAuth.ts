@@ -205,7 +205,7 @@ export class PowerAuth {
      * @returns A promise with information about external pending operation.
      */
     getExternalPendingOperation(): Promise<PowerAuthExternalPendingOperation | undefined> {
-        return NativeWrapper.thisCall("getExternalPendingOperation", this.instanceId);
+        return NativeWrapper.thisCallNull("getExternalPendingOperation", this.instanceId);
     }
 
     /**
