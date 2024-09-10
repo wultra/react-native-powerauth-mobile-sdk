@@ -34,6 +34,8 @@ import { AuthResolver } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
 import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
 import { RawAuthentication, toRawPassword } from './internal/NativeTypes';
+import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
+import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -62,6 +64,12 @@ export class PowerAuth {
      */
     get keychainConfiguration(): PowerAuthKeychainConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.keychainConfiguration
+    }
+    /**
+     * Sharing configuration used to configure this instance of class.
+     */
+    get sharingConfiguration(): PowerAuthSharingConfigurationType | undefined {
+        return configRegister.get(this.instanceId)?.sharingConfiguration
     }
 
     /**
@@ -95,12 +103,14 @@ export class PowerAuth {
      * @param clientConfiguration  Configuration for internal HTTP client. If `undefined`, then the default configuration is used.
      * @param biometryConfiguration Biometry configuration. If `undefined`, then the default configuration is used.
      * @param keychainConfiguration Configuration for internal keychain storage. If `undefined`, then the default configuration is used.
+     * @param sharingConfiguration Configuration for iOS activation data sharing. If `undefined`, then no sharing configuration is applied.
      */
     configure(
         configuration: PowerAuthConfigurationType,
         clientConfiguration?: PowerAuthClientConfigurationType,
         biometryConfiguration?: PowerAuthBiometryConfigurationType,
-        keychainConfiguration?: PowerAuthKeychainConfigurationType
+        keychainConfiguration?: PowerAuthKeychainConfigurationType,
+        sharingConfiguration?: PowerAuthSharingConfigurationType
     ): Promise<boolean>;
 
     /**
@@ -127,6 +137,7 @@ export class PowerAuth {
         let clientConfiguration: PowerAuthClientConfigurationType
         let biometryConfiguration: PowerAuthBiometryConfigurationType
         let keychainConfiguration: PowerAuthKeychainConfigurationType
+        let sharingConfiguration: PowerAuthSharingConfigurationType
         if (typeof param1 === 'string') {
             configuration = buildConfiguration({
                 applicationKey: param1,
@@ -136,19 +147,22 @@ export class PowerAuth {
             clientConfiguration = buildClientConfiguration({enableUnsecureTraffic: args[3]})
             biometryConfiguration = buildBiometryConfiguration()
             keychainConfiguration = buildKeychainConfiguration()
+            sharingConfiguration = buildSharingConfiguration()
         } else {
             configuration = buildConfiguration(param1)
             clientConfiguration = buildClientConfiguration(args[0])
             biometryConfiguration = buildBiometryConfiguration(args[1])
             keychainConfiguration = buildKeychainConfiguration(args[2])
+            sharingConfiguration = buildSharingConfiguration(args[3])
         }
         configRegister.set(this.instanceId, {
             configuration: configuration,
             clientConfiguration: clientConfiguration,
             biometryConfiguration: biometryConfiguration,
-            keychainConfiguration: keychainConfiguration
+            keychainConfiguration: keychainConfiguration,
+            sharingConfiguration: sharingConfiguration
         })
-        return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration)
+        return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration)
     }
 
     /** 
@@ -184,6 +198,14 @@ export class PowerAuth {
      */
     hasPendingActivation(): Promise<boolean> {
         return NativeWrapper.thisCallBool("hasPendingActivation", this.instanceId);
+    }
+
+    /**
+     * Check if there's an external pending operation started in another application.
+     * @returns A promise with information about external pending operation.
+     */
+    getExternalPendingOperation(): Promise<PowerAuthExternalPendingOperation | undefined> {
+        return NativeWrapper.thisCall("getExternalPendingOperation", this.instanceId);
     }
 
     /**
@@ -570,6 +592,7 @@ interface InstanceConfigurations {
     clientConfiguration: PowerAuthClientConfigurationType
     biometryConfiguration: PowerAuthBiometryConfigurationType
     keychainConfiguration: PowerAuthKeychainConfigurationType
+    sharingConfiguration: PowerAuthSharingConfigurationType
 }
 
 /**

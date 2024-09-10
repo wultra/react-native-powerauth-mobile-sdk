@@ -24,7 +24,8 @@ import {
     PowerAuthClientConfiguration,
     PowerAuthConfiguration,
     PowerAuthCreateActivationResult,
-    PowerAuthKeychainConfiguration } from 'react-native-powerauth-mobile-sdk'
+    PowerAuthKeychainConfiguration, 
+    PowerAuthSharingConfiguration} from 'react-native-powerauth-mobile-sdk'
 import { RNHttpClient } from './RNHttpClient'
 
 /**
@@ -92,6 +93,11 @@ export interface CustomActivationHelperPrepareData extends ActivationHelperPrepa
      * Note that the configuration will be ignored if `useConfigObjects` is false and `instanceConfig` is undefined. 
      */
     biometryConfig?: PowerAuthBiometryConfiguration
+    /**
+     * If provided, then this sharing configuration will be applied to PowerAuth instance.
+     * Note that the configuration will be ignored if `useConfigObjects` is false and `instanceConfig` is undefined.
+     */
+    sharingConfiguration?: PowerAuthSharingConfiguration
 }
 
 /**
@@ -121,7 +127,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
                 clientConfig = new PowerAuthClientConfiguration()
                 clientConfig.enableUnsecureTraffic = allowUnsecure
             }
-            await sdk.configure(instanceConfig, clientConfig, pd.biometryConfig,  pd.keychainConfig)
+            await sdk.configure(instanceConfig, clientConfig, pd.biometryConfig,  pd.keychainConfig, pd.sharingConfiguration)
         } else {
             // Use legacy configuration
             await sdk.configure(appSetup.appKey, appSetup.appSecret, appSetup.masterServerPublicKey, cfg.enrollment.baseUrl, allowUnsecure)
