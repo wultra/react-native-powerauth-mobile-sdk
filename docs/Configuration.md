@@ -75,7 +75,7 @@ In case that you need an advanced configuration, then you can import and use the
   - `appIdentifier`- defines unique application identifier. This identifier helps you to determine which application currently holds the lock on activation data in a special operations.
   - `keychainAccessGroup` - defines keychain access group name used by the PowerAuthSDK keychain instances.
   - `sharedMemoryIdentifier` - defines optional identifier of memory shared between the applications in app group. If identifier is not provided then PowerAuthSDK calculate unique identifier based on `PowerAuth.instanceId`.
-  - If you're not familiar with sharing data between iOS applications, or app extensions, then please refer the native PowerAuht mobile SDK documentation, where this topic is explained in more detail. 
+  - If you're not familiar with sharing data between iOS applications, or app extensions, then please refer the native PowerAuth mobile SDK documentation, where this topic is explained in more detail. 
 
 
 > Note 1: Setting `authenticateOnBiometricKeySetup` parameter to `true` leads to use symmetric AES cipher on the background so both configuration and usage of biometric key require the biometric authentication. If set to `false`, then RSA cipher is used and only the usage of biometric key require the biometric authentication. This is due to fact, that RSA cipher can encrypt data with using it's public key available immediate after the key-pair is created in Android KeyStore.
