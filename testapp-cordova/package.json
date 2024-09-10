@@ -5,8 +5,9 @@
     "description": "A sample Cordova application that runs PowerAuth tests.",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "reinstallPlugin": "cordova plugin remove cordova-powerauth-mobile-sdk && cordova plugin add ../build/cdv",
+        "ios": "npx cordova run ios",
+        "installPlugin": "npx cordova plugin add ../build/cdv",
+        "reinstallPlugin": "(npx cordova plugin remove cordova-powerauth-mobile-sdk || true) && npm run installPlugin",
         "build": "node node_modules/gulp/bin/gulp.js"
     },
     "keywords": [
@@ -24,7 +25,7 @@
         "esbuild": "^0.23.1",
         "gulp": "^5.0.0",
         "gulp-replace": "^1.1.4",
-        "powerauth-js-test-client": "^0.2.9",
+        "powerauth-js-test-client": "^0.2.12",
         "rimraf": "^6.0.1"
     },
     "cordova": {

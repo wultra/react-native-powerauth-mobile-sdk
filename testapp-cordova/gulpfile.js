@@ -1,3 +1,19 @@
+//
+// Copyright 2024 Wultra s.r.o.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 const gulp = require("gulp");
 const replace = require('gulp-replace');
 const { build } = require("esbuild");
@@ -31,15 +47,16 @@ class Platform {
 `
 
 // parse environment configuration
-const getEnvConfig = dotenv.parse(fs.readFileSync(`${rnTestAppDir}/.env`))
-const envConfig = `const EnvConfig = ${JSON.stringify(getEnvConfig)};`
+const envConfig = dotenv.parse(fs.readFileSync(`${rnTestAppDir}/.env`))
+console.log(`Reading env config env with pa server ${envConfig.POWERAUTH_SERVER_URL} and enrollment server ${envConfig.ENROLLMENT_SERVER_URL}`)
+const envConfigStr = `const EnvConfig = ${JSON.stringify(envConfig)};`
 
 const copyTestFiles = () =>
     gulp
-        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/Config.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
+        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/Config.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
         .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk";/g, ''))
         .pipe(replace('import { Platform } from "react-native";', platformClass))
-        .pipe(replace('import { Config as EnvConfig } from "react-native-config";', envConfig))
+        .pipe(replace('import { Config as EnvConfig } from "react-native-config";', envConfigStr))
         .pipe(gulp.dest(tempDir));
 
 const copyAppFiles = () =>
@@ -52,11 +69,18 @@ const compile = () =>
         entryPoints: [`${tempDir}/src/App.tsx`],
         outfile: outFile,
         bundle: true,
+        target: "ios13",
         // minify: true // do not minify for easier debug
     })
 
 // to make sure all files are copied in the proper place
-const buildiOS = () => exec("cordova build ios")
+const prepareIOS = () => exec("npx cordova prepare ios")
+
+// patch testapp files
+const patchNativeFiles = () =>
+    gulp
+        .src("patch-files/platforms/**/**", { base: "patch-files" })
+        .pipe(gulp.dest("."))
 
 gulp.task("default", gulp.series(
     cleanTemp,
@@ -64,5 +88,6 @@ gulp.task("default", gulp.series(
     copyAppFiles,
     compile,
     cleanTemp,
-    buildiOS,
+    prepareIOS,
+    patchNativeFiles,
 ));

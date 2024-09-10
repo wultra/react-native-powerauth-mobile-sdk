@@ -3,17 +3,17 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "android": "npx react-native run-android",
+    "ios": "npx react-native run-ios",
+    "start": "npx react-native start",
     "pods": "pushd ios; pod install; popd",
     "test": "echo Just run this app; exit 1",
     "lint": "eslint .",
-    "reinstallPlugin": "npm r react-native-powerauth-mobile-sdk && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.0.tgz"
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.0.tgz"
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.9",
+    "powerauth-js-test-client": "^0.2.12",
     "react": "18.2.0",
     "react-native": "0.71.6",
     "react-native-config": "^1.5.0",

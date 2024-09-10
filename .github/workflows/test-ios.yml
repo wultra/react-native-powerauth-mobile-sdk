@@ -1,0 +1,34 @@
+name: iOS Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  pull_request:
+
+jobs:
+  test-cordova:
+    name: Test Cordova iOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
+        with:
+           env-file: ${{ secrets.ENV_TEST_FILE }}
+      - name: Run Cordova iOS Tests
+        run: npm run buildAndRunCordovaIosTests
+  test-react-native:
+    name: Test React Native iOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
+        with:
+           env-file: ${{ secrets.ENV_TEST_FILE }}
+      - name: Run React-Native iOS Tests
+        run: npm run buildAndRunReactIosTests
