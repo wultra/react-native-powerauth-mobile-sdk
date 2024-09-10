@@ -69,7 +69,8 @@ PAJS_METHOD_START(configure,
                   PAJS_ARGUMENT(configuration, NSDictionary*)
                   PAJS_ARGUMENT(clientConfiguration, NSDictionary*)
                   PAJS_ARGUMENT(biometryConfiguration, NSDictionary*)
-                  PAJS_ARGUMENT(keychainConfiguration, NSDictionary*))
+                  PAJS_ARGUMENT(keychainConfiguration, NSDictionary*)
+                  PAJS_ARGUMENT(sharingConfiguration, NSDictionary*))
 {
     if (![self validateInstanceId:instanceId reject:reject]) {
         return;
@@ -82,6 +83,14 @@ PAJS_METHOD_START(configure,
     config.appSecret = CAST_TO(configuration[@"applicationSecret"], NSString);
     config.masterServerPublicKey = CAST_TO(configuration[@"masterServerPublicKey"], NSString);
     config.baseEndpointUrl = CAST_TO(configuration[@"baseEndpointUrl"], NSString);
+    // Prepare sharing configuration
+    if (CAST_TO(sharingConfiguration[@"isProvided"], NSNumber).boolValue) {
+        PowerAuthSharingConfiguration * sharingConfig = [[PowerAuthSharingConfiguration alloc] initWithAppGroup:CAST_TO(sharingConfiguration[@"appGroup"], NSString)
+                                                                                                  appIdentifier:CAST_TO(sharingConfiguration[@"appIdentifier"], NSString)
+                                                                                            keychainAccessGroup:CAST_TO(sharingConfiguration[@"keychainAccessGroup"], NSString)];
+        sharingConfig.sharedMemoryIdentifier = CAST_TO(sharingConfiguration[@"sharedMemoryIdentifier"], NSString);
+        config.sharingConfiguration = sharingConfig;
+    }
     
     if (![config validateConfiguration]) {
         reject(EC_WRONG_PARAMETER, @"Provided configuration is invalid", nil);
@@ -181,6 +190,24 @@ PAJS_METHOD_START(hasPendingActivation,
     PA_BLOCK_END
 }
 PAJS_METHOD_END
+
+RCT_REMAP_METHOD(getExternalPendingOperation,
+                 instanceId:(NSString*)instanceId
+                 getExternalPendingOperationResolve:(RCTPromiseResolveBlock)resolve
+                 getExternalPendingOperationReject:(RCTPromiseRejectBlock)reject)
+{
+    PA_BLOCK_START
+    PowerAuthExternalPendingOperation * pendingOperation = powerAuth.externalPendingOperation;
+    if (pendingOperation) {
+        resolve(@{
+            @"externalOperationType": pendingOperation.externalOperationType == PowerAuthExternalPendingOperationType_Activation ? @"ACTIVATION" : @"PROTOCOL_UPGRADE",
+            @"externalApplicationId": pendingOperation.externalApplicationId
+        });
+    } else {
+        resolve(nil);
+    }
+    PA_BLOCK_END
+}
 
 PAJS_METHOD_START(fetchActivationStatus,
                   PAJS_ARGUMENT(instanceId, NSString*))

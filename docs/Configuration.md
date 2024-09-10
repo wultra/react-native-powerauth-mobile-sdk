@@ -70,6 +70,14 @@ In case that you need an advanced configuration, then you can import and use the
   - `userDefaultsSuiteName` - iOS specific, defines suite name used by the `UserDefaults` that check for Keychain data presence. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
   - `minimalRequiredKeychainProtection` - Android specific, defines minimal required keychain protection level that must be supported on the current device. The default value is `PowerAuthKeychainProtection.NONE`. See note<sup>3</sup> below.
 
+- `PowerAuthSharingConfiguration` class or `PowerAuthSharingConfigurationType` interface - to configure an activation data sharing on iOS platform. You can alter the following parameters:
+  - `appGroup` - defines name of app group that allows you sharing data between multiple applications. Be aware that the value  overrides `accessGroupName` property if it's provided in `PowerAuthKeychainConfiguration`.
+  - `appIdentifier`- defines unique application identifier. This identifier helps you to determine which application currently holds the lock on activation data in a special operations.
+  - `keychainAccessGroup` - defines keychain access group name used by the PowerAuthSDK keychain instances.
+  - `sharedMemoryIdentifier` - defines optional identifier of memory shared between the applications in app group. If identifier is not provided then PowerAuthSDK calculate unique identifier based on `PowerAuth.instanceId`.
+  - If you're not familiar with sharing data between iOS applications, or app extensions, then please refer the native PowerAuth mobile SDK documentation, where this topic is explained in more detail. 
+
+
 > Note 1: Setting `authenticateOnBiometricKeySetup` parameter to `true` leads to use symmetric AES cipher on the background so both configuration and usage of biometric key require the biometric authentication. If set to `false`, then RSA cipher is used and only the usage of biometric key require the biometric authentication. This is due to fact, that RSA cipher can encrypt data with using it's public key available immediate after the key-pair is created in Android KeyStore.
 
 > Note 2: You're responsible to migrate the keychain and `UserDefaults` data from non-shared storage to the shared one, before you configure the first `PowerAuth` instance. This is quite difficult to do in JavaScript, so it's recommended to do not alter `PowerAuthKeychainConfiguration` once your application is already shipped in AppStore.
@@ -100,7 +108,15 @@ export default class AppMyApplication extends Component {
               const clientConfiguration = { enableUnsecureTraffic: false };
               const biometryConfiguration = { linkItemsToCurrentSet: true };
               const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
-              await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration);
+              const sharingConfiguration = {
+                    // This is iOS specific. All values will be ignored on Android platform.
+                    // All the following values are fake. Please read a native PowerAuth mobile SDK documentation
+                    // about activation data sharing that explains how to prepare parameters in detail.
+                    appGroup: "group.your.app.group",
+                    appIdentifier: "some.identifier",
+                    keychainAccessGroup: "keychain.access.group"
+              };
+              await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration);
               console.log("PowerAuth configuration successfull.");
             } catch(e) {
                 console.log(`PowerAuth failed to configure: ${e.code}`);

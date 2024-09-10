@@ -96,7 +96,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void configure(final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final Promise promise) {
+    public void configure(final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final ReadableMap sharingConfiguration, Promise promise) {
         try {
             boolean result = registerPowerAuthInstance(instanceId, () -> {
                 // Create configurations from maps
@@ -286,6 +286,12 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 promise.resolve(sdk.getActivationFingerprint());
             }
         });
+    }
+
+    @ReactMethod
+    public void getExternalPendingOperation(String instanceId, final Promise promise) {
+        // Not supported on Android
+        promise.resolve(null);
     }
 
     @ReactMethod
