@@ -82,6 +82,28 @@ const patchNativeFiles = () =>
         .src("patch-files/platforms/**/**", { base: "patch-files" })
         .pipe(gulp.dest("."))
 
+const patchIOSPlists = () => {
+
+    const plistPath = "platforms/ios/PowerAuthTest/PowerAuthTest-Info.plist";
+    const entlPaths = ["platforms/ios/PowerAuthTest/Entitlements-Debug.plist", "platforms/ios/PowerAuthTest/Entitlements-Release.plist"]
+    const plistBuddy = "/usr/libexec/PlistBuddy"
+    const faceIdKey = "NSFaceIDUsageDescription"
+    const secGroupKey = "com.apple.security.application-groups"
+    const secGroupValue = "group.com.wultra.testGroup"
+
+    return new Promise((resolve) => {
+        // we need to modify ios plist so we can test on faceid phones. The command check if the faceid key exist and if not, it will add it
+        exec(`${plistBuddy} -c "print :${faceIdKey}" ${plistPath} || ${plistBuddy} -c "add :${faceIdKey} string For Tests" ${plistPath}`)
+
+        // we also need to add entitlements to ensure that the shared data tests will work
+        entlPaths.forEach((entlFile) => {
+            exec(`${plistBuddy} -c "print :${secGroupKey}:0" ${entlFile} || (${plistBuddy} -c "add :${secGroupKey} array" ${entlFile} && ${plistBuddy} -c "add :${secGroupKey}:0 string ${secGroupValue}" ${entlFile})`)
+        })
+
+        resolve()
+    });
+}
+
 gulp.task("default", gulp.series(
     cleanTemp,
     copyTestFiles,
@@ -90,4 +112,5 @@ gulp.task("default", gulp.series(
     cleanTemp,
     prepareIOS,
     patchNativeFiles,
+    patchIOSPlists,
 ));

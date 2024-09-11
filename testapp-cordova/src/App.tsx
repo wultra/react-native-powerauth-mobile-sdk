@@ -26,16 +26,28 @@ function onDeviceReady() {
 
   const statusEl = document.getElementById('tests-status');
   const progressEl = document.getElementById('tests-progress');
+  const messageEl = document.getElementById("test-message");
 
   console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
   document.getElementById('deviceready').classList.add('ready');
 
   const executor = new TestExecutor(async (_context, message, duration) => {
-    console.log(message)
+    messageEl.innerHTML = message;
     await new Promise<void>(resolve => setTimeout(resolve, duration)) 
   }, (progress) => {
-    progressEl.innerHTML = `${progress.succeeded} succeeded<br>${progress.failed} failed<br>${progress.skipped} skipped<br>out of total  ${progress.total}`;;
+    progressEl.innerHTML = `<span style="color: green;">${progress.succeeded} succeeded</span><br><span style="color: red;">${progress.failed} failed</span><br><span style="color: orange;">${progress.skipped} skipped</span><br>out of total  ${progress.total}`;;
   }, (finished) => {
     statusEl.innerHTML = finished ? "Tests running" : "Tests finished";
+    messageEl.innerHTML = "";
+  })
+
+  document.getElementById('tests-simple').addEventListener('click', (e) => {
+    executor.runTests(false)
+  })
+  document.getElementById('tests-full').addEventListener('click', (e) => {
+    executor.runTests(true)
+  })
+  document.getElementById('tests-stop').addEventListener('click', (e) => {
+    executor.cancelTests()
   })
 }

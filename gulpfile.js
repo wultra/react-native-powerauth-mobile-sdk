@@ -151,6 +151,7 @@ const tmpDir = ".build";
         "PowerAuthActivationState",
         "PowerAuthBiometryConfiguration",
         "PowerAuthBiometryStatus",
+        "PowerAuthBiometryType",
         "PowerAuthClientConfiguration",
         "PowerAuthConfiguration",
         "PowerAuthError",
