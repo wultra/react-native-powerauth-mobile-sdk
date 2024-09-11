@@ -60,6 +60,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         expect(sdk2.clientConfiguration).toBeDefined()
         expect(sdk1.biometryConfiguration).toBeDefined()
         expect(sdk2.biometryConfiguration).toBeDefined()
+        expect(sdk1.sharingConfiguration).toBeDefined()
+        expect(sdk2.sharingConfiguration).toBeDefined()
 
         // pa1 & pa2 should be configured now, because PowerAuth is just a thin envelope
         // keeping only essential values
@@ -74,6 +76,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         expect(pa2.clientConfiguration).toBeDefined()
         expect(pa1.biometryConfiguration).toBeDefined()
         expect(pa2.biometryConfiguration).toBeDefined()
+        expect(pa1.sharingConfiguration).toBeDefined()
+        expect(pa2.sharingConfiguration).toBeDefined()
     }
 
     async testReconfigureWhileActive() {
@@ -93,6 +97,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         const keychainConfig2 = sdk2.keychainConfiguration
         const biometryConfig1 = sdk1.biometryConfiguration
         const biometryConfig2 = sdk2.biometryConfiguration
+        const sharingConfig1 = sdk1.sharingConfiguration
+        const sharingConfig2 = sdk2.sharingConfiguration
 
         expect(config1).toBeDefined()
         expect(config2).toBeDefined()
@@ -102,6 +108,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         expect(keychainConfig2).toBeDefined()
         expect(biometryConfig1).toBeDefined()
         expect(biometryConfig2).toBeDefined()
+        expect(sharingConfig1).toBeDefined()
+        expect(sharingConfig2).toBeDefined()
 
         await helper1.createActivation(undefined, this.prepareData(this.instance1))
         await helper2.createActivation(undefined, this.prepareData(this.instance2))
@@ -131,6 +139,16 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
 
         expect(await sdk1.validatePassword(this.password1)).toSucceed()
         expect(await sdk2.validatePassword(this.password2)).toSucceed()
+    }
+
+    async iosTestActivationSharing() {
+        const helper1 = await this.getHelper1()
+        const sdk1 = helper1.powerAuthSdk
+        expect(await sdk1.isConfigured()).toBe(true)
+        expect(sdk1.sharingConfiguration?.appGroup).toBe("group.com.wultra.testGroup")
+        expect(sdk1.sharingConfiguration?.appIdentifier).toBe("SharedInstanceTests")
+        expect(sdk1.sharingConfiguration?.keychainAccessGroup).toBe("fake.accessGroup")
+        expect(sdk1.sharingConfiguration?.sharedMemoryIdentifier).toBe("tst1")
     }
 
     async runMethodsThatMustFail(sdk: PowerAuth) {
@@ -216,6 +234,19 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
     customizePowerAuthActivation(activation: PowerAuthActivation) {}
 
     prepareData(instanceId: string): CustomActivationHelperPrepareData {
+        if (this.currentTestName === 'iosTestActivationSharing') {
+            return {
+                powerAuthInstanceId: instanceId,
+                useConfigObjects: true,
+                password: instanceId === this.instance1 ? this.password1 : this.password2,
+                sharingConfiguration: {
+                    appGroup: "group.com.wultra.testGroup",
+                    appIdentifier: "SharedInstanceTests",
+                    keychainAccessGroup: "fake.accessGroup", // This will work only in simulator
+                    sharedMemoryIdentifier: "tst1"
+                }
+            }
+        }
         return {
             powerAuthInstanceId: instanceId,
             useConfigObjects: true,

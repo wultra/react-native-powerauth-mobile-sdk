@@ -23,7 +23,7 @@ const http = require('http');
 const { exit } = require('process');
 
 const port = 8083
-const maxDurationSeconds = 180 // Test aer usually taking 60-90 seconds
+const maxDurationSeconds = 240 // Test aer usually taking 60-90 seconds
 
 console.log(`Starting test listener @ localhost:${port}`)
 console.log(`If the tests won't finish in ${maxDurationSeconds} seconds, this script will exit with the error exit code.`)

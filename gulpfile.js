@@ -143,6 +143,7 @@ const tmpDir = ".build";
     // TODO: extract from the code
     const objectsToExport = [
         "PowerAuth",
+        "PowerAuthError",
         "PowerAuthActivation",
         "PowerAuthAuthentication",
         "PowerAuthActivationCodeUtil",
@@ -151,12 +152,13 @@ const tmpDir = ".build";
         "PowerAuthActivationState",
         "PowerAuthBiometryConfiguration",
         "PowerAuthBiometryStatus",
+        "PowerAuthBiometryType",
         "PowerAuthClientConfiguration",
         "PowerAuthConfiguration",
-        "PowerAuthError",
         "PowerAuthErrorCode",
         "PowerAuthKeychainConfiguration",
         "PowerAuthKeychainProtection",
+        "PowerAuthSharingConfiguration",
         "PowerAuthPassword",
         "BaseNativeObject",
         "PinTestIssue",
@@ -164,6 +166,7 @@ const tmpDir = ".build";
         "buildClientConfiguration",
         "buildBiometryConfiguration",
         "buildKeychainConfiguration",
+        "buildSharingConfiguration",
         "PowerAuthDebug",
         "NativeObjectRegister",
     ]

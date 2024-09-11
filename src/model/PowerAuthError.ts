@@ -184,6 +184,15 @@ export enum PowerAuthErrorCode {
     BIOMETRY_FAILED = "BIOMETRY_FAILED",
 
     /**
+     * ### iOS Specific
+     * 
+     * The requested function is not available due to an external application is doing the sensitive operation
+     * at the same time. The recommended action is to instruct the user to switch to the application that started
+     * the sensitive operation. You can investigate the type of operation by calling `PowerAuth.getExternalPendingOperation()`.
+     */
+    EXTERNAL_PENDING_OPERATION = "EXTERNAL_PENDING_OPERATION",
+
+    /**
      * When password is not set during activation commit.
      * @deprecated "WRONG_PARAM" is returned in this case.
      */

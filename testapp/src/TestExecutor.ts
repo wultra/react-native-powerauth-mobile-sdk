@@ -23,12 +23,16 @@ import { TestRunner } from './testbed/TestRunner'
  
 export class TestServer {
 
+  private isRunning = true; // assume running
+
   constructor() {
     // we want to re-route console outputs for easier "test infrastructure" and debugging on CI
     const logF = console.log;
     const warnF = console.warn;
     const errorF = console.error;
     const infoF = console.info;
+
+    this.testRunning()
     
     console.log = (...params) => {
       this.log(params)
@@ -52,18 +56,30 @@ export class TestServer {
   }
 
   log(data: any[]) {
-    this.call("log", data)
+    if (this.isRunning) {
+      this.call("log", data)
+    }
   }
 
   reportStatus(data: TestProgress) {
-    this.call("reportStatus", data)
+    if (this.isRunning) {
+      this.call("reportStatus", data)
+    }
   }
 
-  private call(method: string, object: any) {
+  private async testRunning() {
+    try {
+      await this.call("test", {});
+      this.isRunning = true
+    } catch (e) {
+      this.isRunning = false
+      console.log("Server not runnig")
+    }
+  }
+
+  private async call(method: string, object: any): Promise<any> {
     // the server code is in the git root as "test-listener.js"
-    fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) }).catch((e) => {
-      // do we need to react?
-    })
+    return await fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) })
   }
 }
 

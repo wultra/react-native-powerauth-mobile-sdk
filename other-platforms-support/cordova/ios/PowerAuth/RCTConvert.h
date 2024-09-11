@@ -59,46 +59,11 @@ RCT_EXTERN void RCTSetDefaultColorSpace(RCTColorSpace colorSpace);
 + (NSTimeZone *)NSTimeZone:(id)json;
 + (NSTimeInterval)NSTimeInterval:(id)json;
 
-+ (NSLineBreakMode)NSLineBreakMode:(id)json;
-+ (NSTextAlignment)NSTextAlignment:(id)json;
-+ (NSUnderlineStyle)NSUnderlineStyle:(id)json;
-+ (NSWritingDirection)NSWritingDirection:(id)json;
-+ (NSLineBreakStrategy)NSLineBreakStrategy:(id)json;
-+ (UITextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
-+ (UITextFieldViewMode)UITextFieldViewMode:(id)json;
-+ (UIKeyboardType)UIKeyboardType:(id)json;
-+ (UIKeyboardAppearance)UIKeyboardAppearance:(id)json;
-+ (UIReturnKeyType)UIReturnKeyType:(id)json;
-+ (UIUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
-+ (UIInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
-+ (UIModalPresentationStyle)UIModalPresentationStyle:(id)json;
-
-#if !TARGET_OS_TV
-+ (UIDataDetectorTypes)UIDataDetectorTypes:(id)json;
-#endif
-
-+ (UIViewContentMode)UIViewContentMode:(id)json;
-
-+ (CGFloat)CGFloat:(id)json;
-+ (CGPoint)CGPoint:(id)json;
-+ (CGSize)CGSize:(id)json;
-+ (CGRect)CGRect:(id)json;
-+ (UIEdgeInsets)UIEdgeInsets:(id)json;
-
-+ (CGLineCap)CGLineCap:(id)json;
-+ (CGLineJoin)CGLineJoin:(id)json;
-
-+ (CGAffineTransform)CGAffineTransform:(id)json;
-
 + (NSArray<NSArray *> *)NSArrayArray:(id)json;
 + (NSArray<NSString *> *)NSStringArray:(id)json;
 + (NSArray<NSArray<NSString *> *> *)NSStringArrayArray:(id)json;
 + (NSArray<NSDictionary *> *)NSDictionaryArray:(id)json;
-+ (NSArray<NSURL *> *)NSURLArray:(id)json;
 + (NSArray<NSNumber *> *)NSNumberArray:(id)json;
-
-typedef NSArray CGColorArray;
-+ (CGColorArray *)CGColorArray:(id)json;
 
 /**
  * Convert a JSON object to a Plist-safe equivalent by stripping null values.

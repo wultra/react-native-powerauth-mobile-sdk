@@ -33,17 +33,23 @@
         <title>PowerAuth Tests</title>
     </head>
     <body>
+        <div id="test-message"></div>
         <div class="app">
             <h1>PowerAuth Tests</h1>
             <div id="deviceready">
-                <p class="event listening">Starting Javascript</p>
-                <p class="event received">Javascript running</p>
+                <p class="event listening">Loading javascript...</p>
+                <p class="event received">Javascript loaded</p>
 
-                <!-- <div>
-                    <button id="">Run tests non-interactive</button><br><button>Run tests interactive</button>
-                </div> -->
+                <div>
+                    <br>
+                    <button class="button" id="tests-simple">Run tests non-interactive</button>
+                    <br>
+                    <button class="button" id="tests-full">Run tests interactive</button>
+                    <br>
+                    <button class="button" id="tests-stop">Stop tests</button>
+                </div>
 
-                <div id="tests-status" style="font-weight: bold; font-size: 15px; color: gray; margin-top: 20px">
+                <div id="tests-status" style="font-weight: bold; font-size: 15px; color: black; margin-top: 20px">
 
                 </div>
 
