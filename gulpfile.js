@@ -158,6 +158,7 @@ const tmpDir = ".build";
         "PowerAuthErrorCode",
         "PowerAuthKeychainConfiguration",
         "PowerAuthKeychainProtection",
+        "PowerAuthSharingConfiguration",
         "PowerAuthPassword",
         "BaseNativeObject",
         "PinTestIssue",
@@ -165,6 +166,7 @@ const tmpDir = ".build";
         "buildClientConfiguration",
         "buildBiometryConfiguration",
         "buildKeychainConfiguration",
+        "buildSharingConfiguration",
         "PowerAuthDebug",
         "NativeObjectRegister",
     ]
