@@ -21,7 +21,7 @@ The `PowerAuthDebug` class is effective only if global `__DEV__` constant is `tr
 
 ## Dumping native objects
 
-If `__DEV__` mode is turned on, then you can dump information about all native objects allocated and used by React Native PowerAuth Mobile SDK:
+If `__DEV__` mode is turned on, then you can dump information about all native objects allocated and used by PowerAuth Mobile JS SDK:
 
 ```javascript
 // Dump all objects

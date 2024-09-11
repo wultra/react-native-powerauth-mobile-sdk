@@ -1,8 +1,11 @@
-# PowerAuth SDK for React Native Mobile Apps
+# PowerAuth Mobile JS SDK
 
 [![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
 
-In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use React Native library (for Android and iOS) from this repository.
+In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use This PowerAuth JS SDK library (for Android and iOS) from this repository.
+
+> [!TIP]
+> We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platforms.
 
 ## Documentation
 
@@ -10,12 +13,12 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 
 ## Support and compatibility
 
-| Version | React-Native<sup>1</sup> | Native SDK   | Server version | Support Status    |
-|---------|-----------------|--------------|----------------|-------------------|
-| `2.5.x` | `0.73+`         | `1.7.x`      | `0.24+`        | Fully supported   |
-| `2.4.x` | `0.71+`         | `1.7.x`      | `0.24+`        | Security bugfixes |
-| `2.3.x` | `0.64` - `0.70` | `1.7.x`      | `0.24+`        | Security bugfixes |
-| `2.2.x` |                 | `1.6.x`      | `0.24+`        | Not supported     |
+| Version | React-Native<sup>1</sup> | Cordova   | Native SDK   | Server version | Support Status    |
+|---------|--------------------------|-----------|--------------|----------------|-------------------|
+| `2.5.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Fully supported   |
+| `2.4.x` | `0.71+`                  | -         | `1.7.x`      | `0.24+`        | Security bugfixes |
+| `2.3.x` | `0.64` - `0.70`          | -         | `1.7.x`      | `0.24+`        | Security bugfixes |
+| `2.2.x` |                          | -         | `1.6.x`      | `0.24+`        | Not supported     |
 
 <!-- begin box info -->
 > Note 1: The library may also work with other React-Native versions but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
