@@ -143,6 +143,7 @@ const tmpDir = ".build";
     // TODO: extract from the code
     const objectsToExport = [
         "PowerAuth",
+        "PowerAuthError",
         "PowerAuthActivation",
         "PowerAuthAuthentication",
         "PowerAuthActivationCodeUtil",
@@ -154,7 +155,6 @@ const tmpDir = ".build";
         "PowerAuthBiometryType",
         "PowerAuthClientConfiguration",
         "PowerAuthConfiguration",
-        "PowerAuthError",
         "PowerAuthErrorCode",
         "PowerAuthKeychainConfiguration",
         "PowerAuthKeychainProtection",
