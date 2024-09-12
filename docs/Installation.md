@@ -40,12 +40,12 @@ import { PowerAuth, PowerAuthAuthentication, PowerAuthError } from 'react-native
 
 The library is available for the following __Apache Cordova (>=12.0.0)__ platforms:
 
-- __Android 7.0 (API 21)__ and newer (cordova-android version >=12.0.0)
+- __Android 7.0 (API 24)__ and newer (cordova-android version >=12.0.0)
 - __iOS 11.0__ and newer (cordova-ios version >=7.0.0)
 
 ### How To Install
 
-#### 1. Install the plugin via the cordova plugin installed
+#### 1. Install the plugin via the cordova plugin installer
 ```sh
 cordova plugin add cordova-powerauth-mobile-sdk
 ```
