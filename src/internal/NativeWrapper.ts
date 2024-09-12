@@ -181,12 +181,12 @@ export class NativeWrapper {
     }
 
     /**
-     * Enable or disable low level debug features. The __DEV__ variable must be true.
+     * Enable or disable low level debug features. The `PowerAuthDebug.isEnabled` variable must be true.
      * @param traceFail If true, then detailed log entry about failure will be printed to the console.
      * @param traceCall If true, then each call to native code will be printed with a detailed information.
      */
     static setDebugFeatures(traceFail: boolean, traceCall: boolean) {
-        if (Utils.isDev) {
+        if (PowerAuthDebug.isEnabled) {
             if (traceCall || traceFail) {
                 this.thisTrampoline = new DebugThisCall(traceCall, traceFail)
                 this.staticTrampoline = new DebugStaticCall(traceCall, traceFail)

@@ -16,7 +16,6 @@
 
 export class Utils {
     
-    static isDev = false // TODO: set real value
     static platformOs = this.detectPlatform()
 
     // TODO: we should probably make this more robust
