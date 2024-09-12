@@ -115,6 +115,7 @@ const tmpDir = ".build";
     const copyCDVSourceFiles = () =>
         gulp
             .src("src/**/**.ts", { base: ".", allowEmpty: true })
+            .pipe(replace("__DEV__", "false")) // replace reaact-native __DEV__ with false by default
             .pipe(gulp.dest(CDV_tempDir));
 
     const copyCDVPatchSourceFiles = () =>

@@ -17,32 +17,39 @@
 import { PowerAuthError } from "../index";
 import { NativeWrapper } from "../internal/NativeWrapper";
 import { NativeObjectRegister } from "./NativeObjectRegister";
-import { Utils } from "../internal/Utils";
 
 /**
  * The `PowerAuthDebug` class provides a various functionality that can
  * help application develoepr with debugging the problem with React Native PowerAuth mobile SDK.
  */
 export class PowerAuthDebug {
+
+    /**
+     * If debug features are enabled.
+     * 
+     * Initial value = `__DEV__`
+     */
+    static isEnabled = __DEV__
+
     /**
      * Enable or disable detailed log with calls to native code. Be aware that this feature is
-     * effective only if global __DEV__ constant is `true`.
+     * effective only if `isEnabled` static property is `true`.
      * @param traceFailure If set to `true`, then SDK will print a detailed error if native call fails.
      * @param traceEachCall If set to `true`, then SDK will print a detailed information about each call to the native code.
      */
     static traceNativeCodeCalls(traceFailure: boolean, traceEachCall: boolean = false) {
-        if (Utils.isDev) {
+        if (this.isEnabled) {
             NativeWrapper.setDebugFeatures(traceFailure, traceEachCall)
         }
     }
 
     /**
      * Function prints debug information about all native objects registered in native module. Note that the function
-     * is effective ony if native module is compiled in DEBUG mode and if global `__DEV__` constant is `true`.
+     * is effective ony if native module is compiled in DEBUG mode and if `isEnabled` static property is `true`.
      * @param instanceId If provided, then prints only objects that belongs to PowerAuth instance with given identifier.
      */
     static async dumpNativeObjects(instanceId: string | undefined = undefined): Promise<void> {
-        if (Utils.isDev) {
+        if (this.isEnabled) {
             if (instanceId) {
                 console.log(`List of native objects associated with instance '${instanceId}' = [`)
             } else {
