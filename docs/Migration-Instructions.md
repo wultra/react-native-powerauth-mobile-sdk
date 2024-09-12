@@ -1,6 +1,6 @@
 # Migration Instructions
 
-This page contains PowerAuth mobile SDK migration instructions.
+This page contains PowerAuth Mobile JS SDK migration instructions.
 
 <!-- begin box warning -->
 When updating across multiple versions, you need to perform all migration steps additively.

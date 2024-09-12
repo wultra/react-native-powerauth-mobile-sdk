@@ -20,7 +20,7 @@ import { NativeObjectRegister } from "./NativeObjectRegister";
 
 /**
  * The `PowerAuthDebug` class provides a various functionality that can
- * help application develoepr with debugging the problem with React Native PowerAuth mobile SDK.
+ * help application develoepr with debugging the problem with PowerAuth Mobile JS SDK.
  */
 export class PowerAuthDebug {
 
