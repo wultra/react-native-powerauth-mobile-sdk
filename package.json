@@ -14,7 +14,9 @@
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
+    "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/js/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
     "android/build.gradle",
     "lib/*.*",
     "lib/internal/*.js",

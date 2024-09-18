@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wultra.android.powerauth.reactnative;
+package com.wultra.android.powerauth.js;
 
 import androidx.annotation.NonNull;
 
