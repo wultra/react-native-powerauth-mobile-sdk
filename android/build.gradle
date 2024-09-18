@@ -41,6 +41,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  namespace = "com.wultra.android.powerauth.reactnative"
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
