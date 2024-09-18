@@ -210,7 +210,18 @@ const tmpDir = ".build";
     const packCDVPackage = () => exec(`pushd ${CDV_buildDir} && npm pack`);
 
     // join cordova compile and modify for export task
-    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, createCDVDtsTask, exportModules, copyCDVFiles, copyCDVPatchIOSFiles, copyCDVStaticFiles, packCDVPackage, clearCDVtemp);
+    var CDV_buildTask = gulp.series(
+        clearCDVall, 
+        copyCDVSourceFiles, 
+        copyCDVPatchSourceFiles, 
+        compileCDVTask, 
+        createCDVDtsTask, 
+        exportModules, 
+        copyCDVFiles, 
+        copyCDVPatchIOSFiles, 
+        copyCDVStaticFiles, 
+        packCDVPackage, 
+        clearCDVtemp);
 }
 
 let cleanBuild = () => rimraf([ buildDir ])

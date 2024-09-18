@@ -9,7 +9,9 @@
     "pods": "pushd ios; pod install; popd",
     "test": "echo Just run this app; exit 1",
     "lint": "eslint .",
-    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.2.tgz"
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.2.tgz",
+    "reinstallAndAndroid": "npm run reinstallPlugin && npm run android",
+    "freshAndroid": "pushd .. && gulp rn && popd && npm run reinstallAndAndroid"
   },
   "dependencies": {
     "chalk": "^4.1.0",
