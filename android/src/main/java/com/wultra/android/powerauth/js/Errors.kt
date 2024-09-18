@@ -26,6 +26,7 @@ import io.getlime.security.powerauth.networking.exceptions.FailedApiException
 import java.io.IOException
 import javax.annotation.Nonnull
 
+@Suppress("MemberVisibilityCanBePrivate")
 internal object Errors {
     // RN specific
     const val EC_REACT_NATIVE_ERROR: String = "REACT_NATIVE_ERROR"
@@ -115,11 +116,11 @@ internal object Errors {
             code = t.errorCode
         } else if (t is PowerAuthErrorException) {
             // Standard PowerAuthErrorException, containing enumeration with error code.
-            code = getErrorCodeFromError((t as PowerAuthErrorException).getPowerAuthErrorCode())
+            code = getErrorCodeFromError(t.powerAuthErrorCode)
         } else if (t is FailedApiException) {
             // FailedApiException or more specialized ErrorResponseApiException
-            val failedApiException: FailedApiException = t as FailedApiException
-            val httpStatusCode: Int = failedApiException.getResponseCode()
+            val failedApiException: FailedApiException = t
+            val httpStatusCode: Int = failedApiException.responseCode
             if (httpStatusCode == 401) {
                 code = EC_AUTHENTICATION_ERROR
                 message = "Unauthorized"
@@ -129,12 +130,11 @@ internal object Errors {
             //
             userInfo = Arguments.createMap()
             userInfo.putInt("httpStatusCode", httpStatusCode)
-            userInfo.putString("responseBody", failedApiException.getResponseBody())
+            userInfo.putString("responseBody", failedApiException.responseBody)
             if (t is ErrorResponseApiException) {
                 // ErrorResponseApiException is more specialized version of FailedApiException, containing
                 // an additional data.
-                val errorResponseApiException: ErrorResponseApiException =
-                    t as ErrorResponseApiException
+                val errorResponseApiException: ErrorResponseApiException = t
                 val currentRecoveryPukIndex: Int =
                     errorResponseApiException.getCurrentRecoveryPukIndex()
                 if (currentRecoveryPukIndex > 0) {
@@ -142,11 +142,11 @@ internal object Errors {
                 }
                 userInfo.putString(
                     "serverResponseCode",
-                    errorResponseApiException.getErrorResponse().getCode()
+                    errorResponseApiException.errorResponse.code
                 )
                 userInfo.putString(
                     "serverResponseMessage",
-                    errorResponseApiException.getErrorResponse().getMessage()
+                    errorResponseApiException.errorResponse.message
                 )
             }
         } else {

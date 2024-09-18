@@ -16,15 +16,14 @@
 package com.wultra.android.powerauth.js
 
 
-import com.wultra.android.powerauth.bridge.Dynamic;
-import com.wultra.android.powerauth.bridge.Arguments;
-import com.wultra.android.powerauth.bridge.Promise;
-import com.wultra.android.powerauth.bridge.ReadableArray;
-import com.wultra.android.powerauth.bridge.ReadableMap;
-import com.wultra.android.powerauth.bridge.WritableArray;
-import com.wultra.android.powerauth.bridge.WritableMap;
-import com.wultra.android.powerauth.bridge.JsApiMethod;
-import com.wultra.android.powerauth.reactnative.BuildConfig;
+import com.wultra.android.powerauth.bridge.Arguments
+import com.wultra.android.powerauth.bridge.Promise
+import com.wultra.android.powerauth.bridge.ReadableArray
+import com.wultra.android.powerauth.bridge.ReadableMap
+import com.wultra.android.powerauth.bridge.WritableArray
+import com.wultra.android.powerauth.bridge.WritableMap
+import com.wultra.android.powerauth.bridge.JsApiMethod
+import com.wultra.android.powerauth.reactnative.BuildConfig
 
 import android.os.SystemClock
 import android.text.TextUtils
@@ -43,11 +42,12 @@ import java.util.concurrent.locks.ReentrantLock
  * The object is identified by an unique identifier created at the time of registration
  * or by application provided identifier.
  */
+@Suppress("unused")
 class ObjectRegisterJs : BaseJavaJsModule {
     private val lock = ReentrantLock(false)
-    private val register: HashMap<String, RegisterEntry>
-    private val randomGenerator: Random
-    private var cleanupPeriod: Int
+    private val register: HashMap<String, RegisterEntry> = HashMap(16)
+    private val randomGenerator: Random = Random()
+    private var cleanupPeriod: Int = Constants.CLEANUP_PERIOD_DEFAULT
     private var cleanupTimer: Timer? = null
 
     // ---------------------------------------------------------------------------------------------
@@ -234,7 +234,9 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * @param tag If provided, then only objects registered with given tag will be removed, otherwise all objects will be removed.
      */
     fun removeAllObjectsWithTag(tag: String?) {
-        synchronize { findAndRemoveObjects { key: String?, managedObject: RegisterEntry -> tag == null || tag == managedObject.tag } }
+        synchronize {
+            findAndRemoveObjects { _: String?, managedObject: RegisterEntry -> tag == null || tag == managedObject.tag }
+        }
     }
 
     /**
@@ -261,7 +263,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * @return true if provided object identifier is valid and can be used in
      */
     fun isValidObjectId(objectId: String?): Boolean {
-        return objectId != null && objectId.length != 0
+        return !objectId.isNullOrEmpty()
     }
 
     /**
@@ -270,7 +272,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * sets interval to the default period.
      * @param period New period to set.
      */
-    fun setCleanupPeriod(period: Int) {
+    private fun setCleanupPeriod(period: Int) {
         synchronize {
             cleanupPeriod =
                 if (period >= Constants.CLEANUP_PERIOD_MIN && period <= Constants.CLEANUP_PERIOD_MAX) {
@@ -288,8 +290,8 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * @param tag If provided, then only objects with given tag are dumped, otherwise all.
      * @return JavaScript array with objects.
      */
-    fun debugDumpObjects(tag: String?): WritableArray {
-        return synchronize(ThreadSafeAction<WritableArray> {
+    private fun debugDumpObjects(tag: String?): WritableArray {
+        return synchronize(ThreadSafeAction {
             val array: WritableArray = Arguments.createArray()
             if (BuildConfig.DEBUG) {
                 for ((_, value) in register) {
@@ -300,12 +302,6 @@ class ObjectRegisterJs : BaseJavaJsModule {
             }
             array
         })
-    }
-
-    init {
-        this.register = HashMap(16)
-        this.randomGenerator = Random()
-        this.cleanupPeriod = Constants.CLEANUP_PERIOD_DEFAULT
     }
 
     /**
@@ -343,6 +339,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
                                 register.remove(registrationId)
                             }
                         }
+                        @Suppress("UNCHECKED_CAST")
                         return instance as T
                     }
                 }
@@ -462,7 +459,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * @return Translated key.
      */
     private fun translateObjectId(identifier: String?): String? {
-        if (identifier == null || identifier.length == 0) {
+        if (identifier.isNullOrEmpty()) {
             return null
         }
         return identifier
@@ -473,7 +470,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
      * Schedule an object cleanup job.
      */
     private fun scheduleCleanup() {
-        if (!register.isEmpty()) {
+        if (register.isNotEmpty()) {
             // Register is not empty
             if (cleanupTimer == null) {
                 // Timer is not created, so create timer and schedule the task
@@ -516,17 +513,10 @@ class ObjectRegisterJs : BaseJavaJsModule {
         val policies: List<ReleasePolicy>? =
             if (policies.contains(ReleasePolicy.manual())) null else policies
 
-        val createTime: Long
-        var lastUseTime: Long
-        var removedTime: Long
-        var usageCount: Int
-
-        init {
-            this.createTime = currentTime()
-            this.lastUseTime = createTime
-            this.removedTime = 0
-            this.usageCount = 0
-        }
+        val createTime: Long = currentTime()
+        var lastUseTime: Long = createTime
+        var removedTime: Long = 0
+        var usageCount: Int = 0
 
         /**
          * Mark object as used. The function update usageCount and lastUseTime properties.
@@ -658,7 +648,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
                             else -> {}
                         }
                         val policy = sb.toString()
-                        if (!policy.isEmpty()) {
+                        if (policy.isNotEmpty()) {
                             debugPolicies.pushString(sb.toString())
                         }
                     }
@@ -715,14 +705,19 @@ class ObjectRegisterJs : BaseJavaJsModule {
             val objectType: String? =
                 if (options.hasKey("objectType")) options.getString("objectType") else null
             var objectClass: Class<*>? = null
-            if ("data" == objectType || "secure-data" == objectType) {
-                objectClass = ByteArray::class.java
-            } else if ("number" == objectType) {
-                objectClass = Int::class.java
-            } else if ("password" == objectType) {
-                objectClass = Password::class.java
-            } else if ("encryptor" == objectType) {
-                objectClass = PowerAuthEncryptorJsModule.InstanceData::class.java
+            when (objectType) {
+                "data", "secure-data" -> {
+                    objectClass = ByteArray::class.java
+                }
+                "number" -> {
+                    objectClass = Int::class.java
+                }
+                "password" -> {
+                    objectClass = Password::class.java
+                }
+                "encryptor" -> {
+                    objectClass = PowerAuthEncryptorJsModule.InstanceData::class.java
+                }
             }
             if ("create" == command) {
                 // The "create" command creates a new instance of managed object
@@ -748,23 +743,28 @@ class ObjectRegisterJs : BaseJavaJsModule {
                         }
                     }
                 }
-                if (!policies.isEmpty()) {
+                if (policies.isNotEmpty()) {
                     // Create new object
                     var instance: IManagedObject<out Any>? = null
-                    if ("data" == objectType) {
-                        instance =
-                            ManagedAny.wrap("TEST-DATA".toByteArray(StandardCharsets.UTF_8), null)
-                    } else if ("secure-data" == objectType) {
-                        instance =
-                            ManagedAny.wrap("SECURE-DATA".toByteArray(StandardCharsets.UTF_8))
-                    } else if ("number" == objectType) {
-                        instance = ManagedAny.wrap(42)
-                    } else if ("password" == objectType) {
-                        instance = ManagedAny.wrap(Password(), object: ManagedAny.Cleanup<Password> {
-                            override fun cleanup(instance: Password) {
-                                instance.destroy()
-                            }
-                        })
+                    when (objectType) {
+                        "data" -> {
+                            instance =
+                                ManagedAny.wrap("TEST-DATA".toByteArray(StandardCharsets.UTF_8), null)
+                        }
+                        "secure-data" -> {
+                            instance =
+                                ManagedAny.wrap("SECURE-DATA".toByteArray(StandardCharsets.UTF_8))
+                        }
+                        "number" -> {
+                            instance = ManagedAny.wrap(42)
+                        }
+                        "password" -> {
+                            instance = ManagedAny.wrap(Password(), object: ManagedAny.Cleanup<Password> {
+                                override fun cleanup(instance: Password) {
+                                    instance.destroy()
+                                }
+                            })
+                        }
                     }
                     if (instance != null) {
                         promise.resolve(registerObject(instance, objectTag, policies))

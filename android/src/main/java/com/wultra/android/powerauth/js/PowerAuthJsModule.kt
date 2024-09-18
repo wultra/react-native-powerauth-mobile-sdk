@@ -15,13 +15,13 @@
  */
 package com.wultra.android.powerauth.js
 
-import com.wultra.android.powerauth.bridge.Arguments;
-import com.wultra.android.powerauth.bridge.Dynamic;
-import com.wultra.android.powerauth.bridge.ReadableArray;
-import com.wultra.android.powerauth.bridge.ReadableMap;
-import com.wultra.android.powerauth.bridge.JsApiMethod;
-import com.wultra.android.powerauth.bridge.Promise;
-import com.wultra.android.powerauth.bridge.WritableMap;
+import com.wultra.android.powerauth.bridge.Arguments
+import com.wultra.android.powerauth.bridge.Dynamic
+import com.wultra.android.powerauth.bridge.ReadableArray
+import com.wultra.android.powerauth.bridge.ReadableMap
+import com.wultra.android.powerauth.bridge.JsApiMethod
+import com.wultra.android.powerauth.bridge.Promise
+import com.wultra.android.powerauth.bridge.WritableMap
 
 
 import android.annotation.SuppressLint
@@ -33,44 +33,31 @@ import android.util.Pair
 import androidx.fragment.app.FragmentActivity
 import io.getlime.security.powerauth.core.Password
 import java.nio.charset.StandardCharsets
-import java.util.Arrays
 import javax.annotation.Nonnull
 
-import io.getlime.security.powerauth.biometry.BiometricKeyData;
-import io.getlime.security.powerauth.biometry.BiometricAuthentication;
-import io.getlime.security.powerauth.biometry.BiometricStatus;
-import io.getlime.security.powerauth.biometry.BiometryType;
-import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener;
-import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback;
-import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener;
-import io.getlime.security.powerauth.keychain.KeychainProtection;
-import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor;
-import io.getlime.security.powerauth.sdk.*;
-import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy;
-import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor;
-import io.getlime.security.powerauth.networking.response.*;
-import io.getlime.security.powerauth.core.*;
-import io.getlime.security.powerauth.exception.*;
-import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor;
+import io.getlime.security.powerauth.biometry.BiometricKeyData
+import io.getlime.security.powerauth.biometry.BiometricAuthentication
+import io.getlime.security.powerauth.biometry.BiometricStatus
+import io.getlime.security.powerauth.biometry.BiometryType
+import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener
+import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback
+import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener
+import io.getlime.security.powerauth.keychain.KeychainProtection
+import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor
+import io.getlime.security.powerauth.sdk.*
+import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy
+import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor
+import io.getlime.security.powerauth.networking.response.*
+import io.getlime.security.powerauth.core.*
+import io.getlime.security.powerauth.exception.*
+import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor
 
-public class PowerAuthJsModule(
-    context: Context,
-    val activityProvider: ActivityProvider,
-    objectRegisterJs: ObjectRegisterJs,
-    passwordJsModule: PowerAuthPasswordJsModule
-) : BaseJavaJsModule, ActivityAwareModule {
-    private val context: Context = context
-
-    // private final ObjectRegister objectRegister;
-    private val objectRegister: ObjectRegisterJs
+class PowerAuthJsModule(
+    private val context: Context,
+    private val activityProvider: ActivityProvider,
+    private val objectRegister: ObjectRegisterJs,
     private val passwordModule: PowerAuthPasswordJsModule
-
-    // private final PowerAuthPasswordModule passwordModule;
-    init {
-        this.objectRegister = objectRegisterJs
-        this.passwordModule = passwordJsModule
-        // this.passwordModule = passwordModule;
-    }
+) : BaseJavaJsModule, ActivityAwareModule {
 
     // React integration
     override fun getName(): String {
@@ -90,6 +77,7 @@ public class PowerAuthJsModule(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @JsApiMethod
     fun configure(
         instanceId: String,
@@ -111,7 +99,7 @@ public class PowerAuthJsModule(
                 val instance: PowerAuthSDK = PowerAuthSDK.Builder(paConfig)
                     .clientConfiguration(paClientConfig)
                     .keychainConfiguration(paKeychainConfig)
-                    .build(PowerAuthModule@this.context)
+                    .build(this.context)
                 ManagedAny.wrap(instance)
             })
             if (result) {
@@ -168,7 +156,7 @@ public class PowerAuthJsModule(
     fun activationIdentifier(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                promise.resolve(sdk.getActivationIdentifier())
+                promise.resolve(sdk.activationIdentifier)
             }
         })
     }
@@ -177,15 +165,16 @@ public class PowerAuthJsModule(
     fun activationFingerprint(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                promise.resolve(sdk.getActivationFingerprint())
+                promise.resolve(sdk.activationFingerprint)
             }
         })
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @JsApiMethod
     fun getExternalPendingOperation(instanceId: String, promise: Promise) {
         // // Not supported on Android
-        promise.resolve(null);
+        promise.resolve(null)
     }
 
     @JsApiMethod
@@ -202,7 +191,7 @@ public class PowerAuthJsModule(
                         map.putInt("remainingAttempts", status.getRemainingAttempts())
                         map.putMap(
                             "customObject",
-                            Arguments.makeNativeMap(status.getCustomObject())
+                            Arguments.makeNativeMap(status.customObject)
                         )
                         promise.resolve(map)
                     }
@@ -277,9 +266,9 @@ public class PowerAuthJsModule(
                             val map: WritableMap = Arguments.createMap()
                             map.putString(
                                 "activationFingerprint",
-                                result.getActivationFingerprint()
+                                result.activationFingerprint
                             )
-                            val rData: RecoveryData? = result.getRecoveryData()
+                            val rData: RecoveryData? = result.recoveryData
                             if (rData != null) {
                                 val recoveryMap: WritableMap = Arguments.createMap()
                                 recoveryMap.putString("recoveryCode", rData.recoveryCode)
@@ -288,13 +277,11 @@ public class PowerAuthJsModule(
                             } else {
                                 map.putMap("activationRecovery", null)
                             }
-                            val customAttributes: Map<String, Any>? =
-                                result.getCustomActivationAttributes()
+                            val customAttr: Map<String, Any>? = result.customActivationAttributes
                             map.putMap(
                                 "customAttributes",
-                                if (customAttributes == null) null else Arguments.makeNativeMap(
-                                    customAttributes
-                                )
+                                if (customAttr == null) null
+                                else Arguments.makeNativeMap(customAttr)
                             )
                             promise.resolve(map)
                         }
@@ -326,13 +313,13 @@ public class PowerAuthJsModule(
                             "Current fragment activity is not available"
                         )
                     // This is handled in "constructAuthentication", so should never happen.
-                    checkNotNull(auth.getPassword())
+                    checkNotNull(auth.password)
                     sdk.commitActivation(
                         context,
                         fragmentActivity,
                         titleDesc.first,
                         titleDesc.second,
-                        auth.getPassword()!!, // FIXME
+                        auth.password!!, // FIXME
                         object : ICommitActivationWithBiometryListener {
                             override fun onBiometricDialogCancelled() {
                                 promise.reject(
@@ -655,14 +642,13 @@ public class PowerAuthJsModule(
         })
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @JsApiMethod
     fun getBiometryInfo(instanceId: String?, promise: Promise) {
         val isAvailable: Boolean = BiometricAuthentication.isBiometricAuthenticationAvailable(
             this.context
         )
-        val biometryType: String
-        val canAuthenticate: String
-        biometryType = when (BiometricAuthentication.getBiometryType(this.context)) {
+        val biometryType: String = when (BiometricAuthentication.getBiometryType(this.context)) {
             BiometryType.NONE -> "NONE"
             BiometryType.FINGERPRINT -> "FINGERPRINT"
             BiometryType.FACE -> "FACE"
@@ -670,7 +656,7 @@ public class PowerAuthJsModule(
             BiometryType.GENERIC -> "GENERIC"
             else -> "GENERIC"
         }
-        canAuthenticate = when (BiometricAuthentication.canAuthenticate(this.context)) {
+        val canAuthenticate: String = when (BiometricAuthentication.canAuthenticate(this.context)) {
             BiometricStatus.OK -> "OK"
             BiometricStatus.NOT_ENROLLED -> "NOT_ENROLLED"
             BiometricStatus.NOT_AVAILABLE -> "NOT_AVAILABLE"
@@ -891,17 +877,19 @@ public class PowerAuthJsModule(
                             override fun onBiometricDialogSuccess(biometricKeyData: BiometricKeyData) {
                                 // Allocate native managed object object
                                 val managedBytes =
-                                    ManagedAny.wrap(biometricKeyData.getDerivedData())
+                                    ManagedAny.wrap(biometricKeyData.derivedData)
                                 // If reusable authentication is going to be created, then "keep alive" release policy is applied.
                                 // Basically, the data will be available up to 10 seconds from the last access.
                                 // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
                                 // to combine it with "expire" policy to make sure that key don't remain in memory forever.
-                                val releasePolicies = if (makeReusable
-                                ) listOf(ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME)) else Arrays.asList(
-                                    ReleasePolicy.afterUse(1), ReleasePolicy.expire(
-                                        Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME
+                                val releasePolicies =
+                                    if (makeReusable) listOf(
+                                        ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME)
                                     )
-                                )
+                                    else listOf(
+                                        ReleasePolicy.afterUse(1),
+                                        ReleasePolicy.expire(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME)
+                                    )
                                 val managedId = objectRegister.registerObject(
                                     managedBytes,
                                     instanceId,
@@ -940,12 +928,12 @@ public class PowerAuthJsModule(
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
-                sdk.getTokenStore()
+                sdk.tokenStore
                     .requestAccessToken(context, tokenName, auth, object : IGetTokenListener {
                         override fun onGetTokenSucceeded(token: PowerAuthToken) {
                             val response: WritableMap = Arguments.createMap()
-                            response.putString("tokenName", token.getTokenName())
-                            response.putString("tokenIdentifier", token.getTokenIdentifier())
+                            response.putString("tokenName", token.tokenName)
+                            response.putString("tokenIdentifier", token.tokenIdentifier)
                             promise.resolve(response)
                         }
 
@@ -962,7 +950,7 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                sdk.getTokenStore()
+                sdk.tokenStore
                     .removeAccessToken(context, tokenName, object : IRemoveTokenListener {
                         override fun onRemoveTokenSucceeded() {
                             promise.resolve(null)
@@ -981,11 +969,11 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                val token: PowerAuthToken? = sdk.getTokenStore().getLocalToken(context, tokenName)
+                val token: PowerAuthToken? = sdk.tokenStore.getLocalToken(context, tokenName)
                 if (token != null) {
                     val response: WritableMap = Arguments.createMap()
-                    response.putString("tokenName", token.getTokenName())
-                    response.putString("tokenIdentifier", token.getTokenIdentifier())
+                    response.putString("tokenName", token.tokenName)
+                    response.putString("tokenIdentifier", token.tokenIdentifier)
                     promise.resolve(response)
                 } else {
                     promise.reject(
@@ -1002,7 +990,7 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                promise.resolve(sdk.getTokenStore().hasLocalToken(context, tokenName))
+                promise.resolve(sdk.tokenStore.hasLocalToken(context, tokenName))
             }
         })
     }
@@ -1012,7 +1000,7 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                sdk.getTokenStore().removeLocalToken(context, tokenName)
+                sdk.tokenStore.removeLocalToken(context, tokenName)
                 promise.resolve(null)
             }
         })
@@ -1023,7 +1011,7 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                sdk.getTokenStore().removeAllLocalTokens(context)
+                sdk.tokenStore.removeAllLocalTokens(context)
                 promise.resolve(null)
             }
         })
@@ -1034,7 +1022,7 @@ public class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                val token: PowerAuthToken? = sdk.getTokenStore().getLocalToken(context, tokenName)
+                val token: PowerAuthToken? = sdk.tokenStore.getLocalToken(context, tokenName)
                 if (token == null) {
                     promise.reject(
                         Errors.EC_LOCAL_TOKEN_NOT_AVAILABLE,
@@ -1138,8 +1126,7 @@ public class PowerAuthJsModule(
         } else {
             biometryKey = null
         }
-        val password: Password?
-        password = if (map.hasKey("password")) {
+        val password: Password? = if (map.hasKey("password")) {
             passwordModule.usePassword(map.getDynamic("password"))
         } else {
             null
@@ -1181,8 +1168,8 @@ public class PowerAuthJsModule(
      * @return Pair where first item is title and second description for biometric dialog.
      */
     private fun extractPromptStrings(prompt: ReadableMap?): Pair<String, String> {
-        var title: String? = if (prompt != null) prompt.getString("promptTitle") else null
-        var description: String? = if (prompt != null) prompt.getString("promptMessage") else null
+        var title: String? = prompt?.getString("promptTitle")
+        var description: String? = prompt?.getString("promptMessage")
         if (title == null) {
             title = Constants.MISSING_REQUIRED_STRING
         }
@@ -1250,7 +1237,7 @@ public class PowerAuthJsModule(
         // Note: Uses internal PowerAuth mobile SDK class, so we'll need to reimplement this in some future release.
         //       Right now it's OK to use native SDKs class, due to tight dependency between RN wrapper and mobile SDK.
         MainThreadExecutor.getInstance()
-            .execute(Runnable { usePowerAuth(instanceId, promise, block) })
+            .execute { usePowerAuth(instanceId, promise, block) }
     }
 
     // Instances register
@@ -1262,7 +1249,7 @@ public class PowerAuthJsModule(
                 "Instance identifier is missing or empty or forbidden string"
             )
         }
-        return objectRegister.findObject<PowerAuthSDK>(instanceId, PowerAuthSDK::class.java)
+        return objectRegister.findObject(instanceId, PowerAuthSDK::class.java)
     }
 
     @Throws(PowerAuthErrorException::class)
@@ -1304,14 +1291,19 @@ public class PowerAuthJsModule(
         @KeychainProtection
         private fun getKeychainProtectionFromString(stringValue: String?): Int {
             if (stringValue != null) {
-                if ("NONE" == stringValue) {
-                    return KeychainProtection.NONE
-                } else if ("SOFTWARE" == stringValue) {
-                    return KeychainProtection.SOFTWARE
-                } else if ("HARDWARE" == stringValue) {
-                    return KeychainProtection.HARDWARE
-                } else if ("STRONGBOX" == stringValue) {
-                    return KeychainProtection.STRONGBOX
+                when (stringValue) {
+                    "NONE" -> {
+                        return KeychainProtection.NONE
+                    }
+                    "SOFTWARE" -> {
+                        return KeychainProtection.SOFTWARE
+                    }
+                    "HARDWARE" -> {
+                        return KeychainProtection.HARDWARE
+                    }
+                    "STRONGBOX" -> {
+                        return KeychainProtection.STRONGBOX
+                    }
                 }
             }
             return KeychainProtection.NONE
@@ -1431,7 +1423,7 @@ public class PowerAuthJsModule(
             val map: MutableMap<String, String> = HashMap()
             for ((key, value) in rm.toHashMap().entries) {
                 if (value is String) {
-                    map[key] = value as String
+                    map[key] = value
                 }
             }
             return map
