@@ -228,6 +228,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         final boolean linkItemsToCurrentSet = biometryMap.hasKey("linkItemsToCurrentSet") ? biometryMap.getBoolean("linkItemsToCurrentSet") : PowerAuthKeychainConfiguration.DEFAULT_LINK_BIOMETRY_ITEMS_TO_CURRENT_SET;
         final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") ? biometryMap.getBoolean("confirmBiometricAuthentication") : PowerAuthKeychainConfiguration.DEFAULT_CONFIRM_BIOMETRIC_AUTHENTICATION;
         final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") ? biometryMap.getBoolean("authenticateOnBiometricKeySetup") : PowerAuthKeychainConfiguration.DEFAULT_AUTHENTICATE_ON_BIOMETRIC_KEY_SETUP;
+        final boolean fallbackToSharedBiometryKey = biometryMap.hasKey("fallbackToSharedBiometryKey") ? biometryMap.getBoolean("fallbackToSharedBiometryKey") : PowerAuthKeychainConfiguration.DEFAULT_ENABLE_FALLBACK_TO_SHARED_BIOMETRY_KEY;
         // Keychain configuration
         final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"));
         return new PowerAuthKeychainConfiguration.Builder()
@@ -235,6 +236,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 .confirmBiometricAuthentication(confirmBiometricAuthentication)
                 .authenticateOnBiometricKeySetup(authenticateOnBiometricKeySetup)
                 .minimalRequiredKeychainProtection(minimalRequiredKeychainProtection)
+                .enableFallbackToSharedBiometryKey(fallbackToSharedBiometryKey)
                 .build();
     }
 
