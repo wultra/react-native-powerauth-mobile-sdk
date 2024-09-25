@@ -33,29 +33,29 @@
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthObjectRegister.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPassphraseMeterModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPasswordModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthObjectRegister.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPassphraseMeterModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPasswordModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
 
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/util" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/bridge" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ActivityAwareModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/BaseJavaJsModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ActivityAwareModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/BaseJavaJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Constants.java" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/DataFormat.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Errors.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/IManagedObject.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ManagedAny.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ObjectRegisterJs.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PinTester.java" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthEncryptorJsModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPassphraseMeterJsModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPasswordJsModule.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/DataFormat.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Errors.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/IManagedObject.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ManagedAny.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ObjectRegisterJs.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PinTester.java" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthEncryptorJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPassphraseMeterJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPasswordJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ReleasePolicy.java" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Utils.kt" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Utils.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/WrapperException.java" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
         <framework src="android/build.gradle" custom="true" type="gradleReference" />
     </platform>
