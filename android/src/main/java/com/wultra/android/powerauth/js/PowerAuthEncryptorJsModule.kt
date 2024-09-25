@@ -18,7 +18,7 @@ package com.wultra.android.powerauth.js
 import com.wultra.android.powerauth.bridge.JsApiMethod
 import com.wultra.android.powerauth.bridge.Promise
 import com.wultra.android.powerauth.bridge.ReadableMap
-import com.wultra.android.powerauth.reactnative.BuildConfig;
+import com.wultra.android.powerauth.bridge.BuildConfig
 
 import android.content.Context
 import android.util.Base64

@@ -24,7 +24,6 @@ import io.getlime.security.powerauth.exception.PowerAuthErrorException
 import io.getlime.security.powerauth.networking.exceptions.ErrorResponseApiException
 import io.getlime.security.powerauth.networking.exceptions.FailedApiException
 import java.io.IOException
-import javax.annotation.Nonnull
 
 @Suppress("MemberVisibilityCanBePrivate")
 object Errors {
@@ -107,7 +106,7 @@ object Errors {
      * @param t Error to report.
      */
     fun rejectPromise(promise: Promise, t: Throwable) {
-        @Nonnull var code = EC_REACT_NATIVE_ERROR // fallback code
+        var code = EC_REACT_NATIVE_ERROR // fallback code
         var message = t.message
         var userInfo: WritableMap? = null
 

@@ -1,5 +1,7 @@
 package com.wultra.android.powerauth.cdv.util
 
+import org.apache.cordova.CallbackContext
+
 class Promise(
     val callbackContext: CallbackContext
 ) {
@@ -112,13 +114,13 @@ class Promise(
     callbackContext.error("$code: $message ($throwable) [$userInfo]")
   }
 
-  /** Report an error which wasn't caused by an exception. */
-  @Deprecated(
-      message =
-          """Prefer passing a module-specific error code to JS. Using this method will pass the
-        error code EUNSPECIFIED""",
-      replaceWith = ReplaceWith("reject(code, message)"))
-  public fun reject(message: String) {
-    callbackContext.error(": $message")
-  }
+  // /** Report an error which wasn't caused by an exception. */
+  // @Deprecated(
+  //     message =
+  //         """Prefer passing a module-specific error code to JS. Using this method will pass the
+  //       error code EUNSPECIFIED""",
+  //     replaceWith = ReplaceWith("reject(code, message)"))
+  // public fun reject(message: String) {
+  //   callbackContext.error(": $message")
+  // }
 }

@@ -125,8 +125,9 @@ gulp.task("android", gulp.series(
     copyTestFiles,
     copyAppFiles,
     compile,
-    cleanTemp,
-    buildAndroid
+    cleanTemp
+    // ,
+    // buildAndroid
     // ,
     // runAndroidOnDevice
 ));

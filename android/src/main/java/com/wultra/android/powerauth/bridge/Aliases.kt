@@ -1,5 +1,8 @@
 package com.wultra.android.powerauth.bridge
 
+// bridge to concrete platform implementation
+typealias BuildConfig = com.wultra.android.powerauth.reactnative.BuildConfig
+
 // point to React bridge
 typealias Arguments = com.facebook.react.bridge.Arguments
 typealias Dynamic = com.facebook.react.bridge.Dynamic

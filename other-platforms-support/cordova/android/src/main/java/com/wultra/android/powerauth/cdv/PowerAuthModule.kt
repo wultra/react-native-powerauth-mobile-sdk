@@ -1,18 +1,33 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import android.app.Activity
+import com.wultra.android.powerauth.cdv.util.Promise
+import com.wultra.android.powerauth.js.ActivityProvider
+import com.wultra.android.powerauth.js.PowerAuthJsModule
+import org.apache.cordova.CallbackContext
+import org.apache.cordova.CordovaInterface
+import org.apache.cordova.CordovaPlugin
+import org.apache.cordova.CordovaWebView
+import org.json.JSONArray
+import org.json.JSONException
+
 class PowerAuthModule : CordovaPlugin() {
 
     private lateinit var powerAuthJsModule: PowerAuthJsModule
 
-    override public fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
-        super.initialize(cordova, webView);
-        val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister")
-        val powerAuthPasswordModule = webView.pluginManager.getPlugin("PowerAuthPasswordModule")
-        powerAuthJsModule = PowerAuthJsModule(cordova.activity, powerAuthObjectRegister.objectRegisterJs, powerAuthPasswordModule)
+    private val activityProvider: ActivityProvider = object : ActivityProvider {
+        override fun getActivity(): Activity = cordova.activity
     }
 
-    @Throws(JSONException)
+    override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
+        super.initialize(cordova, webView);
+        val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister") as PowerAuthObjectRegister
+        val powerAuthPasswordModule = webView.pluginManager.getPlugin("PowerAuthPasswordModule") as PowerAuthPasswordModule
+        powerAuthJsModule = PowerAuthJsModule(cordova.activity, activityProvider, powerAuthObjectRegister.objectRegisterJs, powerAuthPasswordModule.powerAuthPasswordJsModule)
+    }
+
+    @Throws(JSONException::class)
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         val promise = Promise(callbackContext)
         when (action) {
@@ -210,11 +225,11 @@ class PowerAuthModule : CordovaPlugin() {
     private fun configure(args: JSONArray, promise: Promise) {
         // final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final ReadableMap sharingConfiguration, 
         val instanceId = args.getString(0)
-        val configuration = args.getJSONObject(1)
-        val clientConfiguration = args.getJSONObject(2)
-        val biometryConfiguration = args.getJSONObject(3)
-        val keychainConfiguration = args.getJSONObject(4)
-        val sharingConfiguration = args.getJSONObject(5)
+        val configuration = args.getReadableMap(1)
+        val clientConfiguration = args.getReadableMap(2)
+        val biometryConfiguration = args.getReadableMap(3)
+        val keychainConfiguration = args.getReadableMap(4)
+        val sharingConfiguration = args.getReadableMap(5)
         powerAuthJsModule.configure(instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration, promise);
     }
 
@@ -260,17 +275,19 @@ class PowerAuthModule : CordovaPlugin() {
 
     private fun createActivation(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
+        val activation = args.getReadableMap(1)
         powerAuthJsModule.createActivation(instanceId, activation, promise);
     }
 
     private fun commitActivation(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
+        val authMap = args.getReadableMap(1)
         powerAuthJsModule.commitActivation(instanceId, authMap, promise);
     }
 
     private fun removeActivationWithAuthentication(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         powerAuthJsModule.removeActivationWithAuthentication(instanceId, authMap, promise);
     }
 
@@ -281,23 +298,24 @@ class PowerAuthModule : CordovaPlugin() {
 
     private fun requestGetSignature(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         val uriId = args.getString(2)
-        val params = args.getJSONObject(3)
+        val params = args.getReadableMap(3)
         powerAuthJsModule.requestGetSignature(instanceId, authMap, uriId, params, promise);
     }
 
     private fun requestSignature(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
-        val uriId = args.getString(2)
-        val body = args.getString(3)
+        val authMap = args.getReadableMap(1)
+        val method = args.getString(2)
+        val uriId = args.getString(3)
+        val body = args.getString(4)
         powerAuthJsModule.requestSignature(instanceId, authMap, method, uriId, body, promise);
     }
 
     private fun offlineSignature(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         val uriId = args.getString(2)
         val body = args.getString(3)
         val nonce = args.getString(4)
@@ -328,8 +346,8 @@ class PowerAuthModule : CordovaPlugin() {
 
     private fun addBiometryFactor(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val oldPassword = args.getDynamic(1)
-        val prompt = args.getJSONObject(2)
+        val password = args.getDynamic(1)
+        val prompt = args.getReadableMap(2)
         powerAuthJsModule.addBiometryFactor(instanceId, password, prompt, promise);
     }
 
@@ -350,14 +368,14 @@ class PowerAuthModule : CordovaPlugin() {
 
     private fun fetchEncryptionKey(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         val index = args.getInt(2)
         powerAuthJsModule.fetchEncryptionKey(instanceId, authMap, index, promise);
     }
 
     private fun signDataWithDevicePrivateKey(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         val `data` = args.getString(2)
         powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, `data`, promise);
     }
@@ -375,20 +393,20 @@ class PowerAuthModule : CordovaPlugin() {
 
     private fun activationRecoveryData(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val authMap = args.getJSONObject(1)
+        val authMap = args.getReadableMap(1)
         powerAuthJsModule.activationRecoveryData(instanceId, authMap, promise);
     }
 
     private fun confirmRecoveryCode(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val recoveryCode = args.getString(1)
-        val authMap = args.getJSONObject(2)
+        val authMap = args.getReadableMap(2)
         powerAuthJsModule.confirmRecoveryCode(instanceId, recoveryCode, authMap, promise);
     }
 
     private fun authenticateWithBiometry(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
-        val prompt = args.getJSONObject(1)
+        val prompt = args.getReadableMap(1)
         val makeReusable = args.getBoolean(2)
         powerAuthJsModule.authenticateWithBiometry(instanceId, prompt, makeReusable, promise);
     }
@@ -398,7 +416,7 @@ class PowerAuthModule : CordovaPlugin() {
     private fun requestAccessToken(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val tokenName = args.getString(1)
-        val authMap = args.getJSONObject(2)
+        val authMap = args.getReadableMap(2)
         powerAuthJsModule.requestAccessToken(instanceId, tokenName, authMap, promise);
     }
 

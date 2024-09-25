@@ -1,17 +1,26 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import com.wultra.android.powerauth.js.PowerAuthPasswordJsModule
+import com.wultra.android.powerauth.cdv.util.Promise
+import org.apache.cordova.CallbackContext
+import org.apache.cordova.CordovaInterface
+import org.apache.cordova.CordovaPlugin
+import org.apache.cordova.CordovaWebView
+import org.json.JSONArray
+import org.json.JSONException
+
 class PowerAuthPasswordModule : CordovaPlugin() {
 
-    internal lateinit var PowerAuthPasswordJsModule powerAuthPasswordJsModule;
+    internal lateinit var powerAuthPasswordJsModule: PowerAuthPasswordJsModule 
 
-    override public fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
+    override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView);
-        val powerAuthObjectRegister = webVieiw.pluginManager.getPlugin("PowerAuthObjectRegister")
+        val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister") as PowerAuthObjectRegister
         powerAuthPasswordJsModule = PowerAuthPasswordJsModule(powerAuthObjectRegister.objectRegisterJs)
     }
 
-    @Throws(JSONException)
+    @Throws(JSONException::class)
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         val promise = Promise(callbackContext)
         when (action) {

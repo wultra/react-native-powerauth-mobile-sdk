@@ -1,11 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-package com.facebook.react.bridge;
+package com.wultra.android.powerauth.cdv.util;
 
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -17,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@DoNotStrip
 public class Arguments {
   private static Object makeNativeObject(Object object) {
     if (object == null) {

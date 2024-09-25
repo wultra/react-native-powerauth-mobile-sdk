@@ -15,18 +15,17 @@
  */
 package com.wultra.android.powerauth.js
 
-import com.wultra.android.powerauth.bridge.Dynamic;
-import com.wultra.android.powerauth.bridge.Promise;
-import com.wultra.android.powerauth.bridge.JsApiMethod;
-import com.wultra.android.powerauth.bridge.ReadableMap;
-import com.wultra.android.powerauth.bridge.ReadableType;
+import com.wultra.android.powerauth.bridge.Dynamic
+import com.wultra.android.powerauth.bridge.Promise
+import com.wultra.android.powerauth.bridge.JsApiMethod
+import com.wultra.android.powerauth.bridge.ReadableMap
+import com.wultra.android.powerauth.bridge.ReadableType
 import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.Action
 import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.InstanceData
-import com.wultra.android.powerauth.reactnative.BuildConfig;
+import com.wultra.android.powerauth.bridge.BuildConfig
 
 import io.getlime.security.powerauth.core.Password
 import java.util.Arrays
-import javax.annotation.Nonnull
 import kotlin.math.min
 
 public class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : BaseJavaJsModule {
@@ -153,7 +152,6 @@ public class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegiste
      * @return Resolved core password.
      * @throws WrapperException In case that Password cannot be created.
      */
-    @Nonnull
     @Throws(WrapperException::class)
     private fun findPassword(anyPassword: Dynamic?, use: Boolean): Password {
         if (anyPassword != null) {
@@ -191,7 +189,6 @@ public class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegiste
      * @return Resolved core password.
      * @throws WrapperException In case that Password cannot be created.
      */
-    @Nonnull
     @Throws(WrapperException::class)
     fun usePassword(anyPassword: Dynamic?): Password {
         return findPassword(anyPassword, true)
@@ -204,7 +201,6 @@ public class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegiste
      * @return Resolved core password.
      * @throws WrapperException In case that Password cannot be created.
      */
-    @Nonnull
     @Throws(WrapperException::class)
     fun touchPassword(anyPassword: Dynamic?): Password {
         return findPassword(anyPassword, false)

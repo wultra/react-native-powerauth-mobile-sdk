@@ -1,17 +1,26 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
-class PowerAuthModule : CordovaPlugin() {
+import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule
+import com.wultra.android.powerauth.cdv.util.Promise
+import org.apache.cordova.CallbackContext
+import org.apache.cordova.CordovaInterface
+import org.apache.cordova.CordovaPlugin
+import org.apache.cordova.CordovaWebView
+import org.json.JSONArray
+import org.json.JSONException
 
-    internal lateinit var PowerAuthEncryptorJsModule powerAuthEncryptorJsModule;
+class PowerAuthEncryptionModule : CordovaPlugin() {
 
-    override public fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
+    internal lateinit var powerAuthEncryptorJsModule: PowerAuthEncryptorJsModule
+
+    override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView);
-        val powerAuthObjectRegister = webVieiw.pluginManager.getPlugin("PowerAuthObjectRegister")
+        val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister") as PowerAuthObjectRegister
         powerAuthEncryptorJsModule = PowerAuthEncryptorJsModule(cordova.activity, powerAuthObjectRegister.objectRegisterJs)
     }
 
-    @Throws(JSONException)
+    @Throws(JSONException::class)
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         val promise = Promise(callbackContext)
         when (action) {
@@ -45,7 +54,7 @@ class PowerAuthModule : CordovaPlugin() {
         return false  // Returning false results in a "MethodNotFound" error.
     }
 
-    private fun initialize(args: JSONArray, Promise promise) {
+    private fun initialize(args: JSONArray, promise: Promise) {
         val scope = args.getString(0)
         val ownerId = args.getString(1)
         val autoreleaseTime = args.getInt(2)
@@ -59,12 +68,12 @@ class PowerAuthModule : CordovaPlugin() {
 
     // Encryption
 
-    private fun canEncryptRequest(args: JSONArray, Promise promise) {
+    private fun canEncryptRequest(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
         powerAuthEncryptorJsModule.canEncryptRequest(encryptorId, promise);
     }
 
-    private fun encryptRequest(args: JSONArray, Promise promise) {
+    private fun encryptRequest(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
         val body = args.getString(1)
         val bodyFormat = args.getString(2)
@@ -73,14 +82,14 @@ class PowerAuthModule : CordovaPlugin() {
 
     // Decryption
 
-    private fun canDecryptResponse(args: JSONArray, Promise promise) {
+    private fun canDecryptResponse(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
         powerAuthEncryptorJsModule.canDecryptResponse(encryptorId, promise);
     }
 
-    private fun decryptResponse(args: JSONArray, Promise promise) {
+    private fun decryptResponse(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
-        val cryptogram = args.getJSONObject(1)
+        val cryptogram = args.getReadableMap(1)
         val outputFormat = args.getString(2)
         powerAuthEncryptorJsModule.decryptResponse(encryptorId, cryptogram, outputFormat, promise);
     }

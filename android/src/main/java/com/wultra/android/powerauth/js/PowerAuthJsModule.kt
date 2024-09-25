@@ -33,7 +33,6 @@ import android.util.Pair
 import androidx.fragment.app.FragmentActivity
 import io.getlime.security.powerauth.core.Password
 import java.nio.charset.StandardCharsets
-import javax.annotation.Nonnull
 
 import io.getlime.security.powerauth.biometry.BiometricKeyData
 import io.getlime.security.powerauth.biometry.BiometricAuthentication
@@ -69,7 +68,7 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
-    fun isConfigured(@Nonnull instanceId: String, promise: Promise) {
+    fun isConfigured(instanceId: String, promise: Promise) {
         try {
             promise.resolve(getPowerAuthInstance(instanceId) != null)
         } catch (e: PowerAuthErrorException) {
@@ -1207,7 +1206,7 @@ class PowerAuthJsModule(
      * @param promise Promise to resolve TS call.
      * @param block Block to execute with acquired PowerAuthSDK instance.
      */
-    private fun usePowerAuth(@Nonnull instanceId: String, promise: Promise, block: PowerAuthBlock) {
+    private fun usePowerAuth(instanceId: String, promise: Promise, block: PowerAuthBlock) {
         try {
             val instance: PowerAuthSDK? = getPowerAuthInstance(instanceId)
             if (instance != null) {
@@ -1230,7 +1229,7 @@ class PowerAuthJsModule(
      * @param block Block to execute on main thread with acquired PowerAuthSDK instance.
      */
     private fun usePowerAuthOnMainThread(
-        @Nonnull instanceId: String,
+        instanceId: String,
         promise: Promise,
         block: PowerAuthBlock
     ) {

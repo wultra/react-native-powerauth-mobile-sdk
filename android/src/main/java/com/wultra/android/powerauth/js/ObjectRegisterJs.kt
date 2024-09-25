@@ -23,7 +23,7 @@ import com.wultra.android.powerauth.bridge.ReadableMap
 import com.wultra.android.powerauth.bridge.WritableArray
 import com.wultra.android.powerauth.bridge.WritableMap
 import com.wultra.android.powerauth.bridge.JsApiMethod
-import com.wultra.android.powerauth.reactnative.BuildConfig
+import com.wultra.android.powerauth.bridge.BuildConfig
 
 import android.os.SystemClock
 import android.text.TextUtils

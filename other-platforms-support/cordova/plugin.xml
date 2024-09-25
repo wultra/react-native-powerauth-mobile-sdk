@@ -14,7 +14,7 @@
     </engines>
     <platform name="android" kotlin="1.9.22">
         <!-- Base Configuration -->
-        <config-file target="config.xml" parent="/*" >
+        <config-file target="res/xml/config.xml" parent="/*" >
             <preference name="GradlePluginKotlinEnabled" value="true" />
             <feature name="PowerAuthModule">
                 <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthModule" />
@@ -39,8 +39,17 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPasswordModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
 
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
+
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Arguments.java" target-dir="android/src/main/java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Dynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableType.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ActivityAwareModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/BaseJavaJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Constants.java" target-dir="android/src/main/java/com/wultra/android/powerauth/js" />
