@@ -69,7 +69,7 @@ repositories {
 }
 
 dependencies {
-  api "com.wultra.android.powerauth:powerauth-sdk:1.7.8"
+  api "com.wultra.android.powerauth:powerauth-sdk:1.7.10"
 
   if (project == rootProject) {
     // The standalone build require to specify exact version of RN

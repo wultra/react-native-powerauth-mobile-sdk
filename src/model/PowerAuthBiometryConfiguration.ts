@@ -59,6 +59,23 @@ export interface PowerAuthBiometryConfigurationType {
      * The default value is `false`.
      */
     readonly authenticateOnBiometricKeySetup?: boolean
+
+    /**
+     * ### Android specific
+     * 
+     * Set whether fallback to a shared, legacy biometry key is enabled. By default, this is enabled for compatibility
+     * reasons. If enabled, `PowerAuth` performs an additional lookup for a legacy biometric key previously shared
+     * between multiple `PowerAuth` object instances.
+     * 
+     * If your application uses multiple `PowerAuth` instances, it's recommended to set this configuration to `false`.
+     * This is because the native SDK doesn't properly handle multiple activations with the shared biometric key.
+     * 
+     * If set to `false`, the shared key will no longer be accessible, and you may need to reconfigure the biometric factor
+     * for the existing activations on your `PowerAuth` object instances.
+     * 
+     * The default value is `true`, so the fallback is enabled.
+     */
+    readonly fallbackToSharedBiometryKey?: boolean
 }
 
 /**
@@ -69,6 +86,7 @@ export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigur
     fallbackToDevicePasscode: boolean
     confirmBiometricAuthentication: boolean
     authenticateOnBiometricKeySetup: boolean
+    fallbackToSharedBiometryKey: boolean
 
     /**
      * The default class constructor, respecting a platform specific differences.
@@ -79,6 +97,7 @@ export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigur
         this.fallbackToDevicePasscode = d.fallbackToDevicePasscode
         this.confirmBiometricAuthentication = d.confirmBiometricAuthentication
         this.authenticateOnBiometricKeySetup = d.authenticateOnBiometricKeySetup
+        this.fallbackToSharedBiometryKey = d.fallbackToSharedBiometryKey
     }
 
     /**
@@ -103,6 +122,7 @@ export function buildBiometryConfiguration(input: PowerAuthBiometryConfiguration
         linkItemsToCurrentSet: input?.linkItemsToCurrentSet ?? Platform.OS === 'android',
         fallbackToDevicePasscode: input?.fallbackToDevicePasscode ?? false,
         confirmBiometricAuthentication: input?.confirmBiometricAuthentication ?? false,
-        authenticateOnBiometricKeySetup: input?.authenticateOnBiometricKeySetup ?? true
+        authenticateOnBiometricKeySetup: input?.authenticateOnBiometricKeySetup ?? true,
+        fallbackToSharedBiometryKey: input?.fallbackToSharedBiometryKey ?? true
     })
 }

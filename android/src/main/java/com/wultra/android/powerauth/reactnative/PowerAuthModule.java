@@ -96,7 +96,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void configure(final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final Promise promise) {
+    public void configure(final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final ReadableMap sharingConfiguration, Promise promise) {
         try {
             boolean result = registerPowerAuthInstance(instanceId, () -> {
                 // Create configurations from maps
@@ -228,6 +228,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         final boolean linkItemsToCurrentSet = biometryMap.hasKey("linkItemsToCurrentSet") ? biometryMap.getBoolean("linkItemsToCurrentSet") : PowerAuthKeychainConfiguration.DEFAULT_LINK_BIOMETRY_ITEMS_TO_CURRENT_SET;
         final boolean confirmBiometricAuthentication = biometryMap.hasKey("confirmBiometricAuthentication") ? biometryMap.getBoolean("confirmBiometricAuthentication") : PowerAuthKeychainConfiguration.DEFAULT_CONFIRM_BIOMETRIC_AUTHENTICATION;
         final boolean authenticateOnBiometricKeySetup = biometryMap.hasKey("authenticateOnBiometricKeySetup") ? biometryMap.getBoolean("authenticateOnBiometricKeySetup") : PowerAuthKeychainConfiguration.DEFAULT_AUTHENTICATE_ON_BIOMETRIC_KEY_SETUP;
+        final boolean fallbackToSharedBiometryKey = biometryMap.hasKey("fallbackToSharedBiometryKey") ? biometryMap.getBoolean("fallbackToSharedBiometryKey") : PowerAuthKeychainConfiguration.DEFAULT_ENABLE_FALLBACK_TO_SHARED_BIOMETRY_KEY;
         // Keychain configuration
         final int minimalRequiredKeychainProtection = getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"));
         return new PowerAuthKeychainConfiguration.Builder()
@@ -235,6 +236,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 .confirmBiometricAuthentication(confirmBiometricAuthentication)
                 .authenticateOnBiometricKeySetup(authenticateOnBiometricKeySetup)
                 .minimalRequiredKeychainProtection(minimalRequiredKeychainProtection)
+                .enableFallbackToSharedBiometryKey(fallbackToSharedBiometryKey)
                 .build();
     }
 
@@ -286,6 +288,12 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                 promise.resolve(sdk.getActivationFingerprint());
             }
         });
+    }
+
+    @ReactMethod
+    public void getExternalPendingOperation(String instanceId, final Promise promise) {
+        // Not supported on Android
+        promise.resolve(null);
     }
 
     @ReactMethod
