@@ -27,7 +27,7 @@ import java.io.IOException
 import javax.annotation.Nonnull
 
 @Suppress("MemberVisibilityCanBePrivate")
-internal object Errors {
+object Errors {
     // RN specific
     const val EC_REACT_NATIVE_ERROR: String = "REACT_NATIVE_ERROR"
     const val EC_AUTHENTICATION_ERROR: String = "AUTHENTICATION_ERROR"

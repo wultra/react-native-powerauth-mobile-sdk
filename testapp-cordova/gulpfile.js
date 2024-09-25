@@ -104,6 +104,11 @@ const patchIOSPlists = () => {
     });
 }
 
+const buildAndroid = () => exec("cordova build android")
+const runAndroidOnDevice = () => exec("cordova run android --device")
+
+
+
 gulp.task("default", gulp.series(
     cleanTemp,
     copyTestFiles,
@@ -113,4 +118,15 @@ gulp.task("default", gulp.series(
     prepareIOS,
     patchNativeFiles,
     patchIOSPlists,
+));
+
+gulp.task("android", gulp.series(
+    cleanTemp,
+    copyTestFiles,
+    copyAppFiles,
+    compile,
+    cleanTemp,
+    buildAndroid
+    // ,
+    // runAndroidOnDevice
 ));

@@ -1,0 +1,32 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    google()
+  }
+
+  dependencies {
+    classpath("com.android.tools.build:gradle:7.2.1")
+  }
+}
+
+apply plugin: "org.jetbrains.kotlin.android"
+
+
+android {
+  namespace = "com.wultra.android.powerauth.cdv"
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+
+repositories {
+  mavenCentral()
+  google()
+}
+
+dependencies {
+  implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.22"))
+  api "com.wultra.android.powerauth:powerauth-sdk:1.7.9"
+}

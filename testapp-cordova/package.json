@@ -5,11 +5,15 @@
     "description": "A sample Cordova application that runs PowerAuth tests.",
     "main": "index.js",
     "scripts": {
+        "android": "npx cordova run android",
         "ios": "npx cordova run ios",
         "pods": "pushd \"platforms/ios\"; pod install; popd",
         "installPlugin": "npx cordova plugin add ../build/cdv",
         "reinstallPlugin": "(npx cordova plugin remove cordova-powerauth-mobile-sdk || true) && npm run installPlugin",
-        "build": "node node_modules/gulp/bin/gulp.js"
+        "reinstallAndAndroid": "npm run reinstallPlugin && npm run buildAndroid && npm run android",
+        "freshAndroid": "pushd .. && gulp cdv && popd && npm run reinstallAndAndroid",
+        "build": "node node_modules/gulp/bin/gulp.js",
+        "buildAndroid": "gulp android"
     },
     "keywords": [
         "ecosystem:cordova"

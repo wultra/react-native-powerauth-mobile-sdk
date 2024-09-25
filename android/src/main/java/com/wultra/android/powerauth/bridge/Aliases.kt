@@ -11,8 +11,3 @@ typealias ReadableType = com.facebook.react.bridge.ReadableType
 typealias WritableArray = com.facebook.react.bridge.WritableArray
 typealias WritableMap = com.facebook.react.bridge.WritableMap
 
-
-@Retention(AnnotationRetention.RUNTIME)
-public annotation class JsApiMethod(
-    public val isBlockingSynchronousMethod: Boolean = false
-)

@@ -7,7 +7,9 @@
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
+    "android/src/main/java/com/wultra/android/powerauth/js/*",
+    "android/src/main/java/com/wultra/android/powerauth/cdv/*",
+    "android/src/main/java/com/wultra/android/powerauth/bridge/*",
     "android/build.gradle",
     "lib/*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
