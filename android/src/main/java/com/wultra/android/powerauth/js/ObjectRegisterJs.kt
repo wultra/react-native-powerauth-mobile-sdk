@@ -710,7 +710,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
                     objectClass = ByteArray::class.java
                 }
                 "number" -> {
-                    objectClass = Int::class.java
+                    objectClass = Integer::class.java
                 }
                 "password" -> {
                     objectClass = Password::class.java
