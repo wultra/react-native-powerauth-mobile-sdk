@@ -3,7 +3,6 @@ package com.wultra.android.powerauth.cdv.util;
 import android.os.Bundle;
 import android.os.Parcelable;
 import androidx.annotation.Nullable;
-import com.facebook.proguard.annotations.DoNotStrip;
 import java.lang.reflect.Array;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -27,10 +26,10 @@ public class Arguments {
       return makeNativeMap((Map<String, Object>) object);
     } else if (object instanceof Bundle) {
       return makeNativeMap((Bundle) object);
-    } else if (object instanceof JavaOnlyMap) {
-      return makeNativeMap(((JavaOnlyMap) object).toHashMap());
-    } else if (object instanceof JavaOnlyArray) {
-      return makeNativeArray(((JavaOnlyArray) object).toArrayList());
+    // } else if (object instanceof JavaOnlyMap) {
+    //   return makeNativeMap(((JavaOnlyMap) object).toHashMap());
+    // } else if (object instanceof JavaOnlyArray) {
+    //   return makeNativeArray(((JavaOnlyArray) object).toArrayList());
     } else {
       // Boolean, Integer, Double, String, WritableNativeArray, WritableNativeMap
       return object;
@@ -120,7 +119,6 @@ public class Arguments {
    * The best way to think of this is a way to generate a Java representation of a json object, from
    * Java types which have a natural representation in json.
    */
-  @DoNotStrip
   public static WritableNativeMap makeNativeMap(Map<String, Object> objects) {
     WritableNativeMap nativeMap = new WritableNativeMap();
     if (objects == null) {
@@ -133,7 +131,6 @@ public class Arguments {
   }
 
   /** Like the above, but takes a Bundle instead of a Map. */
-  @DoNotStrip
   public static WritableNativeMap makeNativeMap(Bundle bundle) {
     WritableNativeMap nativeMap = new WritableNativeMap();
     if (bundle == null) {

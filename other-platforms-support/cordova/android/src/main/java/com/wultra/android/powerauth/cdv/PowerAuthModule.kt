@@ -2,6 +2,8 @@
 package com.wultra.android.powerauth.cordova.plugin
 
 import android.app.Activity
+import com.wultra.android.powerauth.bridge.getDynamic
+import com.wultra.android.powerauth.bridge.getReadableMap
 import com.wultra.android.powerauth.cdv.util.Promise
 import com.wultra.android.powerauth.js.ActivityProvider
 import com.wultra.android.powerauth.js.PowerAuthJsModule

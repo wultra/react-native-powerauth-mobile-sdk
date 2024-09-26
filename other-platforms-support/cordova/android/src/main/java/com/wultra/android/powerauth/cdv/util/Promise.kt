@@ -1,6 +1,8 @@
 package com.wultra.android.powerauth.cdv.util
 
 import org.apache.cordova.CallbackContext
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Promise(
     val callbackContext: CallbackContext
@@ -11,7 +13,13 @@ class Promise(
    * @param value Object
    */
   public fun resolve(value: Any?) {
-    callbackContext.success(value)
+    when (value) {
+      is Int -> callbackContext.success(value)
+      is String -> callbackContext.success(value)
+      is Collection<*> -> callbackContext.success(JSONArray(value))
+      is Map<*,*> -> callbackContext.success(JSONObject(value))
+    }
+    // callbackContext.success(value)
   }
 
   /**

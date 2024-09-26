@@ -38,4 +38,8 @@ public interface ReadableMap {
   public fun toHashMap(): HashMap<String, Any>
 }
 
-public interface ReadableMapKeySetIterator
+public interface ReadableMapKeySetIterator {
+  public fun hasNextKey(): Boolean
+
+  public fun nextKey(): String
+}

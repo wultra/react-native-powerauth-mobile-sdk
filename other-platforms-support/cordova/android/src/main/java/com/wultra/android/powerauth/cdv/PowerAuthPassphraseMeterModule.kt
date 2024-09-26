@@ -1,6 +1,7 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import com.wultra.android.powerauth.bridge.getDynamic
 import com.wultra.android.powerauth.js.PowerAuthPassphraseMeterJsModule
 import com.wultra.android.powerauth.cdv.util.Promise
 import org.apache.cordova.CallbackContext
