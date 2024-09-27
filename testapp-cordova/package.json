@@ -13,7 +13,7 @@
         "reinstallAndAndroid": "npm run reinstallPlugin && npm run buildAndroid && npm run android",
         "freshAndroid": "pushd .. && gulp cdv && popd && npm run reinstallAndAndroid",
         "build": "node node_modules/gulp/bin/gulp.js",
-        "buildAndroid": "gulp android"
+        "buildAndroid": "npm run build && cordova build android"
     },
     "keywords": [
         "ecosystem:cordova"

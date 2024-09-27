@@ -1,14 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.wultra.pwatest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.wultra.pwatest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>PowerAuthTest</name>
     <description>PowerAuth tests Cordova App</description>
     <author email="hello@wultra.com" href="https://www.wultra.com/">
         Wultra
     </author>
     <content src="index.html" />
-    <access origin="*" />
+
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+
+    <!-- turn off CORS for the tests where localhost test server accesses azure.com -->
+    <preference name="AndroidInsecureFileModeEnabled" value="true" />
 
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-compileSdkVersion" value="34" />

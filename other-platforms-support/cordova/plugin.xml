@@ -40,6 +40,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
 
         <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Mappings.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
 
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Arguments.java" target-dir="com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Dynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
@@ -73,6 +74,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ReleasePolicy.java" target-dir="com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Utils.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/WrapperException.java" target-dir="com/wultra/android/powerauth/js" />
+        
         <framework src="android/build.gradle" custom="true" type="gradleReference" />
     </platform>
     <platform name="ios">
