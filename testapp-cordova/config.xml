@@ -10,6 +10,12 @@
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
 
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+    </platform>
+
     <!-- turn off CORS for the tests where localhost test server accesses azure.com -->
     <preference name="AndroidInsecureFileModeEnabled" value="true" />
 
