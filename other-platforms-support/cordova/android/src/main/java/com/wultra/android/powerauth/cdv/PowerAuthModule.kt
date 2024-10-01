@@ -323,12 +323,14 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun requestSignature(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        val authMap = args.getReadableMap(1)
-        val method = args.getOptString(2)
-        val uriId = args.getOptString(3)
-        val body = args.getOptString(4)
-        powerAuthJsModule.requestSignature(instanceId, authMap, method, uriId, body, promise);
+        cordova.threadPool.execute(Runnable {
+            val instanceId = args.getString(0)
+            val authMap = args.getReadableMap(1)
+            val method = args.getOptString(2)
+            val uriId = args.getOptString(3)
+            val body = args.getOptString(4)
+            powerAuthJsModule.requestSignature(instanceId, authMap, method, uriId, body, promise);
+        })
     }
 
     private fun offlineSignature(args: JSONArray, promise: Promise) {
@@ -349,10 +351,12 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun unsafeChangePassword(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        val oldPassword = args.getDynamic(1)
-        val newPassword = args.getDynamic(2)
-        powerAuthJsModule.unsafeChangePassword(instanceId, oldPassword, newPassword, promise);
+        cordova.threadPool.execute(Runnable {
+            val instanceId = args.getString(0)
+            val oldPassword = args.getDynamic(1)
+            val newPassword = args.getDynamic(2)
+            powerAuthJsModule.unsafeChangePassword(instanceId, oldPassword, newPassword, promise);
+        })
     }
 
     private fun changePassword(args: JSONArray, promise: Promise) {
@@ -371,13 +375,17 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun hasBiometryFactor(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        powerAuthJsModule.hasBiometryFactor(instanceId, promise);
+        cordova.threadPool.execute(Runnable {
+            val instanceId = args.getString(0)
+            powerAuthJsModule.hasBiometryFactor(instanceId, promise);
+        })
     }
 
     private fun removeBiometryFactor(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        powerAuthJsModule.removeBiometryFactor(instanceId, promise);
+        cordova.threadPool.execute(Runnable {
+            val instanceId = args.getString(0)
+            powerAuthJsModule.removeBiometryFactor(instanceId, promise);
+        })
     }
 
     private fun getBiometryInfo(args: JSONArray, promise: Promise) {
@@ -458,9 +466,11 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun removeLocalToken(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        val tokenName = args.getString(1)
-        powerAuthJsModule.removeLocalToken(instanceId, tokenName, promise);
+        cordova.threadPool.execute(Runnable {
+            val instanceId = args.getString(0)
+            val tokenName = args.getString(1)
+            powerAuthJsModule.removeLocalToken(instanceId, tokenName, promise);
+        })
     }
 
     private fun removeAllLocalTokens(args: JSONArray, promise: Promise) {

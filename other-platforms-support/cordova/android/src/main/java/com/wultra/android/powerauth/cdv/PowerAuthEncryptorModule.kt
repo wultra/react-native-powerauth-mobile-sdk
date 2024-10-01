@@ -22,7 +22,7 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
     internal lateinit var powerAuthEncryptorJsModule: PowerAuthEncryptorJsModule
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
-        super.initialize(cordova, webView);
+        super.initialize(cordova, webView)
         val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister") as PowerAuthObjectRegister
         powerAuthEncryptorJsModule = PowerAuthEncryptorJsModule(cordova.activity, powerAuthObjectRegister.objectRegisterJs)
     }
@@ -37,7 +37,7 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
                 return true
             }
             "release" -> {
-                release(args)
+                release(args, promise)
                 return true
             }
             // Encryption
@@ -67,39 +67,41 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
         val scope = args.getString(0)
         val ownerId = args.getString(1)
         val autoreleaseTime = args.getInt(2)
-        powerAuthEncryptorJsModule.initialize(scope, ownerId, autoreleaseTime, promise);
+        powerAuthEncryptorJsModule.initialize(scope, ownerId, autoreleaseTime, promise)
     }
 
-    private fun release(args: JSONArray) {
+    private fun release(args: JSONArray, promise: Promise) {
+        Log.i(TAG, "release(args=$args)")
         val encryptorId = args.getString(0)
-        powerAuthEncryptorJsModule.release(encryptorId);
+        powerAuthEncryptorJsModule.release(encryptorId)
+        promise.resolve(null)
     }
 
     // Encryption
 
     private fun canEncryptRequest(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
-        powerAuthEncryptorJsModule.canEncryptRequest(encryptorId, promise);
+        powerAuthEncryptorJsModule.canEncryptRequest(encryptorId, promise)
     }
 
     private fun encryptRequest(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
         val body = args.getOptString(1)
         val bodyFormat = args.getOptString(2)
-        powerAuthEncryptorJsModule.encryptRequest(encryptorId, body, bodyFormat, promise);
+        powerAuthEncryptorJsModule.encryptRequest(encryptorId, body, bodyFormat, promise)
     }
 
     // Decryption
 
     private fun canDecryptResponse(args: JSONArray, promise: Promise) {
         val encryptorId = args.getOptString(0)
-        powerAuthEncryptorJsModule.canDecryptResponse(encryptorId, promise);
+        powerAuthEncryptorJsModule.canDecryptResponse(encryptorId, promise)
     }
 
     private fun decryptResponse(args: JSONArray, promise: Promise) {
         val encryptorId = args.getOptString(0)
         val cryptogram = args.getReadableMap(1)
         val outputFormat = args.getOptString(2)
-        powerAuthEncryptorJsModule.decryptResponse(encryptorId, cryptogram, outputFormat, promise);
+        powerAuthEncryptorJsModule.decryptResponse(encryptorId, cryptogram, outputFormat, promise)
     }
 }

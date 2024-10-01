@@ -1,5 +1,6 @@
 package com.wultra.android.powerauth.cdv.util
 
+import com.wultra.android.powerauth.bridge.ReadableArray
 import com.wultra.android.powerauth.bridge.toList
 import com.wultra.android.powerauth.bridge.toMap
 import com.wultra.android.powerauth.bridge.toReadableType
@@ -60,7 +61,14 @@ open class ReadableArrayImpl(srcList: List<Any?>) : ReadableArray {
     }
 
     override fun toArrayList(): ArrayList<Any> {
-        return ArrayList(list.filterNotNull())
+        val l = list.filterNotNull().map {
+            when (it) {
+                is ReadableMap -> it.toHashMap()
+                is ReadableArray -> it.toArrayList()
+                else -> it
+            }
+        }
+        return ArrayList(l)
     }
 }
 

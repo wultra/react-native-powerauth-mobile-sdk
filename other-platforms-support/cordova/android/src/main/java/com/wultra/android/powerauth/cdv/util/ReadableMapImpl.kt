@@ -1,6 +1,7 @@
 package com.wultra.android.powerauth.cdv.util
 
 import android.util.Log
+import com.wultra.android.powerauth.bridge.ReadableArray
 import com.wultra.android.powerauth.bridge.toDynamic
 import com.wultra.android.powerauth.bridge.toList
 import com.wultra.android.powerauth.bridge.toMap
@@ -78,6 +79,7 @@ open class ReadableMapImpl(srcMap: Map<String, Any?>) : ReadableMap {
         val hm = map.map { (key,value) ->
             when (value) {
                 is ReadableMap -> key to value.toHashMap()
+                is ReadableArray -> key to value.toArrayList()
                 else -> key to value
             }
         }.toMap()
