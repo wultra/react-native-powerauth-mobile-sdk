@@ -20,7 +20,7 @@ import com.wultra.android.powerauth.bridge.Arguments
 import com.wultra.android.powerauth.bridge.Dynamic
 import com.wultra.android.powerauth.bridge.Promise
 
-public class PowerAuthPassphraseMeterJsModule(private val passwordJsModule: PowerAuthPasswordJsModule) :
+class PowerAuthPassphraseMeterJsModule(private val passwordJsModule: PowerAuthPasswordJsModule) :
     BaseJavaJsModule {
     override fun getName(): String {
         return "PowerAuthPassphraseMeter"

@@ -1,6 +1,8 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import android.util.Log
+import com.wultra.android.powerauth.bridge.getOptString
 import com.wultra.android.powerauth.js.PowerAuthPasswordJsModule
 import com.wultra.android.powerauth.cdv.util.Promise
 import org.apache.cordova.CallbackContext
@@ -11,6 +13,10 @@ import org.json.JSONArray
 import org.json.JSONException
 
 class PowerAuthPasswordModule : CordovaPlugin() {
+
+    companion object {
+        const val TAG = "PowerAuthPasswordModule"
+    }
 
     internal lateinit var powerAuthPasswordJsModule: PowerAuthPasswordJsModule 
 
@@ -65,14 +71,15 @@ class PowerAuthPasswordModule : CordovaPlugin() {
     }
 
     private fun initialize(args: JSONArray, promise: Promise) {
+        Log.d(TAG, "initialize(args=$args)")
         val destroyOnUse = args.getBoolean(0)
-        val ownerId = args.getString(1)
+        val ownerId = args.getOptString(1)
         val autoreleaseTime = args.getInt(2)
         powerAuthPasswordJsModule.initialize(destroyOnUse, ownerId, autoreleaseTime, promise);
     }
 
     private fun release(args: JSONArray, promise: Promise) {
-        val objectId = args.getString(0)
+        val objectId = args.getOptString(0)
         powerAuthPasswordJsModule.release(objectId, promise);
     }
 

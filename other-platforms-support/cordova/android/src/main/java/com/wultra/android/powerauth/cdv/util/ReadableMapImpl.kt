@@ -1,5 +1,7 @@
 package com.wultra.android.powerauth.cdv.util
 
+import android.util.Log
+import com.wultra.android.powerauth.bridge.toDynamic
 import com.wultra.android.powerauth.bridge.toList
 import com.wultra.android.powerauth.bridge.toMap
 import com.wultra.android.powerauth.bridge.toReadableType
@@ -34,7 +36,8 @@ open class ReadableMapImpl(srcMap: Map<String, Any?>) : ReadableMap {
     }
 
     override fun getDynamic(name: String): Dynamic {
-        return map[name] as Dynamic
+        Log.d("ReadableMapImpl", "Getting dynamic")
+        return map[name].toDynamic()
     }
 
     override fun getInt(name: String): Int {
@@ -72,6 +75,12 @@ open class ReadableMapImpl(srcMap: Map<String, Any?>) : ReadableMap {
     }
 
     override fun toHashMap(): HashMap<String, Any> {
-        return HashMap<String, Any>(map)
+        val hm = map.map { (key,value) ->
+            when (value) {
+                is ReadableMap -> key to value.toHashMap()
+                else -> key to value
+            }
+        }.toMap()
+        return HashMap<String, Any>(hm)
     }
 }

@@ -17,23 +17,35 @@
 //@ts-nocheck
 
 import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
+import { Utils } from "./Utils.ts";
 
 export abstract class NativeCordovaModule implements NativePowerAuthIfc {
 
     protected abstract readonly pluginName: string;
 
     callNative<T>(name: string, args: any[]): Promise<T> {
+        console.log(`Cordova calling method ${name}(${args})`)
         return new Promise<T>(
             (resolve, reject) => {
                 cordova.exec(
                     // success callback
                     (response) => { 
-                        const parsed = JSON.parse(response);
-                        resolve(parsed.result); 
+                        if (Utils.detectPlatform() == "android") {
+                            console.log(`cordova: response: ${JSON.stringify(response)}`)
+                            resolve(response);
+                        } else {
+                            const parsed = JSON.parse(response);
+                            resolve(parsed);     
+                        }                    
                     },
                     // error callback
                     (error) => {
-                        reject(JSON.parse(error)) 
+                        if (Utils.detectPlatform() == "android") {
+                            console.log(`cordova: error response: ${JSON.stringify(error)}`)
+                            reject(error)
+                        } else {
+                            reject(JSON.parse(error)) 
+                        }
                     },
                     // native platform plugin name
                     this.pluginName,

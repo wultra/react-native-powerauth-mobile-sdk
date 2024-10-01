@@ -28,7 +28,7 @@ import io.getlime.security.powerauth.core.Password
 import java.util.Arrays
 import kotlin.math.min
 
-public class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : BaseJavaJsModule {
+class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : BaseJavaJsModule {
     override fun getName(): String {
         return "PowerAuthPassword"
     }

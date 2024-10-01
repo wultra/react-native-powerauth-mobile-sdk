@@ -1,6 +1,9 @@
 package com.wultra.android.powerauth.cdv.util
 
+import android.util.Log
 import org.apache.cordova.CallbackContext
+import org.apache.cordova.PluginResult
+import org.apache.cordova.PluginResult.Status
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -12,12 +15,19 @@ class Promise(
    *
    * @param value Object
    */
-  public fun resolve(value: Any?) {
+  fun resolve(value: Any?) {
+    Log.d("Promise", "resolving: ${value?.let {value::class}}")
     when (value) {
+      null -> callbackContext.sendPluginResult(PluginResult(Status.OK, null as String?))
       is Int -> callbackContext.success(value)
       is String -> callbackContext.success(value)
+      is Boolean -> callbackContext.sendPluginResult(PluginResult(Status.OK, value))
       is Collection<*> -> callbackContext.success(JSONArray(value))
       is Map<*,*> -> callbackContext.success(JSONObject(value))
+      is ReadableMap -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONObject(value.toHashMap().toMap())))
+      is ReadableArray -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONArray(value.toArrayList())))
+      else -> Log.d("Promise", "Promise not handled")
+//      else -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONObject(value))
     }
     // callbackContext.success(value)
   }
@@ -28,8 +38,9 @@ class Promise(
    * @param code String
    * @param message String
    */
-  public fun reject(code: String, message: String?) {
-    callbackContext.error("$code: $message")
+  fun reject(code: String, message: String?) {
+    val m = mapOf("code" to code, "message" to message)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -38,8 +49,9 @@ class Promise(
    * @param code String
    * @param throwable Throwable
    */
-  public fun reject(code: String, throwable: Throwable?) {
-    callbackContext.error("$code: ($throwable)")
+  fun reject(code: String, throwable: Throwable?) {
+    val m = mapOf("code" to code)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -49,8 +61,9 @@ class Promise(
    * @param message String
    * @param throwable Throwable
    */
-  public fun reject(code: String, message: String?, throwable: Throwable?) {
-    callbackContext.error("$code: $message ($throwable)")
+  fun reject(code: String, message: String?, throwable: Throwable?) {
+    val m = mapOf("code" to code, "message" to message)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -59,8 +72,8 @@ class Promise(
    *
    * @param throwable Throwable
    */
-  public fun reject(throwable: Throwable) {
-    callbackContext.error(": ($throwable)")
+  fun reject(throwable: Throwable) {
+    callbackContext.error(JSONObject())
   }
 
   /* ---------------------------
@@ -73,8 +86,8 @@ class Promise(
    * @param throwable Throwable
    * @param userInfo WritableMap
    */
-  public fun reject(throwable: Throwable, userInfo: WritableMap) {
-    callbackContext.error(": ($throwable) [$userInfo]")
+  fun reject(throwable: Throwable, userInfo: WritableMap) {
+    callbackContext.error(JSONObject())
   }
 
   /**
@@ -83,8 +96,9 @@ class Promise(
    * @param code String
    * @param userInfo WritableMap
    */
-  public fun reject(code: String, userInfo: WritableMap) {
-    callbackContext.error("$code: [$userInfo]")
+  fun reject(code: String, userInfo: WritableMap) {
+    val m = mapOf("code" to code)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -94,8 +108,9 @@ class Promise(
    * @param throwable Throwable
    * @param userInfo WritableMap
    */
-  public fun reject(code: String, throwable: Throwable?, userInfo: WritableMap) {
-    callbackContext.error("$code: ($throwable) [$userInfo]")
+  fun reject(code: String, throwable: Throwable?, userInfo: WritableMap) {
+    val m = mapOf("code" to code)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -106,8 +121,9 @@ class Promise(
    * @param message String
    * @param userInfo WritableMap
    */
-  public fun reject(code: String, message: String?, userInfo: WritableMap) {
-    callbackContext.error("$code: $message [$userInfo]")
+  fun reject(code: String, message: String?, userInfo: WritableMap) {
+    val m = mapOf("code" to code, "message" to message)
+    callbackContext.error(JSONObject(m))
   }
 
   /**
@@ -118,8 +134,10 @@ class Promise(
    * @param throwable Throwable
    * @param userInfo WritableMap
    */
-  public fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?) {
-    callbackContext.error("$code: $message ($throwable) [$userInfo]")
+  fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?) {
+    val m = mapOf("code" to code, "message" to message)
+    callbackContext.error(JSONObject(m))
+//    callbackContext.error("$code: $message ($throwable) [$userInfo]")
   }
 
   // /** Report an error which wasn't caused by an exception. */
@@ -128,7 +146,7 @@ class Promise(
   //         """Prefer passing a module-specific error code to JS. Using this method will pass the
   //       error code EUNSPECIFIED""",
   //     replaceWith = ReplaceWith("reject(code, message)"))
-  // public fun reject(message: String) {
+  // fun reject(message: String) {
   //   callbackContext.error(": $message")
   // }
 }

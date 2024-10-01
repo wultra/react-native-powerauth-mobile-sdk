@@ -1,6 +1,7 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import com.wultra.android.powerauth.bridge.getOptString
 import com.wultra.android.powerauth.bridge.getReadableMap
 import com.wultra.android.powerauth.js.ObjectRegisterJs
 import com.wultra.android.powerauth.cdv.util.Promise
@@ -43,12 +44,12 @@ class PowerAuthObjectRegister : CordovaPlugin() {
 
     
     private fun isValidNativeObject(args: JSONArray, promise: Promise) {
-        val objectId = args.getString(0)
+        val objectId = args.getOptString(0)
         objectRegisterJs.isValidNativeObject(objectId, promise)
     }
 
     private fun debugDump(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
+        val instanceId = args.getOptString(0)
         objectRegisterJs.debugDump(instanceId, promise);
     }
 

@@ -37,7 +37,7 @@ import kotlin.math.min
 
 
 @Suppress("unused")
-public class PowerAuthEncryptorJsModule(
+class PowerAuthEncryptorJsModule(
     private val context: Context,
     private val objectRegister: ObjectRegisterJs
 ) : BaseJavaJsModule {
