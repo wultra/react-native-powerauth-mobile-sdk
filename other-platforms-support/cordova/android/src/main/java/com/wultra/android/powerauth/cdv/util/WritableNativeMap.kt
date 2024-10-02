@@ -1,5 +1,10 @@
 package com.wultra.android.powerauth.cdv.util
 
+/**
+ * Cordova implementation of writable map.
+ *
+ * It's not in fact native, it's based on Kotlin collections.
+ */
 class WritableNativeMap(srcMap: Map<String, Any?> = emptyMap()) : ReadableNativeMap(srcMap), WritableMap {
 
   override fun putMap(key: String, value: ReadableMap?) {
@@ -9,7 +14,6 @@ class WritableNativeMap(srcMap: Map<String, Any?> = emptyMap()) : ReadableNative
     _mutableMap.put(key, value as ReadableNativeMap?)
   }
 
-  // Note: this consumes the map so do not reuse it.
   override fun putArray(key: String, value: ReadableArray?) {
     if (!(value == null || value is ReadableNativeArray)) {
       throw IllegalArgumentException("Illegal type provided")

@@ -46,9 +46,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Dynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableArrayImpl.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
-        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMapImpl.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMapKeySetIteratorImpl.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableNativeArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableNativeMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />

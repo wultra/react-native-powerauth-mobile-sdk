@@ -1,6 +1,11 @@
 package com.wultra.android.powerauth.cdv.util
 
 
+/**
+ * Cordova implementation of writable array.
+ *
+ * It's not in fact native, it's based on Kotlin collections.
+ */
 class WritableNativeArray(list: List<Any?> = emptyList()) : ReadableNativeArray(list), WritableArray {
 
     override fun pushArray(array: ReadableArray?) {

@@ -4,9 +4,9 @@ import android.util.Log
 import com.wultra.android.powerauth.cdv.util.DefaultDynamic
 import com.wultra.android.powerauth.cdv.util.Dynamic
 import com.wultra.android.powerauth.cdv.util.ReadableArray
-import com.wultra.android.powerauth.cdv.util.ReadableArrayImpl
+import com.wultra.android.powerauth.cdv.util.ReadableNativeArray
+import com.wultra.android.powerauth.cdv.util.ReadableNativeMap
 import com.wultra.android.powerauth.cdv.util.ReadableMap
-import com.wultra.android.powerauth.cdv.util.ReadableMapImpl
 import com.wultra.android.powerauth.cdv.util.ReadableType
 import org.json.JSONArray
 import org.json.JSONException
@@ -14,9 +14,7 @@ import org.json.JSONObject
 
 fun JSONArray.getDynamic(pos: Int): Dynamic? {
     // TODO improve
-    Log.i("Dyn", "Dynamic: ${this}")
     val obj = get(pos)
-    Log.i("Dyn", "The value is: ${obj}")
     if (isNull(pos)) {
         return object : DefaultDynamic() {
             override val type: ReadableType
@@ -55,17 +53,17 @@ fun JSONArray.getDynamic(pos: Int): Dynamic? {
                 }
             }
             is JSONArray -> return object : DefaultDynamic() {
-                override val type: com.wultra.android.powerauth.cdv.util.ReadableType
+                override val type: ReadableType
                     get() = ReadableType.Array
                 override fun asArray(): ReadableArray {
-                    return ReadableArrayImpl(obj)
+                    return ReadableNativeArray(obj)
                 }
             }
             is JSONObject -> return object : DefaultDynamic() {
                 override val type: ReadableType
                     get() = ReadableType.Map
                 override fun asMap(): ReadableMap {
-                    return ReadableMapImpl(obj)
+                    return ReadableNativeMap(obj)
                 }
             }
             else -> {
@@ -78,14 +76,13 @@ fun JSONArray.getDynamic(pos: Int): Dynamic? {
 
 fun Any?.toDynamic(): Dynamic {
     // TODO improve
-    Log.i("Dyn", "The value is: ${this}")
     when (this) {
-//        null -> return object : DefaultDynamic() {
-//            override val type: ReadableType
-//                get() = ReadableType.Null
-//            override val isNull: Boolean
-//                get() = true
-//        }
+       null -> return object : DefaultDynamic() {
+           override val type: ReadableType
+               get() = ReadableType.Null
+           override val isNull: Boolean
+               get() = true
+       }
         is Boolean -> return object : DefaultDynamic() {
             override val type: ReadableType
                 get() = ReadableType.Boolean
@@ -115,24 +112,24 @@ fun Any?.toDynamic(): Dynamic {
             }
         }
         is JSONArray -> return object : DefaultDynamic() {
-            override val type: com.wultra.android.powerauth.cdv.util.ReadableType
+            override val type: ReadableType
                 get() = ReadableType.Array
             override fun asArray(): ReadableArray {
-                return ReadableArrayImpl(this@toDynamic)
+                return ReadableNativeArray(this@toDynamic)
             }
         }
         is JSONObject -> return object : DefaultDynamic() {
             override val type: ReadableType
                 get() = ReadableType.Map
             override fun asMap(): ReadableMap {
-                return ReadableMapImpl(this@toDynamic)
+                return ReadableNativeMap(this@toDynamic)
             }
         }
         is HashMap<*,*> -> return object : DefaultDynamic() {
             override val type: ReadableType
                 get() = ReadableType.Map
             override fun asMap(): ReadableMap {
-                return ReadableMapImpl(this@toDynamic as Map<String, Any?>)
+                return ReadableNativeMap(this@toDynamic as Map<String, Any?>)
             }
         }
         else -> {
@@ -158,11 +155,10 @@ fun JSONArray.getOptString(pos: Int): String? {
 @Throws(JSONException::class)
 fun JSONArray.getReadableMap(pos: Int): ReadableMap {
     if (isNull(pos)) {
-        return ReadableMapImpl(emptyMap())
+        return ReadableNativeMap(emptyMap())
     }
     val obj = getJSONObject(pos)
-    Log.i("getReadableMap", "RedableMap obj[$pos]: ${obj}")
-    return ReadableMapImpl(obj)
+    return ReadableNativeMap(obj)
 }
 
 @Throws(JSONException::class)
@@ -171,8 +167,7 @@ fun JSONArray.getOptReadableMap(pos: Int): ReadableMap? {
         return null
     }
     val obj = getJSONObject(pos)
-    Log.i("getReadableMap", "RedableMap obj[$pos]: ${obj}")
-    return ReadableMapImpl(obj)
+    return ReadableNativeMap(obj)
 }
 
 fun JSONObject.toMap(): Map<String, Any?> = keys().asSequence()
