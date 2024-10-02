@@ -44,6 +44,7 @@
 
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Arguments.java" target-dir="com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Dynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/NativeDynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />

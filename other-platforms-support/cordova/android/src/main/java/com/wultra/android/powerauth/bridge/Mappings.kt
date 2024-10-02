@@ -1,8 +1,8 @@
 package com.wultra.android.powerauth.bridge
 
 import android.util.Log
-import com.wultra.android.powerauth.cdv.util.DefaultDynamic
 import com.wultra.android.powerauth.cdv.util.Dynamic
+import com.wultra.android.powerauth.cdv.util.NativeDynamic
 import com.wultra.android.powerauth.cdv.util.ReadableArray
 import com.wultra.android.powerauth.cdv.util.ReadableNativeArray
 import com.wultra.android.powerauth.cdv.util.ReadableNativeMap
@@ -13,136 +13,11 @@ import org.json.JSONException
 import org.json.JSONObject
 
 fun JSONArray.getDynamic(pos: Int): Dynamic? {
-    // TODO improve
     val obj = get(pos)
-    if (isNull(pos)) {
-        return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Null
-            override val isNull: Boolean
-                get() = true
-        }
-    } else {
-        when (obj) {
-            is Boolean -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.Boolean
-                override fun asBoolean(): Boolean {
-                    return obj
-                }
-            }
-            is Int -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.Number
-                override fun asInt(): Int {
-                    return obj
-                }
-            }
-            is Double -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.Number
-                override fun asDouble(): Double {
-                    return obj
-                }
-            }
-            is String -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.String
-                override fun asString(): String {
-                    return obj
-                }
-            }
-            is JSONArray -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.Array
-                override fun asArray(): ReadableArray {
-                    return ReadableNativeArray(obj)
-                }
-            }
-            is JSONObject -> return object : DefaultDynamic() {
-                override val type: ReadableType
-                    get() = ReadableType.Map
-                override fun asMap(): ReadableMap {
-                    return ReadableNativeMap(obj)
-                }
-            }
-            else -> {
-                Log.i("Dyn", "Dynamic not handled: ${obj} -> ${obj::class}")
-            }
-        }
-    }
-    return null
+    return NativeDynamic(obj)
 }
 
-fun Any?.toDynamic(): Dynamic {
-    // TODO improve
-    when (this) {
-       null -> return object : DefaultDynamic() {
-           override val type: ReadableType
-               get() = ReadableType.Null
-           override val isNull: Boolean
-               get() = true
-       }
-        is Boolean -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Boolean
-            override fun asBoolean(): Boolean {
-                return this@toDynamic
-            }
-        }
-        is Int -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Number
-            override fun asInt(): Int {
-                return this@toDynamic
-            }
-        }
-        is Double -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Number
-            override fun asDouble(): Double {
-                return this@toDynamic
-            }
-        }
-        is String -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.String
-            override fun asString(): String {
-                return this@toDynamic
-            }
-        }
-        is JSONArray -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Array
-            override fun asArray(): ReadableArray {
-                return ReadableNativeArray(this@toDynamic)
-            }
-        }
-        is JSONObject -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Map
-            override fun asMap(): ReadableMap {
-                return ReadableNativeMap(this@toDynamic)
-            }
-        }
-        is HashMap<*,*> -> return object : DefaultDynamic() {
-            override val type: ReadableType
-                get() = ReadableType.Map
-            override fun asMap(): ReadableMap {
-                return ReadableNativeMap(this@toDynamic as Map<String, Any?>)
-            }
-        }
-        else -> {
-            Log.i("Dyn", "Dynamic not handled: ${this}")
-        }
-    }
-    return object : DefaultDynamic() {
-        override val type: ReadableType
-            get() = ReadableType.Null
-        override val isNull: Boolean
-            get() = true
-    }
-}
+fun Any?.toDynamic(): Dynamic = NativeDynamic(this)
 
 fun JSONArray.getOptString(pos: Int): String? {
     return if (isNull(pos)) {
