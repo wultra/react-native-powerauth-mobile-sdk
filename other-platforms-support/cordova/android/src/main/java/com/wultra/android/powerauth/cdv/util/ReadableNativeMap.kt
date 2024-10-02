@@ -1,14 +1,10 @@
 package com.wultra.android.powerauth.cdv.util
 
-import com.wultra.android.powerauth.cdv.util.ReadableArray
-import com.wultra.android.powerauth.cdv.util.ReadableNativeArray
 import com.wultra.android.powerauth.bridge.toDynamic
-import com.wultra.android.powerauth.bridge.toList
 import com.wultra.android.powerauth.bridge.toMap
 import com.wultra.android.powerauth.bridge.toReadableType
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.HashMap
+import org.json.JSONObject
 
 /**
  * Cordova implementation of readable map.
@@ -24,7 +20,10 @@ open class ReadableNativeMap(srcMap: Map<String, Any?>) : ReadableMap {
 
     override val entryIterator: Iterator<Map.Entry<String, Any>>
         get() = map.filter { entry -> entry.value == null }
-            .map { it as Map.Entry<String, Any> }
+            .map { 
+                @Suppress("UNCHECKED_CAST")
+                it as Map.Entry<String, Any> 
+            }
             .iterator()
 
     override fun getArray(name: String): ReadableArray? {
@@ -55,6 +54,7 @@ open class ReadableNativeMap(srcMap: Map<String, Any?>) : ReadableMap {
 
     override fun getMap(name: String): ReadableMap? {
         return map[name]?.let {
+            @Suppress("UNCHECKED_CAST")
             ReadableNativeMap(it as Map<String, Any?>)
         }
     }

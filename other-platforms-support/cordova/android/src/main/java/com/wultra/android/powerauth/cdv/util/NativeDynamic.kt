@@ -45,7 +45,7 @@ class NativeDynamic(val data: Any?) : Dynamic {
 
     override fun asMap(): ReadableMap {
         if (data is JSONObject) {
-            return ReadableNativeMap(data as JSONObject)
+            return ReadableNativeMap(data)
         } else {
             @Suppress("UNCHECKED_CAST")
             return ReadableNativeMap(data as Map<String, Any?>)

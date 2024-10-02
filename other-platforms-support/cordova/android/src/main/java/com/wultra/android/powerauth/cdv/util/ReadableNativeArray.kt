@@ -1,12 +1,8 @@
 package com.wultra.android.powerauth.cdv.util
 
-import com.wultra.android.powerauth.cdv.util.ReadableArray
 import com.wultra.android.powerauth.bridge.toList
-import com.wultra.android.powerauth.bridge.toMap
 import com.wultra.android.powerauth.bridge.toReadableType
 import org.json.JSONArray
-import org.json.JSONObject
-import java.util.HashMap
 
 
 /**
@@ -46,6 +42,7 @@ open class ReadableNativeArray(srcList: List<Any?>) : ReadableArray {
     }
 
     override fun getMap(index: Int): ReadableMap {
+        @Suppress("UNCHECKED_CAST")
         return ReadableNativeMap(list[index] as Map<String, Any?>)
     }
 

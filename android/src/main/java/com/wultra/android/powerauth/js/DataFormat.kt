@@ -43,17 +43,11 @@ enum class DataFormat {
     fun decodeBytes(value: String?): ByteArray? {
         val result: ByteArray?
         if (value != null) {
-            if (this == UTF8) {
-                result = value.toByteArray(StandardCharsets.UTF_8)
-                if (result == null) {
-                    throw WrapperException(
-                        Errors.EC_WRONG_PARAMETER,
-                        "Failed to convert string into UTF8 encoded data"
-                    )
-                }
+            result = if (this == UTF8) {
+                value.toByteArray(StandardCharsets.UTF_8)
             } else {
                 try {
-                    result = Base64.decode(value, Base64.NO_WRAP)
+                    Base64.decode(value, Base64.NO_WRAP)
                 } catch (e: IllegalArgumentException) {
                     throw WrapperException(
                         Errors.EC_WRONG_PARAMETER,
