@@ -1,6 +1,5 @@
 package com.wultra.android.powerauth.bridge
 
-import android.util.Log
 import com.wultra.android.powerauth.cdv.util.Dynamic
 import com.wultra.android.powerauth.cdv.util.NativeDynamic
 import com.wultra.android.powerauth.cdv.util.ReadableArray

@@ -2,7 +2,6 @@
 package com.wultra.android.powerauth.cordova.plugin
 
 import android.app.Activity
-import android.util.Log
 import com.wultra.android.powerauth.bridge.getDynamic
 import com.wultra.android.powerauth.bridge.getOptReadableMap
 import com.wultra.android.powerauth.bridge.getOptString
@@ -18,10 +17,6 @@ import org.json.JSONArray
 import org.json.JSONException
 
 class PowerAuthModule : CordovaPlugin() {
-
-    companion object {
-        const val TAG = "PowerAuthModule"
-    }
 
     private lateinit var powerAuthJsModule: PowerAuthJsModule
 
@@ -232,7 +227,6 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun configure(args: JSONArray, promise: Promise) {
-        Log.d(TAG, "configure(args=$args)")
         cordova.threadPool.execute(Runnable {
             val instanceId = args.getString(0)
             val configuration = args.getReadableMap(1)
@@ -285,7 +279,6 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun createActivation(args: JSONArray, promise: Promise) {
-        Log.d(TAG, "createActivation(args=$args)")
         cordova.threadPool.execute(Runnable {
             val instanceId = args.getString(0)
             val activation = args.getReadableMap(1)
@@ -294,7 +287,6 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun commitActivation(args: JSONArray, promise: Promise) {
-        Log.d(TAG, "commitActivation(args=$args)")
         val instanceId = args.getString(0)
         val authMap = args.getReadableMap(1)
         powerAuthJsModule.commitActivation(instanceId, authMap, promise);
@@ -307,7 +299,6 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun removeActivationLocal(args: JSONArray, promise: Promise) {
-        Log.d(TAG, "removeActivationLocal(args=$args)")
         cordova.threadPool.execute(Runnable {
             val instanceId = args.getString(0)
             powerAuthJsModule.removeActivationLocal(instanceId, promise);
@@ -367,7 +358,6 @@ class PowerAuthModule : CordovaPlugin() {
     }
 
     private fun addBiometryFactor(args: JSONArray, promise: Promise) {
-        Log.i(TAG, "addBiometryFactor(ags=$args)")
         val instanceId = args.getString(0)
         val password = args.getDynamic(1)
         val prompt = args.getOptReadableMap(2)

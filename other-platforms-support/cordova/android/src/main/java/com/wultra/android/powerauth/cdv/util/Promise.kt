@@ -1,6 +1,5 @@
 package com.wultra.android.powerauth.cdv.util
 
-import android.util.Log
 import org.apache.cordova.CallbackContext
 import org.apache.cordova.PluginResult
 import org.apache.cordova.PluginResult.Status
@@ -16,7 +15,6 @@ class Promise(
    * @param value Object
    */
   fun resolve(value: Any?) {
-    Log.d("Promise", "resolving: ${value?.let {value::class}}")
     when (value) {
       null -> callbackContext.sendPluginResult(PluginResult(Status.OK, null as String?))
       is Int -> callbackContext.success(value)
@@ -26,10 +24,8 @@ class Promise(
       is Map<*,*> -> callbackContext.success(JSONObject(value))
       is ReadableMap -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONObject(value.toHashMap().toMap())))
       is ReadableArray -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONArray(value.toArrayList())))
-      else -> Log.d("Promise", "Promise not handled")
-//      else -> callbackContext.sendPluginResult(PluginResult(Status.OK, JSONObject(value))
+      else -> throw IllegalArgumentException("Unknown value passed to promise ${value::class}")
     }
-    // callbackContext.success(value)
   }
 
   /**
@@ -137,16 +133,5 @@ class Promise(
   fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?) {
     val m = mapOf("code" to code, "message" to message)
     callbackContext.error(JSONObject(m))
-//    callbackContext.error("$code: $message ($throwable) [$userInfo]")
   }
-
-  // /** Report an error which wasn't caused by an exception. */
-  // @Deprecated(
-  //     message =
-  //         """Prefer passing a module-specific error code to JS. Using this method will pass the
-  //       error code EUNSPECIFIED""",
-  //     replaceWith = ReplaceWith("reject(code, message)"))
-  // fun reject(message: String) {
-  //   callbackContext.error(": $message")
-  // }
 }
