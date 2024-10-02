@@ -20,10 +20,7 @@ You will need the following parameters to prepare and configure a PowerAuth inst
 To configure PowerAuth instance simply import it from the module and use the following snippet.
 
 ```javascript
-import { PowerAuth } from 'react-native-powerauth-mobile-sdk';
-import { Component } from 'react';
-
-export default class AppMyApplication extends Component {
+class AppMyApplication {
 
     private powerAuth = new PowerAuth("your-app-instance-id");
     
@@ -87,12 +84,7 @@ In case that you need an advanced configuration, then you can import and use the
 The following code snipped shows usage of the advanced configuration:
 
 ```javascript
-import {
-    PowerAuth,
-    PowerAuthConfiguration } from 'react-native-powerauth-mobile-sdk';
-import { Component } from 'react';
-
-export default class AppMyApplication extends Component {
+class AppMyApplication {
 
     private powerAuth = new PowerAuth("your-app-instance-id");
     

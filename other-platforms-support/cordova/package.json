@@ -1,8 +1,8 @@
 {
   "name": "cordova-powerauth-mobile-sdk",
-  "title": "PowerAuth SDK for Cordova Mobile Apps",
+  "title": "PowerAuth Mobile JS SDK for Cordova Mobile Apps",
   "version": "0.1.0",
-  "description": "Wultra PowerAuth Mobile SDK Cordova component for iOS and Android",
+  "description": "Wultra PowerAuth Mobile JS SDK for Cordova (iOS and Android)",
   "types": "typings.d.ts",
   "files": [
     "README.md",

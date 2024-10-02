@@ -38,7 +38,7 @@ In both ways you can alter the following parameters:
 
 ## Using password
 
-React Native PowerAuth Mobile SDK allows you to use both strings and special password objects at input, so it’s up to you which way fits best for your purposes. For simplicity, this documentation is using strings for the passwords, but all code examples can be changed to utilize `PowerAuthPassword` object as well. For example, this is the modified code for [Password Change](Password-Change.md#change-with-an-automatic-validation):
+PowerAuth Mobile JS SDK allows you to use both strings and special password objects at input, so it’s up to you which way fits best for your purposes. For simplicity, this documentation is using strings for the passwords, but all code examples can be changed to utilize `PowerAuthPassword` object as well. For example, this is the modified code for [Password Change](Password-Change.md#change-with-an-automatic-validation):
 
 ```javascript
 // Change password from "0123" to "3210".

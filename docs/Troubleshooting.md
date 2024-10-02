@@ -16,12 +16,12 @@ PowerAuthDebug.traceNativeCodeCalls(true, true);
 ```
 
 <!-- begin box warning -->
-The `PowerAuthDebug` class is effective only if global `__DEV__` constant is `true`. We don't want to log the sensitive information to the console in the production application.
+The `PowerAuthDebug` class is effective only when `isEnabled` is `true`. We don't want to log the sensitive information to the console in the production application.
 <!-- end -->
 
 ## Dumping native objects
 
-If `__DEV__` mode is turned on, then you can dump information about all native objects allocated and used by React Native PowerAuth Mobile SDK:
+If `PowerAuthDebug.isEnabled` is turned on, then you can dump information about all native objects allocated and used by PowerAuth Mobile JS SDK:
 
 ```javascript
 // Dump all objects

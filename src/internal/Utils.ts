@@ -17,6 +17,5 @@
 import { Platform } from 'react-native';
 
 export class Utils {
-    static isDev = __DEV__;
     static platformOs = Platform.OS;
 }
