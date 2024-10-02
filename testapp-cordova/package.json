@@ -8,12 +8,12 @@
         "android": "npx cordova run android",
         "ios": "npx cordova run ios",
         "pods": "pushd \"platforms/ios\"; pod install; popd",
+        "rebuildPlugin": "pushd .. && gulp cdv && popd",
         "installPlugin": "npx cordova plugin add ../build/cdv",
-        "reinstallPlugin": "(npx cordova plugin remove cordova-powerauth-mobile-sdk || true) && npm run installPlugin",
-        "reinstallAndAndroid": "npm run reinstallPlugin && npm run buildAndroid && npm run android",
-        "freshAndroid": "pushd .. && gulp cdv && popd && npm run reinstallAndAndroid",
+        "reinstallPlugin": "(npx cordova plugin remove cordova-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm run installPlugin",
         "build": "node node_modules/gulp/bin/gulp.js",
-        "buildAndroid": "npm run build && cordova build android"
+        "buildAndroid": "npm run build && cordova build android",
+        "freshAndroid": "npm run reinstallPlugin && npm run buildAndroid && npm run android"
     },
     "keywords": [
         "ecosystem:cordova"
