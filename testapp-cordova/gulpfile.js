@@ -119,15 +119,3 @@ gulp.task("default", gulp.series(
     patchNativeFiles,
     patchIOSPlists,
 ));
-
-gulp.task("android", gulp.series(
-    cleanTemp,
-    copyTestFiles,
-    copyAppFiles,
-    compile,
-    cleanTemp
-    // ,
-    // buildAndroid
-    // ,
-    // runAndroidOnDevice
-));
