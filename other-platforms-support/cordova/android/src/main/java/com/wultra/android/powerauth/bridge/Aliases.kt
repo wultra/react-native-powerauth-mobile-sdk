@@ -1,7 +1,9 @@
 package com.wultra.android.powerauth.bridge
 
-// bridge to concrete platform implementation
-typealias BuildConfig = DummyBuildConfig
+import android.content.Context
+import android.content.pm.ApplicationInfo
+
+
 
 // point to React bridge
 typealias Arguments = com.wultra.android.powerauth.cdv.util.Arguments
@@ -14,7 +16,16 @@ typealias WritableArray = com.wultra.android.powerauth.cdv.util.WritableArray
 typealias WritableMap = com.wultra.android.powerauth.cdv.util.WritableMap
 
 
-// hack before we figure out Cordova solution
+// bridge to concrete platform implementation
+typealias BuildConfig = com.wultra.android.powerauth.bridge.DummyBuildConfig
+typealias PwBuildConfig = com.wultra.android.powerauth.bridge.CordovaPwBuildConfig
+
 object DummyBuildConfig {
-    val DEBUG = true
+    val DEBUG = false // unused in the lib
+}
+
+object CordovaPwBuildConfig {
+    fun isDebuggable(context: Context): Boolean {
+        return 0 != context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE
+    }
 }

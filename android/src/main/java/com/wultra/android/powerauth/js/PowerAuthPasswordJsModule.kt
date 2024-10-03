@@ -49,7 +49,7 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
             return
         }
         var releaseTime = Constants.PASSWORD_KEY_KEEP_ALIVE_TIME
-        if (BuildConfig.DEBUG) {
+        if (objectRegister.DEBUG) {
             if (autoreleaseTime != 0) {
                 releaseTime = min(
                     autoreleaseTime.toDouble(),

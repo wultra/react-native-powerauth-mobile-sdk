@@ -69,7 +69,7 @@ class PowerAuthEncryptorJsModule(
                 )
             }
             var releaseTime = Constants.ENCRYPTOR_KEY_KEEP_ALIVE_TIME
-            if (BuildConfig.DEBUG) {
+            if (objectRegister.DEBUG) {
                 if (autoreleaseTime != 0) {
                     releaseTime = min(
                         autoreleaseTime.toDouble(),

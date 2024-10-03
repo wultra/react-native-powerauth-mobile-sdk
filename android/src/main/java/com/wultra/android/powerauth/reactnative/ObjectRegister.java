@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.BaseJavaModule;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
@@ -36,8 +37,8 @@ public class ObjectRegister extends BaseJavaModule {
 
     private final ObjectRegisterJs objectRegisterJs;
 
-    public ObjectRegister() {
-        this.objectRegisterJs = new ObjectRegisterJs();
+    public ObjectRegister(ReactApplicationContext context) {
+        this.objectRegisterJs = new ObjectRegisterJs(context.getApplicationContext());
     }
 
     public ObjectRegisterJs getObjectRegisterJs() {

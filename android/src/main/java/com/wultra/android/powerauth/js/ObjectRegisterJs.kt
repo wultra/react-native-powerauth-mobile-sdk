@@ -23,8 +23,9 @@ import com.wultra.android.powerauth.bridge.ReadableMap
 import com.wultra.android.powerauth.bridge.WritableArray
 import com.wultra.android.powerauth.bridge.WritableMap
 import com.wultra.android.powerauth.bridge.JsApiMethod
-import com.wultra.android.powerauth.bridge.BuildConfig
+import com.wultra.android.powerauth.bridge.PwBuildConfig
 
+import android.content.Context
 import android.os.SystemClock
 import android.text.TextUtils
 import android.util.Base64
@@ -43,7 +44,7 @@ import java.util.concurrent.locks.ReentrantLock
  * or by application provided identifier.
  */
 @Suppress("unused")
-class ObjectRegisterJs : BaseJavaJsModule {
+class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     private val lock = ReentrantLock(false)
     private val register: HashMap<String, RegisterEntry> = HashMap(16)
     private val randomGenerator: Random = Random()
@@ -55,6 +56,8 @@ class ObjectRegisterJs : BaseJavaJsModule {
     override fun getName(): String {
         return "PowerAuthObjectRegister"
     }
+
+    internal val DEBUG: Boolean = PwBuildConfig.isDebuggable(appContext)
 
     fun invalidate() {
 //        super.invalidate()
@@ -293,10 +296,10 @@ class ObjectRegisterJs : BaseJavaJsModule {
     private fun debugDumpObjects(tag: String?): WritableArray {
         return synchronize(ThreadSafeAction {
             val array: WritableArray = Arguments.createArray()
-            if (BuildConfig.DEBUG) {
+            if (DEBUG) {
                 for ((_, value) in register) {
                     if (tag == null || tag == value.tag) {
-                        array.pushMap(value.debugDump())
+                        array.pushMap(value.debugDump(DEBUG))
                     }
                 }
             }
@@ -612,9 +615,9 @@ class ObjectRegisterJs : BaseJavaJsModule {
          * Return map representing the debug information about this register's entry.
          * @return Map with debug information.
          */
-        fun debugDump(): WritableMap {
+        fun debugDump(debug: Boolean): WritableMap {
             val map: WritableMap = Arguments.createMap()
-            if (BuildConfig.DEBUG) {
+            if (debug) {
                 var printLastUseDate = false
                 var printUsageCount = false
                 // Enumerate policies
@@ -697,7 +700,7 @@ class ObjectRegisterJs : BaseJavaJsModule {
 
     @JsApiMethod
     fun debugCommand(command: String, options: ReadableMap, promise: Promise) {
-        if (BuildConfig.DEBUG) {
+        if (DEBUG) {
             val objectId: String? =
                 if (options.hasKey("objectId")) options.getString("objectId") else null
             val objectTag: String? =

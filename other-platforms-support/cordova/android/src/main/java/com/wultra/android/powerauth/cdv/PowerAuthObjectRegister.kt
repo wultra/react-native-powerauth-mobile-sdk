@@ -19,7 +19,7 @@ class PowerAuthObjectRegister : CordovaPlugin() {
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView);
-        objectRegisterJs = ObjectRegisterJs()
+        objectRegisterJs = ObjectRegisterJs(cordova.context.applicationContext)
     }
 
     @Throws(JSONException::class)
