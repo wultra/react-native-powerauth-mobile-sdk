@@ -1,11 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.wultra.pwatest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.wultra.pwatest" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>PowerAuthTest</name>
     <description>PowerAuth tests Cordova App</description>
-    <author email="dev@cordova.apache.org" href="https://cordova.apache.org">
-        Apache Cordova Team
+    <author email="hello@wultra.com" href="https://www.wultra.com/">
+        Wultra
     </author>
     <content src="index.html" />
+
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+    </platform>
+
+    <!-- turn off CORS for the tests where localhost test server accesses azure.com -->
+    <preference name="AndroidInsecureFileModeEnabled" value="true" />
+
+    <preference name="android-targetSdkVersion" value="34" />
+    <preference name="android-compileSdkVersion" value="34" />
+    <preference name="GradleVersion" value="8.1.1" />
+    <preference name="GradlePluginKotlinEnabled" value="true" />
+    <preference name="GradlePluginKotlinCodeStyle" value="official" />
+    <preference name="GradlePluginKotlinVersion" value="1.9.22" />
+    <preference name="AndroidGradlePluginVersion" value="8.1.4" />
+    <preference name="AndroidXEnabled" value="true" />
+    <preference name="AndroidKotlinJVMTarget" value="17" />
+    <preference name="AndroidJavaSourceCompatibility" value="17" />
+    <preference name="AndroidJavaTargetCompatibility" value="17" />
 </widget>

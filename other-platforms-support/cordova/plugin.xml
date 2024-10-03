@@ -12,6 +12,70 @@
         <engine name="cordova-android" version=">=12.0.0" />
         <engine name="cordova-ios" version=">=7.0.0" />
     </engines>
+    <platform name="android" kotlin="1.9.22">
+        <!-- Base Configuration -->
+        <config-file target="res/xml/config.xml" parent="/*" >
+            <preference name="GradlePluginKotlinEnabled" value="true" />
+            <feature name="PowerAuthModule">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthModule" />
+            </feature>
+            <feature name="PowerAuthObjectRegister">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthObjectRegister" />
+            </feature>
+            <feature name="PowerAuthPassphraseMeterModule">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthPassphraseMeterModule" />
+            </feature>
+            <feature name="PowerAuthPasswordModule">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthPasswordModule" />
+            </feature>
+            <feature name="PowerAuthEncryptorModule">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthEncryptorModule" />
+            </feature>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/*" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthObjectRegister.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPassphraseMeterModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPasswordModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Mappings.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
+
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Arguments.java" target-dir="com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Dynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/NativeDynamic.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/Promise.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableMapKeySetIteratorImpl.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableNativeArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableNativeMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/ReadableType.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableNativeArray.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/util/WritableNativeMap.kt" target-dir="java/com/wultra/android/powerauth/cdv/util" />
+
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ActivityAwareModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/BaseJavaJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Constants.java" target-dir="com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/DataFormat.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Errors.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/IManagedObject.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ManagedAny.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ObjectRegisterJs.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PinTester.java" target-dir="com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthEncryptorJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPassphraseMeterJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPasswordJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ReleasePolicy.java" target-dir="com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Utils.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/WrapperException.java" target-dir="com/wultra/android/powerauth/js" />
+        
+        <framework src="android/build.gradle" custom="true" type="gradleReference" />
+    </platform>
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="PowerAuthModule">

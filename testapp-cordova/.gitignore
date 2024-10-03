@@ -27,3 +27,5 @@ node_modules/
 
 # compiled file
 www/js/index.js
+
+.temp/

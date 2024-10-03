@@ -185,15 +185,27 @@ const tmpDir = ".build";
         });
     }
 
+    // Copy sources based on package.json for cordova, but the source directory (the root project) doesn't contain all the mentioned files.
+    // It's necessary to filter files not present in the source directory. Otherwise it fails completely.
+    const cdvPackageRegex = /.*\/powerauth\/cdv\/.*/;
     const copyCDVFiles = () =>
         gulp
-            .src(JSON.parse(fs.readFileSync(CDV_packageJson, 'utf8')).files.filter((file) => !file.startsWith(`${CDV_libDir}/`)), { base: ".", allowEmpty: true })
+            .src(
+                JSON.parse(fs.readFileSync(CDV_packageJson, 'utf8'))
+                    .files.filter((file) => !file.startsWith(`${CDV_libDir}/`) && !file.match(cdvPackageRegex)), 
+                { base: ".", allowEmpty: true })
             .pipe(gulp.dest(CDV_buildDir));
 
     const copyCDVPatchIOSFiles = () =>
         gulp
             .src([`${CDV_patchSourcesDir}/ios/PowerAuth/**`], { base: CDV_patchSourcesDir })
             .pipe(gulp.dest(CDV_buildDir));
+            
+    const copyCDVPatchAndroidFiles = () =>
+        gulp
+            .src([`${CDV_patchSourcesDir}/android/**`], { base: CDV_patchSourcesDir })
+            .pipe(gulp.dest(CDV_buildDir));
+
 
     const copyCDVStaticFiles = () => 
         gulp
@@ -211,7 +223,20 @@ const tmpDir = ".build";
     const packCDVPackage = () => exec(`pushd ${CDV_buildDir} && npm pack`);
 
     // join cordova compile and modify for export task
-    var CDV_buildTask = gulp.series(clearCDVall, copyCDVSourceFiles, copyCDVPatchSourceFiles, compileCDVTask, createCDVDtsTask, exportModules, copyCDVFiles, copyCDVPatchIOSFiles, copyCDVStaticFiles, packCDVPackage, clearCDVtemp);
+    var CDV_buildTask = gulp.series(
+        clearCDVall, 
+        copyCDVSourceFiles, 
+        copyCDVPatchSourceFiles, 
+        compileCDVTask, 
+        createCDVDtsTask, 
+        exportModules, 
+        copyCDVFiles, 
+        copyCDVPatchIOSFiles, 
+        copyCDVPatchAndroidFiles, 
+        copyCDVStaticFiles, 
+        packCDVPackage, 
+        clearCDVtemp
+    );
 }
 
 let cleanBuild = () => rimraf([ buildDir ])

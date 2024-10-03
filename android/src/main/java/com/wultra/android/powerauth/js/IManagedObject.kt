@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.wultra.android.powerauth.reactnative;
-
-import androidx.annotation.NonNull;
+package com.wultra.android.powerauth.js
 
 /**
  * Interface for objects stored in the objects register.
  */
-interface IManagedObject {
+interface IManagedObject<T> {
     /**
      * Do cleanup when object is being removed from the register.
      */
-    void cleanup();
+    fun cleanup()
 
     /**
      * Return actual object stored in the register.
      */
-    @NonNull Object managedInstance();
+    fun managedInstance(): T
 }

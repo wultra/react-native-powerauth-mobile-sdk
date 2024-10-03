@@ -1,8 +1,8 @@
 ext {
   //
   // Defaults for the standalone build
-  //
-  PowerAuthSdkRN_kotlinVersion = "1.7.0"
+  
+  PowerAuthSdkRN_kotlinVersion = "1.9.22"
   PowerAuthSdkRN_minSdkVersion = 21
   PowerAuthSdkRN_targetSdkVersion = 33
   PowerAuthSdkRN_compileSdkVersion = 33
@@ -26,6 +26,7 @@ def isNewArchitectureEnabled() {
 }
 
 apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -40,6 +41,7 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  namespace = "com.wultra.android.powerauth.reactnative"
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
@@ -69,6 +71,7 @@ repositories {
 }
 
 dependencies {
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
   api "com.wultra.android.powerauth:powerauth-sdk:1.7.9"
 
   if (project == rootProject) {
