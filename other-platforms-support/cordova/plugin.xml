@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="cordova-powerauth-mobile-sdk" version="0.1.0">
+        id="cordova-powerauth-mobile-sdk" version="0.2.0">
     <name>PowerAuth Mobile JS SDK</name>
     <description>PowerAuth Mobile JS SDK for adds capability for authentication and transaction signing into the mobile apps</description>
     <license>Apache 2.0</license>
