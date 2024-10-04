@@ -24,7 +24,6 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
     protected abstract readonly pluginName: string;
 
     callNative<T>(name: string, args: any[]): Promise<T> {
-        console.log(`Cordova calling method ${name}(${args})`)
         return new Promise<T>(
             (resolve, reject) => {
                 cordova.exec(
