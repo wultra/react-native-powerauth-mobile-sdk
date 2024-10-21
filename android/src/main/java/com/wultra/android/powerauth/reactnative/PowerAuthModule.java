@@ -401,8 +401,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void commitActivation(String instanceId, final ReadableMap authMap, final Promise promise) {
         final Context context = this.context;
         this.usePowerAuthOnMainThread(instanceId, promise, sdk -> {
-            final PowerAuthAuthentication auth = constructAuthentication(authMap, true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, true, true);
                 final ReadableMap promptMap = authMap.hasKey("biometricPrompt") ? authMap.getMap("biometricPrompt") : null;
                 final Pair<String, String> titleDesc = extractPromptStrings(promptMap);
                 try {
@@ -434,6 +434,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
                     Errors.rejectPromise(promise, t);
                 }
             } else {
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, true, false);
                 int result = sdk.commitActivationWithAuthentication(context, auth);
                 if (result == PowerAuthErrorCodes.SUCCEED) {
                     promise.resolve(null);
@@ -450,7 +451,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.removeActivationWithAuthentication(context, auth, new IActivationRemoveListener() {
                     @Override
                     public void onActivationRemoveSucceed() {
@@ -488,7 +489,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 Map<String, String> paramMap = params == null ? null : getStringMap(params);
                 PowerAuthAuthorizationHttpHeader header = sdk.requestGetSignatureWithAuthentication(context, auth, uriId, paramMap);
                 ReadableMap headerObject = getHttpHeaderObject(header);
@@ -508,7 +509,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
                 PowerAuthAuthorizationHttpHeader header = sdk.requestSignatureWithAuthentication(context, auth, method, uriId, decodedBody);
                 if (header.powerAuthErrorCode == PowerAuthErrorCodes.SUCCEED) {
@@ -529,7 +530,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 byte[] decodedBody = body == null ? null : body.getBytes(StandardCharsets.UTF_8);
                 String signature = sdk.offlineSignatureWithAuthentication(context, auth, uriId, decodedBody, nonce);
                 if (signature != null) {
@@ -710,7 +711,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.fetchEncryptionKey(context, auth, index, new IFetchEncryptionKeyListener() {
                     @Override
                     public void onFetchEncryptionKeySucceed(@NonNull byte[] encryptedEncryptionKey) {
@@ -732,7 +733,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.signDataWithDevicePrivateKey(context, auth, data.getBytes(StandardCharsets.UTF_8), new IDataSignatureListener() {
                     @Override
                     public void onDataSignedSucceed(@NonNull byte[] signature) {
@@ -783,7 +784,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.getActivationRecoveryData(context, auth, new IGetRecoveryDataListener() {
                     @Override
                     public void onGetRecoveryDataSucceeded(@NonNull RecoveryData recoveryData) {
@@ -808,7 +809,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.confirmRecoveryCode(context, auth, recoveryCode, new IConfirmRecoveryCodeListener() {
                     @Override
                     public void onRecoveryCodeConfirmed(boolean alreadyConfirmed) {
@@ -911,7 +912,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.usePowerAuth(instanceId, promise, new PowerAuthBlock() {
             @Override
             public void run(@NonNull PowerAuthSDK sdk) throws Exception {
-                final PowerAuthAuthentication auth = constructAuthentication(authMap, false);
+                final PowerAuthAuthentication auth = constructAuthentication(authMap, false, false);
                 sdk.getTokenStore().requestAccessToken(context, tokenName, auth, new IGetTokenListener() {
                     @Override
                     public void onGetTokenSucceeded(@NonNull PowerAuthToken token) {
@@ -1140,10 +1141,11 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
      * Helper function converts input readable map to PowerAuthAuthentication object.
      * @param map Map with authentication data.
      * @param forCommit Set true if authentication is required for activation commit.
+     * @param copyPassword Set true if Password object should be copied from managed Password to prevent possible destruction.
      * @return {@link PowerAuthAuthentication} instance.
      */
     @NonNull
-    private PowerAuthAuthentication constructAuthentication(ReadableMap map, boolean forCommit) throws WrapperException {
+    private PowerAuthAuthentication constructAuthentication(ReadableMap map, boolean forCommit, boolean copyPassword) throws WrapperException {
         final String biometryKeyId = map.getString("biometryKeyId");
         final byte[] biometryKey;
         if (biometryKeyId != null) {
@@ -1156,7 +1158,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         }
         final Password password;
         if (map.hasKey("password")) {
-            password = passwordModule.usePassword(map.getDynamic("password"));
+            final Password managedPassword = passwordModule.usePassword(map.getDynamic("password"));
+            password = copyPassword ? managedPassword.copyToImmutable() : managedPassword;
         } else {
             password = null;
         }
@@ -1181,7 +1184,7 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
             if (biometryKey != null) {
                 return PowerAuthAuthentication.possessionWithBiometry(biometryKey);
             } else if (password != null) {
-                return PowerAuthAuthentication.commitWithPassword(password);
+                return PowerAuthAuthentication.possessionWithPassword(password);
             } else  {
                 return PowerAuthAuthentication.possession();
             }
