@@ -10,16 +10,16 @@
     "test": "echo Just run this app; exit 1",
     "lint": "eslint .",
     "rebuildPlugin": "pushd .. && gulp rn && popd",
-    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/react-native-powerauth-mobile-sdk-2.5.2.tgz",
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/react-native-powerauth-mobile-sdk-3.0.0.tgz",
     "freshAndroid": "npm run reinstallPlugin && npm run android"
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.12",
+    "powerauth-js-test-client": "file:../../powerauth-js-test-client/powerauth-js-test-client-0.2.13.tgz",
     "react": "18.2.0",
     "react-native": "0.71.6",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-2.5.2.tgz"
+    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-3.0.0.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
