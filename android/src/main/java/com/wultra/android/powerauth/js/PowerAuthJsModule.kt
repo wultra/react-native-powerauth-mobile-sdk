@@ -300,8 +300,8 @@ class PowerAuthJsModule(
     fun commitActivation(instanceId: String, authMap: ReadableMap, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            val auth: PowerAuthAuthentication = constructAuthentication(authMap, true)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, true)
                 val promptMap: ReadableMap? =
                     if (authMap.hasKey("biometricPrompt")) authMap.getMap("biometricPrompt") else null
                 val titleDesc = extractPromptStrings(promptMap)
@@ -339,6 +339,7 @@ class PowerAuthJsModule(
                     Errors.rejectPromise(promise, t)
                 }
             } else {
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, false)
                 val result: Int = sdk.commitActivationWithAuthentication(context, auth)
                 if (result == PowerAuthErrorCodes.SUCCEED) {
                     promise.resolve(null)
@@ -359,7 +360,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.removeActivationWithAuthentication(
                     context,
                     auth,
@@ -403,7 +404,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val paramMap = if (params == null) null else getStringMap(params)
                 val header: PowerAuthAuthorizationHttpHeader =
                     sdk.requestGetSignatureWithAuthentication(context, auth, uriId, paramMap)
@@ -434,7 +435,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 val header: PowerAuthAuthorizationHttpHeader =
                     sdk.requestSignatureWithAuthentication(
@@ -472,7 +473,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 val signature: String? =
                     sdk.offlineSignatureWithAuthentication(context, auth, uriId, decodedBody, nonce)
@@ -675,7 +676,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.fetchEncryptionKey(
                     context,
                     auth,
@@ -709,7 +710,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.signDataWithDevicePrivateKey(
                     context,
                     auth,
@@ -759,7 +760,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.getActivationRecoveryData(context, auth, object : IGetRecoveryDataListener {
                     override fun onGetRecoveryDataSucceeded(recoveryData: RecoveryData) {
                         val map: WritableMap = Arguments.createMap()
@@ -787,7 +788,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.confirmRecoveryCode(
                     context,
                     auth,
@@ -926,7 +927,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false)
+                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.tokenStore
                     .requestAccessToken(context, tokenName, auth, object : IGetTokenListener {
                         override fun onGetTokenSucceeded(token: PowerAuthToken) {
@@ -1110,7 +1111,8 @@ class PowerAuthJsModule(
     @Throws(WrapperException::class)
     private fun constructAuthentication(
         map: ReadableMap,
-        forCommit: Boolean
+        forCommit: Boolean,
+        copyPassword: Boolean
     ): PowerAuthAuthentication {
         val biometryKeyId: String? = map.getString("biometryKeyId")
         val biometryKey: ByteArray?
@@ -1125,10 +1127,12 @@ class PowerAuthJsModule(
         } else {
             biometryKey = null
         }
-        val password: Password? = if (map.hasKey("password")) {
-            passwordModule.usePassword(map.getDynamic("password"))
+        val password: Password?
+        if (map.hasKey("password")) {
+            val managedPassword = passwordModule.usePassword(map.getDynamic("password"))
+            password = if (copyPassword) managedPassword.copyToImmutable() else managedPassword
         } else {
-            null
+            password = null
         }
         if (forCommit) {
             // Authentication for activation commit
@@ -1154,7 +1158,7 @@ class PowerAuthJsModule(
             return if (biometryKey != null) {
                 PowerAuthAuthentication.possessionWithBiometry(biometryKey)
             } else if (password != null) {
-                PowerAuthAuthentication.commitWithPassword(password)
+                PowerAuthAuthentication.possessionWithPassword(password)
             } else {
                 PowerAuthAuthentication.possession()
             }
