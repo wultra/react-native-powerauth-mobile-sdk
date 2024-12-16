@@ -28,5 +28,5 @@ repositories {
 
 dependencies {
   implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.22"))
-  api "com.wultra.android.powerauth:powerauth-sdk:1.7.9"
+  api "com.wultra.android.powerauth:powerauth-sdk:1.7.10"
 }

@@ -132,7 +132,7 @@
                 <source url="https://github.com/CocoaPods/Specs.git"/>
             </config>
             <pods use-frameworks="true">
-                <pod name="PowerAuth2" options="'1.7.9'" />
+                <pod name="PowerAuth2" options="'1.7.10'" />
             </pods>
         </podspec>
     </platform>
