@@ -15,14 +15,6 @@
  */
 package com.wultra.android.powerauth.js
 
-import com.wultra.android.powerauth.bridge.Arguments
-import com.wultra.android.powerauth.bridge.Dynamic
-import com.wultra.android.powerauth.bridge.ReadableArray
-import com.wultra.android.powerauth.bridge.ReadableMap
-import com.wultra.android.powerauth.bridge.JsApiMethod
-import com.wultra.android.powerauth.bridge.Promise
-import com.wultra.android.powerauth.bridge.WritableMap
-
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -31,25 +23,19 @@ import android.os.Build
 import android.util.Base64
 import android.util.Pair
 import androidx.fragment.app.FragmentActivity
-import io.getlime.security.powerauth.core.Password
-import java.nio.charset.StandardCharsets
-
-import io.getlime.security.powerauth.biometry.BiometricKeyData
-import io.getlime.security.powerauth.biometry.BiometricAuthentication
-import io.getlime.security.powerauth.biometry.BiometricStatus
-import io.getlime.security.powerauth.biometry.BiometryType
-import io.getlime.security.powerauth.biometry.IAddBiometryFactorListener
-import io.getlime.security.powerauth.biometry.IBiometricAuthenticationCallback
-import io.getlime.security.powerauth.biometry.ICommitActivationWithBiometryListener
-import io.getlime.security.powerauth.keychain.KeychainProtection
-import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor
-import io.getlime.security.powerauth.sdk.*
-import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy
-import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor
-import io.getlime.security.powerauth.networking.response.*
+import com.wultra.android.powerauth.bridge.*
+import io.getlime.security.powerauth.biometry.*
 import io.getlime.security.powerauth.core.*
 import io.getlime.security.powerauth.exception.*
+import io.getlime.security.powerauth.keychain.KeychainProtection
+import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor
+import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor
+import io.getlime.security.powerauth.networking.response.*
+import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy
+import io.getlime.security.powerauth.sdk.*
 import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor
+import java.nio.charset.StandardCharsets
+
 
 class PowerAuthJsModule(
     private val context: Context,
@@ -1405,6 +1391,8 @@ class PowerAuthJsModule(
                 if (biometryMap.hasKey("confirmBiometricAuthentication")) biometryMap.getBoolean("confirmBiometricAuthentication") else PowerAuthKeychainConfiguration.DEFAULT_CONFIRM_BIOMETRIC_AUTHENTICATION
             val authenticateOnBiometricKeySetup: Boolean =
                 if (biometryMap.hasKey("authenticateOnBiometricKeySetup")) biometryMap.getBoolean("authenticateOnBiometricKeySetup") else PowerAuthKeychainConfiguration.DEFAULT_AUTHENTICATE_ON_BIOMETRIC_KEY_SETUP
+            val fallbackToSharedBiometryKey =
+                if (biometryMap.hasKey("fallbackToSharedBiometryKey")) biometryMap.getBoolean("fallbackToSharedBiometryKey") else PowerAuthKeychainConfiguration.DEFAULT_ENABLE_FALLBACK_TO_SHARED_BIOMETRY_KEY
             // Keychain configuration
             val minimalRequiredKeychainProtection =
                 getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"))
@@ -1413,6 +1401,7 @@ class PowerAuthJsModule(
                 .confirmBiometricAuthentication(confirmBiometricAuthentication)
                 .authenticateOnBiometricKeySetup(authenticateOnBiometricKeySetup)
                 .minimalRequiredKeychainProtection(minimalRequiredKeychainProtection)
+                .enableFallbackToSharedBiometryKey(fallbackToSharedBiometryKey)
                 .build()
         }
 
