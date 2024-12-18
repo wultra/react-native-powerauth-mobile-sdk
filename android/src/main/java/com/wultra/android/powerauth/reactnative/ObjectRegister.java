@@ -17,6 +17,7 @@
 package com.wultra.android.powerauth.reactnative;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.BaseJavaModule;
 import com.facebook.react.bridge.Promise;
@@ -58,6 +59,13 @@ public class ObjectRegister extends BaseJavaModule {
     public void invalidate() {
         super.invalidate();
         objectRegisterJs.invalidate();
+    }
+
+    // Module Inter-Op
+
+    @Nullable
+    public <T> T findObject(@NonNull String objectId, @NonNull Class<T> expectedClass) {
+        return objectRegisterJs.findObject(objectId, expectedClass);
     }
 
     // ---------------------------------------------------------------------------------------------
