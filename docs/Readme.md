@@ -28,6 +28,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 - [Troubleshooting](Troubleshooting.md)
 - [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
+- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
 <!-- end -->
 
 ## Support and compatibility
