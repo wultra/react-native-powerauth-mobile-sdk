@@ -16,6 +16,7 @@
 
 package com.wultra.android.powerauth.reactnative;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactContext;
 import io.getlime.security.powerauth.sdk.PowerAuthSDK;
@@ -34,7 +35,7 @@ public class PowerAuthUtils {
      * @return Native PowerAuthSDK or null if such instance is not configured.
      */
     @Nullable
-    public static PowerAuthSDK liftPowerAuthSdk(String instanceId, ReactContext reactContext) {
+    public static PowerAuthSDK liftPowerAuthSdk(@NonNull String instanceId, @NonNull ReactContext reactContext) {
         ObjectRegister module = reactContext.getNativeModule(ObjectRegister.class);
         if (module == null) {
             return null;

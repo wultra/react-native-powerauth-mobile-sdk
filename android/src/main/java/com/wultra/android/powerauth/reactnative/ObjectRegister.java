@@ -64,7 +64,7 @@ public class ObjectRegister extends BaseJavaModule {
     // Module Inter-Op
 
     @Nullable
-    public <T> T findObject(@NonNull String objectId, @NonNull Class<T> expectedClass) {
+    <T> T findObject(@NonNull String objectId, @NonNull Class<T> expectedClass) {
         return objectRegisterJs.findObject(objectId, expectedClass);
     }
 
