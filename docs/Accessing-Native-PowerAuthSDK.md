@@ -1,8 +1,12 @@
 # Accessing the Native PowerAuthSDK
 
+<!-- begin box warning -->
+__This feature is not available for Cordova.__
+<!-- end -->
+
 If you need to access the native PowerAuthSDK object (created in the JS/TS code) from Java/Kotlin or Objective-C/Swift, you can use the following snippets.
 
-<!-- begin box warning -->
+<!-- begin box info -->
 Consider consultation with our technical support when accessing the native object. This technique should be used rarely and only for limited purposes as it might lead to unexpected behavior.
 <!-- end -->
 
