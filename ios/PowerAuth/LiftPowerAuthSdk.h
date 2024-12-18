@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Wultra s.r.o.
+ * Copyright 2024 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#import "PowerAuthObjectRegister.h"
+#import <Foundation/Foundation.h>
 #import <PowerAuth2/PowerAuthSDK.h>
+#import <React/RCTBridge.h>
 
 #ifdef __cplusplus
     // C++
@@ -31,6 +32,6 @@
 
 /// Function that lifts PowerAuthSDK instance from the React-Native module if present (configured). If the object is not available, returns nil.
 /// @param instanceId Id of the instance that was configured from the JS/TS layer.
-/// @param bridge bridge reference.
-/// @return PowerAuthSDK or nil if such instance is not configured.
+/// @param bridge React bridge reference obtained from your ReactNative module or app.
+/// @return Native PowerAuthSDK or nil if such instance is not configured.
 PA_EXTERN_C PowerAuthSDK * LiftPowerAuthSdk(NSString * instanceId, RCTBridge * bridge);
