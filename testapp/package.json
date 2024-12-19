@@ -7,11 +7,10 @@
     "ios": "npx react-native run-ios",
     "start": "npx react-native start",
     "pods": "pushd ios; pod install; popd",
-    "test": "echo Just run this app; exit 1",
-    "lint": "eslint .",
     "rebuildPlugin": "pushd .. && gulp rn && popd",
-    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/react-native-powerauth-mobile-sdk-3.0.0.tgz",
-    "freshAndroid": "npm run reinstallPlugin && npm run android"
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/$(pushd ../build/react-native/ > /dev/null && ls | grep .tgz)",
+    "freshAndroid": "npm run reinstallPlugin && npm run android",
+    "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
   },
   "dependencies": {
     "chalk": "^4.1.0",

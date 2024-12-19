@@ -18,7 +18,7 @@ To access the native `PowerAuthSDK` object on iOS, use the `LiftPowerAuthSdk` he
 #import "LiftPowerAuthSdk.h"
 #import <PowerAuth2/PowerAuthSDK.h>
 
-// The `bridge` availability depends on the place, where you're trying to access the PowerAuthSDK object.
+// The `bridge` (of type `RCTBridge`) availability depends on the place, where you're trying to access the PowerAuthSDK object.
 // For example, you can access it in the AppDelegate that implements `RCTAppDelegate` or as property of an `RCTBridgeModule`.
 PowerAuthSDK * sdk = LiftPowerAuthSdk(@"myPowerauthInstance", bridge);
 if (sdk) {
@@ -34,7 +34,7 @@ To access the native `PowerAuthSDK` object on Android, use the `PowerAuthUtils.l
 import com.wultra.android.powerauth.reactnative.PowerAuthUtils;
 import io.getlime.security.powerauth.sdk.PowerAuthSDK;
 
-// The `reactNativeContext` availability depends on the place, where you're trying to access the PowerAuthSDK object.
+// The `reactNativeContext` (of type ReactContext) availability depends on the place, where you're trying to access the PowerAuthSDK object.
 // For example, you can pass it when creating our package when implementing `ReactPackage` interface.
 PowerAuthSDK sdk = PowerAuthUtils.liftPowerAuthSdk("test", reactNativeContext);
 if (sdk != null) {

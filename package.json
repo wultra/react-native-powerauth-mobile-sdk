@@ -8,8 +8,10 @@
   "source": "src/index",
   "scripts": {
     "build": "node node_modules/gulp/bin/gulp.js",
-    "buildAndRunCordovaIosTests": "npm run build && pushd testapp-cordova && npm run reinstallPlugin & npx pod-install && npm run build && npm run ios",
-    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npx pod-install && npm run ios"
+    "freshIosCordova": "npm run build && pushd testapp-cordova && npm run freshIos",
+    "freshIosReact": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
+    "freshAndroidCordova": "npm run build && pushd testapp-cordova && npm run freshAndroid",
+    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid"
   },
   "files": [
     "README.md",
