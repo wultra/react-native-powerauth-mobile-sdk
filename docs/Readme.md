@@ -35,9 +35,10 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 | Version | React-Native<sup>1</sup> | Cordova   | Native SDK   | Server version | Support Status    |
 |---------|--------------------------|-----------|--------------|----------------|-------------------|
-| `2.5.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Fully supported   |
+| `3.0.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Fully supported   |
+| `2.5.x` | `0.73+`                  | -         | `1.7.x`      | `0.24+`        | Security bugfixes |
 | `2.4.x` | `0.71+`                  | -         | `1.7.x`      | `0.24+`        | Security bugfixes |
-| `2.3.x` | `0.64` - `0.70`          | -         | `1.7.x`      | `0.24+`        | Security bugfixes |
+| `2.3.x` | `0.64` - `0.70`          | -         | `1.7.x`      | `0.24+`        | Not supported     |
 | `2.2.x` |                          | -         | `1.6.x`      | `0.24+`        | Not supported     |
 
 <!-- begin box info -->
