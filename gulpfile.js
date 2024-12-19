@@ -29,6 +29,10 @@ const exec = require('child_process').exec;
 const buildDir = "build";
 const tmpDir = ".build";
 
+const libVersion = JSON.parse(fs.readFileSync("package.json", 'utf8')).version
+
+console.log(`Library version: ${libVersion}`)
+
 /***********************
 * REACT-NATIVE SECTION *
 ************************/
@@ -217,6 +221,9 @@ const tmpDir = ".build";
                         .map((v) => `    <js-module src="${CDV_libDir}/${v}.js" name="${v}"><clobbers target="${v}" /></js-module>`)
                         .join("\n")
                 )
+            )
+            .pipe(
+                replace("<!-- PLACEHOLDER_VERSION -->", libVersion)
             )
             .pipe(gulp.dest(CDV_buildDir));
 
