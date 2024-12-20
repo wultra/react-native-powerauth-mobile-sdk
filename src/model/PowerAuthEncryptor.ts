@@ -19,7 +19,7 @@ import { BaseNativeObject, BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthEncryptionHttpHeader } from "../index"
 import { NativeWrapper } from "../internal/NativeWrapper"
 import { PowerAuthDataFormat } from "./PowerAuthDataFormat"
-import { NativeObject } from "../internal/NativeObject"
+import { PowerAuthNativeObject } from "./PowerAuthNativeObject"
 
 /**
  * Scope of encryptor.

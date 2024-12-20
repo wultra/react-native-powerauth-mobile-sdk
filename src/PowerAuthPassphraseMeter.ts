@@ -16,7 +16,7 @@
 
 import { PasswordType } from "./index";
 import { NativePassphraseMeter } from './internal/NativePassphraseMeter'
-import { toRawPassword } from "./internal/NativeTypes";
+import { toPowerAuthRawPassword } from "./model/PowerAuthNativeTypes";
 import { NativeWrapper } from "./internal/NativeWrapper";
 
 /**
@@ -72,7 +72,7 @@ export class PowerAuthPassphraseMeter {
      */
     static async testPin(pin: PasswordType): Promise<PinTestResult> {
         try {
-            return await NativePassphraseMeter.testPin(await toRawPassword(pin))
+            return await NativePassphraseMeter.testPin(await toPowerAuthRawPassword(pin))
         } catch (error) {
             throw NativeWrapper.processException(error)
         }

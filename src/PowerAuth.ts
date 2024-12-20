@@ -30,10 +30,10 @@ import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmR
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
 import { NativeWrapper } from "./internal/NativeWrapper";
-import { AuthResolver } from "./internal/AuthResolver";
+import { resolveAuthentication } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
 import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
-import { RawAuthentication, toRawPassword } from './internal/NativeTypes';
+import { PowerAuthRawAuthentication, toPowerAuthRawPassword } from './model/PowerAuthNativeTypes';
 import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
 
@@ -85,8 +85,7 @@ export class PowerAuth {
      * @param instanceId Identifier of the PowerAuthSDK instance. The bundle identifier/packagename is recommended.
      */
     constructor(public readonly instanceId: string) {
-        this.authResolver = new AuthResolver(instanceId);
-        this.tokenStore = new PowerAuthTokenStore(instanceId, this.authResolver);
+        this.tokenStore = new PowerAuthTokenStore(instanceId);
     }
 
     /** 
@@ -337,7 +336,7 @@ export class PowerAuth {
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
     async changePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("changePassword", this.instanceId, await toRawPassword(oldPassword), await toRawPassword(newPassword));
+        return NativeWrapper.thisCall("changePassword", this.instanceId, await toPowerAuthRawPassword(oldPassword), await toPowerAuthRawPassword(newPassword));
     }
 
     /**
@@ -352,7 +351,7 @@ export class PowerAuth {
      @returns Returns true in case password was changed without error, false otherwise.
      */
     async unsafeChangePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
-        return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, await toRawPassword(oldPassword), await toRawPassword(newPassword));
+        return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, await toPowerAuthRawPassword(oldPassword), await toPowerAuthRawPassword(newPassword));
     }
 
     /**
@@ -387,7 +386,7 @@ export class PowerAuth {
         } else {
             prompt = args[0]
         }
-        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, await toRawPassword(password), prompt);
+        return NativeWrapper.thisCall("addBiometryFactor", this.instanceId, await toPowerAuthRawPassword(password), prompt);
     }
 
     /** 
@@ -448,7 +447,7 @@ export class PowerAuth {
      * @param password Password to be verified.
      */
     async validatePassword(password: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("validatePassword", this.instanceId, await toRawPassword(password));
+        return NativeWrapper.thisCall("validatePassword", this.instanceId, await toPowerAuthRawPassword(password));
     }
 
     /**
@@ -527,7 +526,7 @@ export class PowerAuth {
             throw new PowerAuthError(undefined, "Authentication object is not configured for biometric factor", PowerAuthErrorCode.WRONG_PARAMETER);
         }
         try {
-            const reusable = await this.authResolver.resolve(authentication, true);
+            const reusable = await resolveAuthentication(this.instanceId, authentication, true);
             try {
                 // integrator defined chain of authorization calls with reusable authentication
                 await groupedAuthenticationCalls(reusable);
@@ -577,11 +576,9 @@ export class PowerAuth {
      * @param authentication authentication configuration
      * @returns configured authorization object
      */
-    private async authenticate(authentication: PowerAuthAuthentication): Promise<RawAuthentication> {
-        return (await this.authResolver.resolve(authentication, false)).toRawAuthentication()
+    private async authenticate(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
+        return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
     }
-
-    private authResolver: AuthResolver
 }
 
 /**

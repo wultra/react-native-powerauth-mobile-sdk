@@ -18,7 +18,7 @@ import { PinTestResult, PowerAuthError, PowerAuthErrorCode } from "../index"
 import { BaseNativeObject } from "./BaseNativeObject"
 import { NativePassphraseMeter } from "../internal/NativePassphraseMeter"
 import { NativePassword } from "../internal/NativePassword"
-import { RawPassword } from "../internal/NativeTypes"
+import { PowerAuthRawPassword } from "./PowerAuthNativeTypes"
 
 
 /**
@@ -123,7 +123,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Number of characters stored in the password.
      */
     addCharacter(character: CharacterType): Promise<number> {
-        return this.withObjectId(id => NativePassword.addCharacter(id, getCodePoint(character)))
+        return this.withObjectId(id => NativePassword.addCharacter(id, this.getCodePoint(character)))
     }
 
     /**
@@ -135,7 +135,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Number of characters stored in the password.
      */
     insertCharacter(character: CharacterType, at: number): Promise<number> {
-        return this.withObjectId(id => NativePassword.insertCharacter(id, getCodePoint(character), at))
+        return this.withObjectId(id => NativePassword.insertCharacter(id, this.getCodePoint(character), at))
     }
 
     /**
@@ -184,7 +184,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * Convert this password object into RawPassword object that can be passed safely to a native call.
      * @returns Frozen RawPassword object.
      */
-    toRawPassword(): Promise<RawPassword> {
+    toRawPassword(): Promise<PowerAuthRawPassword> {
         return this.resolveRawObject()
     }
 
@@ -221,27 +221,27 @@ export class PowerAuthPassword extends BaseNativeObject {
             this.automaticCleanupCallback()
         }
     }
-}
 
-/**
- * Function translate string or number into unicode code point. If string parameter is provided,
- * then the `codePointAt(0)` is returned.
- * @param character CharacterType to translate. 
- * @returns number with Unicode Code Point.
- */
-function getCodePoint(character: CharacterType): number {
-    let c: number
-    if (typeof character === 'string') {
-        if (character.length === 0) {
-            throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
+    /**
+     * Function translate string or number into unicode code point. If string parameter is provided,
+     * then the `codePointAt(0)` is returned.
+     * @param character CharacterType to translate. 
+     * @returns number with Unicode Code Point.
+     */
+    private getCodePoint(character: CharacterType): number {
+        let c: number
+        if (typeof character === 'string') {
+            if (character.length === 0) {
+                throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
+            }
+            const cp = character.codePointAt(0)
+            if (cp === undefined) {
+                throw new PowerAuthError(undefined, "Failed to extract 1st. code point", PowerAuthErrorCode.WRONG_PARAMETER)
+            }
+            c = cp
+        } else {
+            c = character
         }
-        const cp = character.codePointAt(0)
-        if (cp === undefined) {
-            throw new PowerAuthError(undefined, "Failed to extract 1st. code point", PowerAuthErrorCode.WRONG_PARAMETER)
-        }
-        c = cp
-    } else {
-        c = character
+        return c
     }
-    return c
 }

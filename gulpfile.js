@@ -15,15 +15,16 @@
 //
 
 // Dependencies
-const gulp = require("gulp"); // gulp itself
-const ts = require("gulp-typescript"); // to be able to compiles typescript
-const replace = require('gulp-replace');
-const concat = require('gulp-concat');
-const { build } = require("esbuild");
-const stripImportExport = require("gulp-strip-import-export"); 
-const { rimraf } = require('rimraf'); // folder cleaner
-const fs = require('fs');
-const exec = require('child_process').exec;
+import gulp from "gulp" // gulp itself
+import ts from "gulp-typescript" // to be able to compiles typescript
+import replace from "gulp-replace"
+import concat  from "gulp-concat"
+import filter from "gulp-filter"
+import { build } from "esbuild"
+import stripImportExport from "gulp-strip-import-export"
+import { rimraf } from "rimraf" // folder cleaner
+import fs from "fs"
+import { exec } from "child_process"
 
 // Out files
 const buildDir = "build";
@@ -31,7 +32,7 @@ const tmpDir = ".build";
 
 const libVersion = JSON.parse(fs.readFileSync("package.json", 'utf8')).version
 
-console.log(`Library version: ${libVersion}`)
+console.log(`\x1b[32m\n#########################\n## MTOKEN SDK JS BUILD\n## Library version: ${libVersion}\n#########################\n\x1b[0m`)
 
 /***********************
 * REACT-NATIVE SECTION *
@@ -103,13 +104,14 @@ console.log(`Library version: ${libVersion}`)
 *  CORDOVA.JS SECTION  *
 ************************/
 {
-    const CDV_patchSourcesDir = "other-platforms-support/cordova";
-    const CDV_packageJson = `${CDV_patchSourcesDir}/package.json`;
-    const CDV_pluginXml = `${CDV_patchSourcesDir}/plugin.xml`;
-    const CDV_buildDir = `${buildDir}/cdv`;
+    const CDV_patchSourcesDir = "other-platforms-support/cordova"
+    const CDV_packageJson = `${CDV_patchSourcesDir}/package.json`
+    const CDV_pluginXml = `${CDV_patchSourcesDir}/plugin.xml`
+    const CDV_buildDir = `${buildDir}/cdv`
     const CDV_tempDir = `${tmpDir}/cdv`
-    const CDV_libDir = "lib";
-    const CDV_outFileDir = `${CDV_buildDir}/${CDV_libDir}`;
+    const CDV_libDir = "lib"
+    const CDV_typingsFile = "typings.d.ts"
+    const CDV_outFileDir = `${CDV_buildDir}/${CDV_libDir}`
     const CDV_pluginName = "PowerAuthPlugin"
     const CDV_outFile = `${CDV_outFileDir}/${CDV_pluginName}.js`
 
@@ -142,39 +144,20 @@ console.log(`Library version: ${libVersion}`)
             .src([`${CDV_tempDir}/src/PowerAuth**.ts`, `${CDV_tempDir}/src/*/**.ts`])
             .pipe(stripImportExport())
             .pipe(ts({ declaration: true, emitDeclarationOnly: true }))
-            .pipe(concat(`typings.d.ts`))
+            .pipe(filter(f => !f.path.includes(`${CDV_tempDir}/src/internal/`)))
+            .pipe(concat(CDV_typingsFile))
             .pipe(gulp.dest(CDV_buildDir))
 
-    // TODO: extract from the code
-    const objectsToExport = [
-        "PowerAuth",
-        "PowerAuthError",
-        "PowerAuthActivation",
-        "PowerAuthAuthentication",
-        "PowerAuthActivationCodeUtil",
-        "PowerAuthTokenStore",
-        "PowerAuthPassphraseMeter",
-        "PowerAuthActivationState",
-        "PowerAuthBiometryConfiguration",
-        "PowerAuthBiometryStatus",
-        "PowerAuthBiometryType",
-        "PowerAuthClientConfiguration",
-        "PowerAuthConfiguration",
-        "PowerAuthErrorCode",
-        "PowerAuthKeychainConfiguration",
-        "PowerAuthKeychainProtection",
-        "PowerAuthSharingConfiguration",
-        "PowerAuthPassword",
-        "BaseNativeObject",
-        "PinTestIssue",
-        "buildConfiguration",
-        "buildClientConfiguration",
-        "buildBiometryConfiguration",
-        "buildKeychainConfiguration",
-        "buildSharingConfiguration",
-        "PowerAuthDebug",
-        "NativeObjectRegister",
-    ]
+    // Will be filled by `processCDVobjectsToExport` task
+    let objectsToExport = []
+
+    const processCDVobjectsToExport = () => {
+        return new Promise(function(resolve) {
+            const matches = fs.readFileSync(`${CDV_buildDir}/${CDV_typingsFile}`, 'utf8').matchAll(/declare(\sabstract)? [a-z]* (?<name>[a-zA-z0-9_]*)/g)
+            objectsToExport = [...matches].flatMap(r => r.groups).flatMap(r => r.name)
+            resolve()
+        });
+    }
 
     const exportModules = () => {
         return new Promise(function(resolve) {
@@ -235,7 +218,8 @@ console.log(`Library version: ${libVersion}`)
         copyCDVSourceFiles, 
         copyCDVPatchSourceFiles, 
         compileCDVTask, 
-        createCDVDtsTask, 
+        createCDVDtsTask,
+        processCDVobjectsToExport, 
         exportModules, 
         copyCDVFiles, 
         copyCDVPatchIOSFiles, 

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { NativeModulesProvider } from "./NativeModulesProvider"
+import { NativeModulesProvider } from "../internal/NativeModulesProvider"
 
 /**
  * Low level interface provided by native PowerAuthObjectRegister.
  */
-export interface NativeObject {
+export interface PowerAuthNativeObject {
     /**
      * Test whether underlying native object register still contains object with given ID.
      * @param objectId Object identifier to test.
@@ -27,4 +27,4 @@ export interface NativeObject {
     isValidNativeObject(objectId: string): Promise<boolean>
 }
 
-export const NativeObject = NativeModulesProvider.PowerAuthObjectRegister as NativeObject
+export const PowerAuthNativeObject = NativeModulesProvider.PowerAuthObjectRegister as PowerAuthNativeObject
