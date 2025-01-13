@@ -19,7 +19,7 @@
 #import <PowerAuth2/PowerAuthSDK.h>
 #import <React/RCTBridge.h>
 
-PA_EXTERN_C PowerAuthSDK * LiftPowerAuthSdk(NSString * instanceId, RCTBridge * bridge)
+PowerAuthSDK * LiftPowerAuthSdk(NSString * instanceId, RCTBridge * bridge)
 {
     PowerAuthSDK * sdk;
     PowerAuthObjectRegister * paor = [bridge moduleForName:@"PowerAuthObjectRegister"];
