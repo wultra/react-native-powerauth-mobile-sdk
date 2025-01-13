@@ -24,6 +24,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/product/powerauth-
 - [Troubleshooting](Troubleshooting.md)
 - [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
+- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
 <!-- end -->
 
 ## Support and compatibility
