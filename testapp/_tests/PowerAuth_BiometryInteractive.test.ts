@@ -20,6 +20,7 @@ import { expect, UserPromptDuration } from "../src/testbed";
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { ActivationStatus } from "powerauth-js-test-client";
 import { Platform } from "react-native";
+import { importPassword } from "./helpers/PasswordHelper";
 
 export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
@@ -70,8 +71,9 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         // Now commit activation with a legacy authentication
 
         if (this.isAndoid) await this.showPrompt('Authenticate to create activation with biometry')
-
-        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(this.credentials.validPassword, {
+        
+        const password = await importPassword(this.credentials.validPassword)
+        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(password, {
             promptTitle: 'Authenticate with biometry',
             promptMessage: 'Authenticate to create activation with biometry'
         })
