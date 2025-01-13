@@ -32,7 +32,7 @@ const tmpDir = ".build";
 
 const libVersion = JSON.parse(fs.readFileSync("package.json", 'utf8')).version
 
-console.log(`\x1b[32m\n#########################\n## MTOKEN SDK JS BUILD\n## Library version: ${libVersion}\n#########################\n\x1b[0m`)
+console.log(`\x1b[32m\n#########################\n## POWERAUTH MOBILE SDK JS BUILD\n## Library version: ${libVersion}\n#########################\n\x1b[0m`)
 
 /***********************
 * REACT-NATIVE SECTION *
