@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "file:../../powerauth-js-test-client/powerauth-js-test-client-0.2.13.tgz",
+    "powerauth-js-test-client": "^0.2.13",
     "react": "18.2.0",
     "react-native": "0.71.6",
     "react-native-config": "^1.5.0",

@@ -25,12 +25,13 @@ import stripImportExport from "gulp-strip-import-export"
 import { rimraf } from "rimraf" // folder cleaner
 import fs from "fs"
 import { exec } from "child_process"
+import pkg from "./package.json" with { type: "json" }
 
 // Out files
 const buildDir = "build";
 const tmpDir = ".build";
 
-const libVersion = JSON.parse(fs.readFileSync("package.json", 'utf8')).version
+const libVersion = pkg.version
 
 console.log(`\x1b[32m\n#########################\n## POWERAUTH MOBILE SDK JS BUILD\n## Library version: ${libVersion}\n#########################\n\x1b[0m`)
 
