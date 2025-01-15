@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RawAuthentication } from "../internal/NativeTypes"
+import { PowerAuthRawAuthentication } from "./PowerAuthNativeTypes"
 import { PasswordType } from "./PowerAuthPassword"
 
 /**
@@ -96,7 +96,7 @@ export class PowerAuthAuthentication {
      * @returns Authentication object configured to authenticate with possession and biometry factors.
      */
     static biometry(biometricPrompt: PowerAuthBiometricPrompt): PowerAuthAuthentication {
-        return new PowerAuthAuthentication(undefined, biometricPrompt ?? FALLBACK_PROMPT).configure(false, true)
+        return new PowerAuthAuthentication(undefined, biometricPrompt ?? PowerAuthAuthentication.FALLBACK_PROMPT).configure(false, true)
     }
 
     /**
@@ -176,8 +176,8 @@ export class PowerAuthAuthentication {
         // Authentication object was constructed in legacy mode,
         // so create a fallback object.
         return {
-            promptMessage: this.biometryMessage ?? FALLBACK_MESSAGE,
-            promptTitle: this.biometryTitle ?? FALLBACK_TITLE
+            promptMessage: this.biometryMessage ?? PowerAuthAuthentication.FALLBACK_MESSAGE,
+            promptTitle: this.biometryTitle ?? PowerAuthAuthentication.FALLBACK_TITLE
         }
     }
 
@@ -238,7 +238,7 @@ export class PowerAuthAuthentication {
      * 
      * @returns Frozen object with data for authentication.
      */
-    async toRawAuthentication(): Promise<RawAuthentication> {
+    async toRawAuthentication(): Promise<PowerAuthRawAuthentication> {
         const rawPassword = this.password !== undefined
                     ? (typeof this.password === 'string' ? this.password  : await this.password.toRawPassword()) 
                     : undefined
@@ -251,13 +251,13 @@ export class PowerAuthAuthentication {
             isBiometry: this.isBiometry,
         })
     }
-}
 
-// Fallback strings
+    // Fallback strings
 
-const FALLBACK_TITLE = '< missing title >'
-const FALLBACK_MESSAGE = '< missing message >'
-const FALLBACK_PROMPT: PowerAuthBiometricPrompt = {
-    promptMessage: FALLBACK_MESSAGE,
-    promptTitle: FALLBACK_TITLE
+    private static FALLBACK_TITLE = '< missing title >'
+    private static FALLBACK_MESSAGE = '< missing message >'
+    private static FALLBACK_PROMPT: PowerAuthBiometricPrompt = {
+        promptMessage: this.FALLBACK_MESSAGE,
+        promptTitle: this.FALLBACK_TITLE
+    }
 }

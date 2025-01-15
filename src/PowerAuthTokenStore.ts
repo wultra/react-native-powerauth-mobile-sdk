@@ -17,7 +17,7 @@
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
 import { NativeWrapper } from "./internal/NativeWrapper";
-import { AuthResolver as AuthResolver } from './internal/AuthResolver';
+import { resolveAuthentication } from './internal/AuthResolver';
 
 /**
  * The PowerAuthTokenStore provides interface for managing access tokens. The class is using Keychain as 
@@ -27,7 +27,8 @@ import { AuthResolver as AuthResolver } from './internal/AuthResolver';
  */
 export class PowerAuthTokenStore {
 
-    constructor(private instanceId: string, private authResolver: AuthResolver) {
+    constructor(private instanceId: string) {
+        
     }
 
     /**
@@ -79,7 +80,7 @@ export class PowerAuthTokenStore {
      * @returns PowerAuth token with already generated header
      */
     async requestAccessToken(tokenName: string, authentication: PowerAuthAuthentication): Promise<PowerAuthToken> {
-        return NativeWrapper.thisCall("requestAccessToken", this.instanceId, tokenName, await this.authResolver.resolve(authentication));
+        return NativeWrapper.thisCall("requestAccessToken", this.instanceId, tokenName, await resolveAuthentication(this.instanceId, authentication));
     }
 
     /**

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="cordova-powerauth-mobile-sdk" version="0.2.0">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-powerauth-mobile-sdk" version="<!-- PLACEHOLDER_VERSION -->">
     <name>PowerAuth Mobile JS SDK</name>
     <description>PowerAuth Mobile JS SDK for adds capability for authentication and transaction signing into the mobile apps</description>
     <license>Apache 2.0</license>
@@ -132,7 +131,7 @@
                 <source url="https://github.com/CocoaPods/Specs.git"/>
             </config>
             <pods use-frameworks="true">
-                <pod name="PowerAuth2" options="'1.7.9'" />
+                <pod name="PowerAuth2" options="'1.7.10'" />
             </pods>
         </podspec>
     </platform>

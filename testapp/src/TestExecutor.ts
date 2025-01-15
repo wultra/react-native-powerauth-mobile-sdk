@@ -20,68 +20,6 @@ import { TestContext, UserPromptDuration, UserInteraction, TestProgressObserver,
 import { TestLog } from './testbed/TestLog'
 import { TestMonitorGroup } from './testbed/TestMonitor'
 import { TestRunner } from './testbed/TestRunner'
- 
-export class TestServer {
-
-  private isRunning = true; // assume running
-
-  constructor() {
-    // we want to re-route console outputs for easier "test infrastructure" and debugging on CI
-    const logF = console.log;
-    const warnF = console.warn;
-    const errorF = console.error;
-    const infoF = console.info;
-
-    this.testRunning()
-    
-    console.log = (...params) => {
-      this.log(params)
-      logF(...params);
-    }
-    
-    console.warn = (...params) => {
-      this.log(params)
-      warnF(...params);
-    }
-    
-    console.info = (...params) => {
-      this.log(params)
-      infoF(...params);
-    }
-    
-    console.error = (...params) => {
-      this.log(params)
-      errorF(...params);
-    }
-  }
-
-  log(data: any[]) {
-    if (this.isRunning) {
-      this.call("log", data)
-    }
-  }
-
-  reportStatus(data: TestProgress) {
-    if (this.isRunning) {
-      this.call("reportStatus", data)
-    }
-  }
-
-  private async testRunning() {
-    try {
-      await this.call("test", {});
-      this.isRunning = true
-    } catch (e) {
-      this.isRunning = false
-      console.log("Server not runnig")
-    }
-  }
-
-  private async call(method: string, object: any): Promise<any> {
-    // the server code is in the git root as "test-listener.js"
-    return await fetch("http://localhost:8083/" + method, { method: "POST", body: JSON.stringify(object) })
-  }
-}
 
 export class TestExecutor implements UserInteraction {
 
@@ -90,7 +28,6 @@ export class TestExecutor implements UserInteraction {
   private readonly onProgress: TestProgressObserver
   private readonly onCompletion: (inProgress: boolean) => void
   private testRunner?: TestRunner
-  private testServer = new TestServer();
 
   constructor(
     onShowPrompt: (context: TestContext, message: string, duration: number) => Promise<void>,
@@ -99,7 +36,6 @@ export class TestExecutor implements UserInteraction {
     this.onShowPrompt = onShowPrompt
     this.onProgress = (progress) => {
       onProgress(progress)
-      this.testServer.reportStatus(progress)
     }
     this.onCompletion = onCompletion
     this.runTests(false)

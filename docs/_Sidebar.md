@@ -19,3 +19,7 @@
 - [Troubleshooting](Troubleshooting.md)
 - [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
+- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
+
+**Other**
+- [Changelog](Changelog.md)

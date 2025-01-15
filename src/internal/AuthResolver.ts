@@ -16,53 +16,41 @@
 
 import { PowerAuthAuthentication } from '../index';
 import { NativeWrapper } from './NativeWrapper';
-import { NativeObject } from './NativeObject';
-import { RawAuthentication } from './NativeTypes';
+import { PowerAuthNativeObject } from '../model/PowerAuthNativeObject';
+import { PowerAuthRawAuthentication } from '../model/PowerAuthNativeTypes';
 
 /**
- * The `AuthResolver` helper class hides internal dependencies when PowerAuthAuthentication needs to be
- * resolved in case of biometry factor is used.
+ * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
+ * The method should be used only for the signing purposes.
+ * @param instanceId PowerAuth instnace identifier.
+ * @param authentication Authentication configuration
+ * @param makeReusable if the object should be forced to be reusable
+ * @returns configured authorization object
  */
-export class AuthResolver {
-    /**
-     * Construct resolver with required instance identifier.
-     * @param instanceId PowerAuth instnace identifier.
-     */
-    constructor(private instanceId: string) {
-    }
-
-    /**
-     * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
-     * The method should be used only for the signing purposes.
-     * @param authentication Authentication configuration
-     * @param makeReusable if the object should be forced to be reusable
-     * @returns configured authorization object
-     */
-    async resolve(authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-        // Force cast to private interface and patch possible legacy object.
-        const correctAuth = authentication.convertLegacyObject(false)
-        const privateAuth = (correctAuth as any as RawAuthentication)
-        // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
-        // if underlying data object is no longer valid.
-        if (privateAuth.isReusable && privateAuth.biometryKeyId !== undefined) {
-            if (!await NativeObject.isValidNativeObject(privateAuth.biometryKeyId)) {
-                privateAuth.biometryKeyId = undefined
-            }
+export async function resolveAuthentication(instanceId: string, authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
+    // Force cast to private interface and patch possible legacy object.
+    const correctAuth = authentication.convertLegacyObject(false)
+    const privateAuth = (correctAuth as any as PowerAuthRawAuthentication)
+    // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
+    // if underlying data object is no longer valid.
+    if (privateAuth.isReusable && privateAuth.biometryKeyId !== undefined) {
+        if (!await PowerAuthNativeObject.isValidNativeObject(privateAuth.biometryKeyId)) {
+            privateAuth.biometryKeyId = undefined
         }
-        // On both platforms we need to fetch the key for every biometric authentication.
-        // If the key is already set, use it.
-        if (privateAuth.isBiometry && privateAuth.biometryKeyId === undefined) {
-            try {
-                // Alter the reusable flag
-                const isReusable = privateAuth.isReusable = privateAuth.isReusable || makeReusable
-                // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
-                privateAuth.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', this.instanceId, correctAuth.biometricPrompt, isReusable)) as string;
-                return correctAuth;
-            } catch (e) {
-                throw NativeWrapper.processException(e)
-            }
-        }
-        // no other processing is required
-        return correctAuth;
     }
+    // On both platforms we need to fetch the key for every biometric authentication.
+    // If the key is already set, use it.
+    if (privateAuth.isBiometry && privateAuth.biometryKeyId === undefined) {
+        try {
+            // Alter the reusable flag
+            const isReusable = privateAuth.isReusable = privateAuth.isReusable || makeReusable
+            // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
+            privateAuth.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', instanceId, correctAuth.biometricPrompt, isReusable)) as string;
+            return correctAuth;
+        } catch (e) {
+            throw NativeWrapper.processException(e)
+        }
+    }
+    // no other processing is required
+    return correctAuth;
 }

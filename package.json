@@ -1,15 +1,17 @@
 {
   "name": "react-native-powerauth-mobile-sdk",
   "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index",
   "scripts": {
     "build": "node node_modules/gulp/bin/gulp.js",
-    "buildAndRunCordovaIosTests": "npm run build && pushd testapp-cordova && npm run reinstallPlugin && npm run build && npm run ios && popd && node test-listener.js",
-    "buildAndRunReactIosTests": "npm run build && pushd testapp && npm run reinstallPlugin && npx pod-install && (npm run start & npm run ios) && popd && node test-listener.js"
+    "freshIosCordova": "npm run build && pushd testapp-cordova && npm run freshIos",
+    "freshIosReact": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
+    "freshAndroidCordova": "npm run build && pushd testapp-cordova && npm run freshAndroid",
+    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid"
   },
   "files": [
     "README.md",
@@ -56,6 +58,7 @@
     "esbuild": "^0.23.1",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
+    "gulp-filter": "^9.0.1",
     "gulp-replace": "^1.1.4",
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
