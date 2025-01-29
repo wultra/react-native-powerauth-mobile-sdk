@@ -17,8 +17,7 @@
 #import "PowerAuthPassphraseMeterModule.h"
 #import "PowerAuthObjectRegister.h"
 #import "Errors.h"
-
-#import <React/RCTConvert.h>
+#import "PAJS.h"
 
 #include "pin_tester.h"
 
@@ -31,14 +30,13 @@
 
 // MARK: - ReactNative bridge
 
-@synthesize moduleRegistry = _moduleRegistry;
+PAJS_MODULE_REGISTRY
 
 RCT_EXPORT_MODULE(PowerAuthPassphraseMeter);
 
-- (void) initialize
+- (void) PAJS_INITIALIZE_METHOD
 {
-    // RCTInitializing protocol allows us to get module dependencies before the object is used from JS.
-    _objectRegister = [_moduleRegistry moduleForName:"PowerAuthObjectRegister"];
+    PAJS_OBJECT_REGISTER
 }
 
 + (BOOL) requiresMainQueueSetup
@@ -48,9 +46,8 @@ RCT_EXPORT_MODULE(PowerAuthPassphraseMeter);
 
 // MARK: - JS interface
 
-RCT_EXPORT_METHOD(testPin:(id)pin
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(testPin,
+                  PAJS_ARGUMENT(pin, id))
 {
     PowerAuthCorePassword * corePin = TouchPassword(pin, _objectRegister, reject);
     if (corePin) {
@@ -109,5 +106,6 @@ RCT_EXPORT_METHOD(testPin:(id)pin
         }
     }
 }
+PAJS_METHOD_END
 
 @end

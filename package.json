@@ -1,15 +1,24 @@
 {
   "name": "react-native-powerauth-mobile-sdk",
   "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "2.5.5",
+  "version": "3.0.0",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index",
+  "scripts": {
+    "build": "node node_modules/gulp/bin/gulp.js",
+    "freshIosCordova": "npm run build && pushd testapp-cordova && npm run freshIos",
+    "freshIosReact": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
+    "freshAndroidCordova": "npm run build && pushd testapp-cordova && npm run freshAndroid",
+    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid"
+  },
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
+    "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/js/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
     "android/build.gradle",
     "lib/*.*",
     "lib/internal/*.js",
@@ -21,9 +30,6 @@
     "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
-  "scripts": {
-    "prepare": "tsc"
-  },
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
     "type": "git",
@@ -48,7 +54,17 @@
     "react-native": "*"
   },
   "devDependencies": {
+    "@capacitor/core": "^6.1.2",
+    "esbuild": "^0.23.1",
+    "gulp": "^5.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-filter": "^9.0.1",
+    "gulp-replace": "^1.1.4",
+    "gulp-strip-import-export": "^1.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
-    "react-native": "^0.73.4"
+    "pod-install": "^0.2.2",
+    "react-native": "^0.73.4",
+    "rimraf": "^6.0.1"
   }
 }

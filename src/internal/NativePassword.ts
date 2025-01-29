@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { NativeModules } from "react-native"
+import { NativeModulesProvider } from "./NativeModulesProvider"
 
 /**
  * Password interface implemented in the native code.
@@ -84,4 +84,4 @@ export interface PowerAuthPasswordIfc {
     removeLastCharacter(objectId: string): Promise<number>
 }
 
-export const NativePassword = NativeModules.PowerAuthPassword as PowerAuthPasswordIfc
+export const NativePassword = NativeModulesProvider.PowerAuthPassword as PowerAuthPasswordIfc

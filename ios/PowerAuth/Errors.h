@@ -17,7 +17,7 @@
 #import "Utilities.h"
 
 #import <PowerAuth2/PowerAuthErrorConstants.h>
-#import <React/RCTBridgeModule.h>
+#import "PAJS.h"
 
 PA_EXTERN_C NSString * __nonnull const EC_NETWORK_ERROR;
 PA_EXTERN_C NSString * __nonnull const EC_SIGNATURE_ERROR;

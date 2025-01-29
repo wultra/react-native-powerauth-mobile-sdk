@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { NativeObjectCmdData, NativeObjectCmdResult, NativeObjectRegister, NativeObjectType } from "react-native-powerauth-mobile-sdk"
+import { NativeObjectCmdData, NativeObjectCmdResult, NativeObjectRegister, NativeObjectType } from "react-native-powerauth-mobile-sdk";
 
 export interface ObjectsCount {
     valid: number

@@ -71,7 +71,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         // Now commit activation with a legacy authentication
 
         if (this.isAndoid) await this.showPrompt('Authenticate to create activation with biometry')
-        
+
         const password = await importPassword(this.credentials.validPassword)
         const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(password, {
             promptTitle: 'Authenticate with biometry',

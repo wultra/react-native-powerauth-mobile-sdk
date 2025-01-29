@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "ES6",
+    "noImplicitAny": false,
+    "removeComments": false,
+    "declaration": true,
+    "target": "ES5",
+    "skipLibCheck": true,
+    "lib": ["ES2016"],
+    "outDir": "lib",
+    "strict": true,
+    "moduleResolution": "node"
+  },
+  "exclude": [ "node_modules" ],
+  "include": [ "src/*.ts", "src/model/*.ts", "src/debug/*.ts" ]
+}

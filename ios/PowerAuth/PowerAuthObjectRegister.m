@@ -16,7 +16,7 @@
 
 #import "PowerAuthObjectRegister.h"
 #import "Constants.h"
-#import <React/RCTConvert.h>
+#import "PAJS.h"
 
 // MARK: - Release policies -
 
@@ -297,7 +297,7 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     if (stringId.length == 0) {
         return nil;
     }
-    return stringId;
+    return objectId;
 }
 
 /// Find object in the object register.

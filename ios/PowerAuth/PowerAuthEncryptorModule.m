@@ -18,7 +18,7 @@
 #import "PowerAuthObjectRegister.h"
 #import "Constants.h"
 #import "Utilities.h"
-#import <React/RCTConvert.h>
+#import "PAJS.h"
 
 #import <PowerAuth2/PowerAuthSDK.h>
 @import PowerAuthCore;
@@ -32,14 +32,14 @@
 
 // MARK: - ReactNative bridge
 
-@synthesize moduleRegistry = _moduleRegistry;
+PAJS_MODULE_REGISTRY
 
 RCT_EXPORT_MODULE(PowerAuthEncryptor);
 
-- (void) initialize
+- (void) PAJS_INITIALIZE_METHOD
 {
     // RCTInitializing protocol allows us to get module dependencies before the object is used from JS.
-    _objectRegister = [_moduleRegistry moduleForName:"PowerAuthObjectRegister"];
+    PAJS_OBJECT_REGISTER
 }
 
 + (BOOL) requiresMainQueueSetup
@@ -84,11 +84,10 @@ static void WithEncryptor(PowerAuthObjectRegister * objectRegister, NSString * e
 
 // MARK: - JS interface
 
-RCT_EXPORT_METHOD(initialize:(NSString*)scope
-                  ownerId:(NSString*)ownerId
-                  autoreleaseTime:(nonnull NSNumber*)autoreleaseTime
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(initialize,
+                  PAJS_ARGUMENT(scope, NSString*)
+                  PAJS_ARGUMENT(ownerId, NSString*)
+                  PAJS_ARGUMENT(autoreleaseTime, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     // Input parameters validation
     NSString * scopeType = [RCTConvert NSString: scope];
@@ -121,14 +120,15 @@ RCT_EXPORT_METHOD(initialize:(NSString*)scope
     NSString * encryptorId = [_objectRegister registerObject:encryptor tag:ownerId policies:policies];
     resolve(encryptorId);
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(release:(NSString*)encryptorId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(release,
+                  PAJS_ARGUMENT(encryptorId, NSString*))
 {
     [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
     resolve(nil);
 }
+PAJS_METHOD_END
 
 // MARK: Encryption
 
@@ -156,20 +156,19 @@ static BOOL CanEncrypt(PowerAuthJsEncryptor * encryptor, PowerAuthObjectRegister
     return result;
 }
 
-RCT_EXPORT_METHOD(canEncryptRequest:(NSString*)encryptorId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(canEncryptRequest,
+                  PAJS_ARGUMENT(encryptorId, NSString*))
 {
     [self touchEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
         resolve(CanEncrypt(encryptor, _objectRegister, nil) ? @YES : @NO);
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(encryptRequest:(NSString*)encryptorId
-                  body:(NSString*)body
-                  bodyFormat:(NSString*)bodyFormat
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(encryptRequest,
+                  PAJS_ARGUMENT(encryptorId, NSString*)
+                  PAJS_ARGUMENT(body, NSString*)
+                  PAJS_ARGUMENT(bodyFormat, NSString*))
 {
     [self useEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
         // Input validations
@@ -220,6 +219,7 @@ RCT_EXPORT_METHOD(encryptRequest:(NSString*)encryptorId
         }];
     }];
 }
+PAJS_METHOD_END
 
 // MARK: Decryption
 
@@ -247,20 +247,19 @@ static BOOL CanDecrypt(PowerAuthJsEncryptor * encryptor, PowerAuthObjectRegister
     return result;
 }
 
-RCT_EXPORT_METHOD(canDecryptResponse:(NSString*)encryptorId
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(canDecryptResponse,
+                  PAJS_ARGUMENT(encryptorId, NSString*))
 {
     [self touchEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
         resolve(CanDecrypt(encryptor, _objectRegister, nil) ? @YES : @NO);
     }];
 }
+PAJS_METHOD_END
 
-RCT_EXPORT_METHOD(decryptResponse:(NSString*)encryptorId
-                  cryptogram:(NSDictionary*)data
-                  outputFormat:(NSString*)outputFormat
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+PAJS_METHOD_START(decryptResponse,
+                  PAJS_ARGUMENT(encryptorId, NSString*)
+                  PAJS_ARGUMENT(data, NSDictionary*)
+                  PAJS_ARGUMENT(outputFormat, NSString*))
 {
     [self useEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
         // Input validations
@@ -294,6 +293,7 @@ RCT_EXPORT_METHOD(decryptResponse:(NSString*)encryptorId
         }
     }];
 }
+PAJS_METHOD_END
 
 @end
 

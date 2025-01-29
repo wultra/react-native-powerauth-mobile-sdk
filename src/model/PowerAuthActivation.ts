@@ -18,7 +18,7 @@
  * The `PowerAuthActivation` object contains activation data required for the activation creation. The object supports
  * all types of activation currently supported in the SDK.
  */
- export class PowerAuthActivation {
+export class PowerAuthActivation {
 
     /** parameters that are filled by create* methods  */ 
 

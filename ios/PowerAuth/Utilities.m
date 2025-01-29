@@ -16,8 +16,8 @@
 
 #import "Errors.h"
 #import "PowerAuthObjectRegister.h"
+#import "PAJS.h"
 
-#import <React/RCTConvert.h>
 #import <PowerAuth2/PowerAuthSDK.h>
 @import PowerAuthCore;
 

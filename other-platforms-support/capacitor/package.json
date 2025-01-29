@@ -1,0 +1,56 @@
+{
+  "name": "capacitor-powerauth-mobile-sdk",
+  "title": "PowerAuth SDK for Capacitor.js Mobile Apps",
+  "version": "2.5.0",
+  "description": "Wultra PowerAuth Mobile SDK Capacitor.js component for iOS and Android",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "source": "src/index",
+  "files": [
+    "README.md",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
+    "android/build.gradle",
+    "lib/*.*",
+    "lib/internal/*.js",
+    "lib/model/*.*",
+    "lib/debug/*.*",
+    "ios/PowerAuth.xcodeproj/project.pbxproj",
+    "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.c",
+    "ios/PowerAuth/*.h",
+    "react-native-powerauth-mobile-sdk.podspec"
+  ],
+  "homepage": "https://www.wultra.com/mobile-security-suite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
+  },
+  "keywords": [
+    "react-native",
+    "powerauth",
+    "security"
+  ],
+  "author": {
+    "name": "Wultra s.r.o.",
+    "email": "support@wultra.com"
+  },
+  "license": "Apache 2.0",
+  "licenseFilename": "LICENSE",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "node-fetch": ">=2.6.1"
+  },
+  "peerDependencies": {
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-footer": "^2.1.0",
+    "gulp-strip-import-export": "^1.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "lodash": "^4.17.21",
+    "react-native": "^0.73.4",
+    "rimraf": "^6.0.1"
+  }
+}

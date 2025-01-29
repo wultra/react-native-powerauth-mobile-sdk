@@ -16,7 +16,7 @@
 
 import { PowerAuthError, PowerAuthErrorCode } from './PowerAuthError';
 import { NativeWrapper } from '../internal/NativeWrapper';
-import { RawNativeObject } from '../internal/NativeTypes';
+import { PowerAuthRawNativeObject } from './PowerAuthNativeTypes';
 
 /**
  * Base interface for objects that use releasable underlying native object.
@@ -96,7 +96,7 @@ export class BaseNativeObject implements BaseReleasableObject {
      * Initialize native object if it's not initialized yet and convert this object into `RawNativeObject` 
      * that is passable to the native code.
      */
-    protected resolveRawObject(): Promise<RawNativeObject> {
+    protected resolveRawObject(): Promise<PowerAuthRawNativeObject> {
         return this.withObjectId(id => Promise.resolve(Object.freeze({objectId: id})))
     }
 
@@ -104,7 +104,7 @@ export class BaseNativeObject implements BaseReleasableObject {
      * Convert instance of this object into `RawNativeObject` that is passable to the native code.
      * Be aware that this function throws an exception if object identifier is not available.
      */
-    protected toRawObject(): RawNativeObject {
+    protected toRawObject(): PowerAuthRawNativeObject {
         if (this.objectId === undefined) {
             throw new PowerAuthError(undefined, "Native object is not initialized", PowerAuthErrorCode.REACT_NATIVE_ERROR)
         }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { NativeModules } from "react-native"
+import { NativeModulesProvider } from "./NativeModulesProvider"
 import { PowerAuthCryptogram } from "../model/PowerAuthEncryptor"
 import { PowerAuthEncryptionHttpHeader } from "../model/PowerAuthEncryptionHttpHeader"
 
@@ -85,4 +85,4 @@ export interface PowerAuthEncryptorIfc {
     decryptResponse(encryptorId: string, cryptogram: PowerAuthCryptogram, outputFormat: string | undefined): Promise<string>
 }
 
-export const NativeEncryptor = NativeModules.PowerAuthEncryptor as PowerAuthEncryptorIfc
+export const NativeEncryptor = NativeModulesProvider.PowerAuthEncryptor;

@@ -3,20 +3,22 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "android": "npx react-native run-android",
+    "ios": "npx react-native run-ios",
+    "start": "npx react-native start",
     "pods": "pushd ios; pod install; popd",
-    "test": "echo Just run this app; exit 1",
-    "lint": "eslint ."
+    "rebuildPlugin": "pushd .. && gulp rn && popd",
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/$(pushd ../build/react-native/ > /dev/null && ls | grep .tgz)",
+    "freshAndroid": "npm run reinstallPlugin && npm run android",
+    "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.12",
+    "powerauth-js-test-client": "^0.2.13",
     "react": "18.2.0",
-    "react-native": "0.71.6",
+    "react-native": "0.71.19",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "^2.5.0"
+    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-3.0.0.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -29,7 +31,7 @@
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
     "eslint": "^8.19.0",
-    "metro-react-native-babel-preset": "0.73.7",
+    "metro-react-native-babel-preset": "0.73.10",
     "react-test-renderer": "18.2.0",
     "typescript": "^4.8.4"
   }

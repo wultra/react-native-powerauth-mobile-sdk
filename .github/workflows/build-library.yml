@@ -1,0 +1,20 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  pull_request:
+
+jobs:
+  build-library:
+    name: Build and Pack the Library
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
+      - name: Library build
+        run: npm run build

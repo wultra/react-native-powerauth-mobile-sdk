@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { Platform } from "react-native"
+import { Platform } from "react-native";
 import { TestSuite, expect } from "../../src/testbed"
 
 /**

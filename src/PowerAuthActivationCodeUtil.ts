@@ -40,7 +40,7 @@ import { NativeWrapper } from "./internal/NativeWrapper";
  * As you can see, both activation and recovery codes, shares the same basic principle (like CRC16
  * checksum). That's why parser returns the same `PowerAuthOtp` object for both scenarios. 
  */
- export class PowerAuthActivationCodeUtil {
+export class PowerAuthActivationCodeUtil {
 
     /**
      * Parses an input |activationCode| (which may or may not contain an optional signature) and returns PowerAuthOtp 

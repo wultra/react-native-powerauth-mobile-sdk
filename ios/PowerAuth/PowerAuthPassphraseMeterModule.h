@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
+#import "PAJS.h"
 
 /**
  Bridge implementing PowerAuthPassphraseMeter interface.
  */
-@interface PowerAuthPassphraseMeterModule : NSObject<RCTBridgeModule, RCTInitializing>
+PAJS_MODULE(PowerAuthPassphraseMeterModule)
 
 @end

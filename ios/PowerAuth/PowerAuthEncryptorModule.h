@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import <React/RCTInitializing.h>
+#import "PAJS.h"
 #import "Errors.h"
 
 @class PowerAuthCoreEciesEncryptor;
@@ -35,7 +34,7 @@
 
 // "PowerAuthEncryptor" module
 
-@interface PowerAuthEncryptorModule : NSObject<RCTBridgeModule, RCTInitializing>
+PAJS_MODULE(PowerAuthEncryptorModule)
 
 /// Use native encryptor object with given identifier.
 /// - Parameters:
