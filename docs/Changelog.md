@@ -1,5 +1,6 @@
 # Changelog
 
-## 3.0.0 (TBA)
+## 3.0.0 (1/2025)
 
-- Added Cordova Support
+- Library renamed to `PowerAuth Mobile JS`
+- Added Cordova support
