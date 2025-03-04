@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Wultra s.r.o.
+// Copyright 2025 Wultra s.r.o.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import React, { Component } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -23,108 +23,96 @@ import {
   Button,
   Appearance,
   NativeEventSubscription,
-} from 'react-native'
-import { TestExecutor } from './TestExecutor'
+} from 'react-native';
+import { TestExecutor } from './TestExecutor';
 
-interface AppState {
-  isDark: boolean
-  inProgress: boolean
-  promptMessage?: string
-
-  testsDone: number
-  testsSkipped: number
-  testsFailed: number
-  testsCount: number
-}
-
-const Separator = () => (
+const Separator = (): React.ReactNode => (
   <View style={styles.separator} />
 );
 
-class App extends Component<{}, AppState> {
-  
-  state = {
-    isDark: Appearance.getColorScheme() === 'dark',
-    inProgress: false, 
-    promptMessage: undefined,
-    testsDone: 0,
-    testsSkipped: 0,
-    testsFailed: 0,
-    testsCount: 0
-  }
+const App: React.FC = () => {
+  const [isDark, setIsDark] = useState(Appearance.getColorScheme() === 'dark');
+  const [inProgress, setInProgress] = useState(false);
+  const [promptMessage, setPromptMessage] = useState<string | undefined>(undefined);
+  const [testsDone, setTestsDone] = useState(0);
+  const [testsSkipped, setTestsSkipped] = useState(0);
+  const [testsFailed, setTestsFailed] = useState(0);
+  const [testsCount, setTestsCount] = useState(0);
 
-  subscription?: NativeEventSubscription
-  executor?: TestExecutor
+  const subscription = useRef<NativeEventSubscription | null>(null);
+  const executor = useRef<TestExecutor | null>(null);
 
-  onPressNotInteractive = () => {
-    this.executor?.runTests(false)
-  }
+  const onPressNotInteractive = () => {
+    executor.current?.runTests(false);
+  };
 
-  onPressInteractive = () => {
-    this.executor?.runTests(true)
-  }
+  const onPressInteractive = () => {
+    executor.current?.runTests(true);
+  };
 
-  onPressCancel = () => {
-    this.executor?.cancelTests()
-  }
+  const onPressCancel = () => {
+    executor.current?.cancelTests();
+  };
 
-  componentDidMount() {
-    // Patch appearance
-    this.subscription = Appearance.addChangeListener((preferences) => {
-      this.setState({isDark: Appearance.getColorScheme() === 'dark'})
-    })
-    // Create test executor
-    this.executor = new TestExecutor(async (_context, message, duration) => {
-      this.setState({ promptMessage: message })
-      await new Promise<void>(resolve => setTimeout(resolve, duration)) 
-      this.setState({ promptMessage: ' '})
-    }, (progress) => {
-      this.setState({
-        testsCount: progress.total,
-        testsDone: progress.succeeded,
-        testsSkipped: progress.skipped,
-        testsFailed: progress.failed
-      })
-    }, (progress) => {
-      this.setState({inProgress: progress})
-    })
-  }
+  useEffect(() => {
+    subscription.current = Appearance.addChangeListener(() => {
+      setIsDark(Appearance.getColorScheme() === 'dark');
+    });
 
-  componentWillUnmount() {
-    this.subscription?.remove()
-    this.executor?.cancelTests()
-    this.executor = undefined
-  }
+    executor.current = new TestExecutor(
+      async (_context, message, duration) => {
+        setPromptMessage(message);
+        await new Promise<void>(resolve => setTimeout(resolve, duration));
+        setPromptMessage(' ');
+      },
+      (progress) => {
+        setTestsCount(progress.total);
+        setTestsDone(progress.succeeded);
+        setTestsSkipped(progress.skipped);
+        setTestsFailed(progress.failed);
+      },
+      (progress) => {
+        setInProgress(progress);
+      }
+    );
 
-  render() {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.promptContainer}>
-          <Text style={styles.promptText}>
-            { this.state.promptMessage ?? ' ' }
-          </Text>
-        </View>
-        <View style={styles.progressContainer}>
-          <Text style={this.state.isDark ? styles.progressTextDark : styles.progressTextLight}>
-            {this.state.testsDone + this.state.testsFailed + this.state.testsSkipped} / {this.state.testsCount}
-          </Text>
-        </View>
-        <Separator />
-        { !this.state.inProgress ? 
-            <View style={styles.fixToText}>
-              <Button title="Run regular" onPress={() => this.onPressNotInteractive() } />
-              <Button title="Run interactive" onPress={() => this.onPressInteractive() } />
-            </View> :
-            <View style={styles.fixToText}>
-              <Button title="Cancel" onPress={() => this.onPressCancel() } />
-            </View>
-        }
-      </SafeAreaView>
-     )
-   }
- }
- 
- const styles = StyleSheet.create({
+    // Cleanup on unmount
+    return () => {
+      subscription.current?.remove();
+      executor.current?.cancelTests();
+      executor.current = null;
+    };
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.promptContainer}>
+        <Text style={styles.promptText}>
+          {promptMessage ?? ' '}
+        </Text>
+      </View>
+      <View style={styles.progressContainer}>
+        <Text style={isDark ? styles.progressTextDark : styles.progressTextLight}>
+          {testsDone + testsFailed + testsSkipped} / {testsCount}
+        </Text>
+      </View>
+      <Separator />
+      { !inProgress ? (
+          <View style={styles.fixToText}>
+            <Button title="Run regular" onPress={onPressNotInteractive} />
+            <Button title="Run interactive" onPress={onPressInteractive} />
+          </View>
+        ) : (
+          <View style={styles.fixToText}>
+            <Button title="Cancel" onPress={onPressCancel} />
+          </View>
+        )
+      }
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -159,6 +147,6 @@ class App extends Component<{}, AppState> {
     textAlign: 'center',
     color: '#000000'
   }
-})
- 
+});
+
 export default App;
