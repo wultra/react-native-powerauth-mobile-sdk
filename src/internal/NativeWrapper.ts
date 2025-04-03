@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { NativeModulesProvider } from './NativeModulesProvider';
 import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../debug/PowerAuthDebug';
 import { PowerAuthAuthentication } from '../index';
 import { Utils } from "../internal/Utils";
+import { NativeModulesProvider } from './NativeModulesProvider';
 
 interface StaticCallTrampoline {
     call<T>(name: string, args: any[]): Promise<T>
@@ -34,7 +34,7 @@ interface ThisCallTrampoline {
 class DefaultStaticCall implements StaticCallTrampoline {
     async call<T>(name: string, args: any[]): Promise<T> {
         try {
-            return await NativeModulesProvider.PowerAuth.callNative(name, args);
+            return await NativeModulesProvider.PowerAuth[name](...args);
         } catch (e) {
             throw NativeWrapper.processException(e);
         }
@@ -47,7 +47,7 @@ class DefaultStaticCall implements StaticCallTrampoline {
 class DefaultThisCall implements ThisCallTrampoline {
     async call<T>(name: string, instanceId: string, args: any[]): Promise<T> {
         try {
-            return await NativeModulesProvider.PowerAuth.callNative(name, [instanceId, ...args]);
+            return await NativeModulesProvider.PowerAuth[name](instanceId, ...args);
         } catch (e) {
             throw NativeWrapper.processException(e);
         }
@@ -65,7 +65,7 @@ class DebugStaticCall implements StaticCallTrampoline {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
             }
-            const r = await NativeModulesProvider.PowerAuth.callNative<T>(name, args)
+            const r = await NativeModulesProvider.PowerAuth[name](args);
             if (this.traceCall) {
                 console.log(` ret ${msg} => ${JSON.stringify(r)}`)
             }
@@ -91,7 +91,7 @@ class DebugThisCall implements ThisCallTrampoline {
             if (this.traceCall) {
                 console.log(`call ${msg}`)
             }
-            const r = await NativeModulesProvider.PowerAuth.callNative<T>(name, [instanceId, ...args])
+            const r = await NativeModulesProvider.PowerAuth[name](...args);
             if (this.traceCall) {
                 console.log(` ret ${msg} => ${JSON.stringify(r)}`)
             }

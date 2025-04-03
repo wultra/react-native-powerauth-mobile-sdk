@@ -169,7 +169,7 @@ export class PowerAuth {
      */
     deconfigure(): Promise<boolean> {
         configRegister.delete(this.instanceId)
-        return NativeWrapper.thisCallBool("deconfigure", this.instanceId)
+        return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
     }
 
     /**
