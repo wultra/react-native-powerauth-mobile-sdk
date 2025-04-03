@@ -55,6 +55,8 @@ public class ObjectRegister extends BaseJavaModule {
         return objectRegisterJs.getName();
     }
 
+    public static final String NAME = "PowerAuthObjectRegister";
+
     @Override
     public void invalidate() {
         super.invalidate();

@@ -52,6 +52,8 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
         return powerAuthEncryptorJsModule.getName();
     }
 
+    public static final String NAME = "PowerAuthEncryptor";
+
     // JavaScript methods
 
     @ReactMethod
