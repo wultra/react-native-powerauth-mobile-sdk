@@ -15,15 +15,10 @@
  */
 
 import { NativeModules } from "react-native";
-import { NativeModulesProviderIfc } from "./NativeModulesProviderIfc";
-import { NativePowerAuth } from "./NativePowerAuth";
+import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
 
-class Provider implements NativeModulesProviderIfc {
-    PowerAuthObjectRegister = NativeModules.PowerAuthObjectRegister;
-    PowerAuthEncryptor = NativeModules.PowerAuthEncryptor
-    PowerAuthPassphraseMeter = NativeModules.PowerAuthPassphraseMeter
-    PowerAuthPassword = NativeModules.PowerAuthPassword
-    PowerAuth = new NativePowerAuth()
+export class NativePowerAuth implements NativePowerAuthIfc {
+    callNative<T>(name: string, ...args): Promise<T> {
+        return (NativeModules.PowerAuth[name] as Function).apply(null, ...args);
+    }
 }
-
-export const NativeModulesProvider = new Provider() as NativeModulesProviderIfc
