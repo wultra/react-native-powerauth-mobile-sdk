@@ -51,7 +51,6 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
         this.objectRegister = objectRegister;
         this.passwordModule = passwordModule;
         this.powerAuthJsModule = new PowerAuthJsModule(context, activityProvider, objectRegister.getObjectRegisterJs(), passwordModule.getPowerAuthPasswordJsModule());
-        System.out.println("PWA constructor");
     }
 
     public PowerAuthJsModule getPowerAuthJsModule() {
@@ -293,11 +292,5 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void correctTypedCharacter(int character, final Promise promise) {
         powerAuthJsModule.correctTypedCharacter(character, promise);
-    }
-
-    @ReactMethod
-    public void testBridgeConnection(String testArgument, Promise promise) {
-        System.out.println("PowerAuthModule.testBridgeConnection called with: " + testArgument);
-        promise.resolve("Successfully called testBridgeConnection on Android with: " + testArgument);
     }
 }
