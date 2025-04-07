@@ -8,7 +8,7 @@
     "start": "npx react-native start",
     "pods": "pushd ios; pod install; popd",
     "rebuildPlugin": "pushd .. && gulp rn && popd",
-    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/$(pushd ../build/react-native/ > /dev/null && ls | grep .tgz)",
+    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/$(pushd ../build/react-native/ > /dev/null && ls | grep .tgz) --save",
     "freshAndroid": "npm run reinstallPlugin && npm run android",
     "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
   },

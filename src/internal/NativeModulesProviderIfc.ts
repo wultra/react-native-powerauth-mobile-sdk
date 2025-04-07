@@ -19,11 +19,13 @@ import { PowerAuthEncryptorIfc } from "./NativeEncryptor";
 import { PowerAuthNativeObject } from "../model/PowerAuthNativeObject";
 import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
+import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
+
 
 export interface NativeModulesProviderIfc {
     PowerAuthObjectRegister: NativeObjectRegisterIfc & PowerAuthNativeObject;
     PowerAuthEncryptor: PowerAuthEncryptorIfc;
     PowerAuthPassphraseMeter: PowerAuthPassphraseMeterIfc;
     PowerAuthPassword: PowerAuthPasswordIfc;
-    PowerAuth: any;
+    PowerAuth: NativePowerAuthIfc;
 }
