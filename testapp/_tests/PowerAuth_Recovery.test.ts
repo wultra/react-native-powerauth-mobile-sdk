@@ -45,7 +45,7 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
         // And create activation with a recovery code
         const activation = PowerAuthActivation.createWithRecoveryCode(rd.recoveryCode, rd.puk, 'Recovery Test')
         activationResult = await this.sdk.createActivation(activation)
-        this.sdk.commitActivation(this.credentials.knowledge)
+        this.sdk.persistActivation(this.credentials.knowledge)
 
         const newActivationId = await this.sdk.getActivationIdentifier()
         expect(newActivationId).toBeNotNull()

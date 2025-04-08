@@ -308,7 +308,7 @@ export class PowerAuthPasswordTests extends TestSuite {
 
     async testGlobalRelease() {
         // Dummy values for PA configuration
-        const config = new PowerAuthConfiguration('6NgAwrP3iLfbuN2S8vCyEw==', '6N6JAkZhTTmeDoJG0llXhA==', 'BCgc7k0uu5wjYdbRxObMCLr7vDD5JQW//C0kRZSUYlyixAj/fllAx3pbkHZhogTL42EBUbKZeVqtXsw2PE46SJs=', 'http://localhost/wrong')
+        const config = new PowerAuthConfiguration('ARCB+/qxpmLCa04AyT2IPXHKED4Heu76QU+v2PtnzQbe0sYBAUEEU05t3byEUdh90CBiBvqgr4sWU7r1YTAtdpTh3EyhAUL791k66wy+SZM1qELw6zdoOHNFk/z4neDDqKtIQ5E5jg==', 'http://localhost/wrong')
 
         // Owner object represents an instance of PowerAuth class that typically owns various object types
         const powerAuthInstanceId = this.getRandomId()

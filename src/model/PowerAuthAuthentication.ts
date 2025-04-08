@@ -56,10 +56,10 @@ export class PowerAuthAuthentication {
      */
     readonly biometricPrompt?: PowerAuthBiometricPrompt
     /**
-     * Indicates that this authentication object should be used for activation commit. 
+     * Indicates that this authentication object should be used for activation persist. 
      */
-    get isActivationCommit(): boolean {
-        return this.isCommit ?? false
+    get isActivationPersist(): boolean {
+        return this.isPersist ?? false
     }
 
     /**
@@ -109,21 +109,21 @@ export class PowerAuthAuthentication {
     }
 
     /**
-     * Create object configured to commit activation with password.
+     * Create object configured to persist activation with password.
      * @param password User's password. You can provide string or `PowerAuthPassword` object.
-     * @returns Object configured to commit activation with password.
+     * @returns Object configured to persist activation with password.
      */
-    static commitWithPassword(password: PasswordType): PowerAuthAuthentication {
+    static persistWithPassword(password: PasswordType): PowerAuthAuthentication {
         return new PowerAuthAuthentication(password, undefined).configure(true)
     }
 
     /**
-     * Create object configured to commit activation with password and biometry.
+     * Create object configured to persist activation with password and biometry.
      * @param password User's password. You can provide string or `PowerAuthPassword` object.
      * @param biometricPrompt Required on Android, only when biometry config has `authenticateOnBiometricKeySetup` set to `true`.
-     * @returns Object configured to commit activation with password and biometry.
+     * @returns Object configured to persist activation with password and biometry.
      */
-    static commitWithPasswordAndBiometry(password: PasswordType, biometricPrompt: PowerAuthBiometricPrompt | undefined = undefined): PowerAuthAuthentication {
+    static persistWithPasswordAndBiometry(password: PasswordType, biometricPrompt: PowerAuthBiometricPrompt | undefined = undefined): PowerAuthAuthentication {
         return new PowerAuthAuthentication(password, biometricPrompt).configure(true, true)
     }
 
@@ -133,23 +133,23 @@ export class PowerAuthAuthentication {
     /**
      * Configure object after its construction. The method is private, because we don't want to expose internal flags to
      * application developers. We'll fix this once we remove the deprecated properties in the next major release.
-     * @param commit Value for isCommit property. 
+     * @param persist Value for isPersist property. 
      * @param biometry Value for isBiometry property.
      * @param reusable Value for isReusable property. If not provided, then false is used.
      * @returns this
      */
-    private configure(commit: boolean | undefined, biometry: boolean = false, reusable: boolean = false): PowerAuthAuthentication {
-        this.isCommit = commit
+    private configure(persist: boolean | undefined, biometry: boolean = false, reusable: boolean = false): PowerAuthAuthentication {
+        this.isPersist = persist
         this.isBiometry = biometry
         this.isReusable = reusable
         return this
     }
 
     /**
-     * Indicates that object should be used for activation commit. If not defined, then the object was
+     * Indicates that object should be used for activation persist. If not defined, then the object was
      * constructed with using deprecated properties.
      */
-    private isCommit?: boolean
+    private isPersist?: boolean
     /**
      * Indicate that object use biometric authentication.
      */
@@ -189,16 +189,16 @@ export class PowerAuthAuthentication {
      * 
      * > Do not use this function in application code.
      * 
-     * @param forCommit If true, this conversion is for activation commit purposes.
+     * @param forPersist If true, this conversion is for activation persist purposes.
      * @returns New authentication object created from the legacy properties, otherwise `this`.
      */
-    convertLegacyObject(forCommit: boolean): PowerAuthAuthentication {
-        if (this.isCommit === undefined) {
+    convertLegacyObject(forPersist: boolean): PowerAuthAuthentication {
+        if (this.isPersist === undefined) {
             // This is a legacy object, so we have to create a new one to make sure that
             // the native code will reach to all new properties.
             const prompt = this.useBiometry ? this.getBiometricPrompt() : undefined
             return new PowerAuthAuthentication(this.userPassword, prompt)
-                        .configure(forCommit, this.useBiometry, this.isReusable)
+                        .configure(forPersist, this.useBiometry, this.isReusable)
         }
         return this
     }
@@ -246,7 +246,7 @@ export class PowerAuthAuthentication {
             password: rawPassword,
             biometricPrompt: this.biometricPrompt,
             biometryKeyId: this.biometryKeyId,
-            isCommit: this.isCommit,
+            isPersist: this.isPersist,
             isReusable: this.isReusable,
             isBiometry: this.isBiometry,
         })

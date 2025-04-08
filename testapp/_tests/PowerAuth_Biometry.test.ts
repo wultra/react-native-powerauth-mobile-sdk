@@ -52,9 +52,9 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         const activatioData = await this.helper.initActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
-        // Now commit activation with a legacy authentication
-        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(this.credentials.validPassword)
-        await sdk.commitActivation(commitAuth)
+        // Now persist activation with a legacy authentication
+        const persistAuth = PowerAuthAuthentication.persistWithPasswordAndBiometry(this.credentials.validPassword)
+        await sdk.persistActivation(persistAuth)
     }
 
     async testAddRemoveBiometryFactor() {

@@ -45,7 +45,7 @@ export type PowerAuthRawPasswordType = PowerAuthRawPassword | string
 export interface PowerAuthRawAuthentication {
     readonly password?: string | PowerAuthRawPassword
     readonly biometricPrompt?: PowerAuthBiometricPrompt    
-    readonly isCommit?: boolean
+    readonly isPersist?: boolean
     readonly isBiometry: boolean
     isReusable: boolean
     biometryKeyId?: string    

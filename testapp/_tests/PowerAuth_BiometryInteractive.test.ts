@@ -68,16 +68,16 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         const activatioData = await this.helper.initActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
-        // Now commit activation with a legacy authentication
+        // Now persist activation with a legacy authentication
 
         if (this.isAndoid) await this.showPrompt('Authenticate to create activation with biometry')
 
         const password = await importPassword(this.credentials.validPassword)
-        const commitAuth = PowerAuthAuthentication.commitWithPasswordAndBiometry(password, {
+        const persistAuth = PowerAuthAuthentication.persistWithPasswordAndBiometry(password, {
             promptTitle: 'Authenticate with biometry',
             promptMessage: 'Authenticate to create activation with biometry'
         })
-        await sdk.commitActivation(commitAuth)
+        await sdk.persistActivation(persistAuth)
 
         // Commit activation on the server
         if (await this.helper.getActivationStatus() != ActivationStatus.ACTIVE) {

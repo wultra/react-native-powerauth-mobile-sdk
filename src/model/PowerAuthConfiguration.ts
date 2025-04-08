@@ -19,17 +19,9 @@
  */
 export interface PowerAuthConfigurationType {
     /**
-     * `APPLICATION_KEY` as defined in PowerAuth specification - a key identifying an application version.
+     * String with the cryptographic configuration.
      */
-    readonly applicationKey: string
-    /**
-     * `APPLICATION_SECRET` as defined in PowerAuth specification - a secret associated with an application version.
-     */
-    readonly applicationSecret: string
-    /**
-     * `KEY_SERVER_MASTER_PUBLIC` as defined in PowerAuth specification - a master server public key.
-     */
-    readonly masterServerPublicKey: string
+    readonly configuration: string
     /**
      * Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
      */
@@ -41,23 +33,17 @@ export interface PowerAuthConfigurationType {
  * `ConfigurationType` interface, so can be used 
  */
 export class PowerAuthConfiguration implements PowerAuthConfigurationType {
-    applicationKey: string
-    applicationSecret: string
-    masterServerPublicKey: string
+    configuration: string
     baseEndpointUrl: string
      
     /**
      * Construct configuration with required parameters.
      * 
-     * @param applicationKey `APPLICATION_KEY` as defined in PowerAuth specification - a key identifying an application version.
-     * @param applicationSecret `APPLICATION_SECRET` as defined in PowerAuth specification - a secret associated with an application version.
-     * @param masterServerPublicKey `KEY_SERVER_MASTER_PUBLIC` as defined in PowerAuth specification - a master server public key.
+     * @param configuration String with the cryptographic configuration.
      * @param baseEndpointUrl Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
      */
-    public constructor(applicationKey: string, applicationSecret: string, masterServerPublicKey: string, baseEndpointUrl: string) {
-        this.applicationKey = applicationKey
-        this.applicationSecret = applicationSecret
-        this.masterServerPublicKey = masterServerPublicKey
+    public constructor(configuration: string, baseEndpointUrl: string) {
+        this.configuration = configuration
         this.baseEndpointUrl = baseEndpointUrl
     }
 }
@@ -69,9 +55,7 @@ export class PowerAuthConfiguration implements PowerAuthConfigurationType {
  */
 export function buildConfiguration(input: PowerAuthConfigurationType): PowerAuthConfigurationType {
     return Object.freeze({
-        applicationKey: input.applicationKey,
-        applicationSecret: input.applicationSecret,
-        masterServerPublicKey: input.masterServerPublicKey,
+        configuration: input.configuration,
         baseEndpointUrl: input.baseEndpointUrl
     })
 }

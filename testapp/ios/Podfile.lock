@@ -8,9 +8,9 @@ PODS:
   - hermes-engine (0.78.0):
     - hermes-engine/Pre-built (= 0.78.0)
   - hermes-engine/Pre-built (0.78.0)
-  - PowerAuth2 (1.7.11):
-    - PowerAuthCore (~> 1.7.11)
-  - PowerAuthCore (1.7.11)
+  - PowerAuth2 (1.9.3):
+    - PowerAuthCore (~> 1.9.3)
+  - PowerAuthCore (1.9.3)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -1249,7 +1249,7 @@ PODS:
     - DoubleConversion
     - glog
     - hermes-engine
-    - PowerAuth2 (~> 1.7.10)
+    - PowerAuth2 (~> 1.9.3)
     - RCT-Folly (= 2024.11.18.00)
     - RCTRequired
     - RCTTypeSafety
@@ -1782,8 +1782,8 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
   hermes-engine: b417d2b2aee3b89b58e63e23a51e02be91dc876d
-  PowerAuth2: 06e000736ebbabaf308893ddf1e49e4cae6ed22f
-  PowerAuthCore: 441885f53e9f0efed7c1a3b5822fa4e79fd70660
+  PowerAuth2: d5095166e077ea6c188dc1a49ce535c42e50b6cb
+  PowerAuthCore: a5030933691810ba7a40f06beb9d4150f2728fff
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: b2eecf2d60216df56bc5e6be5f063826d3c1ee35
   RCTRequired: 78522de7dc73b81f3ed7890d145fa341f5bb32ea
@@ -1815,7 +1815,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 3c11cee7737609275c7b66bd0b1de475f094cedf
   React-microtasksnativemodule: 843f352b32aacbe13a9c750190d34df44c3e6c2c
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
-  react-native-powerauth-mobile-sdk: 1925121eb2e6896e23269e61821d19aa1d89569f
+  react-native-powerauth-mobile-sdk: 73ae626440e2a39df15d86c545835a3d6d34463d
   React-NativeModulesApple: 88433b6946778bea9c153e27b671de15411bf225
   React-perflogger: 9e8d3c0dc0194eb932162812a168aa5dc662f418
   React-performancetimeline: 5a2d6efef52bdcefac079c7baa30934978acd023

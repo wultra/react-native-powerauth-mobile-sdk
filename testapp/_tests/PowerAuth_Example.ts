@@ -61,9 +61,7 @@ export class PowerAuth_Example extends TestWithServer {
 
         // Prepare configuration, you can use PowerAuthConfiguration class, or ConfigurationType interface.
         const configuration = {
-            applicationKey: applicationSetup.appKey,
-            applicationSecret: applicationSetup.appSecret,
-            masterServerPublicKey: applicationSetup.masterServerPublicKey,
+            configuration: applicationSetup.applicationVersion.mobileSdkConfig,
             baseEndpointUrl: this.config.enrollment.baseUrl
         }
 
@@ -73,7 +71,7 @@ export class PowerAuth_Example extends TestWithServer {
         const clientConfiguration = { enableUnsecureTraffic: configuration.baseEndpointUrl.startsWith('http://') }
 
         // You can also alter how biometry behave in the SDK. This is an automatic test, so we don't
-        // want to display an biometric dialog when an activation is being commited.
+        // want to display an biometric dialog when an activation is being persisted.
         const biometryConfiguration = { authenticateOnBiometricKeySetup: false }
 
         // Confitgure SDK
@@ -142,20 +140,20 @@ export class PowerAuth_Example extends TestWithServer {
         await password.addCharacter('5')
         await password.addCharacter('7')
         await password.addCharacter('9')
-        const commitAuthentication = PowerAuthAuthentication.commitWithPasswordAndBiometry(password, {
+        const persistAuthentication = PowerAuthAuthentication.persistWithPasswordAndBiometry(password, {
             // The following strings are required on android platform in case that `biometryConfiguration.authenticateOnBiometricKeySetup` is true
             // You can provide some dummy strings in case that flag is false.
             promptTitle: 'Please authenticate with biometry',
             promptMessage: 'Please authenticate to create an activation supporting biometry'
         });
         
-        // Now finally commit the activation.
-        await this.powerAuth.commitActivation(commitAuthentication)
+        // Now finally persist the activation.
+        await this.powerAuth.persistActivation(persistAuthentication)
         
-        // After `commit`, you cannot start activation and activation is valid
-        await this.printActivationState('After commit')
+        // After `persist`, you cannot start activation and activation is valid
+        await this.printActivationState('After persist')
 
-        // Now it's time to test the activation's status. This method is available after commitActivation()
+        // Now it's time to test the activation's status. This method is available after persistActivation()
         
         let status = await this.powerAuth.fetchActivationStatus()
         if (status.state === PowerAuthActivationState.PENDING_COMMIT) {

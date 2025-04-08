@@ -43,12 +43,13 @@ export class PowerAuth_LegacyAuthTests extends TestWithActivation {
         const activatioData = await this.helper.initActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
-        // Now commit activation with a legacy authentication
+        
+        // Now persist activation with a legacy authentication
 
-        const commitAuth = new PowerAuthAuthentication()
-        commitAuth.usePossession = true
-        commitAuth.userPassword = this.credentials.validPassword
-        await sdk.commitActivation(commitAuth)
+        const persistAuth = new PowerAuthAuthentication()
+        persistAuth.usePossession = true
+        persistAuth.userPassword = this.credentials.validPassword
+        await sdk.persistActivation(persistAuth)
 
         expect(await sdk.hasValidActivation())
     }
@@ -58,13 +59,14 @@ export class PowerAuth_LegacyAuthTests extends TestWithActivation {
         const activatioData = await this.helper.initActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
-        // Now commit activation with a legacy authentication
+        
+        // Now persist activation with a legacy authentication
 
-        const commitAuth = new PowerAuthAuthentication()
-        commitAuth.usePossession = true
-        commitAuth.userPassword = this.credentials.validPassword
-        commitAuth.useBiometry = true
-        await sdk.commitActivation(commitAuth)
+        const persistAuth = new PowerAuthAuthentication()
+        persistAuth.usePossession = true
+        persistAuth.userPassword = this.credentials.validPassword
+        persistAuth.useBiometry = true
+        await sdk.persistActivation(persistAuth)
 
         expect(await sdk.hasValidActivation())
     }
