@@ -731,7 +731,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 val policies = ArrayList<ReleasePolicy>()
                 if (createPolicies != null) {
                     for (idx in 0 until createPolicies.size()) {
-                        val policyString: String = createPolicies.getString(idx)
+                        val policyString: String = createPolicies.getString(idx) ?: continue
                         val components = TextUtils.split(policyString, " ")
                         val param =
                             if (components.size > 1) components[components.size - 1].toInt() else 0

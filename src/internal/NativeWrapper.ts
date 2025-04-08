@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { NativeModulesProvider } from './NativeModulesProvider';
 import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../debug/PowerAuthDebug';
 import { PowerAuthAuthentication } from '../index';
 import { Utils } from "../internal/Utils";
+import { NativeModulesProvider } from './NativeModulesProvider';
 
 interface StaticCallTrampoline {
     call<T>(name: string, args: any[]): Promise<T>

@@ -47,6 +47,8 @@ public class PowerAuthPassphraseMeterModule extends BaseJavaModule {
         return powerAuthPassphraseMeterJsModule.getName();
     }
 
+    public static final String NAME = "PowerAuthPassphraseMeter";
+
     @ReactMethod
     void testPin(Dynamic password, Promise promise) {
         powerAuthPassphraseMeterJsModule.testPin(password, promise);

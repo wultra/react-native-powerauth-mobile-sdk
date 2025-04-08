@@ -35,6 +35,8 @@ import javax.annotation.Nonnull;
 @ReactModule(name = "PowerAuth")
 public class PowerAuthModule extends ReactContextBaseJavaModule {
 
+    public static final String NAME = "PowerAuth";
+
     private final PowerAuthJsModule powerAuthJsModule;
 
     private final ReactApplicationContext context;

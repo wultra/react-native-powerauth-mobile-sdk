@@ -1348,9 +1348,9 @@ class PowerAuthJsModule(
             }
             if (customHeaders != null && customHeaders.size() > 0) {
                 for (i in 0 until customHeaders.size()) {
-                    val `object`: ReadableMap = customHeaders.getMap(i)
-                    val name: String? = `object`.getString("name")
-                    val value: String? = `object`.getString("value")
+                    val headerObject: ReadableMap? = customHeaders.getMap(i)
+                    val name: String? = headerObject?.getString("name")
+                    val value: String? = headerObject?.getString("value")
                     if (name != null && value != null) {
                         paClientConfigBuilder.requestInterceptor(
                             CustomHeaderRequestInterceptor(

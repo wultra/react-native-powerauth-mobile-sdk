@@ -48,6 +48,8 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
         return powerAuthPasswordJsModule.getName();
     }
 
+    public static final String NAME = "PowerAuthPassword";
+
     // JavaScript methods
 
     @ReactMethod
