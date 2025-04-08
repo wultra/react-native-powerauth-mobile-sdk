@@ -105,7 +105,27 @@ PAJS_METHOD_START(initialize,
     if (!sdk) {
         return;
     }
-    PowerAuthCoreEciesEncryptor * coreEncryptor = activationScope ? [sdk eciesEncryptorForActivationScope] : [sdk eciesEncryptorForApplicationScope];
+    
+    if (activationScope) {
+        [sdk eciesEncryptorForActivationScopeWithCallback:^(PowerAuthCoreEciesEncryptor * _Nullable encryptor, NSError * _Nullable error) {
+            [self processEciesEncryptor:encryptor sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
+        }];
+    } else {
+        [sdk eciesEncryptorForApplicationScopeWithCallback:^(PowerAuthCoreEciesEncryptor * _Nullable encryptor, NSError * _Nullable error) {
+            [self processEciesEncryptor:encryptor sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
+        }];
+    }
+}
+PAJS_METHOD_END
+
+- (void) processEciesEncryptor:(PowerAuthCoreEciesEncryptor*)coreEncryptor
+                           sdk:(PowerAuthSDK*)sdk
+               activationScope:(BOOL)activationScope
+                       ownerId:(NSString*)ownerId
+               autoreleaseTime:(NSNumber*)autoreleaseTime
+                       resolve:(RCTPromiseResolveBlock)resolve
+                        reject:(RCTPromiseRejectBlock)reject
+{
     if (!coreEncryptor) {
         if (activationScope && ![sdk hasValidActivation]) {
             reject(EC_MISSING_ACTIVATION, nil, nil);
@@ -120,7 +140,6 @@ PAJS_METHOD_START(initialize,
     NSString * encryptorId = [_objectRegister registerObject:encryptor tag:ownerId policies:policies];
     resolve(encryptorId);
 }
-PAJS_METHOD_END
 
 PAJS_METHOD_START(release,
                   PAJS_ARGUMENT(encryptorId, NSString*))
@@ -205,10 +224,12 @@ PAJS_METHOD_START(encryptRequest,
             // Resolve...
             resolve(@{
                 @"cryptogram": @{
+                    @"temporaryKeyId": cryptogram.temporaryKeyId,
                     @"ephemeralPublicKey": cryptogram.keyBase64,
                     @"encryptedData": cryptogram.bodyBase64,
                     @"mac": cryptogram.macBase64,
-                    @"nonce": cryptogram.nonceBase64
+                    @"nonce": cryptogram.nonceBase64,
+                    @"timestamp": [[NSNumber alloc] initWithUnsignedLongLong:cryptogram.timestamp]
                 },
                 @"header": @{
                     @"key": metadata.httpHeaderKey,
@@ -282,6 +303,8 @@ PAJS_METHOD_START(decryptResponse,
         PowerAuthCoreEciesCryptogram * cryptogram = [[PowerAuthCoreEciesCryptogram alloc] init];
         cryptogram.bodyBase64 = [RCTConvert NSString:data[@"encryptedData"]];
         cryptogram.macBase64 = [RCTConvert NSString:data[@"mac"]];
+        cryptogram.nonceBase64 = [RCTConvert NSString:data[@"nonce"]];
+        cryptogram.timestamp = [[RCTConvert NSNumber:data[@"timestamp"]] unsignedLongLongValue];
         NSData * response = [coreEncryptor decryptResponse:cryptogram];
         if (!response) {
             reject(EC_ENCRYPTION_ERROR, @"Failed to decrypt response", nil);

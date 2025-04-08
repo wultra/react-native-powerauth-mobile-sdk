@@ -54,6 +54,7 @@ NSString * const EC_LOCAL_TOKEN_NOT_AVAILABLE   = @"LOCAL_TOKEN_NOT_AVAILABLE";
 NSString * const EC_CANNOT_GENERATE_TOKEN       = @"CANNOT_GENERATE_TOKEN";
 NSString * const EC_INSTANCE_NOT_CONFIGURED     = @"INSTANCE_NOT_CONFIGURED";
 NSString * const EC_INVALID_NATIVE_OBJECT       = @"INVALID_NATIVE_OBJECT";
+NSString * const EC_TIME_SYNCHRONIZATION        = @"TIME_SYNCHRONIZATION";
 
 // MARK: - Utility functions
 
@@ -80,6 +81,7 @@ NSString * TranslatePAErrorCode(PowerAuthErrorCode code)
         case PowerAuthErrorCode_WatchConnectivity: return EC_WATCH_CONNECTIVITY;
         case PowerAuthErrorCode_BiometryFailed: return EC_BIOMETRY_FAILED;
         case PowerAuthErrorCode_BiometryFallback: return EC_BIOMETRY_FALLBACK;
+        case PowerAuthErrorCode_TimeSynchronization: return EC_TIME_SYNCHRONIZATION;
         default: return [[NSString alloc] initWithFormat:@"UNKNOWN_%li", code];
     }
 }

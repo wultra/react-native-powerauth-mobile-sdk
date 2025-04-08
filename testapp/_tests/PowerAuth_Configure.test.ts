@@ -152,7 +152,7 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
     }
 
     async runMethodsThatMustFail(sdk: PowerAuth) {
-        const commitAuth = PowerAuthAuthentication.commitWithPassword('1234')
+        const persistAuth = PowerAuthAuthentication.persistWithPassword('1234')
         const signAuth = PowerAuthAuthentication.possession()
         await expect(async () => await sdk.hasValidActivation()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.canStartActivation()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
@@ -160,7 +160,7 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         await expect(async () => await sdk.hasActivationRecoveryData()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.fetchActivationStatus()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.createActivation(PowerAuthActivation.createWithActivationCode('', ''))).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        await expect(async () => await sdk.commitActivation(commitAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.persistActivation(persistAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.getActivationFingerprint()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.getActivationIdentifier()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.removeActivationWithAuthentication(signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})

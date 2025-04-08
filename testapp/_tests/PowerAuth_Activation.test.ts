@@ -44,7 +44,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.getExternalPendingOperation()).toBeUndefined()
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
-        await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
+        await expect(async () => await sdk.persistActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         // [ 1 ] Prepare activation on the server
         await this.helper.initActivation()
@@ -80,8 +80,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(result.activationFingerprint).toBe(activationFingerprint)
         expect(result.activationFingerprint).toBe(activationDetail.devicePublicKeyFingerprint)
 
-        // [ 3 ] Now commit activation locally
-        await sdk.commitActivation(this.credentials.knowledge)
+        // [ 3 ] Now persist activation locally
+        await sdk.persistActivation(this.credentials.knowledge)
 
         activationId = await sdk.getActivationIdentifier()
         activationFingerprint = await sdk.getActivationFingerprint()
@@ -139,7 +139,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasValidActivation()).toBe(true)
 
         await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-        await expect(async () => await sdk.commitActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
+        await expect(async () => await sdk.persistActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         expect(await sdk.canStartActivation()).toBe(false)
         expect(await sdk.hasPendingActivation()).toBe(false)
