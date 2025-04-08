@@ -731,20 +731,18 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 val policies = ArrayList<ReleasePolicy>()
                 if (createPolicies != null) {
                     for (idx in 0 until createPolicies.size()) {
-                        val policyString: String? = createPolicies.getString(idx)
+                        val policyString: String = createPolicies.getString(idx) ?: continue
                         val components = TextUtils.split(policyString, " ")
                         val param =
                             if (components.size > 1) components[components.size - 1].toInt() else 0
                         if ("manual" == policyString) {
                             policies.add(ReleasePolicy.manual())
-                        } else if (policyString != null) {
-                            if (policyString.startsWith("afterUse")) {
-                                policies.add(ReleasePolicy.afterUse(param))
-                            } else if (policyString.startsWith("keepAlive")) {
-                                policies.add(ReleasePolicy.keepAlive(param))
-                            } else if (policyString.startsWith("expire")) {
-                                policies.add(ReleasePolicy.expire(param))
-                            }
+                        } else if (policyString.startsWith("afterUse")) {
+                            policies.add(ReleasePolicy.afterUse(param))
+                        } else if (policyString.startsWith("keepAlive")) {
+                            policies.add(ReleasePolicy.keepAlive(param))
+                        } else if (policyString.startsWith("expire")) {
+                            policies.add(ReleasePolicy.expire(param))
                         }
                     }
                 }

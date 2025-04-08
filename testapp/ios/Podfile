@@ -1,11 +1,12 @@
+# Uncomment, if you want to build the app with the old architecture
+# ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
     "react-native/scripts/react_native_pods.rb",
     {paths: [process.argv[1]]},
   )', __dir__]).strip
-
-# ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
