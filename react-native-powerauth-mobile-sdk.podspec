@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/PowerAuth/*.{h,m,c}"
   s.requires_arc = true
 
-  s.dependency "PowerAuth2", "~> 1.7.10"
+  s.dependency "PowerAuth2", "~> 1.7.12"
 
   # For RN > 0.74, this automatically resolves the architecture AND interop layer deps.
   if respond_to?(:install_modules_dependencies, true)

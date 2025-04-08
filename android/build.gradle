@@ -73,7 +73,7 @@ repositories {
 dependencies {
   implementation "com.facebook.react:react-native"
   implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
-  api "com.wultra.android.powerauth:powerauth-sdk:1.7.10"
+  api "com.wultra.android.powerauth:powerauth-sdk:1.7.12"
 }
 
 if (isNewArchitectureEnabled()) {
