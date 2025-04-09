@@ -55,8 +55,6 @@
   },
   "devDependencies": {
     "@capacitor/core": "^6.1.2",
-    "@react-native-community/cli": "^18.0.0",
-    "@react-native-community/cli-platform-ios": "^18.0.0",
     "esbuild": "^0.23.1",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",

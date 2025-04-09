@@ -235,29 +235,43 @@ console.log(`\x1b[32m\n#########################\n## POWERAUTH MOBILE SDK JS BUI
 *  GULP TASKS SECTION  *
 ************************/
 
-let purge = () => rimraf([ 
-    buildDir, 
-    tmpDir ,
-    './node_modules',
-    './package-lock.json',
-    './testapp/package-lock.json',
-    './testapp/ios/build',
-    './testapp/ios/Pods',
-    './testapp/ios/Podfile.lock',
-    './testapp/android/build',
-    './testapp/android/app/build',
-    './testapp-cordova/node_modules',
-    './testapp-cordova/package-lock.json',
-    './testapp-cordova/platforms/ios/build',
-    './testapp-cordova/platforms/ios/Podfile.lock',
-    './testapp-cordova/platforms/ios/Pods',
-    './testapp-cordova/platforms/android/app/build',
-    './testapp-cordova/platforms/android/',
-    './testapp-cordova/platforms/android/',
-    './testapp-cordova/platforms/android/',
-    './testapp-cordova/platforms/android/',
-    './testapp/node_modules',
-])
+// purge will remove all build and temp folders, node_modules and package-lock.json
+// It will also remove all ios and android build folders in testapp and testapp-cordova
+// This is useful for cleaning up the project before a new build
+let purge = () => {
+    return new Promise(function(resolve) {
+        let itemsToRemove = [
+            buildDir, 
+            tmpDir ,
+            './node_modules',
+            './package-lock.json',
+            './testapp/package-lock.json',
+            './testapp/ios/build',
+            './testapp/ios/Pods',
+            './testapp/ios/Podfile.lock',
+            './testapp/android/build',
+            './testapp/android/app/build',
+            './testapp-cordova/node_modules',
+            './testapp-cordova/package-lock.json',
+            './testapp-cordova/platforms/ios/build',
+            './testapp-cordova/platforms/ios/Podfile.lock',
+            './testapp-cordova/platforms/ios/Pods',
+            './testapp-cordova/platforms/android/app/build',
+            './testapp-cordova/platforms/android/',
+            './testapp-cordova/platforms/android/',
+            './testapp-cordova/platforms/android/',
+            './testapp-cordova/platforms/android/',
+            './testapp/node_modules',
+        ]
+        console.log(`\x1b[32m`)
+        console.log("!! Purging all build and temp folders, node_modules and package-lock.json")
+        console.log("!! Purging all ios and android build folders in testapp and testapp-cordova")
+        console.log(`\x1b[30mFolders and files to remove: ${itemsToRemove.join(", ")}`)
+        console.log(`\x1b[0m`)
+        rimraf(itemsToRemove)
+        resolve()
+    });
+}
 
 let cleanBuild = () => rimraf([ buildDir ])
 let cleanTemp = () => rimraf([ tmpDir ])
@@ -278,7 +292,7 @@ const buildAllTask = gulp.series(
 gulp.task("watch", () => { gulp.watch("src/ts/**/*.ts", buildAllTask) });
 gulp.task("default", buildAllTask);
 gulp.task("clean", gulp.parallel(cleanBuild, cleanTemp));
-gulp.task("purge", gulp.series(purge));
+gulp.task("purge", purge);
 gulp.task("rn", RN_buildTask);
 gulp.task("cap", CAP_buildTask);
 gulp.task("cdv", CDV_buildTask);

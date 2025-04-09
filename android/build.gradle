@@ -10,6 +10,10 @@ ext {
   PowerAuthSdkRN_reactNativeVersion = "0.78.1"
 }
 
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react.rootproject"
+
 buildscript {
   repositories {
     mavenCentral()
@@ -17,16 +21,15 @@ buildscript {
   }
 
   dependencies {
-    classpath("com.android.tools.build:gradle:7.2.1")
+    classpath("com.android.tools.build:gradle")
+    classpath("com.facebook.react:react-native-gradle-plugin")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
   }
 }
 
 def isNewArchitectureEnabled() {
   return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
-
-apply plugin: "com.android.library"
-apply plugin: "org.jetbrains.kotlin.android"
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -41,8 +44,13 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+
   namespace = "com.wultra.android.powerauth.reactnative"
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
+
+  buildFeatures {
+    buildConfig true
+  }
 
   defaultConfig {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
@@ -60,8 +68,8 @@ android {
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
 }
 
@@ -71,14 +79,14 @@ repositories {
 }
 
 dependencies {
-  implementation "com.facebook.react:react-native"
+  implementation("com.facebook.react:react-android")
   implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
   api "com.wultra.android.powerauth:powerauth-sdk:1.7.12"
 }
 
 if (isNewArchitectureEnabled()) {
   react {
-    jsRootDir = file("../lib/")
+    jsRootDir = file("../build/react-native")
     libraryName = "PowerAuthReactNative"
     codegenJavaPackageName = "com.wultra.android.powerauth.reactnative"
   }
