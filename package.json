@@ -11,7 +11,8 @@
     "freshIosCordova": "npm run build && pushd testapp-cordova && npm run freshIos",
     "freshIosReact": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
     "freshAndroidCordova": "npm run build && pushd testapp-cordova && npm run freshAndroid",
-    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid"
+    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid",
+    "purge": "node node_modules/gulp/bin/gulp.js purge"
   },
   "files": [
     "README.md",
