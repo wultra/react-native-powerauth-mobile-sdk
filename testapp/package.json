@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "powerauth-js-test-client": "^0.2.13",
+    "powerauth-js-test-client": "^0.2.14",
     "react": "18.2.0",
     "react-native": "0.71.19",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-3.0.0.tgz"
+    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-3.0.1.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
