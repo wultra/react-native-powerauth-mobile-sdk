@@ -77,7 +77,7 @@ class PowerAuthJsModule(
             val result = registerPowerAuthInstance(instanceId, ObjectRegisterJs.objectFactory {
                 // Create configurations from maps
                 val paConfig: PowerAuthConfiguration = getPowerAuthConfigurationFromMap(instanceId, configuration)
-                        ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
+                    ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
                 val paClientConfig: PowerAuthClientConfiguration = getPowerAuthClientConfigurationFromMap(clientConfiguration)
                 val paKeychainConfig: PowerAuthKeychainConfiguration = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration, biometryConfiguration)
                 // Configure the instance
@@ -283,7 +283,7 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
-    fun commitActivation(instanceId: String, authMap: ReadableMap, promise: Promise) {
+    fun persistActivation(instanceId: String, authMap: ReadableMap, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
@@ -299,13 +299,13 @@ class PowerAuthJsModule(
                         )
                     // This is handled in "constructAuthentication", so should never happen.
                     checkNotNull(auth.password)
-                    sdk.commitActivation(
+                    sdk.persistActivation(
                         context,
                         fragmentActivity,
                         titleDesc.first,
                         titleDesc.second,
                         auth.password!!, // FIXME
-                        object : ICommitActivationWithBiometryListener {
+                        object : IPersistActivationWithBiometricsListener {
                             override fun onBiometricDialogCancelled() {
                                 promise.reject(
                                     Errors.EC_BIOMETRY_CANCEL,
@@ -326,11 +326,11 @@ class PowerAuthJsModule(
                 }
             } else {
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, false)
-                val result: Int = sdk.commitActivationWithAuthentication(context, auth)
+                val result: Int = sdk.persistActivationWithAuthentication(context, auth)
                 if (result == PowerAuthErrorCodes.SUCCEED) {
                     promise.resolve(null)
                 } else {
-                    promise.reject(Errors.getErrorCodeFromError(result), "Commit failed.")
+                    promise.reject(Errors.getErrorCodeFromError(result), "Persist failed.")
                 }
             }
         })
@@ -847,12 +847,12 @@ class PowerAuthJsModule(
                             "Current fragment activity is not available"
                         )
                     val titleDesc = extractPromptStrings(prompt)
-                    sdk.authenticateUsingBiometry(
+                    sdk.authenticateUsingBiometrics(
                         context,
                         fragmentActivity,
                         titleDesc.first,
                         titleDesc.second,
-                        object : IBiometricAuthenticationCallback {
+                        object : IAuthenticateWithBiometricsListener {
                             override fun onBiometricDialogCancelled(userCancel: Boolean) {
                                 promise.reject(
                                     Errors.EC_BIOMETRY_CANCEL,
@@ -860,10 +860,9 @@ class PowerAuthJsModule(
                                 )
                             }
 
-                            override fun onBiometricDialogSuccess(biometricKeyData: BiometricKeyData) {
+                            override fun onBiometricDialogSuccess(authentication: PowerAuthAuthentication) {
                                 // Allocate native managed object object
-                                val managedBytes =
-                                    ManagedAny.wrap(biometricKeyData.derivedData)
+                                val managedBytes = ManagedAny.wrap(authentication.biometryFactorRelatedKey!!)
                                 // If reusable authentication is going to be created, then "keep alive" release policy is applied.
                                 // Basically, the data will be available up to 10 seconds from the last access.
                                 // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
@@ -1091,13 +1090,13 @@ class PowerAuthJsModule(
     /**
      * Helper function converts input readable map to PowerAuthAuthentication object.
      * @param map Map with authentication data.
-     * @param forCommit Set true if authentication is required for activation commit.
+     * @param forPersist Set true if authentication is required for activation persist.
      * @return [PowerAuthAuthentication] instance.
      */
     @Throws(WrapperException::class)
     private fun constructAuthentication(
         map: ReadableMap,
-        forCommit: Boolean,
+        forPersist: Boolean,
         copyPassword: Boolean
     ): PowerAuthAuthentication {
         val biometryKeyId: String? = map.getString("biometryKeyId")
@@ -1120,8 +1119,8 @@ class PowerAuthJsModule(
         } else {
             password = null
         }
-        if (forCommit) {
-            // Authentication for activation commit
+        if (forPersist) {
+            // Authentication for activation persist
             if (password == null) {
                 throw WrapperException(
                     Errors.EC_WRONG_PARAMETER,
@@ -1129,15 +1128,15 @@ class PowerAuthJsModule(
                 )
             }
             return if (biometryKey == null) {
-                PowerAuthAuthentication.commitWithPassword(password)
+                PowerAuthAuthentication.persistWithPassword(password)
             } else {
                 // This is currently not supported in RN wrapper. Application has no way to create
-                // commit authentication object prepared with valid biometry key. This is supported
+                // persist authentication object prepared with valid biometry key. This is supported
                 // in native SDK, but application has to create its own biometry-supporting infrastructure.
                 //
                 // We can still use this option in tests, to simulate biometry-related operations
                 // with no user's interaction.
-                PowerAuthAuthentication.commitWithPasswordAndBiometry(password, biometryKey)
+                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometryKey)
             }
         } else {
             // Authentication for data signing
@@ -1310,18 +1309,14 @@ class PowerAuthJsModule(
         ): PowerAuthConfiguration? {
             // Configuration parameters
             val baseEndpointUrl: String? = map.getString("baseEndpointUrl")
-            val appKey: String? = map.getString("applicationKey")
-            val appSecret: String? = map.getString("applicationSecret")
-            val masterServerPublicKey: String? = map.getString("masterServerPublicKey")
-            if (baseEndpointUrl == null || appKey == null || appSecret == null || masterServerPublicKey == null) {
+            val configuration: String? = map.getString("configuration")
+            if (baseEndpointUrl == null || configuration == null) {
                 return null
             }
             return PowerAuthConfiguration.Builder(
                 instanceId,
                 baseEndpointUrl,
-                appKey,
-                appSecret,
-                masterServerPublicKey
+                configuration
             ).build()
         }
 
