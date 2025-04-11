@@ -257,9 +257,8 @@ let purge = () => {
             './testapp-cordova/platforms/ios/Podfile.lock',
             './testapp-cordova/platforms/ios/Pods',
             './testapp-cordova/platforms/android/app/build',
-            './testapp-cordova/platforms/android/',
             './testapp/node_modules',
-        ]));
+        ];
         console.log(`\x1b[32m`)
         console.log("!! Purging all build and temp folders, node_modules and package-lock.json")
         console.log("!! Purging all ios and android build folders in testapp and testapp-cordova")
