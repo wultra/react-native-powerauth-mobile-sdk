@@ -209,4 +209,9 @@ export enum PowerAuthErrorCode {
      * when you're using 
      */
     INVALID_NATIVE_OBJECT = "INVALID_NATIVE_OBJECT",
+
+    /**
+     * Indicates a problem with the time synchronization.
+     */
+    EC_TIME_SYNCHRONIZATION = "TIME_SYNCHRONIZATION"
 }

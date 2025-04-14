@@ -7,9 +7,7 @@ Before you call any method on the newly created `const powerAuth = new PowerAuth
 You will need the following parameters to prepare and configure a PowerAuth instance:
 
 - **instanceId** - Identifier of the app - the aplication package name/identifier is recommended.  
-- **appKey** - APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
-- **appSecret** - APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.  
-- **masterServerPublicKey** - KEY\_SERVER\_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.  
+- **configuration** - String (base64) with the cryptographic configuration.
 - **baseEndpointUrl** - Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").  
 - **enableUnsecureTraffic** - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
 
@@ -32,7 +30,7 @@ class AppMyApplication {
             console.log("PowerAuth was already configured.");
         } else {
             try {
-                await this.powerAuth.configure("APPLICATION_KEY", "APPLICATION_SECRET", "KEY_SERVER_MASTER_PUBLIC", "https://your-powerauth-endpoint.com/", false);
+                await this.powerAuth.configure("CONFIGURATION_STRING", "https://your-powerauth-server.com/enrollment-server", false);
                 console.log("PowerAuth configuration successfull.");
             } catch(e) {
                 console.log(`PowerAuth failed to configure: ${e.code}`);
@@ -97,7 +95,7 @@ class AppMyApplication {
             console.log("PowerAuth was already configured.");
         } else {
             try {
-              const configuration = new PowerAuthConfiguration("appKey", "appSecret", "masterServerPublicKey", "https://your-powerauth-endpoint.com/")
+              const configuration = new PowerAuthConfiguration("CONFIGURATION_STRING", "https://your-powerauth-server.com/enrollment-server")
               const clientConfiguration = { enableUnsecureTraffic: false };
               const biometryConfiguration = { linkItemsToCurrentSet: true };
               const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
