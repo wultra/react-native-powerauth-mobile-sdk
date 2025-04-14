@@ -15,8 +15,11 @@
     "freshReactIos": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
     "freshReactAndroid": "npm run build && pushd testapp && npm run freshAndroid",
 
+    "buildReactIos": "pushd testapp && npm run buildIos",
+    "buildReactAndroid": "pushd testapp && npm run buildAndroid",
+
     "buildCordovaIos": "pushd testapp-cordova && npm run buildIos",
-    "buildCordovaAndroid": "npm run build && pushd testapp-cordova && npm run reinstallPlugin && npm run buildAndroid",
+    "buildCordovaAndroid": "pushd testapp-cordova && npm run buildAndroid",
 
     "purge": "node node_modules/gulp/bin/gulp.js purge"
   },
