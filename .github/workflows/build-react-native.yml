@@ -16,6 +16,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare environment
         uses: ./.github/actions/prepare
+        with:
+          env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Build RN iOS
         run: npm run buildReactIos
   build-android:
@@ -26,5 +28,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare environment
         uses: ./.github/actions/prepare
+        with:
+          env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Build RN Android
         run: npm run buildReactAndroid

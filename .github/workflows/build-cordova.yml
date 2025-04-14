@@ -16,6 +16,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare environment
         uses: ./.github/actions/prepare
+        with:
+          env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Build Cordova iOS
         run: npm run buildCordovaIos
   build-android:
@@ -26,5 +28,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare environment
         uses: ./.github/actions/prepare
+        with:
+          env-file: ${{ secrets.ENV_TEST_FILE }}
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
       - name: Build Cordova Android
         run: npm run buildCordovaAndroid
