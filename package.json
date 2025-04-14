@@ -8,10 +8,16 @@
   "source": "src/index",
   "scripts": {
     "build": "node node_modules/gulp/bin/gulp.js",
-    "freshIosCordova": "npm run build && pushd testapp-cordova && npm run freshIos",
-    "freshIosReact": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
-    "freshAndroidCordova": "npm run build && pushd testapp-cordova && npm run freshAndroid",
-    "freshAndroidReact": "npm run build && pushd testapp && npm run freshAndroid",
+
+    "freshCordovaIos": "pushd testapp-cordova && npm run freshIos",
+    "freshCordovaAndroid": "npm run build && pushd testapp-cordova && npm run freshAndroid",
+
+    "freshReactIos": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
+    "freshReactAndroid": "npm run build && pushd testapp && npm run freshAndroid",
+
+    "buildCordovaIos": "pushd testapp-cordova && npm run buildIos",
+    "buildCordovaAndroid": "npm run build && pushd testapp-cordova && npm run reinstallPlugin && npm run buildAndroid",
+
     "purge": "node node_modules/gulp/bin/gulp.js purge"
   },
   "files": [
