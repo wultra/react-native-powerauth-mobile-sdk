@@ -94,7 +94,7 @@ class SdkDataWriter {
         this.writeByte(count);
     } else if (count <= 0x3FFF) {
         this.writeByte(((count >> 8 ) & 0x3F) | 0x80);
-        writeByte(count & 0xFF);
+        this.writeByte(count & 0xFF);
     } else if (count <= 0x3FFFFFFF) {
         this.writeByte(((count >> 24) & 0x3F) | 0xC0);
         this.writeByte((count >> 16) & 0xFF);
