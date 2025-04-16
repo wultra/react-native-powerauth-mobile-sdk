@@ -4,7 +4,7 @@
 - Migration to the latest native PowerAuthSDK stack (1.9.x)
   - Use [migration guide](Version-4.0.md) for a smooth migration
 - Possibility to sign Base64 encoded data with `signDataWithDevicePrivateKey`
-  - we added `dataFormat` parameter with possible `UTF8` and `BASE64` values based on the data, you're signing
+  - we added the `dataFormat` parameter with possible `UTF8` and `BASE64` values for the data to be signed
 
 ## 3.1.0 TBD
 - Support for the new React Architecture
