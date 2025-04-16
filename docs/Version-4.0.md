@@ -8,7 +8,7 @@ PowerAuth Mobile JS SDK in version `4.0.0` provides the following improvements:
   - The simplified configuration can be obtained in the `powerauth-cloud/admin/applications/<APPLICATION_ID>` admin endpoint.
   - Or it can be created by the [migration script](#sdk-config-migration-script)
 - Added support for PowerAuth protocol version 3.3, including the following improvements:
-  - The PowerAuth protocol is no longer use EC key-pairs for encryption and signature calculation (dual use problem.)
+  - The PowerAuth protocol no longer uses EC key-pairs for encryption and signature calculation (dual use problem).
   - The End-To-End encryption is now using temporary keys to improve the forward secrecy of our ECIES scheme.
   - Time synchronized with the server.
 - We have replaced the term 'commit activation' with 'persist activation' in our terminology. This change clearly distinguishes between the commit activation process on the server and the activation completion process on the mobile device.
