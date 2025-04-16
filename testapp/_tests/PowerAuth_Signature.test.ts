@@ -108,11 +108,22 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(status.remainingAttempts).toBe(0)
     }
 
-    async testDeviceSignedData() {
+    async testDeviceSignedDataPlain() {
         const dataToSign = 'This is a very sensitive information and must be signed.'
         const activationId = await this.sdk.getActivationIdentifier()
-        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign)
+        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign, 'UTF8')
         // Now verify signature on the server.
+        const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
+        expect(result).toBe(true)
+    }
+
+    async testDeviceSignedDataBase64() {
+        const dataToSign = 'This is a very sensitive information and must be signed.'
+        const dataToSignBase64 = btoa(dataToSign)
+        const activationId = await this.sdk.getActivationIdentifier()
+        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSignBase64, 'BASE64')
+        // Now verify signature on the server.
+        // We provide plain data, as the test server library will encode it to Base64 internally.
         const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
         expect(result).toBe(true)
     }

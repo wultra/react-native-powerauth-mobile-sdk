@@ -18,6 +18,7 @@
 #import "PowerAuthData.h"
 #import "PowerAuthObjectRegister.h"
 #import "Constants.h"
+#import "Utilities.h"
 #import "PAJS.h"
 
 #import "UIKit/UIKit.h"
@@ -613,13 +614,23 @@ PAJS_METHOD_END
 PAJS_METHOD_START(signDataWithDevicePrivateKey,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(authDict, NSDictionary*)
-                  PAJS_ARGUMENT(data, NSString*))
+                  PAJS_ARGUMENT(data, NSString*)
+                  PAJS_ARGUMENT(dataFormat, NSString*))
 {
     PA_BLOCK_START
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
     if (!auth) return;
+
+    DataFormat format = GetPowerAuthDataFormat(dataFormat, reject);
+    if (!format) {
+        return;
+    }
+    NSData * decodedData = DecodeNSDataValue(data, format, reject);
+    if (!decodedData) {
+        return;
+    }
     
-    [powerAuth signDataWithDevicePrivateKey:auth data:[RCTConvert NSData:data] callback:^(NSData * signature, NSError * error) {
+    [powerAuth signDataWithDevicePrivateKey:auth data:decodedData callback:^(NSData * signature, NSError * error) {
         if (signature) {
             resolve([RCTConvert NSString:[signature base64EncodedStringWithOptions:0]]);
         } else {

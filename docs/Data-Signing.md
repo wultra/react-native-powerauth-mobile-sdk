@@ -87,6 +87,8 @@ It is recommended that your application executes only one signed request at the 
 
 Asymmetric Private Key Signature uses a private key stored in the PowerAuth secure vault. In order to unlock the secure vault and retrieve the private key, the user has to first authenticate using the symmetric multi-factor signature with at least two factors. This mechanism protects the private key on the device - the server plays a role of a "doorkeeper" and holds the vault unlock key.
 
+You could either sign an UTF-8 string or a Base64 encoded data. Fill a proper `dataFormat` parameter to specify the data format.
+
 This process is completely transparent on the SDK level. To compute an asymmetric private key signature, request user credentials (password, PIN) and use the following code:
 
 ```javascript
@@ -95,7 +97,9 @@ const auth = PowerAuthAuthentication.password("1234");
 
 // Unlock the secure vault, fetch the private key and perform data signing
 try {
-    const signature = await powerAuth.signDataWithDevicePrivateKey(auth, data);
+    const dataToSign = "N9yHkF5zSks="; // base64 encoded data to sign
+    const dataFormat = "BASE64"; // data format, UTF8 in case of plain string
+    const signature = await powerAuth.signDataWithDevicePrivateKey(auth, dataToSign, dataFormat);
     // Send data and signature to the server
 } catch(e) {
     // Authentication or network error
