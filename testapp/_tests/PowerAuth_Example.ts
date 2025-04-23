@@ -61,7 +61,7 @@ export class PowerAuth_Example extends TestWithServer {
 
         // Prepare configuration, you can use PowerAuthConfiguration class, or ConfigurationType interface.
         const configuration = {
-            configuration: applicationSetup.applicationVersion.mobileSdkConfig,
+            configuration: applicationSetup.applicationVersion.mobileSdkConfig!,
             baseEndpointUrl: this.config.enrollment.baseUrl
         }
 

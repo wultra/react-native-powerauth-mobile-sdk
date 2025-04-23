@@ -121,7 +121,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
         const allowUnsecure = cfg.enrollment.baseUrl.startsWith('http://')
         if (pd.instanceConfig !== undefined || pd.useConfigObjects) {
             // Use configuration objects
-            const instanceConfig = pd.instanceConfig ?? new PowerAuthConfiguration(appSetup.applicationVersion.mobileSdkConfig, cfg.enrollment.baseUrl)
+            const instanceConfig = pd.instanceConfig ?? new PowerAuthConfiguration(appSetup.applicationVersion.mobileSdkConfig!, cfg.enrollment.baseUrl)
             let clientConfig = pd.clientConfig
             if (!clientConfig) {
                 clientConfig = new PowerAuthClientConfiguration()
@@ -130,7 +130,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
             await sdk.configure(instanceConfig, clientConfig, pd.biometryConfig,  pd.keychainConfig, pd.sharingConfiguration)
         } else {
             // Use legacy configuration
-            await sdk.configure(appSetup.applicationVersion.mobileSdkConfig, cfg.enrollment.baseUrl, allowUnsecure)
+            await sdk.configure(appSetup.applicationVersion.mobileSdkConfig!, cfg.enrollment.baseUrl, allowUnsecure)
         }
         return sdk
     }
