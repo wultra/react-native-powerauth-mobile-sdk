@@ -116,17 +116,13 @@ export class PowerAuth {
      * Prepares the PowerAuth instance with a basic configuration. The method needs to be called before before any other method.
      * If you have to tweak more configuration properties, then use method variant with the configuration objects as parameters.
      * 
-     * @param appKey APPLICATION_KEY as defined in PowerAuth specification - a key identifying an application version.
-     * @param appSecret APPLICATION_SECRET as defined in PowerAuth specification - a secret associated with an application version.
-     * @param masterServerPublicKey KEY_SERVER_MASTER_PUBLIC as defined in PowerAuth specification - a master server public key.
+     * @param configuration String with the cryptographic configuration.
      * @param baseEndpointUrl Base URL to the PowerAuth Standard RESTful API (the URL part before "/pa/...").
      * @param enableUnsecureTraffic If HTTP and invalid HTTPS communication should be enabled
      * @returns Promise that with result of the configuration (can by rejected if already configured).
      */
     configure(
-        appKey: string,
-        appSecret: string,
-        masterServerPublicKey: string,
+        configuration: string,
         baseEndpointUrl: string,
         enableUnsecureTraffic: boolean
     ): Promise<boolean>;
@@ -139,11 +135,9 @@ export class PowerAuth {
         let sharingConfiguration: PowerAuthSharingConfigurationType
         if (typeof param1 === 'string') {
             configuration = buildConfiguration({
-                applicationKey: param1,
-                applicationSecret: args[0],
-                masterServerPublicKey: args[1],
-                baseEndpointUrl: args[2]})
-            clientConfiguration = buildClientConfiguration({enableUnsecureTraffic: args[3]})
+                configuration: param1,
+                baseEndpointUrl: args[0]})
+            clientConfiguration = buildClientConfiguration({enableUnsecureTraffic: args[1]})
             biometryConfiguration = buildBiometryConfiguration()
             keychainConfiguration = buildKeychainConfiguration()
             sharingConfiguration = buildSharingConfiguration()
@@ -232,12 +226,12 @@ export class PowerAuth {
     }
 
     /**
-     * Commit activation that was created and store related data using provided authentication instance.
+     * Persists activation that was created and store related data using provided authentication instance.
      * 
      * @param authentication An authentication instance specifying what factors should be stored.
      */
-    async commitActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("commitActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
+    async persistActivation(authentication: PowerAuthAuthentication): Promise<void> {
+        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
     }
 
     /**

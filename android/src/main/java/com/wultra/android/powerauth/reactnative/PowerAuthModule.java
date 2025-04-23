@@ -121,8 +121,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void commitActivation(String instanceId, final ReadableMap authMap, final Promise promise) {
-        powerAuthJsModule.commitActivation(instanceId, authMap, promise);
+    public void persistActivation(String instanceId, final ReadableMap authMap, final Promise promise) {
+        powerAuthJsModule.persistActivation(instanceId, authMap, promise);
     }
 
     @ReactMethod

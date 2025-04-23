@@ -121,7 +121,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
         const allowUnsecure = cfg.enrollment.baseUrl.startsWith('http://')
         if (pd.instanceConfig !== undefined || pd.useConfigObjects) {
             // Use configuration objects
-            const instanceConfig = pd.instanceConfig ?? new PowerAuthConfiguration(appSetup.appKey, appSetup.appSecret, appSetup.masterServerPublicKey, cfg.enrollment.baseUrl)
+            const instanceConfig = pd.instanceConfig ?? new PowerAuthConfiguration(appSetup.applicationVersion.mobileSdkConfig!, cfg.enrollment.baseUrl)
             let clientConfig = pd.clientConfig
             if (!clientConfig) {
                 clientConfig = new PowerAuthClientConfiguration()
@@ -130,7 +130,7 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
             await sdk.configure(instanceConfig, clientConfig, pd.biometryConfig,  pd.keychainConfig, pd.sharingConfiguration)
         } else {
             // Use legacy configuration
-            await sdk.configure(appSetup.appKey, appSetup.appSecret, appSetup.masterServerPublicKey, cfg.enrollment.baseUrl, allowUnsecure)
+            await sdk.configure(appSetup.applicationVersion.mobileSdkConfig!, cfg.enrollment.baseUrl, allowUnsecure)
         }
         return sdk
     }
@@ -151,14 +151,14 @@ export async function createActivationHelper(server: PowerAuthTestServer, cfg: T
         customizeActivation(activationData)
         // Create activation
         const result = await sdk.createActivation(activationData)
-        // Commit activation locally
+        // Persist activation locally
         const auth = pd.useBiometry
-                        ? PowerAuthAuthentication.commitWithPasswordAndBiometry(pd.password, {
+                        ? PowerAuthAuthentication.persistWithPasswordAndBiometry(pd.password, {
                             promptMessage: 'Please authenticate to enable biometry',
                             promptTitle: 'Enable biometry' 
                           })
-                        : PowerAuthAuthentication.commitWithPassword(pd.password)
-        await sdk.commitActivation(auth)
+                        : PowerAuthAuthentication.persistWithPassword(pd.password)
+        await sdk.persistActivation(auth)
         return result
     }
     return helper

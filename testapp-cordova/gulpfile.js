@@ -70,11 +70,12 @@ const compile = () =>
         outfile: outFile,
         bundle: true,
         target: "ios13",
-        // minify: true // do not minify for easier debug
+        // minify: true // do not minify for easier debug, also, it doesn't work :)
     })
 
 // to make sure all files are copied in the proper place
 const prepareIOS = () => exec("npx cordova prepare ios")
+const prepareAndroid = () => exec("npx cordova prepare android")
 
 // patch testapp files
 const patchNativeFiles = () =>
@@ -92,7 +93,7 @@ const patchIOSPlists = () => {
     const secGroupValue = "group.com.wultra.testGroup"
 
     return new Promise((resolve) => {
-        // we need to modify ios plist so we can test on faceid phones. The command check if the faceid key exist and if not, it will add it
+        // we need to modify ios plist so we can test on faceid phones. The command checks if the faceid key exist and if not, it will add it
         exec(`${plistBuddy} -c "print :${faceIdKey}" ${plistPath} || ${plistBuddy} -c "add :${faceIdKey} string For Tests" ${plistPath}`)
 
         // we also need to add entitlements to ensure that the shared data tests will work
@@ -112,6 +113,7 @@ gulp.task("default", gulp.series(
     compile,
     cleanTemp,
     prepareIOS,
+    prepareAndroid,
     patchNativeFiles,
     patchIOSPlists,
 ));

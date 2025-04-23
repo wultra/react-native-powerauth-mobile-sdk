@@ -314,7 +314,7 @@ function prettyArgs(fname: string, args: any[]): string {
         args[authIndex] = {
             password: auth.password ? '***' : undefined,
             biometricPrompt: auth.biometricPrompt,
-            isCommit: auth.isCommit,
+            isPersist: auth.isPersist,
             isBiometry: auth.isBiometry,
             biometryKeyId: auth.biometryKeyId,
             // deprecated

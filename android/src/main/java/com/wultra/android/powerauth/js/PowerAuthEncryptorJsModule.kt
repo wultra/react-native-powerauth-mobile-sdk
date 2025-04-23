@@ -15,22 +15,16 @@
  */
 package com.wultra.android.powerauth.js
 
-import com.wultra.android.powerauth.bridge.JsApiMethod
-import com.wultra.android.powerauth.bridge.Promise
-import com.wultra.android.powerauth.bridge.ReadableMap
-import com.wultra.android.powerauth.bridge.BuildConfig
-
 import android.content.Context
 import android.util.Base64
 import android.util.Pair
-import com.wultra.android.powerauth.bridge.Arguments
-import com.wultra.android.powerauth.bridge.WritableMap
-import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.InstanceData
+import com.wultra.android.powerauth.bridge.*
 import io.getlime.security.powerauth.core.EciesCryptogram
 import io.getlime.security.powerauth.core.EciesEncryptor
 import io.getlime.security.powerauth.ecies.EciesMetadata
 import io.getlime.security.powerauth.exception.PowerAuthErrorCodes
 import io.getlime.security.powerauth.exception.PowerAuthErrorException
+import io.getlime.security.powerauth.networking.response.IGetEciesEncryptorListener
 import io.getlime.security.powerauth.sdk.PowerAuthSDK
 import java.util.Arrays
 import kotlin.math.min
@@ -80,22 +74,34 @@ class PowerAuthEncryptorJsModule(
             }
             // Resolve PowerAuthSDK
             val sdk: PowerAuthSDK = resolveSdk(ownerId, promise) ?: return
-            // Create ECIES encryptor
-            val coreEncryptor: EciesEncryptor? =
-                if (activationScope) sdk.getEciesEncryptorForActivationScope(context)
-                else sdk.getEciesEncryptorForApplicationScope()
-            if (coreEncryptor == null) {
-                if (activationScope && !sdk.hasValidActivation()) {
-                    throw PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION)
+
+            val encryptorListener = object : IGetEciesEncryptorListener {
+
+                override fun onGetEciesEncryptorSuccess(encryptor: EciesEncryptor) {
+                    // Create container with all required objects and register it to the register.
+                    val instanceData = InstanceData(encryptor, ownerId, activationScope)
+                    val releasePolicy = listOf(ReleasePolicy.keepAlive(releaseTime))
+                    val objectId = objectRegister.registerObject(instanceData, ownerId, releasePolicy)
+                    // Resolve with native object identifier.
+                    promise.resolve(objectId)
                 }
-                throw WrapperException(Errors.EC_UNKNOWN_ERROR, "Failed to create ECIES encryptor")
+
+                override fun onGetEciesEncryptorFailed(t: Throwable) {
+                    if (activationScope && !sdk.hasValidActivation()) {
+                        @Suppress("ThrowableNotThrown")
+                        Errors.rejectPromise(promise, PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION))
+                    }
+                    Errors.rejectPromise(promise, t)
+                }
             }
-            // Create container with all required objects and register it to the register.
-            val instanceData = InstanceData(coreEncryptor, ownerId, activationScope)
-            val releasePolicy = listOf(ReleasePolicy.keepAlive(releaseTime))
-            val objectId = objectRegister.registerObject(instanceData, ownerId, releasePolicy)
-            // Resolve with native object identifier.
-            promise.resolve(objectId)
+
+            // Get ECIES encryptor
+            if (activationScope) {
+                sdk.getEciesEncryptorForActivationScope(context, encryptorListener)
+            } else {
+                sdk.getEciesEncryptorForApplicationScope(encryptorListener)
+            }
+
         } catch (t: Throwable) {
             Errors.rejectPromise(promise, t)
         }
@@ -184,10 +190,12 @@ class PowerAuthEncryptorJsModule(
             )
             // Resolve
             val cryptogram: WritableMap = Arguments.createMap()
+            cryptogram.putString("temporaryKeyId", encryptionResult.second.temporaryKeyId)
             cryptogram.putString("ephemeralPublicKey", encryptionResult.second.getKeyBase64())
             cryptogram.putString("encryptedData", encryptionResult.second.getBodyBase64())
             cryptogram.putString("mac", encryptionResult.second.getMacBase64())
             cryptogram.putString("nonce", encryptionResult.second.getNonceBase64())
+            cryptogram.putLong("timestamp", encryptionResult.second.timestamp)
             val header: WritableMap = Arguments.createMap()
             header.putString("key", metadata.getHttpHeaderKey())
             header.putString("value", metadata.getHttpHeaderValue())
@@ -256,8 +264,12 @@ class PowerAuthEncryptorJsModule(
             }
             // Decrypt
             val coreCryptogram: EciesCryptogram = EciesCryptogram(
+                if (cryptogram.hasKey("temporaryKeyId")) cryptogram.getString("temporaryKeyId") else null,
                 if (cryptogram.hasKey("encryptedData")) cryptogram.getString("encryptedData") else null,
-                if (cryptogram.hasKey("mac")) cryptogram.getString("mac") else null
+                if (cryptogram.hasKey("mac")) cryptogram.getString("mac") else null,
+                if (cryptogram.hasKey("ephemeralPublicKey")) cryptogram.getString("ephemeralPublicKey") else null,
+                if (cryptogram.hasKey("nonce")) cryptogram.getString("nonce") else null,
+                if (cryptogram.hasKey("timestamp")) cryptogram.getDouble("timestamp").toLong() else 0
             )
             val decryptedResponse: ByteArray =
                 instanceData.coreEncryptor.decryptResponse(coreCryptogram)

@@ -37,7 +37,14 @@ open class ReadableNativeMap(srcMap: Map<String, Any?>) : ReadableMap {
     }
 
     override fun getDouble(name: String): Double {
-        return map[name] as Double
+        // we do this, because cordova is working differently with numbers than react-native
+        val value = map[name]
+        return value as? Double ?: let {
+            if (value is Long) return value.toDouble()
+            if (value is Int) return value.toDouble()
+            @Suppress("KotlinConstantConditions")
+            return value as Double // as a fallback, just let it throw exception as it would do by default
+        }
     }
 
     override fun getDynamic(name: String): Dynamic {

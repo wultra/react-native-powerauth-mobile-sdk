@@ -27,20 +27,16 @@ import {
     PowerAuthKeychainProtection} from "react-native-powerauth-mobile-sdk";
 import { TestSuite, expect } from "../src/testbed";
 
-const APP_KEY = 'FbLfn5IDjk/1NYAa9aizAw=='
-const APP_SECRET = '5N8R264tS9uk6ZOrtwj6yQ=='
-const MASTER_KEY = 'BFYynvvMhYOthr4cFPHhN4hGWQjnjarRMs9gF17P8mXsJ5nREwvCdrDXMOTZyAKWA1JgYdp/l0R4s3uBIlXXrY0='
+const SDK_CONFIG = 'ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ=='
 const BASE_URL = 'http://localhost'
 
 export class ConfigurationObjectsTests extends TestSuite {
     
     testInstanceConfiguration() {
         // Config class
-        const config = new PowerAuthConfiguration(APP_KEY, APP_SECRET, MASTER_KEY, BASE_URL)
+        const config = new PowerAuthConfiguration(SDK_CONFIG, BASE_URL)
         expect(config).toEqual({
-            applicationKey: APP_KEY,
-            applicationSecret: APP_SECRET,
-            masterServerPublicKey: MASTER_KEY,
+            configuration: SDK_CONFIG,
             baseEndpointUrl: BASE_URL,
         })
         expect(Object.isFrozen(config)).toBe(false)

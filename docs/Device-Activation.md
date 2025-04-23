@@ -16,7 +16,7 @@ const activationCode = "VVVVV-VVVVV-VVVVV-VTFVA"; // let user type or QR-scan th
 const activation = PowerAuthActivation.createWithActivationCode(activationCode, deviceName);
 try {
     const result = await powerAuth.createActivation(activation);
-    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
+    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
 } catch (e) {
@@ -65,7 +65,7 @@ const activation = PowerAuthActivation.createWithIdentityAttributes(credentials,
 // Create a new activation with just created activation object
 try {
     const result = await powerAuth.createActivation(activation);
-    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
+    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
 } catch (e) {
@@ -93,7 +93,7 @@ const activation = PowerAuthActivation.createWithRecoveryCode(recoveryCode, puk,
 // Create a new activation with just created activation object
 try {
     const result = await powerAuth.createActivation(activation);
-    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and commit
+    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation.
     // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
     // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
 } catch (e) {
@@ -132,12 +132,12 @@ try {
 }
 ```  
 
-## Committing Activation Data
+## Persisting Activation Data
 
-After you create an activation using one of the methods mentioned above, you need to commit the activation - to use provided user credentials to store the activation data on the device. 
+After you create an activation using one of the methods mentioned above, you need to persist the activation - to use provided user credentials to store the activation data on the device. 
 
 ```javascript
-const auth = PowerAuthAuthentication.commitWithPasswordAndBiometry("1234", {
+const auth = PowerAuthAuthentication.persistWithPasswordAndBiometry("1234", {
     // The `PowerAuthBiometricPrompt` object is required on Android platform in case that
     // `biometryConfiguration.authenticateOnBiometricKeySetup` is true.
     // You can provide undefined prompt object in case that flag is false.
@@ -145,9 +145,9 @@ const auth = PowerAuthAuthentication.commitWithPasswordAndBiometry("1234", {
     promptMessage: 'Please authenticate to create an activation supporting biometry'
 });
 try {
-  await powerAuth.commitActivation(auth);
+  await powerAuth.persistActivation(auth);
 } catch (e) {
-    // happens only in case SDK was not configured or activation is not in state to be committed
+    // happens only in case SDK was not configured or activation is not in state to be persisted
 }
 ```
 

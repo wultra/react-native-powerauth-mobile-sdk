@@ -19,7 +19,6 @@ import { BaseNativeObject, BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthEncryptionHttpHeader } from "../index"
 import { NativeWrapper } from "../internal/NativeWrapper"
 import { PowerAuthDataFormat } from "./PowerAuthDataFormat"
-import { PowerAuthNativeObject } from "./PowerAuthNativeObject"
 
 /**
  * Scope of encryptor.
@@ -30,6 +29,10 @@ export type PowerAuthEncryptorScope = 'APPLICATION' | 'ACTIVATION'
  * Interface representing encrypted data in request or response.
  */
 export interface PowerAuthCryptogram {
+    /**
+     * Temporary key identifier.
+     */
+    readonly temporaryKeyId: string
     /**
      * Ephemeral public key, valid only for encrypted request.
      */
@@ -46,6 +49,11 @@ export interface PowerAuthCryptogram {
      * Nonce, valid for encrypted request.
      */
     readonly nonce?: string
+
+    /**
+     * Timestamp of request or response in milliseconds since 1.1.1970.
+     */
+    readonly timestmap: number
 }
 
 /**

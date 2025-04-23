@@ -148,7 +148,7 @@ export enum PowerAuthErrorCode {
     BIOMETRY_LOCKOUT = "BIOMETRY_LOCKOUT",
     /** 
      * The biometric authentication did not recognize the biometric image (fingerprint, face, etc...)
-     * Supported only on Android, during the activation commit with biometry.
+     * Supported only on Android, during the activation persist with biometry.
      */
     BIOMETRY_NOT_RECOGNIZED = "BIOMETRY_NOT_RECOGNIZED",
 
@@ -193,7 +193,7 @@ export enum PowerAuthErrorCode {
     EXTERNAL_PENDING_OPERATION = "EXTERNAL_PENDING_OPERATION",
 
     /**
-     * When password is not set during activation commit.
+     * When password is not set during activation persist.
      * @deprecated "WRONG_PARAM" is returned in this case.
      */
     PASSWORD_NOT_SET = "PASSWORD_NOT_SET",
@@ -209,4 +209,9 @@ export enum PowerAuthErrorCode {
      * when you're using 
      */
     INVALID_NATIVE_OBJECT = "INVALID_NATIVE_OBJECT",
+
+    /**
+     * Indicates a problem with the time synchronization.
+     */
+    EC_TIME_SYNCHRONIZATION = "TIME_SYNCHRONIZATION"
 }
