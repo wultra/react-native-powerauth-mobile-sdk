@@ -1,6 +1,6 @@
 # Recovery Codes
 
-The recovery codes allow your users to recover their activation in case that mobile device is lost or stolen. Before you start, please read the [Activation Recovery](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Recovery.md) document, available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
+The recovery codes allow your users to recover their activation in case that mobile device is lost or stolen. Before you start, please read the [Activation Recovery](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-via-Recovery-Code.md) document, available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 
 ## Recovery Code Data
 
