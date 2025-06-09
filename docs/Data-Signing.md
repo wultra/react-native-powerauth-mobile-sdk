@@ -53,7 +53,7 @@ try {
 }
 ```
 
-To sign data with biomtry simply create different authentication object:
+To sign data with biometry simply create different authentication object:
 
 ```javascript
 // 2FA signature, uses device related key and biometry
@@ -143,4 +143,4 @@ try {
 
 ## Read Next
 
-- [Password Change](Password-Change.md)
+- [Password Management](Password-Management.md)
