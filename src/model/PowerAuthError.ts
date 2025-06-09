@@ -53,7 +53,7 @@ export enum PowerAuthErrorCode {
   
     /** 
      * Failed to authenticate on the server. The code is reported when 401 HTTP status code from the server is received. 
-     * You can investigate more failure details in similar manner than `RESPONSE_ERROR`.
+     * You can investigate more failure details in similar manner like in `RESPONSE_ERROR`.
      */
     AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR",
   

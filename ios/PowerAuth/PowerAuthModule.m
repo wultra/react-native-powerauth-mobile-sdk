@@ -654,7 +654,7 @@ PAJS_METHOD_START(validatePassword,
         if (error) {
             ProcessError(error, reject);
         } else {
-            resolve(@YES);
+            resolve(nil);
         }
     }];
     PA_BLOCK_END

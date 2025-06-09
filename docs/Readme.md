@@ -14,7 +14,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 - [Device Activation](Device-Activation.md)
 - [Requesting Device Activation Status](Requesting-Device-Activation-Status.md)
 - [Data Signing](Data-Signing.md)
-- [Password Change](Password-Change.md)
+- [Password Management](Password-Management.md)
 - [Working with passwords securely](Secure-Password.md)
 - [Biometry Setup](Biometry-Setup.md)
 - [Device Activation Removal](Device-Activation-Removal.md)
