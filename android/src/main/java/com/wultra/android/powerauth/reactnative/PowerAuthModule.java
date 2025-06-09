@@ -191,8 +191,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void signDataWithDevicePrivateKey(String instanceId, final ReadableMap authMap, final String data, final Promise promise) {
-        powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, data, promise);
+    public void signDataWithDevicePrivateKey(String instanceId, final ReadableMap authMap, final String data, final String dataFormat, final Promise promise) {
+        powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, data, dataFormat, promise);
     }
 
     @ReactMethod

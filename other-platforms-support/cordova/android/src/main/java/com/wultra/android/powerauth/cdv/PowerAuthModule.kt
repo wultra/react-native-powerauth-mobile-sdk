@@ -393,8 +393,9 @@ class PowerAuthModule : CordovaPlugin() {
     private fun signDataWithDevicePrivateKey(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val authMap = args.getReadableMap(1)
-        val `data` = args.getString(2)
-        powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, `data`, promise)
+        val dataToSign = args.getString(2)
+        val dataFormat = args.getString(3)
+        powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, dataToSign, dataFormat, promise)
     }
 
     private fun validatePassword(args: JSONArray, promise: Promise) {

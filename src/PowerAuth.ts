@@ -36,6 +36,7 @@ import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
 import { PowerAuthRawAuthentication, toPowerAuthRawPassword } from './model/PowerAuthNativeTypes';
 import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
+import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -428,9 +429,10 @@ export class PowerAuth {
      * 
      * @param authentication Authentication used for vault unlocking call.
      * @param data Data to be signed with the private key.
+     * @param dataFormat Data format of the input data.
      */
-    async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string): Promise<string> {
-        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data);
+    async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string, dataFormat: PowerAuthDataFormat): Promise<string> {
+        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data, dataFormat);
     }
 
     /** 

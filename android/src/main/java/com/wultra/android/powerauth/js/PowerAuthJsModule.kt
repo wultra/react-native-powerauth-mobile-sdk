@@ -690,6 +690,7 @@ class PowerAuthJsModule(
         instanceId: String,
         authMap: ReadableMap,
         data: String,
+        dataFormat: String,
         promise: Promise
     ) {
         val context: Context = this.context
@@ -697,10 +698,19 @@ class PowerAuthJsModule(
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
+                val format = DataFormat.fromString(dataFormat)
+                val decodedData = format.decodeBytes(data)
+                if (decodedData == null) {
+                    promise.reject(
+                        Errors.EC_WRONG_PARAMETER,
+                        "Failed to decode data."
+                    )
+                    return
+                }
                 sdk.signDataWithDevicePrivateKey(
                     context,
                     auth,
-                    data.toByteArray(StandardCharsets.UTF_8),
+                    decodedData,
                     object : IDataSignatureListener {
                         override fun onDataSignedSucceed(signature: ByteArray) {
                             promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))

@@ -102,7 +102,7 @@ export interface PowerAuthEncryptor extends BaseReleasableObject {
     encryptRequest(body: string): Promise<PowerAuthEncryptedRequestData>
     /**
      * Encrypt the request data.
-     * @param body Data to encrypt. By default plain string is expected, but you can use `dataFormat` parameter to specify Base64 encoded string at input.
+     * @param body Data to encrypt. By default plain string is expected, but you can use `bodyFormat` parameter to specify Base64 encoded string at input.
      * @param bodyFormat Specify encoding of `body` parameter. The default value is `UTF8`, so plain string is expected in `body` parameter.
      * @returns Object containing encrypted data, HTTP header and decryptor for the response decryption.
      */
