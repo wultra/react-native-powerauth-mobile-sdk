@@ -99,6 +99,22 @@ typedef void (^RCTPromiseResolveBlock)(id result);
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString] callbackId: cmd.callbackId]; \
     };
 
+#define PAJS_METHOD_NO_ARGS_START(name) \
+- (void)name:(CDVInvokedUrlCommand*)cmd \
+{ \
+    RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
+        NSError *writeError = nil; \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
+        [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
+    }; \
+    RCTPromiseResolveBlock resolve = ^(id result) { \
+        NSError *writeError = nil; \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"result": result ? result : [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
+        [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString] callbackId: cmd.callbackId]; \
+    };
+
 #define PAJS_METHOD_END }
 
 #define PAJS_NULLABLE_ARGUMENT
