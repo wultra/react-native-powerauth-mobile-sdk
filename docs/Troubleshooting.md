@@ -32,4 +32,4 @@ await PowerAuthDebug.dumpNativeObjects(powerAuth.instanceId);
 
 ## Read Next
 
-- [Sample Integration](Sample-Integration.md)
+- [Migration Instructions](Migration-Instructions.md)

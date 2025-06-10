@@ -13,4 +13,4 @@ When updating across multiple versions, you need to perform all migration steps 
 
 ## Read Next
 
-- [Troubleshooting](Troubleshooting.md)
+- [Sample Integration](Sample-Integration.md)
