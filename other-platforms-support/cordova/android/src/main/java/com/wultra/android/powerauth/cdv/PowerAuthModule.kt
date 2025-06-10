@@ -217,6 +217,10 @@ class PowerAuthModule : CordovaPlugin() {
                 correctTypedCharacter(args, promise)
                 return true
             }
+            "getEnvironmentInfo" -> {
+                getEnvironmentInfo(args, promise)
+                return true
+            }
         }
         return false  // Returning false results in a "MethodNotFound" error.
     }
@@ -510,5 +514,11 @@ class PowerAuthModule : CordovaPlugin() {
     private fun correctTypedCharacter(args: JSONArray, promise: Promise) {
         val character = args.getInt(0)
         powerAuthJsModule.correctTypedCharacter(character, promise)
+    }
+
+    // UTILS METHODS
+    
+    private fun getEnvironmentInfo(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getEnvironmentInfo(promise)
     }
 }

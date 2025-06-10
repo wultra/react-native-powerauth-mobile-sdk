@@ -35,6 +35,9 @@ const libVersion = pkg.version
 
 console.log(`\x1b[32m\n#########################\n## POWERAUTH MOBILE SDK JS BUILD\n## Library version: ${libVersion}\n#########################\n\x1b[0m`)
 
+// Create SDK verison file with the current version
+const patchSDKVersionTask = () => exec(`echo "// THIS FILE IS AUTO-GENERATED\nexport const SDK_VERSION = '${libVersion}';" > src/internal/SDKVersion.ts`);
+
 /***********************
 * REACT-NATIVE SECTION *
 ************************/
@@ -276,6 +279,7 @@ let cleanTemp = () => rimraf([ tmpDir ])
 const buildAllTask = gulp.series(
     cleanBuild,
     cleanTemp,
+    patchSDKVersionTask,
     gulp.parallel(
         RN_buildTask,
         //CAP_buildTask,
@@ -289,6 +293,6 @@ gulp.task("watch", () => { gulp.watch("src/ts/**/*.ts", buildAllTask) });
 gulp.task("default", buildAllTask);
 gulp.task("clean", gulp.parallel(cleanBuild, cleanTemp));
 gulp.task("purge", purge);
-gulp.task("rn", RN_buildTask);
-gulp.task("cap", CAP_buildTask);
-gulp.task("cdv", CDV_buildTask);
+gulp.task("rn", gulp.series(patchSDKVersionTask, RN_buildTask));
+// gulp.task("cap", gulp.series(patchSDKVersionTask, CAP_buildTask));
+gulp.task("cdv", gulp.series(patchSDKVersionTask, CDV_buildTask));

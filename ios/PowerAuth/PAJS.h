@@ -54,6 +54,11 @@ RCT_REMAP_METHOD(name,\
                  resolve:(RCTPromiseResolveBlock)resolve \
                  name##reject:(RCTPromiseRejectBlock)reject)
 
+#define PAJS_METHOD_NO_ARGS_START(name) \
+RCT_REMAP_METHOD(name,\
+                 resolve:(RCTPromiseResolveBlock)resolve \
+                 name##reject:(RCTPromiseRejectBlock)reject)
+
 #define PAJS_METHOD_END
 
 #define PAJS_INITIALIZE_METHOD initialize

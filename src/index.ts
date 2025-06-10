@@ -18,6 +18,7 @@
 
 export * from './PowerAuth';
 export * from './PowerAuthActivationCodeUtil';
+export * from './PowerAuthUtils';
 export * from './PowerAuthTokenStore';
 export * from './PowerAuthPassphraseMeter';
 
