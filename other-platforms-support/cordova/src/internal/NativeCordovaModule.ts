@@ -29,7 +29,7 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
                 cordova.exec(
                     // success callback
                     (response) => { 
-                        if (Utils.detectPlatform() == "android") {
+                        if (Utils.detectPlatform() === "android") {
                             resolve(response);
                         } else {
                             const parsed = JSON.parse(response);
@@ -38,7 +38,7 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
                     },
                     // error callback
                     (error) => {
-                        if (Utils.detectPlatform() == "android") {
+                        if (Utils.detectPlatform() === "android") {
                             reject(error)
                         } else {
                             reject(JSON.parse(error)) 
