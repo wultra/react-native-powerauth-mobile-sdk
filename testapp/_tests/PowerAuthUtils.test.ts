@@ -19,7 +19,7 @@ import { TestSuite, expect } from "../src/testbed";
 
 export class PowerAuthUtilsTests extends TestSuite {
     
-    async iosTestEnvironmetInfo() {
+    async iosTestEnvironmentInfo() {
         const deviceInfo = await PowerAuthUtils.getEnvironmentInfo();
         console.log(`Device info: ${JSON.stringify(deviceInfo)}`);
         expect(deviceInfo).toBeDefined();
@@ -32,7 +32,7 @@ export class PowerAuthUtilsTests extends TestSuite {
         expect(deviceInfo.applicationIdentifier).toBeDefined();
     }
 
-    async androidTestEnvironmetInfo() {
+    async androidTestEnvironmentInfo() {
         const deviceInfo = await PowerAuthUtils.getEnvironmentInfo();
         console.log(`Device info: ${JSON.stringify(deviceInfo)}`);
         expect(deviceInfo).toBeDefined();
