@@ -1,6 +1,6 @@
 # Additional Utilities
 
-The PowerAuth Mobile SDK offers additional utility functions that can help with various tasks in your application. These utilities are available through the `PowerAuthUtils` class.
+The PowerAuth Mobile JS SDK offers additional utility functions that can help with various tasks in your application. These utilities are available through the `PowerAuthUtils` class.
 
 ## Available Methods
 
