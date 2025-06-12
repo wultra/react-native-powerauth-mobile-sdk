@@ -221,9 +221,9 @@ export class NativeWrapper {
             return new PowerAuthError(exception, message)
         } 
         // Otherwise handle the platform specific cases.
-        if (Utils.platformOs == "android") {
+        if (Utils.platformOs === "android") {
             return this.processAndroidException(exception, message)
-        } else if (Utils.platformOs == "ios") {
+        } else if (Utils.platformOs === "ios") {
             return this.processIosException(exception, message)
         } else {
             return new PowerAuthError(undefined, "Unsupported platform")
