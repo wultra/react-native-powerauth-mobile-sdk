@@ -19,6 +19,7 @@ package com.wultra.android.powerauth.js
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Base64
 import android.util.Pair
@@ -1085,6 +1086,35 @@ class PowerAuthJsModule(
         } else {
             promise.resolve(corrected)
         }
+    }
+
+    @JsApiMethod
+    fun getEnvironmentInfo(promise: Promise) {
+
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            @Suppress("DEPRECATION")
+            PackageManager.GET_SIGNATURES
+        }
+        val appInfo = try {
+            this.context.packageManager.getPackageInfo(this.context.packageName, flags)
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+
+        val map: WritableMap = Arguments.createMap()
+        
+        map.putString("systemName", "android")
+        map.putString("systemVersion", Build.VERSION.RELEASE)
+
+        map.putString("applicationVersion", appInfo?.versionName)
+        map.putString("applicationIdentifier", appInfo?.packageName)
+
+        map.putString("deviceManufacturer", Build.BRAND)
+        map.putString("deviceId", Build.MODEL)
+
+        promise.resolve(map)
     }
 
 

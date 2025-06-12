@@ -9,3 +9,7 @@ The test application with the PowerAuth Mobile JS SDK integration can be found i
 <!-- begin box warning -->
 The test application is using our [`powerauth-js-test-client`](https://github.com/wultra/powerauth-js-test-client) library to manage activations on the server automatically. You suppose to don't do such thing in the real application.
 <!-- end -->
+
+## Read Next
+
+- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)

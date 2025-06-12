@@ -20,6 +20,7 @@
 - [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
 - [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
+- [Additional Utilities](Additional-Utilities.md)
 
 **Other**
 - [Changelog](Changelog.md)
