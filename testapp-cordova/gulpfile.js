@@ -34,14 +34,8 @@ class Platform {
     
     static OS = this.detectPlatform()
 
-    // TODO: we should probably make this more robust
     private static detectPlatform(): string {
-
-        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-            return "ios";
-        }
-    
-        return "android"; // we consider everything else android
+        return cordova.platformId
     }
 }
 `
