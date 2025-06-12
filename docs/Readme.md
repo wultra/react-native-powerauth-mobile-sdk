@@ -4,7 +4,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 <!-- begin box info -->
 > We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platforms.
-<!-- end -->
+<!-- end box info -->
 
 <!-- begin remove -->
 ## Integration Tutorials
@@ -33,7 +33,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 ## Other
 - [Changelog](Changelog.md)
-<!-- end -->
+<!-- end remove -->
 
 ## Support and compatibility
 
@@ -49,7 +49,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 <!-- begin box info -->
 > Note 1: The library may also work with other React-Native versions but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
-<!-- end -->
+<!-- end box info -->
 
 ## License
 

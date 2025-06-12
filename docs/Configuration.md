@@ -25,7 +25,7 @@ class AppMyApplication {
     async setupPowerAuth() {
         // already configured instance will throw an
         // exception when you'll try to configure it again
-        const isConfigured = this.powerAuth.isConfigured();
+        const isConfigured = await this.powerAuth.isConfigured();
         if (isConfigured) {
             console.log("PowerAuth was already configured.");
         } else {
@@ -90,7 +90,7 @@ class AppMyApplication {
     async setupPowerAuth() {
         // already configured instance will throw an
         // exception when you'll try to configure it again
-        const isConfigured = this.powerAuth.isConfigured();
+        const isConfigured = await this.powerAuth.isConfigured();
         if (isConfigured) {
             console.log("PowerAuth was already configured.");
         } else {
