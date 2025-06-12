@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0 (5/2025)
+- Added `PowerAuthUtils` that provides `getEnvironmentInfo` with device, system and app info
+- Fixed issue on Cordova when iPadOS was recognized as Android in some cases
+
 ## 3.1.0 (5/2025)
 
 - Support for the new RN architecture
