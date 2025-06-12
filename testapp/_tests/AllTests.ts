@@ -18,6 +18,7 @@ import { TestSuite } from "../src/testbed/TestSuite";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
 import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
+import { PowerAuthUtilsTests } from "./PowerAuthUtils.test";
 import { PowerAuthActivationTests } from "./PowerAuthActivation.test";
 import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
 import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
@@ -51,6 +52,7 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_EncryptorTests(),
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
+        new PowerAuthUtilsTests(),
         new PowerAuthPasswordTests(),
         new PowerAuthPassphraseMeterTests(),
         new PowerAuth_LegacyAuthTests(),

@@ -978,6 +978,27 @@ PAJS_METHOD_START(generateHeaderForToken,
 }
 PAJS_METHOD_END
 
+PAJS_METHOD_NO_ARGS_START(getEnvironmentInfo)
+{
+    UIDevice * currentDevice = [UIDevice currentDevice];
+    NSBundle * mainBundle = [NSBundle mainBundle];
+    NSDictionary * mainDictionary = [mainBundle infoDictionary];
+    NSString * appVersion = mainDictionary[@"CFBundleShortVersionString"];
+    NSString * appId = mainDictionary[@"CFBundleIdentifier"];
+    
+    resolve(@{
+        @"systemName": [currentDevice systemName],
+        @"systemVersion": [currentDevice systemVersion],
+        
+        @"applicationVersion": appVersion ? appVersion : [NSNull null],
+        @"applicationIdentifier": appId ? appId : [NSNull null],
+        
+        @"deviceManufacturer": @"apple",
+        @"deviceId": [currentDevice model]
+    });
+}
+PAJS_METHOD_END
+
 #pragma mark - Helper methods
 
 /// Validate instance identifier and call reject promise if identifier is invalid.

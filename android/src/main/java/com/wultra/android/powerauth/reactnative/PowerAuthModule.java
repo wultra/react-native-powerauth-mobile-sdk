@@ -293,4 +293,11 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void correctTypedCharacter(int character, final Promise promise) {
         powerAuthJsModule.correctTypedCharacter(character, promise);
     }
+
+    // UTILS METHODS
+
+    @ReactMethod
+    public void getEnvironmentInfo(final Promise promise) {
+        powerAuthJsModule.getEnvironmentInfo(promise);
+    }
 }
