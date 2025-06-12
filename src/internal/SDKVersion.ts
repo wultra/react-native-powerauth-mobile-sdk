@@ -1,2 +1,2 @@
 // THIS FILE IS AUTO-GENERATED
-export const SDK_VERSION = '0.0.1.dev';
+export const SDK_VERSION = '0.0.1-dev';
