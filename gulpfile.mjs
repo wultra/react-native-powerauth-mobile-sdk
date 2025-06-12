@@ -254,7 +254,7 @@ const buildAllTask = gulp.series(
 gulp.task("watch", () => { gulp.watch("src/ts/**/*.ts", buildAllTask) });
 gulp.task("default", buildAllTask);
 gulp.task("clean", gulp.parallel(cleanBuild, cleanTemp));
-gulp.task("purge", purge);
+//gulp.task("purge", purge);
 gulp.task("rn", gulp.series(patchSDKVersionTask, RN_buildTask));
 // gulp.task("cap", gulp.series(patchSDKVersionTask, CAP_buildTask));
 gulp.task("cdv", gulp.series(patchSDKVersionTask, CDV_buildTask));
