@@ -15,9 +15,11 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 
 | Version | React-Native<sup>1</sup> | Cordova   | Native SDK   | Server version | Support Status    |
 |---------|--------------------------|-----------|--------------|----------------|-------------------|
-| `4.0.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Fully supported   |
-| `3.1.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Security bugfixes |
-| `3.0.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Security bugfixes |
+| `4.1.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Fully supported   |
+| `3.2.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Bugfixes          |
+| `4.0.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Not supported     |
+| `3.1.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Not supported     |
+| `3.0.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Not supported     |
 | `2.5.x` | `0.73+`                  | -         | `1.7.x`      | `0.24+`        | Not supported     |
 | `2.4.x` | `0.71+`                  | -         | `1.7.x`      | `0.24+`        | Not supported     |
 | `2.3.x` | `0.64` - `0.70`          | -         | `1.7.x`      | `0.24+`        | Not supported     |
