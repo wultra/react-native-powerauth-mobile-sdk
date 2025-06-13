@@ -1,15 +1,21 @@
 # Changelog
 
-## 4.1.0 TBD
+## 4.1.0 (6/2025)
 - Opportunity to sign Base64 encoded data with `signDataWithDevicePrivateKey`
   - we added the `dataFormat` parameter with possible `UTF8` and `BASE64` values for the data to be signed
-- `PowerAuthUtils` that provides `getEnvironmentInfo` with device, system and app data
+- Added `PowerAuthUtils` that provides `getEnvironmentInfo` with device, system and app info
+- Fixed issue on Cordova when iPadOS was recognized as Android in some cases
+- Fixed `validatePassword` API on iOS that returned wrong value
+
+## 3.2.0 (6/2025)
+- Added `PowerAuthUtils` that provides `getEnvironmentInfo` with device, system and app info
+- Fixed issue on Cordova when iPadOS was recognized as Android in some cases
 
 ## 4.0.0 (5/2025)
 - Migration to the latest native PowerAuthSDK stack (1.9.x)
   - Use [migration guide](Version-4.0.md) for a smooth migration
 
-## 3.1.0 TBD
+## 3.1.0 (5/2025)
 - Support for the new React Architecture
 
 ## 3.0.1 (4/2025)
