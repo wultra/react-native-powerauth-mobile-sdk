@@ -3,8 +3,8 @@
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use This PowerAuth Mobile JS SDK library (for Android and iOS) from this repository.
 
 <!-- begin box info -->
-> We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platforms.
-<!-- end box info -->
+We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platforms.
+<!-- end -->
 
 <!-- begin remove -->
 ## Integration Tutorials
@@ -33,7 +33,7 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 ## Other
 - [Changelog](Changelog.md)
-<!-- end remove -->
+<!-- end -->
 
 ## Support and compatibility
 
@@ -48,8 +48,8 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 | `2.2.x` |                          | -         | `1.6.x`      | `0.24+`        | Not supported     |
 
 <!-- begin box info -->
-> Note 1: The library may also work with other React-Native versions but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
-<!-- end box info -->
+> Note 1: The library may also work with other React-Native versions, but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
+<!-- end -->
 
 ## License
 
