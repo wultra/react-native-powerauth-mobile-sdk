@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.1 (7/2025)
+
+- Upgraded the [PowerAuth native SDK to `1.9.5`](https://github.com/wultra/powerauth-mobile-sdk/releases/tag/1.9.5)
+  - Biometric authentication offloaded to the background thread
+
 ## 4.1.0 (6/2025)
 - Opportunity to sign Base64 encoded data with `signDataWithDevicePrivateKey`
   - we added the `dataFormat` parameter with possible `UTF8` and `BASE64` values for the data to be signed
