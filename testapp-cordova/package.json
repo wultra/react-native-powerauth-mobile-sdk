@@ -27,7 +27,7 @@
         "chalk": "^4.1.2",
         "cordova-android": "^13.0.0",
         "cordova-ios": "^7.1.1",
-        "cordova-powerauth-mobile-sdk": "file:../build/cdv/cordova-powerauth-mobile-sdk-0.0.1-dev.tgz",
+        "cordova-powerauth-mobile-sdk": "file:../build/cdv/cordova-powerauth-mobile-sdk-4.1.1.tgz",
         "dotenv": "^16.4.5",
         "esbuild": "^0.23.1",
         "gulp": "^5.0.0",
