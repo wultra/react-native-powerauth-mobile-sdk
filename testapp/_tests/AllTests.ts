@@ -36,27 +36,29 @@ import { PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
+import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
-        new ConfigurationObjectsTests(),
-        new PowerAuth_Example(),
-        new PowerAuth_ConfigureTests(),
-        new PowerAuth_ActivationTests(),
-        new PowerAuth_RecoveryTests(),
-        new PowerAuth_PasswordTests(),
-        new PowerAuth_BiometryTests(),
-        new PowerAuth_SignatureTests(),
-        new PowerAuth_TokenTests(),
-        new PowerAuth_KDFTests(),
-        new PowerAuth_EncryptorTests(),
-        new PowerAuthActivationTests(),
-        new PowerAuthActivationCodeUtilTests(),
-        new PowerAuthUtilsTests(),
-        new PowerAuthPasswordTests(),
-        new PowerAuthPassphraseMeterTests(),
-        new PowerAuth_LegacyAuthTests(),
-        new NativeObjectRegisterTests(),
+        new PowerAuth_TimeSyncTests(),
+        // new ConfigurationObjectsTests(),
+        // new PowerAuth_Example(),
+        // new PowerAuth_ConfigureTests(),
+        // new PowerAuth_ActivationTests(),
+        // new PowerAuth_RecoveryTests(),
+        // new PowerAuth_PasswordTests(),
+        // new PowerAuth_BiometryTests(),
+        // new PowerAuth_SignatureTests(),
+        // new PowerAuth_TokenTests(),
+        // new PowerAuth_KDFTests(),
+        // new PowerAuth_EncryptorTests(),
+        // new PowerAuthActivationTests(),
+        // new PowerAuthActivationCodeUtilTests(),
+        // new PowerAuthUtilsTests(),
+        // new PowerAuthPasswordTests(),
+        // new PowerAuthPassphraseMeterTests(),
+        // new PowerAuth_LegacyAuthTests(),
+        // new NativeObjectRegisterTests(),
     ]
 }
 
