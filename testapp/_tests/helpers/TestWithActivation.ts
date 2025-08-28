@@ -14,19 +14,9 @@
 // limitations under the License.
 //
 
-import { 
-    PowerAuth,
-    PowerAuthActivation,
-    PowerAuthAuthentication,
-    PowerAuthCreateActivationResult } from "react-native-powerauth-mobile-sdk";
-import {
-    Activation,
-    ActivationStatus } from "powerauth-js-test-client";
-import { 
-    RNActivationHelper,
-    createActivationHelper,
-    CustomActivationHelperPrepareData } from "./RNActivationHelper";
-import { TestWithServer } from "./TestWithServer";
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthCreateActivationResult, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
+import { TestSuite } from "../../src/testbed";
+import { CustomConfig, IntegrationHelper } from "../../src/IntegrationUtils";
 
 /**
  * Set of various activation credentials.
@@ -63,15 +53,8 @@ export interface ActivationCredentials {
  * Base test suite for tests that require valid activation. You can override the default behafior by changing
  * `automaticallyCreateActivationHelper` and `automaticallyCreateActivation` in the custom `beforeAll()` method.
  */
-export class TestWithActivation extends TestWithServer {
-
-    /**
-     * Overridable method. If returns true, then `RNActivationHelper` is automatically created in `beforeAll()` method.
-     * If you return this variable to false, then you have to provide your own object to `helperInstance` property.
-     */
-    shouldCreateActivationHelper(): boolean {
-        return true
-    }
+export class TestWithActivation extends TestSuite {
+    
     /**
      * Overridable method. If returns true, then helper will automatically create an activation in `beforeEach()` method.
      */
@@ -80,73 +63,20 @@ export class TestWithActivation extends TestWithServer {
     }
 
     /**
-     * Overridable method. If returns true, then helper will automatically remove local activation in `beforeEach()` method.
-     * This is recommended to set to `true`. You normally don't need to keep activation between the tests.
+     * Overridable method. Provides custom configuration for the test.
      */
-    shouldRemoveActivationBeforeTest(): boolean {
-        return true
+    provideCustomConfig(): CustomConfig {
+        return { }
     }
 
-    /**
-     * Overridable method. If returns true, then helper will automatically remove local activation in `afterEach()` method.
-     * This is recommended to set to `true`. You normally don't need to keep activation between the tests.
-     */
-    shouldRemoveActivationAfterTest(): boolean {
-        return true
-    }
-    
-
-    protected helperInstance?: RNActivationHelper
-    protected credentialsData?: ActivationCredentials
-
-    /**
-     * Contains instance of `RNActivationHelper`. Throws an error if no such instance is available yet.
-     */
-    get helper(): RNActivationHelper {
-        if (!this.helperInstance) {
-            throw new Error('RNActivationHelper instance is not set')
-        }
-        return this.helperInstance
+    /** Overridable method. If returns true, then helper will use biometric authentication during the activation setup. */
+    activateWithBiometrics(): boolean {
+        return false
     }
 
-    /**
-     * Contains `Activation` data once the activation is created.
-     */
-    get activation(): Activation {
-        return this.helper.activation
-    }
-
-    /**
-     * Contains `PowerAuthCreateActivationResult` once the activation is created.
-     */
-    get activationResult(): PowerAuthCreateActivationResult {
-        return this.helper.prepareActivationResult
-    }
-
-    /**
-     * Contains instnace of `PowerAuth` if helper created such instance.
-     */
-    get sdk(): PowerAuth {
-        return this.helper.powerAuthSdk
-    }
-
-    /**
-     * Contains ActivationCredentials generated for each test. 
-     */
-    get credentials(): ActivationCredentials {
-        if (!this.credentialsData) {
-            this.credentialsData = this.generateActivationCredentials()
-        }
-        return this.credentialsData
-    }
-
-    /**
-     * Create PowerAuth instance.
-     * @returns Promise with PowerAuth result.
-     */
-     createSdk(): Promise<PowerAuth> {
-        return this.helper.getPowerAuthSdk(this.customPrepareData())
-    }
+    protected helper!: IntegrationHelper
+    protected sdk!: PowerAuth
+    protected credentials!: ActivationCredentials
 
     /**
      * Function generate a set of PowerAuthAuthentication credentials.
@@ -170,85 +100,22 @@ export class TestWithActivation extends TestWithServer {
         }
     }
 
-    /**
-     * Overridable method that can provide `CustomActivationHelperPrepareData`.
-     * @returns `undefined` in default implementation.
-     */
-    customPrepareData(): CustomActivationHelperPrepareData {
-        return {
-            password: this.credentials.validPassword,
-            useConfigObjects: true
-        }
-    }
-
-    /**
-     * Overridable method that can adjust `PowerAuthActivation` before the activation is created.
-     * @param activation Activation creation data.
-     */
-    beforeCreateActivation(activation: PowerAuthActivation): void { 
-        // EMPTY
-    }
-
-
     // Overrided methods
 
     async beforeEach() {
         await super.beforeEach()
-        // Invalidate credentials to generate set of passwords for each test.
-        this.credentialsData = undefined
-        // If automatic activation creation is set, then do it.
-        if (this.shouldCreateActivationHelper()) {
-            this.debugInfo('Creating activation helper')
-            const helper = await createActivationHelper(this.serverApi, this.context.config, (activation) => this.beforeCreateActivation(activation))
-            this.helperInstance = helper
-            const prepareData = this.customPrepareData()
-            if (this.shouldRemoveActivationBeforeTest()) {
-                await this.cleanupActivation(prepareData, false)
-            }
-            if (this.shouldCreateActivationBeforeTest()) {
-                await this.helper.createActivation(undefined, prepareData)
-                this.debugInfo(`Using activation ${this.activation.activationId}`)
-            }
+
+        this.credentials = this.generateActivationCredentials()
+        this.sdk = new PowerAuth(IntegrationHelper.randomString(30))
+        this.helper = new IntegrationHelper(this.sdk)
+        this.helper.configure(this.provideCustomConfig())
+        if (this.shouldCreateActivationBeforeTest()) {
+            await this.helper.prepareActiveActivation(this.credentials.validPassword, undefined, this.activateWithBiometrics())
         }
     }
 
     async afterEach() {
         await super.afterEach()
-        if (this.helperInstance !== undefined) {
-            const sdk = await this.helperInstance.getPowerAuthSdk(this.customPrepareData())
-            if (this.shouldRemoveActivationAfterTest()) {
-                await this.cleanupActivation(this.customPrepareData(), true)
-            }
-        }
-    }
-
-    /**
-     * Cleanup activation before or after the test.
-     * @param prepareData Data for activation prepare.
-     * @param after If true, this is cleanup after the test.
-     */
-    private async cleanupActivation(prepareData: CustomActivationHelperPrepareData, after: boolean) {
-        if (this.helperInstance === undefined) {
-            return
-        }
-        const sdk = await this.helperInstance.getPowerAuthSdk(prepareData)
-        const configured = await sdk.isConfigured()
-        const activationId = configured ? await sdk.getActivationIdentifier() : undefined
-        if (activationId) {
-            this.debugInfo(`Removing activation ${activationId}`)
-            const status = (await this.serverApi.getActivationDetil(activationId)).activationStatus
-            // If status is not 'REMOVED' then remove the activation on the server.
-            if (status !== ActivationStatus.REMOVED) {
-                await this.serverApi.activationRemove(activationId)
-            }
-            // And then remove the activation locally after the test
-            await sdk.removeActivationLocal()
-        }
-        // Otherwise just cleanup the activation if activation is in right state.
-        await this.helperInstance.cleanup()
-        if (after && configured) {
-            // Deconfigure SDK after the test
-            await sdk.deconfigure()
-        }
+        this.helper?.cleanup()
     }
 }

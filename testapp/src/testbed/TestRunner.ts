@@ -15,7 +15,6 @@
 //
 
 import { Platform } from "react-native";
-import { TestConfig } from "../Config";
 import { describeError } from "./private/ErrorHelper";
 import { getAllObjectMethods } from "./private/ObjectHelper";
 import { TestInteraction, UserInteraction, UserPromptDuration } from "./TestInteraction";
@@ -25,7 +24,6 @@ import { TestContext, TestSuite } from "./TestSuite";
 
 export class TestRunner {
     readonly batchName: string
-    readonly config: TestConfig
     readonly monitor: TestMonitor
     readonly interaction?: UserInteraction
 
@@ -34,12 +32,10 @@ export class TestRunner {
 
     constructor(
         batchName: string,
-        config: TestConfig,
         monitor: TestMonitor,
         interaction: UserInteraction | undefined
     ) {
         this.batchName = batchName
-        this.config = config
         this.monitor = monitor
         this.interaction = interaction
         this.allSuitesCounter = new TestCounter("Test suites")
@@ -57,15 +53,7 @@ export class TestRunner {
             console.error(`Tests are still running...`)
             return false
         }
-        try {
-            if (this.config.debug?.singleTestSuite) {
-                const suiteIndex = tests.findIndex(suite => suite.suiteName === this.config.debug?.singleTestSuite)
-                const suite = tests[suiteIndex]
-                tests = [suite]
-                if (this.config.debug?.singleTestName) {
-                    suite.runOnlyOneTest = this.config.debug?.singleTestName
-                }
-            }    
+        try { 
             this.testsInProgress = true
             this.requestCancel = false
             if (!this.beforeBatch(tests)) {
@@ -147,7 +135,7 @@ export class TestRunner {
 
     private async runTestSuite(testSuite: TestSuite) {
         // Create context for this test suite
-        const ctx = new RunnerContext(this.config, this.monitor, this.interaction, this.allSuitesCounter, this.allTestsCounter)
+        const ctx = new RunnerContext(this.monitor, this.interaction, this.allSuitesCounter, this.allTestsCounter)
         const testMethods = this.populateTestMethods(testSuite)
 
         // Call "beforeAll()"
@@ -223,7 +211,6 @@ enum RunnerState {
 
 class RunnerContext implements TestInteraction {
 
-    readonly config: TestConfig
     readonly interaction?: UserInteraction
 
     private currentSuiteName?: string
@@ -243,12 +230,10 @@ class RunnerContext implements TestInteraction {
     private testMethodsCount: number
     
     constructor(
-        config: TestConfig,
         monitor: TestMonitor,
         interaction: UserInteraction | undefined,
         suitesCounter: TestCounter,
         testsCounter: TestCounter) {
-        this.config = config
         this.monitor = monitor
         this.interaction = interaction
         this.suitesCounter = suitesCounter
@@ -365,7 +350,6 @@ class RunnerContext implements TestInteraction {
             }
         }
         return {
-            config: this.config,
             testSuiteName: this.testSuiteName,
             testName: testName,
             interaction: this,

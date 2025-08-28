@@ -15,7 +15,6 @@
     "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
   },
   "dependencies": {
-    "powerauth-js-test-client": "^0.2.14",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-config": "^1.5.0",

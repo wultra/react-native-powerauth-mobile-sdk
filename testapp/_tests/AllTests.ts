@@ -21,7 +21,6 @@ import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.
 import { PowerAuthUtilsTests } from "./PowerAuthUtils.test";
 import { PowerAuthActivationTests } from "./PowerAuthActivation.test";
 import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
-import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 import { PowerAuth_PasswordTests } from "./PowerAuth_Password.test";
 import { PowerAuth_BiometryTests } from "./PowerAuth_Biometry.test";
 import { PowerAuth_BiometryInteractiveTests } from "./PowerAuth_BiometryInteractive.test";
@@ -29,18 +28,17 @@ import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
 import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 import { PowerAuth_KDFTests } from "./PowerAuth_KDF.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
-import { PowerAuth_Example } from "./PowerAuth_Example";
 import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
 import { PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
+import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
         new ConfigurationObjectsTests(),
-        new PowerAuth_Example(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ActivationTests(),
         new PowerAuth_RecoveryTests(),

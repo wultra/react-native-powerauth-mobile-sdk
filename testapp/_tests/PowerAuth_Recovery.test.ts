@@ -14,49 +14,39 @@
 // limitations under the License.
 //
 
-import { ActivationStatus } from "powerauth-js-test-client";
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_RecoveryTests extends TestWithActivation {
 
-    get recoveryData(): PowerAuthRecoveryActivationData {
-        const activationResult = this.helper.prepareActivationResult
-        const rd = activationResult.activationRecovery
-        expect(rd).toBeDefined()
-        return rd!
-    }
-
     async testCreateActivationRecovery() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
+
+        if (await this.sdk.hasActivationRecoveryData() == false) {
+            this.reportSkip("Recovery data not available on the server")
+            return
+        }
 
         // Extract activation recovery
-        let activationResult = this.helper.prepareActivationResult
-        const rd = this.recoveryData
-
-        // Test original activation
-        let status = await this.helper.getActivationStatus()
-        expect(status).toBe(ActivationStatus.ACTIVE)
+        const rd = await this.sdk.activationRecoveryData(this.credentials.knowledge)
+        const originalActivationId = await this.sdk.getActivationIdentifier()
 
         // Now remove activation locally
         await this.sdk.removeActivationLocal()
 
         // And create activation with a recovery code
         const activation = PowerAuthActivation.createWithRecoveryCode(rd.recoveryCode, rd.puk, 'Recovery Test')
-        activationResult = await this.sdk.createActivation(activation)
+        await this.sdk.createActivation(activation)
         this.sdk.persistActivation(this.credentials.knowledge)
 
         const newActivationId = await this.sdk.getActivationIdentifier()
         expect(newActivationId).toBeNotNull()
+        expect(originalActivationId).toNotBe(newActivationId)
 
-        const newStatus = await this.serverApi.getActivationDetil(newActivationId!)
+        // verify server status
+        const newStatus = await this.helper.getRegistrationDetail(newActivationId!)
         expect(newStatus).toBeDefined()
-        expect(newStatus.activationStatus).toBe(ActivationStatus.ACTIVE)
-
-        // Test original activation
-        status = await this.helper.getActivationStatus()
-        expect(status).toBe(ActivationStatus.REMOVED)
+        expect(newStatus.registrationStatus).toBe('ACTIVE')
 
         // Fetch status
         let sdkStatus = await this.sdk.fetchActivationStatus()
@@ -64,10 +54,14 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
     }
 
     async testConfirmRecoveryCode() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
+
+        if (await this.sdk.hasActivationRecoveryData() == false) {
+            this.reportSkip("Recovery data not available on the server")
+            return
+        }
 
         // Extract activation recovery
-        const rd = this.recoveryData
+        const rd = await this.sdk.activationRecoveryData(this.credentials.knowledge)
 
         // We can confirm already confirmed RC, so let's confirm RC created as a part of activation
         let result = await this.sdk.confirmRecoveryCode(rd!.recoveryCode, this.credentials.knowledge)
@@ -78,10 +72,14 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
     }
 
     async testGetRecoveryData() {
-        expect(await this.sdk.hasActivationRecoveryData()).toBe(true)
         
+        if (await this.sdk.hasActivationRecoveryData() == false) {
+            this.reportSkip("Recovery data not available on the server")
+            return
+        }
+
         // Extract activation recovery
-        const rd = this.recoveryData
+        const rd = await this.sdk.activationRecoveryData(this.credentials.knowledge)
 
         const receivedRd = await this.sdk.activationRecoveryData(this.credentials.knowledge)
         expect(receivedRd.puk).toBe(rd.puk)
