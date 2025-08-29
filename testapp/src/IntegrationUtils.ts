@@ -14,7 +14,7 @@
 // and limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthKeychainConfiguration, PowerAuthPassword, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
 
 export class AppConfig {
@@ -94,7 +94,7 @@ export class IntegrationHelper {
 
         // COMMIT ACTIVATION ON THE SERVER
 
-        await this.makeCall('{ "externalUserId": "test" }', `${AppConfig.cloudServerUrl}/v2/registrations/${resp.registrationId}/commit`)
+        //await this.makeCall('{ "externalUserId": "test" }', `${AppConfig.cloudServerUrl}/v2/registrations/${resp.registrationId}/commit`)
     }
 
     async configure(config?: CustomConfig): Promise<void> {
@@ -142,7 +142,7 @@ export class IntegrationHelper {
     }
 
     async getRegistrationDetail(registrationId?: string): Promise<RegistrationDetail> {
-        const resp = await this.makeCall("", `${AppConfig.cloudServerUrl}/v2/registrations/${registrationId ?? this._createdActivation?.registrationId}`, "GET")
+        const resp = await this.makeCall(undefined, `${AppConfig.cloudServerUrl}/v2/registrations/${registrationId ?? this._createdActivation?.registrationId}`, "GET")
         return resp
     }
 
