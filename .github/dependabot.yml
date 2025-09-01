@@ -4,9 +4,6 @@ updates:
     directory: "/" # Root directory
     schedule:
       interval: weekly
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-        # Ignore all dependencies inside testapp folders
-        paths:
-          - "testapp-**/**"
+    exclude-paths:
+      - "testapp/**"
+      - "testapp-cordova/**"
