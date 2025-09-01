@@ -1126,6 +1126,72 @@ class PowerAuthJsModule(
         promise.resolve(map)
     }
 
+    @JsApiMethod
+    fun isTimeSynchronized(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                promise.resolve(sdk.timeSynchronizationService.isTimeSynchronized)
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun localTimeAdjustment(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun localTimeAdjustmentPrecision(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun currentTime(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.currentTime.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun resetTimeSynchronization(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.timeSynchronizationService.resetTimeSynchronization()
+                promise.resolve(null)
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun synchronizeTime(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.timeSynchronizationService.synchronizeTime(object: ITimeSynchronizationListener {
+                    override fun onTimeSynchronizationSucceeded() {
+                        promise.resolve(null)
+                    }
+                    override fun onTimeSynchronizationFailed(t: Throwable) {
+                        Errors.rejectPromise(promise, t)
+                    }
+                })
+            }
+        })
+    }
+
+    // -- PRIVATE HELPERS --
 
     /**
      * Helper function converts input readable map to PowerAuthAuthentication object.
