@@ -125,7 +125,7 @@ export class IntegrationHelper {
                 "userId": "${activationName}",
                 "flags": [],
                 "appId": "${AppConfig.cloudApplicationId}",
-            "commitPhase": "${autoCommit ? "ON_KEY_EXCHANGE" : "ON_COMMIT"}"
+                "commitPhase": "${autoCommit ? "ON_KEY_EXCHANGE" : "ON_COMMIT"}"
             }
             `
         const created = await this.makeCall(body, `${AppConfig.cloudServerUrl}/v2/registrations`) as CreatedActivation
@@ -153,12 +153,12 @@ export class IntegrationHelper {
     async verifySignature(method: string, uriId: string, body: string, authHeader: string): Promise<SignatureResponse> {
         const payload = `
             {
-            "method": "${method}",
-            "uriId": "${uriId}",
-            "authHeader": "${authHeader.replaceAll("\"", "\\\"")}",
-            "requestBody": "${btoa(body)}"
+                "method": "${method}",
+                "uriId": "${uriId}",
+                "authHeader": "${authHeader.replace(/\"/g, '\\\"')}",
+                "requestBody": "${btoa(body)}"
             }
-            `;
+        `;
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/signature/verify`)
     }
 

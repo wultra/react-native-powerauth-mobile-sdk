@@ -108,7 +108,7 @@ export class TestWithActivation extends TestSuite {
         this.credentials = this.generateActivationCredentials()
         this.sdk = new PowerAuth(IntegrationHelper.randomString(30))
         this.helper = new IntegrationHelper(this.sdk)
-        this.helper.configure(this.provideCustomConfig())
+        await this.helper.configure(this.provideCustomConfig())
         if (this.shouldCreateActivationBeforeTest()) {
             await this.helper.prepareActiveActivation(this.credentials.validPassword, undefined, this.activateWithBiometrics())
         }
