@@ -12,4 +12,4 @@ The test application is using direct calls to PowerAuth Cloud component to manag
 
 ## Read Next
 
-- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
+- [Time Synchronization](Time-Synchronization.md)
