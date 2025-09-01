@@ -19,8 +19,8 @@
     <!-- turn off CORS for the tests where localhost test server accesses azure.com -->
     <preference name="AndroidInsecureFileModeEnabled" value="true" />
 
-    <preference name="android-targetSdkVersion" value="34" />
-    <preference name="android-compileSdkVersion" value="34" />
+    <preference name="android-targetSdkVersion" value="36" />
+    <preference name="android-compileSdkVersion" value="36" />
     <preference name="GradleVersion" value="8.1.1" />
     <preference name="GradlePluginKotlinEnabled" value="true" />
     <preference name="GradlePluginKotlinCodeStyle" value="official" />
