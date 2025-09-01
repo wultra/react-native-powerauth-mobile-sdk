@@ -1166,7 +1166,7 @@ PAJS_METHOD_END
     }
 }
 
-- (double) convertTimestamp:(double)timestamp
+- (int) convertTimestamp:(double)timestamp
 {
     // PowerAuth provides timestamp in seconds, but JS expect milliseconds.
     // Also, convert it to integer to get rid of the decimal part.
