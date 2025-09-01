@@ -1014,8 +1014,8 @@ PAJS_METHOD_START(localTimeAdjustment,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
-    double timestamap = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustment]];
-    resolve([[NSNumber alloc] initWithDouble:timestamap]);
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustment]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -1024,8 +1024,8 @@ PAJS_METHOD_START(localTimeAdjustmentPrecision,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
-    double timestamap = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustmentPrecision]];
-    resolve([[NSNumber alloc] initWithDouble:timestamap]);
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustmentPrecision]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -1034,8 +1034,8 @@ PAJS_METHOD_START(currentTime,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
-    double timestamap = [self convertTimestamp:[[powerAuth timeSynchronizationService] currentTime]];
-    resolve([[NSNumber alloc] initWithDouble:timestamap]);
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] currentTime]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -1169,7 +1169,8 @@ PAJS_METHOD_END
 - (double) convertTimestamp:(double)timestamp
 {
     // PowerAuth provides timestamp in seconds, but JS expect milliseconds.
-    return timestamp * 1000;
+    // Also, convert it to integer to get rid of the decimal part.
+    return (int)(timestamp * 1000);
 }
 
 @end

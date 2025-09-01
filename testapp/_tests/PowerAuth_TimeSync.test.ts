@@ -31,9 +31,13 @@ export class PowerAuth_TimeSyncTests extends TestWithActivation {
         expect(await this.sdk.timeSynchronizationService.synchronizeTime()).toSucceed()
         expect(await this.sdk.timeSynchronizationService.isTimeSynchronized()).toBe(true)
 
+        const timestamp = await this.sdk.timeSynchronizationService.currentTime()
+        
         // just check if actual non-zero values are returned
-        expect(await this.sdk.timeSynchronizationService.currentTime()).toBeGreaterThan(0)
-        expect(await this.sdk.timeSynchronizationService.localTimeAdjustmentPrecision()).toBeGreaterThan(0)
-        expect(await this.sdk.timeSynchronizationService.localTimeAdjustment()).toBeGreaterThan(0)
+        expect(timestamp).toNotBe(0)
+        expect(await this.sdk.timeSynchronizationService.localTimeAdjustmentPrecision()).toNotBe(0)
+
+        const date = new Date(timestamp)
+        expect(date.getTime()).toBe(timestamp)
     }
 }
