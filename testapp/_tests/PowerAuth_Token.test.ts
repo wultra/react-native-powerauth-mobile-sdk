@@ -14,8 +14,6 @@
 // limitations under the License.
 //
 
-import { PowerAuthServerError, TokenDigest, TokenDigestVerifyResult } from "powerauth-js-test-client";
-import { Platform } from "react-native";
 import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
@@ -24,14 +22,14 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
     async testTokenManagement() {
         const T1 = 'possessionToken'
-        const T1_cred = this.credentials.possession
-        const T1_invCred = this.credentials.knowledge
+        const T1_cred = this.credentials!.possession
+        const T1_invCred = this.credentials!.knowledge
         const T2 = 'knowledgeToken'
-        const T2_cred = this.credentials.knowledge
-        const T2_invCred = this.credentials.possession
+        const T2_cred = this.credentials!.knowledge
+        const T2_invCred = this.credentials!.possession
 
         const sdk = this.sdk
-        const tokenStore = sdk.tokenStore
+        const tokenStore = sdk!.tokenStore
 
         expect(await tokenStore.hasLocalToken(T1)).toBe(false)
         expect(await tokenStore.hasLocalToken(T2)).toBe(false)
@@ -88,15 +86,15 @@ export class PowerAuth_TokenTests extends TestWithActivation {
     }
 
     async testTokenCalculation() {
-        const activationId = await this.sdk.getActivationIdentifier()
+        const activationId = await this.sdk!.getActivationIdentifier()
         
         const T1 = 'possessionToken'
-        const T1_cred = this.credentials.possession
+        const T1_cred = this.credentials!.possession
         const T2 = 'knowledgeToken'
-        const T2_cred = this.credentials.knowledge
+        const T2_cred = this.credentials!.knowledge
 
         const sdk = this.sdk
-        const tokenStore = sdk.tokenStore
+        const tokenStore = sdk!.tokenStore
 
         const token1 = await tokenStore.requestAccessToken(T1, T1_cred)
         expect(token1.tokenIdentifier).toBeDefined()
@@ -108,29 +106,30 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         const header1 = await tokenStore.generateHeaderForToken(T1)
         expect(header1.value).toBeDefined()
-        const result1 = await this.verifyTokenDigest(header1.value)
-        expect(result1.tokenValid).toBe(true)
-        expect(result1.activationId).toBe(activationId)
-        expect(result1.signatureType).toBe('POSSESSION')
+        // const result1 = await this.verifyTokenDigest(header1.value)
+        // expect(result1.tokenValid).toBe(true)
+        // expect(result1.activationId).toBe(activationId)
+        // expect(result1.signatureType).toBe('POSSESSION')
 
         const header2 = await tokenStore.generateHeaderForToken(T2)
         expect(header2.value).toBeDefined()
-        const result2 = await this.verifyTokenDigest(header2.value)
-        expect(result2.tokenValid).toBe(true)
-        expect(result2.activationId).toBe(activationId)
-        expect(result2.signatureType).toBe('POSSESSION_KNOWLEDGE')
+        // const result2 = await this.verifyTokenDigest(header2.value)
+        // expect(result2.tokenValid).toBe(true)
+        // expect(result2.activationId).toBe(activationId)
+        // expect(result2.signatureType).toBe('POSSESSION_KNOWLEDGE')
     }
 
-    async verifyTokenDigest(digest: TokenDigest | string, timeIsWrong: boolean = false): Promise<TokenDigestVerifyResult> {
-        try {
-            return await this.helper.tokenHelper.verifyTokenDigest(digest)
-        } catch (error) {
-            if (error instanceof PowerAuthServerError) {
-                if (Platform.OS === 'android' && error.httpStatusCode === 400 && error.serverErrorCode === 'ERR0030' && !timeIsWrong) {
-                    this.reportWarning(`It appears that time on Android Device is out of sync`)
-                }
-            }
-            throw error
-        }
-    }
+    // TODO: not support in PowerAuth Cloud 
+    // async verifyTokenDigest(digest: TokenDigest | string, timeIsWrong: boolean = false): Promise<TokenDigestVerifyResult> {
+    //     try {
+    //         return await this.helper.tokenHelper.verifyTokenDigest(digest)
+    //     } catch (error) {
+    //         if (error instanceof PowerAuthServerError) {
+    //             if (Platform.OS === 'android' && error.httpStatusCode === 400 && error.serverErrorCode === 'ERR0030' && !timeIsWrong) {
+    //                 this.reportWarning(`It appears that time on Android Device is out of sync`)
+    //             }
+    //         }
+    //         throw error
+    //     }
+    // }
 }

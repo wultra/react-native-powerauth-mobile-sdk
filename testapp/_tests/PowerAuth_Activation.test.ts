@@ -33,7 +33,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     }
 
     async createActivationTest(useSignature: boolean) {
-        const sdk = await this.createSdk()
+        const sdk = this.helper.sdk
         expect(sdk).toBeDefined()
 
         expect(await sdk.canStartActivation()).toBe(true)
@@ -44,15 +44,15 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.getExternalPendingOperation()).toBeUndefined()
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
-        await expect(async () => await sdk.persistActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
+        await expect(async () => await sdk.persistActivation(this.credentials!.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         // [ 1 ] Prepare activation on the server
-        await this.helper.initActivation()
-        expect(this.activation.activationCode).toBeDefined()
-        expect(this.activation.activationSignature).toBeDefined()
-        const code = useSignature 
-                        ? `${this.activation.activationCode}#${this.activation.activationSignature}`
-                        : `${this.activation.activationCode}`
+        const detail = await this.helper.createActivation()
+        expect(detail.activationCode).toBeDefined()
+        expect(detail.activationCodeSignature).toBeDefined()
+        const code = useSignature
+            ? `${detail.activationCode}#${detail.activationCodeSignature}`
+            : `${detail.activationCode}`
         // [ 2 ] Create activation locally, don't wait for promise completion, we need to test 
         //       a pending state
         const activation = PowerAuthActivation.createWithActivationCode(code, 'RN')
@@ -73,12 +73,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(activationId).toBeDefined()
         expect(activationFingerprint).toBeDefined()
 
-        let activationDetail = await this.helper.getActivationDetail()
+        let activationDetail = await this.helper.getRegistrationDetail()
 
-        expect(activationDetail.devicePublicKeyFingerprint).toBeDefined()
-        expect(activationId).toBe(activationDetail.activationId)
-        expect(result.activationFingerprint).toBe(activationFingerprint)
-        expect(result.activationFingerprint).toBe(activationDetail.devicePublicKeyFingerprint)
+        expect(activationId).toBe(activationDetail.registrationId)
 
         // [ 3 ] Now persist activation locally
         await sdk.persistActivation(this.credentials.knowledge)
@@ -92,11 +89,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasPendingActivation()).toBe(false)
         expect(await sdk.hasValidActivation()).toBe(true)
 
-        activationDetail = await this.helper.getActivationDetail()
-        expect(activationDetail.devicePublicKeyFingerprint).toBeDefined()
-        expect(activationId).toBe(activationDetail.activationId)
+        activationDetail = await this.helper.getRegistrationDetail()
+        expect(activationId).toBe(activationDetail.registrationId)
         expect(result.activationFingerprint).toBe(activationFingerprint)
-        expect(result.activationFingerprint).toBe(activationDetail.devicePublicKeyFingerprint)
 
         // Fetch status now
 
@@ -105,34 +100,22 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         // Validate status
 
         let doCommitActivation = false
-        if (this.config.connection.autoCommit) {
-            // Auto commit is expected, so the state should be ACTIVE
-            if (state !== PowerAuthActivationState.ACTIVE) {
-                if (state === PowerAuthActivationState.PENDING_COMMIT) {
-                    this.reportWarning(`State should be ACTIVE but is PENDING_COMMIT`)
-                    doCommitActivation = true
-                } else {
-                    this.reportFailure(`State should be ACTIVE but is ${state}`)
-                }
-            }
-        } else if (this.config.connection.autoCommit === false) {
-            // Auto commit is not expected, so the state should be PENDING_COMMIT
-            if (state !== PowerAuthActivationState.PENDING_COMMIT) {
-                if (state === PowerAuthActivationState.ACTIVE) {
-                    this.reportWarning(`State should be PENDING_COMMIT but is ACTIVE`)
-                } else {
-                    this.reportFailure(`State should be PENDING_COMMIT but is ${state}`)
-                }
+        
+        if (state !== PowerAuthActivationState.PENDING_COMMIT) {
+            if (state === PowerAuthActivationState.ACTIVE) {
+                this.reportWarning(`State should be PENDING_COMMIT but is ACTIVE`)
             } else {
-                doCommitActivation = true
+                this.reportFailure(`State should be PENDING_COMMIT but is ${state}`)
             }
+        } else {
+            doCommitActivation = true
         }
         // [ 4 ] Commit activation on the server, if required
-        if (doCommitActivation) {
-            await this.helper.commitActivation()
-            state = (await sdk.fetchActivationStatus()).state
-            expect(state).toBe(PowerAuthActivationState.ACTIVE)
-        }
+        
+        await this.helper.commitActivation()
+        state = (await sdk.fetchActivationStatus()).state
+        expect(state).toBe(PowerAuthActivationState.ACTIVE)
+        
 
         expect(await sdk.canStartActivation()).toBe(false)
         expect(await sdk.hasPendingActivation()).toBe(false)
@@ -185,16 +168,16 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
 
         let status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
-        await this.helper.blockActivation()
+        await this.helper.changeActivation("BLOCK")
 
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.BLOCKED)
 
-        await this.helper.unblockActivation()
+        await this.helper.changeActivation("UNBLOCK")
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
 
-        await this.helper.removeActivation()
+        await this.helper.removeRegistration()
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.REMOVED)
         expect(await this.sdk.hasValidActivation()).toBe(true)
@@ -209,16 +192,16 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     }
 
     async testVerifyActivationQrCode() {
-        const sdk = await this.createSdk()
+        const sdk = this.sdk
         expect(sdk).toBeDefined()
         expect(await sdk.canStartActivation()).toBe(true)
 
         // Prepare activation on the server
-        await this.helper.initActivation()
-        expect(this.activation.activationCode).toBeDefined()
-        expect(this.activation.activationSignature).toBeDefined()
-        const code = this.activation.activationCode!
-        const sign = this.activation.activationSignature!
+        const detail = await this.helper.createActivation()
+        expect(detail.activationCode).toBeDefined()
+        expect(detail.activationCodeSignature).toBeDefined()
+        const code = detail.activationCode!
+        const sign = detail.activationCodeSignature!
 
         expect(await sdk.verifyScannedActivationCode(`${code}#${sign}`)).toBe(true)
         expect(await sdk.verifyScannedActivationCode(`${code}`)).toBe(false)

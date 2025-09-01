@@ -115,36 +115,34 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
     async testReusePasswordObjectInAuth() {
         const pValid = await importPassword(this.credentials.validPassword, false, this.sdk)
         const pInvalid = await importPassword(this.credentials.invalidPassword, false, this.sdk)
-        const signatureHelper = this.helper.signatureHelper
         
         const validAuth = PowerAuthAuthentication.password(pValid)
         const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
         let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(true)
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
         header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(true)
-        
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
+
         header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(false)
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
         header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(false)
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
     }
 
     async testReuseUsedPasswordObjectInAuth() {
         const pValid = await importPassword(this.credentials.validPassword, true, this.sdk)
         const pInvalid = await importPassword(this.credentials.invalidPassword, true, this.sdk)
-        const signatureHelper = this.helper.signatureHelper
         
         const validAuth = PowerAuthAuthentication.password(pValid)
         const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
         let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(true)
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
         await expect(async () => await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
         header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
-        expect(await signatureHelper.verifyOnlineSignature('POST', '/some/uriId', '{}', header.value)).toBe(false)
+        expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
         await expect(async () => await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }
 }

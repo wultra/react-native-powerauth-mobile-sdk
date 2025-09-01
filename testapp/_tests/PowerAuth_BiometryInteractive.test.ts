@@ -15,12 +15,11 @@
 //
 
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { expect, UserPromptDuration } from "../src/testbed";
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { ActivationStatus } from "powerauth-js-test-client";
 import { Platform } from "react-native";
 import { importPassword } from "./helpers/PasswordHelper";
+import { CustomConfig } from "../src/IntegrationUtils";
 
 export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
@@ -39,7 +38,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         return !(n == 'testCreateActivationWithSymmetricKey')
     }
 
-    customPrepareData(): CustomActivationHelperPrepareData {
+    provideCustomConfig(): CustomConfig {
         // Use auth on setup
         const n = this.context.testName
 
@@ -48,12 +47,11 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         config.authenticateOnBiometricKeySetup = n == 'testCreateActivationWithSymmetricKey'
         config.fallbackToDevicePasscode = n == 'iosTestFallbackToPasscode'
         return {
-            useConfigObjects: true,
-            useBiometry: true,
-            biometryConfig: config,
-            password: this.credentials.validPassword
+            biometryConfiguration: config
         }
     }
+
+    activateWithBiometrics(): boolean { return true }
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
@@ -64,8 +62,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
     }
 
     async testCreateActivationWithSymmetricKey() {
-        const sdk = await this.helper.getPowerAuthSdk()
-        const activatioData = await this.helper.initActivation()
+        const sdk = await this.helper.sdk
+        const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         // Now persist activation with a legacy authentication
@@ -80,7 +78,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         await sdk.persistActivation(persistAuth)
 
         // Commit activation on the server
-        if (await this.helper.getActivationStatus() != ActivationStatus.ACTIVE) {
+        if ((await this.helper.getRegistrationDetail()).registrationStatus != 'ACTIVE') {
             await this.helper.commitActivation()
         }
 
@@ -155,8 +153,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             let uriId = '/some/uriId'
             let header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
             // Verify signature
-            let result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
-            expect(result).toBe(true)
+            let result = await this.helper.verifySignature('POST', uriId, data, header.value)
+            expect(result.signatureValid).toBe(true)
             //
             await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
             // Calculate yet another signature and verify
@@ -164,8 +162,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             uriId = '/another/uriId'
 
             header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
-            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
-            expect(result).toBe(true)
+            result = await this.helper.verifySignature('POST', uriId, data, header.value)
+            expect(result.signatureValid).toBe(true)
 
             await this.showPrompt('Biometric dialog should not be displayed.', UserPromptDuration.QUICK)
             // Calculate yet another signature and verify
@@ -173,8 +171,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             uriId = '/another/uriId'
 
             header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
-            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
-            expect(result).toBe(true)
+            result = await this.helper.verifySignature('POST', uriId, data, header.value)
+            expect(result.signatureValid).toBe(true)
 
             // Now sleep for 10 seconds
 
@@ -187,8 +185,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             uriId = '/another/uriId'
 
             header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
-            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
-            expect(result).toBe(true)
+            result = await this.helper.verifySignature('POST', uriId, data, header.value)
+            expect(result.signatureValid).toBe(true)
 
             await this.showPrompt('Biometric dialog should not be displayed again.', UserPromptDuration.QUICK)
             // Calculate yet another signature and verify
@@ -196,8 +194,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             uriId = '/another/uriId'
 
             header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
-            result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, data, header.value)
-            expect(result).toBe(true)
+            result = await this.helper.verifySignature('POST', uriId, data, header.value)
+            expect(result.signatureValid).toBe(true)
         })
     }
 
@@ -229,8 +227,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         let uriId = '/some/failed/uriId'
         let body = '{ failedApi: true }'
         const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
-        const result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, body, header.value)
-        expect(result).toBe(false)
+        const result = await this.helper.verifySignature('POST', uriId, body, header.value)
+        expect(result.signatureValid).toBe(false)
     }
 
     async iosTestFallbackToPasscode() {
@@ -241,8 +239,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         let uriId = '/some/fallback/uriId'
         let body = '{ fallbackApi: true }'
         const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
-        const result = await this.helper.signatureHelper.verifyOnlineSignature('POST', uriId, body, header.value)
-        expect(result).toBe(true)
+        const result = await this.helper.verifySignature('POST', uriId, body, header.value)
+        expect(result.signatureValid).toBe(true)
     }
 
     async iosTestFallbackButton() {

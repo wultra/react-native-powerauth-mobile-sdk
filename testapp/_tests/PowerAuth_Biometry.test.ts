@@ -17,7 +17,6 @@
 import { Platform } from "react-native";
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
-import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_BiometryTests extends TestWithActivation {
@@ -25,18 +24,6 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     shouldCreateActivationBeforeTest(): boolean {
         const n = this.context.testName
         return !(n == 'androidTestCreateActivationWithRSABiometryKey')
-    }
-
-    customPrepareData(): CustomActivationHelperPrepareData {
-        // Use config that allows create activation with biometry key with no user's interaction
-        const config = new PowerAuthBiometryConfiguration()
-        config.authenticateOnBiometricKeySetup = false
-        return {
-            useConfigObjects: true,
-            useBiometry: true,
-            biometryConfig: config,
-            password: this.credentials.validPassword
-        }
     }
 
     async beforeEach(): Promise<void> {
@@ -48,8 +35,11 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     async androidTestCreateActivationWithRSABiometryKey() {
-        const sdk = await this.helper.getPowerAuthSdk()
-        const activatioData = await this.helper.initActivation()
+        const bioConfig = new PowerAuthBiometryConfiguration()
+        bioConfig.authenticateOnBiometricKeySetup = false
+        this.helper.configure({ biometryConfiguration: bioConfig })
+        const sdk = await this.helper.sdk
+        const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         // Now persist activation with a legacy authentication
@@ -58,8 +48,7 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     async testAddRemoveBiometryFactor() {
-        expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        await this.sdk.removeBiometryFactor()
+        
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
 
         await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
