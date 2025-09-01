@@ -221,6 +221,30 @@ class PowerAuthModule : CordovaPlugin() {
                 getEnvironmentInfo(args, promise)
                 return true
             }
+            "isTimeSynchronized" -> {
+                isTimeSynchronized(args, promise)
+                return true
+            }
+            "localTimeAdjustment" -> {
+                localTimeAdjustment(args, promise)
+                return true
+            }
+            "localTimeAdjustmentPrecision" -> {
+                localTimeAdjustmentPrecision(args, promise)
+                return true
+            }
+            "currentTime" -> {
+                currentTime(args, promise)
+                return true
+            }
+            "resetTimeSynchronization" -> {
+                resetTimeSynchronization(args, promise)
+                return true
+            }
+            "synchronizeTime" -> {
+                synchronizeTime(args, promise)
+                return true
+            }
         }
         return false  // Returning false results in a "MethodNotFound" error.
     }
@@ -520,5 +544,37 @@ class PowerAuthModule : CordovaPlugin() {
     
     private fun getEnvironmentInfo(args: JSONArray, promise: Promise) {
         powerAuthJsModule.getEnvironmentInfo(promise)
+    }
+
+    // TIME SYNCHRONIZATION METHODS
+
+    private fun isTimeSynchronized(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.isTimeSynchronized(instanceId, promise)
+    }
+
+    private fun localTimeAdjustment(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.localTimeAdjustment(instanceId, promise)
+    }
+
+    private fun localTimeAdjustmentPrecision(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.localTimeAdjustmentPrecision(instanceId, promise)
+    }
+
+    private fun currentTime(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.currentTime(instanceId, promise)
+    }
+
+    private fun resetTimeSynchronization(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.resetTimeSynchronization(instanceId, promise)
+    }
+
+    private fun synchronizeTime(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.synchronizeTime(instanceId, promise)
     }
 }
