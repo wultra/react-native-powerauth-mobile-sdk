@@ -75,7 +75,7 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
     "pod-install": "^0.2.2",
-    "react": "19.0.0",
+    "react": "19.1.1",
     "react-native": "^0.78.1",
     "rimraf": "^6.0.1"
   }
