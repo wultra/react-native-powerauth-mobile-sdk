@@ -14,12 +14,17 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthDebug, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { TestWithServer } from "./helpers/TestWithServer";
-import { createActivationHelper, CustomActivationHelperPrepareData, RNActivationHelper } from "./helpers/RNActivationHelper";
-import { expect } from "../src/testbed";
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthDebug, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthSharingConfigurationType } from "react-native-powerauth-mobile-sdk"
+import { expect } from "../src/testbed"
+import { TestWithActivation } from "./helpers/TestWithActivation"
+import { AppConfig, IntegrationHelper } from "../src/IntegrationUtils"
 
-export class PowerAuth_ConfigureTests extends TestWithServer {
+export class PowerAuth_ConfigureTests extends TestWithActivation {
+
+    // lets not create activation before each test
+    override shouldCreateActivationBeforeTest(): boolean {
+        return false
+    }
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
@@ -46,8 +51,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         const helper1 = await this.getHelper1()
         const helper2 = await this.getHelper2()
         // SDK instances from helpers should be available
-        const sdk1 = helper1.powerAuthSdk
-        const sdk2 = helper2.powerAuthSdk
+        const sdk1 = helper1.sdk
+        const sdk2 = helper2.sdk
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
@@ -82,9 +87,9 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
 
     async testReconfigureWhileActive() {
         const helper1 = await this.getHelper1()
-        const sdk1 = helper1.powerAuthSdk
+        const sdk1 = helper1.sdk
         const helper2 = await this.getHelper2()
-        const sdk2 = helper2.powerAuthSdk
+        const sdk2 = helper2.sdk
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
@@ -111,8 +116,8 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         expect(sharingConfig1).toBeDefined()
         expect(sharingConfig2).toBeDefined()
 
-        await helper1.createActivation(undefined, this.prepareData(this.instance1))
-        await helper2.createActivation(undefined, this.prepareData(this.instance2))
+        await helper1.prepareActiveActivation(this.password1)
+        await helper2.prepareActiveActivation(this.password2)
 
         expect(await sdk1.hasValidActivation()).toBe(true)
         expect(await sdk2.hasValidActivation()).toBe(true)
@@ -143,7 +148,7 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
 
     async iosTestActivationSharing() {
         const helper1 = await this.getHelper1()
-        const sdk1 = helper1.powerAuthSdk
+        const sdk1 = helper1.sdk
         expect(await sdk1.isConfigured()).toBe(true)
         expect(sdk1.sharingConfiguration?.appGroup).toBe("group.com.wultra.testGroup")
         expect(sdk1.sharingConfiguration?.appIdentifier).toBe("SharedInstanceTests")
@@ -187,15 +192,15 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
 
     async testConfigurationWithBiometry() {
         const helper1 = await this.getHelper1()
-        const sdk1 = helper1.powerAuthSdk
+        const sdk1 = helper1.sdk
         const helper2 = await this.getHelper2()
-        const sdk2 = helper2.powerAuthSdk
+        const sdk2 = helper2.sdk
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
 
-        await helper1.createActivation(undefined, this.prepareData(this.instance1))
-        await helper2.createActivation(undefined, this.prepareData(this.instance2))
+        await helper1.prepareActiveActivation(this.password1)
+        await helper2.prepareActiveActivation(this.password2)
 
         expect(await sdk1.hasValidActivation()).toBe(true)
         expect(await sdk2.hasValidActivation()).toBe(true)
@@ -222,35 +227,35 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
 
     // Support methods
 
-    helperInstance1: RNActivationHelper | undefined
-    helperInstance2: RNActivationHelper | undefined
+    helperInstance1: IntegrationHelper | undefined
+    helperInstance2: IntegrationHelper | undefined
 
     readonly instance1 = 'testInstance1'
     readonly instance2 = 'testInstance2'
     readonly password1 = 'SueprSecure'
     readonly password2 = 'GoodAlternative'
 
-    async getHelper1(): Promise<RNActivationHelper> {
+    async getHelper1(): Promise<IntegrationHelper> {
         if (!this.helperInstance1) {
             this.helperInstance1 = await this.createInstance(this.instance1)
         }
         return this.helperInstance1
     }
 
-    async getHelper2(): Promise<RNActivationHelper> {
+    async getHelper2(): Promise<IntegrationHelper> {
         if (!this.helperInstance2) {
             this.helperInstance2 = await this.createInstance(this.instance2)
         }
         return this.helperInstance2
     }
 
-    async createInstance(instanceId: string): Promise<RNActivationHelper> {
-        const helper = await createActivationHelper(this.serverApi, this.config, activation => this.customizePowerAuthActivation(activation))
-        await helper.getPowerAuthSdk(this.prepareData(instanceId))
+    async createInstance(instanceId: string): Promise<IntegrationHelper> {
+        const helper = new IntegrationHelper(new PowerAuth(instanceId))
+        await this.configureSDK(helper)
         return helper
     }
 
-    async cleanupInstance(helper: RNActivationHelper | undefined, instanceId: string) {
+    async cleanupInstance(helper: IntegrationHelper | undefined, instanceId: string) {
         const sdk = new PowerAuth(instanceId)
         if (await sdk.isConfigured()) {
             await sdk.removeActivationLocal()
@@ -266,36 +271,33 @@ export class PowerAuth_ConfigureTests extends TestWithServer {
         this.helperInstance2 = undefined
     }
 
-    customizePowerAuthActivation(activation: PowerAuthActivation) {}
+    private async configureSDK(helper: IntegrationHelper): Promise<void> {
 
-    prepareData(instanceId: string): CustomActivationHelperPrepareData {
+        if (await helper.sdk.isConfigured()) {
+            await helper.sdk.deconfigure()
+        }
+
+        let sharingConfig: PowerAuthSharingConfiguration | undefined
+        let biometryConfig: PowerAuthBiometryConfiguration | undefined
+        let keychainConfig: PowerAuthKeychainConfiguration | undefined
+        let clientConfig: PowerAuthClientConfiguration | undefined
         if (this.currentTestName === 'iosTestActivationSharing') {
-            return {
-                powerAuthInstanceId: instanceId,
-                useConfigObjects: true,
-                password: instanceId === this.instance1 ? this.password1 : this.password2,
-                sharingConfiguration: {
-                    appGroup: "group.com.wultra.testGroup",
-                    appIdentifier: "SharedInstanceTests",
-                    keychainAccessGroup: "fake.accessGroup", // This will work only in simulator
-                    sharedMemoryIdentifier: "tst1"
-                }
-            }
+            sharingConfig = new PowerAuthSharingConfiguration(
+                "group.com.wultra.testGroup",
+                "SharedInstanceTests",
+                "fake.accessGroup", // This will work only in simulator
+                "tst1"
+            )
         }
-        if (this.currentTestName === 'testConfigurationWithBiometry') {
-            const biometryConfig = new PowerAuthBiometryConfiguration()
+        if (this.currentTestName == 'testConfigurationWithBiometry') {
+            biometryConfig = new PowerAuthBiometryConfiguration()
             biometryConfig.authenticateOnBiometricKeySetup = false
-            return {
-                powerAuthInstanceId: instanceId,
-                useConfigObjects: true,
-                biometryConfig: biometryConfig,
-                password: instanceId === this.instance1 ? this.password1 : this.password2
-            }    
         }
-        return {
-            powerAuthInstanceId: instanceId,
-            useConfigObjects: true,
-            password: instanceId === this.instance1 ? this.password1 : this.password2
-        }
+        await helper.configure({
+            clientConfiguration: clientConfig,
+            biometryConfiguration: biometryConfig,
+            keychainConfiguration: keychainConfig,
+            sharingConfiguration: sharingConfig
+        })
     }
 }

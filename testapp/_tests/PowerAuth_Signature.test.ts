@@ -14,17 +14,21 @@
 // limitations under the License.
 //
 
-import { SignatureType } from "powerauth-js-test-client";
 import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { Base64 } from "js-base64"; 
+
+enum SignatureType {
+    POSSESSION = 'POSSESSION',
+    POSSESSION_KNOWLEDGE = 'POSSESSION_KNOWLEDGE',
+    BIOMETRY = 'BIOMETRY'
+}
 
 interface SignatureTestData {
     method: string,
     uriId: string,
-    body: string | Map<string, string> | undefined
-    factors: SignatureType,
+    body: string | undefined
+    factors: SignatureType
     shouldFail?: boolean
 }
 
@@ -50,7 +54,6 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 
     async testSignatureCalculation() {
         const sdk = this.sdk
-        const signatureHelper = this.helper.signatureHelper
         const activationId = await sdk.getActivationIdentifier()
 
         for (const i in testData) {
@@ -82,15 +85,12 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             }
 
             // Let's validate signature on the server
-            const parsed = signatureHelper.parseHeader(header.value)
+            const parsed = SignatureHelper.parseHeader(header.value)
             expect(parsed.activationId).toBe(activationId)
-            expect(parsed.applicationKey).toBe(this.helper.appSetup.appKey)
             expect(parsed.signatureType.toUpperCase()).toBe(td.factors)
 
-            const result = await signatureHelper.verifyOnlineSignature(td.method, td.uriId, td.body, header.value)
-            if (result !== !(td.shouldFail ?? false)) {
-                this.reportFailure(`Result doesn't match for ${td.uriId}`)
-            }
+            const result = await this.helper.verifySignature(td.method, td.uriId, td.body || "", header.value)
+            expect(!td.shouldFail).toBe(result.signatureValid)
         }
     }
 
@@ -108,54 +108,104 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(status.remainingAttempts).toBe(0)
     }
 
-    async testDeviceSignedDataPlain() {
-        const dataToSign = 'This is a very sensitive information and must be signed.'
-        const activationId = await this.sdk.getActivationIdentifier()
-        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSign, 'UTF8')
-        // Now verify signature on the server.
-        const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
-        expect(result).toBe(true)
-    }
+    // TODO: add offlineSignature test via {{baseUrl}}/v2/operations/{{operationId}}/offline/otp
 
     async testDeviceSignedDataBase64() {
         const dataToSign = 'This is a very sensitive information and must be signed.'
         const dataToSignBase64 = btoa(dataToSign)
         const activationId = await this.sdk.getActivationIdentifier()
-        const signature = await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSignBase64, 'BASE64')
+        expect(await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSignBase64, 'BASE64')).toSucceed()
         // Now verify signature on the server.
         // We provide plain data, as the test server library will encode it to Base64 internally.
-        const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
-        expect(result).toBe(true)
+        // TODO: missing verification API
+        // const result = await this.serverApi.verifyDeviceSignedData(activationId!, dataToSign, signature)
+        // expect(result).toBe(true)
     }
 
-    async testServerSignedData_WithNoActivation() {
-        const dataToSign = 'All your money are belong to us!'
-        let signedPayload = await this.serverApi.createNonPersonalizedOfflineSignature(this.helper.application, dataToSign)
-        let signedData = signedPayload.parsedSignedData
-        let signature = signedPayload.parsedSignature
-        expect(signedPayload.parsedData).toBe(dataToSign)
-        expect(signedData).toBeNotNullish()
-        expect(signature).toBeNotNullish()
+    // async testServerSignedData_WithNoActivation() {
+    //     const dataToSign = 'All your money are belong to us!'
+    //     let signedPayload = await this.serverApi.createNonPersonalizedOfflineSignature(this.helper.application, dataToSign)
+    //     let signedData = signedPayload.parsedSignedData
+    //     let signature = signedPayload.parsedSignature
+    //     expect(signedPayload.parsedData).toBe(dataToSign)
+    //     expect(signedData).toBeNotNullish()
+    //     expect(signature).toBeNotNullish()
 
-        let result = await this.sdk.verifyServerSignedData(signedData!, signature!, true)
-        expect(result).toBe(true)
-        result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, true)
-        expect(result).toBe(false)
-    }
+    //     let result = await this.sdk.verifyServerSignedData(signedData!, signature!, true)
+    //     expect(result).toBe(true)
+    //     result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, true)
+    //     expect(result).toBe(false)
+    // }
 
-    async testServerSignedData_WithActivation() {
-        const activationId = await this.sdk.getActivationIdentifier()
-        const dataToSign = 'All your money are belong to us!'
-        let signedPayload = await this.serverApi.createPersonalizedOfflineSignature(activationId!, dataToSign)
-        let signedData = signedPayload.parsedSignedData
-        let signature = signedPayload.parsedSignature
-        expect(signedPayload.parsedData).toBe(dataToSign)
-        expect(signedData).toBeNotNullish()
-        expect(signature).toBeNotNullish()
+    // async testServerSignedData_WithActivation() {
+    //     const activationId = await this.sdk.getActivationIdentifier()
+    //     const dataToSign = 'All your money are belong to us!'
+    //     let signedPayload = await this.serverApi.createPersonalizedOfflineSignature(activationId!, dataToSign)
+    //     let signedData = signedPayload.parsedSignedData
+    //     let signature = signedPayload.parsedSignature
+    //     expect(signedPayload.parsedData).toBe(dataToSign)
+    //     expect(signedData).toBeNotNullish()
+    //     expect(signature).toBeNotNullish()
 
-        let result = await this.sdk.verifyServerSignedData(signedData!, signature!, false)
-        expect(result).toBe(true)
-        result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, false)
-        expect(result).toBe(false)
+    //     let result = await this.sdk.verifyServerSignedData(signedData!, signature!, false)
+    //     expect(result).toBe(true)
+    //     result = await this.sdk.verifyServerSignedData(Base64.encode(`A${signedData!}`), signature!, false)
+    //     expect(result).toBe(false)
+    // }
+}
+
+interface OnlineSignature {
+    activationId: string
+    signature: string
+    signatureType: string
+    signatureVersion: string
+    nonce: string
+}
+
+class SignatureHelper {
+
+    static readonly signatureMagic = 'PowerAuth '
+
+    /**
+     * Parse authentication header produced in mobile SDK.
+     * @param header HTTP header's value.
+     * @returns Object representing an online signature.
+     */
+    static parseHeader(header: string): OnlineSignature {
+        if (!header.startsWith(SignatureHelper.signatureMagic)) {
+            throw new Error('Signature string must begin with PowerAuth')
+        }
+        const components = new Map<string, string>()
+        header.substring(SignatureHelper.signatureMagic.length)
+            .split(', ')
+            .forEach((keyValue, index) => {
+                const equalIdx = keyValue.indexOf('=')
+                if (equalIdx == -1) {
+                    throw new Error(`Unknown component in header: ${keyValue}`)
+                }
+                const key = keyValue.substring(0, equalIdx)
+                let value = keyValue.substring(equalIdx + 1)
+                if (!value.startsWith('\"') || !value.endsWith('\"')) {
+                    throw new Error(`Value is not closed in parenthesis:: ${keyValue}`)
+                }
+                components.set(key, value.substring(1, value.length - 1))
+            })
+        const version       = components.get('pa_version')
+        const activationId  = components.get('pa_activation_id')
+        const nonce         = components.get('pa_nonce')
+        const signatureType = components.get('pa_signature_type')
+        const signature     = components.get('pa_signature')
+        if (!version)       throw new Error('Missing pa_version in PA signature')
+        if (!activationId)  throw new Error('Missing pa_activation_id in PA signature')
+        if (!nonce)         throw new Error('Missing pa_nonce in PA signature')
+        if (!signatureType) throw new Error('Missing pa_signature_type in PA signature')
+        if (!signature)     throw new Error('Missing pa_signature in PA signature')
+        return {
+            signature: signature,
+            activationId: activationId,
+            nonce: nonce,
+            signatureType: signatureType.toUpperCase(),
+            signatureVersion: version
+        }
     }
 }
