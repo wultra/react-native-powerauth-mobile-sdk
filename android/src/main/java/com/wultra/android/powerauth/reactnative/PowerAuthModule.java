@@ -116,6 +116,16 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void fetchUserInfo(String instanceId, final Promise promise) {
+        powerAuthJsModule.fetchUserInfo(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getLastFetchedUserInfo(String instanceId, final Promise promise) {
+        powerAuthJsModule.getLastFetchedUserInfo(instanceId, promise);
+    }
+
+    @ReactMethod
     public void createActivation(String instanceId, final ReadableMap activation, final Promise promise) {
         powerAuthJsModule.createActivation(instanceId, activation, promise);
     }

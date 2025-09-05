@@ -189,6 +189,51 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
+    fun fetchUserInfo(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                try {
+                    sdk.fetchUserInfo(object : IGetUserInfoListener {
+                        override fun onGetUserInfoSucceeded(userInfo: UserInfo) {
+                            val response: WritableMap = Arguments.createMap()
+                            val claims = userInfo.allClaims
+                            response.putMap("allClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                            promise.resolve(response)
+                        }
+
+                        override fun onGetUserInfoFailed(t: Throwable) {
+                            Errors.rejectPromise(promise, t)
+                        }
+                    })
+                } catch (t: Throwable) {
+                    Errors.rejectPromise(promise, t)
+                }
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun getLastFetchedUserInfo(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                try {
+                    val info = sdk.lastFetchedUserInfo
+                    if (info != null) {
+                        val response: WritableMap = Arguments.createMap()
+                        val claims = info.allClaims
+                        response.putMap("allClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                        promise.resolve(response)
+                    } else {
+                        promise.resolve(null)
+                    }
+                } catch (t: Throwable) {
+                    Errors.rejectPromise(promise, t)
+                }
+            }
+        })
+    }
+
+    @JsApiMethod
     fun createActivation(instanceId: String, activation: ReadableMap, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
