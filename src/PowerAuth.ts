@@ -29,6 +29,7 @@ import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
+import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { resolveAuthentication } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
@@ -219,6 +220,26 @@ export class PowerAuth {
      */
     createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
         return NativeWrapper.thisCall("createActivation", this.instanceId, activation);
+    }
+
+    /**
+     * Fetch information about the user from the server.
+     * If the operation succeeds, then the user information object is also
+     * internally stored and available in [getLastFetchedUserInfo] method.
+     */
+    fetchUserInfo(): Promise<PowerAuthUserInfo> {
+        return NativeWrapper.thisCall("fetchUserInfo", this.instanceId);
+    }
+
+    /**
+     * Returns the last fetched user info or undefined when there's no cached user info available.
+     *
+     * Notes:
+     * - On iOS native SDK, `PowerAuthSDK.lastFetchedUserInfo` is nullable and may be `nil` until user info is fetched.
+     * - This bridge returns `undefined` when the native value is `nil`, or when the claims are missing/empty.
+     */
+    getLastFetchedUserInfo(): Promise<PowerAuthUserInfo | undefined> {
+        return NativeWrapper.thisCallNull("getLastFetchedUserInfo", this.instanceId);
     }
 
     /**
