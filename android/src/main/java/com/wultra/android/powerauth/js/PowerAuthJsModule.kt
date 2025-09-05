@@ -312,6 +312,13 @@ class PowerAuthJsModule(
                                 if (customAttr == null) null
                                 else Arguments.makeNativeMap(customAttr)
                             )
+                            val userInfo = result.userInfo
+                            if (userInfo != null) {
+                                val claims = userInfo.allClaims
+                                map.putMap("userInfoClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                            } else {
+                                map.putNull("userInfoClaims")
+                            }
                             promise.resolve(map)
                         }
 

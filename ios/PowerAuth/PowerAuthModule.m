@@ -308,7 +308,8 @@ PAJS_METHOD_START(createActivation,
                     @"recoveryCode": result.activationRecovery.recoveryCode,
                     @"puk": result.activationRecovery.puk
                 } : [NSNull null],
-                @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null]
+                @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null],
+                @"userInfoClaims": result.userInfo ? result.userInfo.allClaims : [NSNull null]
             }));
         } else {
             ProcessError(error, reject);
