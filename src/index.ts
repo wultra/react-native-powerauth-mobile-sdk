@@ -44,6 +44,7 @@ export * from './model/PowerAuthRecoveryActivationData';
 export * from './model/PowerAuthPassword';
 export * from './model/PowerAuthEncryptor';
 export * from './model/PowerAuthDataFormat';
+export * from './model/PowerAuthUserInfo';
 export * from './model/BaseNativeObject';
 
 // Debug features
