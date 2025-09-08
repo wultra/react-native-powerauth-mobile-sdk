@@ -193,15 +193,14 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
                 try {
-                    sdk.fetchUserInfo(object : IGetUserInfoListener {
-                        override fun onGetUserInfoSucceeded(userInfo: UserInfo) {
+                    sdk.fetchUserInfo(object : IUserInfoListener {
+                        override fun onUserInfoSucceed(userInfo: UserInfo) {
                             val response: WritableMap = Arguments.createMap()
                             val claims = userInfo.allClaims
                             response.putMap("allClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
                             promise.resolve(response)
                         }
-
-                        override fun onGetUserInfoFailed(t: Throwable) {
+                        override fun onUserInfoFailed(t: Throwable) {
                             Errors.rejectPromise(promise, t)
                         }
                     })
