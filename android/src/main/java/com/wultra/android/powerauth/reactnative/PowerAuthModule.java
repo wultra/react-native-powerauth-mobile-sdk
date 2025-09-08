@@ -300,4 +300,36 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void getEnvironmentInfo(final Promise promise) {
         powerAuthJsModule.getEnvironmentInfo(promise);
     }
+
+    // TIME SYNCHRONIZATION METHODS
+
+    @ReactMethod
+    public void isTimeSynchronized(String instanceId, final Promise promise) {
+        powerAuthJsModule.isTimeSynchronized(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void localTimeAdjustment(String instanceId, final Promise promise) {
+        powerAuthJsModule.localTimeAdjustment(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void localTimeAdjustmentPrecision(String instanceId, final Promise promise) {
+        powerAuthJsModule.localTimeAdjustmentPrecision(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void currentTime(String instanceId, final Promise promise) {
+        powerAuthJsModule.currentTime(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void resetTimeSynchronization(String instanceId, final Promise promise) {
+        powerAuthJsModule.resetTimeSynchronization(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void synchronizeTime(String instanceId, final Promise promise) {
+        powerAuthJsModule.synchronizeTime(instanceId, promise);
+    }
 }

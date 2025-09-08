@@ -35,9 +35,11 @@ import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
 import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
+import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
+        new PowerAuth_TimeSyncTests(),
         new ConfigurationObjectsTests(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ActivationTests(),
