@@ -1,5 +1,8 @@
 # Changelog
 
+## TBA
+- Fixed Android Encryptor crashing on missing `putLong` JNI bindings (issue [#264](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/264))
+
 ## 4.1.1 (7/2025)
 
 - Upgraded the [PowerAuth native SDK to `1.9.5`](https://github.com/wultra/powerauth-mobile-sdk/releases/tag/1.9.5)
