@@ -57,16 +57,14 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
 
             // Let's use "user info" service for the test.
             const headers = new Headers([[encrypted.header.key, encrypted.header.value]])
-            const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
+            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
             expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Decrypt response
             const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram)
             expect(decrypted).toBeDefined()
-            const decryptedObject = JSON.parse(decrypted)
 
-            // Response contains 'sub' key which should be equal to user-id
-            expect(decryptedObject.sub).toEqual(this.activation.userId)
+            expect(decrypted).toEqual('{}') // empty user info should be returned since we're creating random usernames
             expect(await decryptor.canDecryptResponse()).toBe(false)
         }
     }
@@ -91,16 +89,14 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             // Let's use "user info" service for the test.
             const headers = new Headers()
             headers.set(encrypted.header.key, encrypted.header.value)
-            const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
+            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
             expect(await decryptor.canDecryptResponse()).toBe(true)
 
             // Decrypt response
             const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, "UTF8")
             expect(decrypted).toBeDefined()
-            const decryptedObject = JSON.parse(decrypted)
 
-            // Response contains 'sub' key which should be equal to user-id
-            expect(decryptedObject.sub).toEqual(this.activation.userId)
+            expect(decrypted).toEqual('{}') // empty user info should be returned since we're creating random usernames
             expect(await decryptor.canDecryptResponse()).toBe(false)
         }
     }
@@ -125,14 +121,13 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             // Let's use "user info" service for the test
             const headers = new Headers()
             headers.set(encrypted.header.key, encrypted.header.value)
-            const response = await this.helper.httpClient.post('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
+            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
             expect(await decryptor.canDecryptResponse()).toBe(true)
     
             // Decrypt response
             const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, 'BASE64')
             expect(decrypted).toBeDefined()
-            const decryptedObject = JSON.parse(Buffer.from(decrypted, 'base64').toString('utf8'))
-            expect(decryptedObject.sub).toEqual(this.activation.userId)
+            expect(decrypted).toEqual('e30=') // e30= is '{}' as base64 and we're expecting empty body since we're creating random usernames
     
             expect(await decryptor.canDecryptResponse()).toBe(false)    
         }

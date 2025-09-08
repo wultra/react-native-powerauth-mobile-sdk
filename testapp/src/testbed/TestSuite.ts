@@ -14,17 +14,12 @@
 // limitations under the License.
 //
 
-import { TestConfig } from "../Config"
 import { TestInteraction, UserPromptDuration, UserInteraction } from "./TestInteraction"
 
 /**
  * Defines context for running test.
  */
 export interface TestContext {
-    /**
-     * Current test configuration.
-     */
-    readonly config: TestConfig
     /**
      * Current test suite name.
      */
@@ -98,13 +93,6 @@ export class TestSuite {
             throw new Error('TestContext is not set.')
         }
         return this.currentContext
-    }
-
-    /**
-     * Contains current `TestConfig`. If no such config is available then throws an error.
-     */
-    get config(): TestConfig {
-        return this.context.config
     }
 
     /**

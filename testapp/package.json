@@ -15,11 +15,10 @@
     "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
   },
   "dependencies": {
-    "powerauth-js-test-client": "^0.2.14",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-4.1.1.tgz"
+    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-0.0.1-dev.tgz"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
