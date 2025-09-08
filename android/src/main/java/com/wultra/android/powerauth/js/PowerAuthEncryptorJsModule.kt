@@ -195,7 +195,7 @@ class PowerAuthEncryptorJsModule(
             cryptogram.putString("encryptedData", encryptionResult.second.getBodyBase64())
             cryptogram.putString("mac", encryptionResult.second.getMacBase64())
             cryptogram.putString("nonce", encryptionResult.second.getNonceBase64())
-            cryptogram.putLong("timestamp", encryptionResult.second.timestamp)
+            cryptogram.putDouble("timestamp", encryptionResult.second.timestamp.toDouble())
             val header: WritableMap = Arguments.createMap()
             header.putString("key", metadata.getHttpHeaderKey())
             header.putString("value", metadata.getHttpHeaderValue())
