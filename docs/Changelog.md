@@ -2,6 +2,7 @@
 
 ## TBA
 - Fixed Android Encryptor crashing on missing `putLong` JNI bindings (issue [#264](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/264))
+- Added [Time Synchronization service](./Time-Synchronization.md)
 
 ## 4.1.1 (7/2025)
 
