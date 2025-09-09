@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-ios:
-    name: Build React Native Test App - iOS
+    name: iOS
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
@@ -21,7 +21,7 @@ jobs:
       - name: Build RN iOS
         run: npm run buildReactIos
   build-android:
-    name: Build React Native Test App - Android
+    name: Android
     runs-on: macos-latest
     steps:
       - name: Checkout the repo

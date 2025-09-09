@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-ios:
-    name: Build Cordova Test App - iOS
+    name: iOS
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
@@ -21,7 +21,7 @@ jobs:
       - name: Build Cordova iOS
         run: npm run buildCordovaIos
   build-android:
-    name: Build Cordova Test App - Android
+    name: Android
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
