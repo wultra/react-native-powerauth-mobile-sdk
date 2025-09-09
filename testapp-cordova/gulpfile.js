@@ -42,15 +42,16 @@ class Platform {
 
 // parse environment configuration
 const envConfig = dotenv.parse(fs.readFileSync(`${rnTestAppDir}/.env`))
-console.log(`Reading env config env with pa server ${envConfig.POWERAUTH_SERVER_URL} and enrollment server ${envConfig.ENROLLMENT_SERVER_URL}`)
+console.log(`Reading env config env with PA Cloud server ${envConfig.POWERAUTH_CLOUD_URL} and enrollment server ${envConfig.ENROLLMENT_SERVER_URL}`)
 const envConfigStr = `const EnvConfig = ${JSON.stringify(envConfig)};`
 
 const copyTestFiles = () =>
     gulp
-        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/Config.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
+        .src([`${rnTestAppDir}/src/testbed/**/**.ts`, `${rnTestAppDir}/src/IntegrationUtils.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
         .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk";/g, ''))
+        .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk"/g, ''))
         .pipe(replace('import { Platform } from "react-native";', platformClass))
-        .pipe(replace('import { Config as EnvConfig } from "react-native-config";', envConfigStr))
+        .pipe(replace('import { Config as EnvConfig } from "react-native-config"', envConfigStr))
         .pipe(gulp.dest(tempDir));
 
 const copyAppFiles = () =>

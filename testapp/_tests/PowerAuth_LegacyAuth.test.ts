@@ -16,8 +16,8 @@
 
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration } from "react-native-powerauth-mobile-sdk";
 import { expect } from "../src/testbed";
-import { CustomActivationHelperPrepareData } from "./helpers/RNActivationHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
+import { CustomConfig } from "../src/IntegrationUtils";
 
 export class PowerAuth_LegacyAuthTests extends TestWithActivation {
 
@@ -25,22 +25,19 @@ export class PowerAuth_LegacyAuthTests extends TestWithActivation {
         return this.context.testName?.startsWith('testWithActivation') ?? false
     }
 
-    customPrepareData(): CustomActivationHelperPrepareData {
+    provideCustomConfig(): CustomConfig {
         const useBiometry = (this.context.testName?.indexOf("Biometry") ?? 0) > 0
         // Use config that allows create activation with biometry key with no user's interaction
         const config = new PowerAuthBiometryConfiguration()
         config.authenticateOnBiometricKeySetup = false
         return {
-            useConfigObjects: true,
-            useBiometry: useBiometry,
-            biometryConfig: useBiometry ? config : undefined,
-            password: this.credentials.validPassword
+            biometryConfiguration: config
         }
     }
 
     async testActivationWithLegacyAuth() {
-        const sdk = await this.helper.getPowerAuthSdk()
-        const activatioData = await this.helper.initActivation()
+        const sdk = await this.helper.sdk
+        const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         
@@ -55,8 +52,8 @@ export class PowerAuth_LegacyAuthTests extends TestWithActivation {
     }
 
     async testActivationWithLegacyAuth_WithBiometry() {
-        const sdk = await this.helper.getPowerAuthSdk()
-        const activatioData = await this.helper.initActivation()
+        const sdk = await this.helper.sdk
+        const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         

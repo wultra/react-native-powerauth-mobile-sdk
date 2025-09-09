@@ -1,7 +1,7 @@
 {
   "name": "react-native-powerauth-mobile-sdk",
   "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -66,7 +66,7 @@
   "devDependencies": {
     "@capacitor/core": "^6.1.2",
     "@react-native-community/cli": "^18.0.0",
-    "esbuild": "^0.23.1",
+    "esbuild": "^0.25.0",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-filter": "^9.0.1",
@@ -74,7 +74,7 @@
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
-    "pod-install": "^0.2.2",
+    "pod-install": "^1.0.1",
     "react": "19.0.0",
     "react-native": "^0.78.1",
     "rimraf": "^6.0.1"

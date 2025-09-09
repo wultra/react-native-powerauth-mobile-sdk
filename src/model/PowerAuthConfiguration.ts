@@ -23,7 +23,7 @@ export interface PowerAuthConfigurationType {
      */
     readonly configuration: string
     /**
-     * Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
+     * Base URL to the PowerAuth enrollment server. Usualky ends with `/enrollment-server`.
      */
     readonly baseEndpointUrl: string
 }
@@ -40,7 +40,7 @@ export class PowerAuthConfiguration implements PowerAuthConfigurationType {
      * Construct configuration with required parameters.
      * 
      * @param configuration String with the cryptographic configuration.
-     * @param baseEndpointUrl Base URL to the PowerAuth Standard REST API (the URL part before `"/pa/..."`).
+     * @param baseEndpointUrl Base URL to the PowerAuth enrollment server. Usually ends with `/enrollment-server`.
      */
     public constructor(configuration: string, baseEndpointUrl: string) {
         this.configuration = configuration

@@ -19,6 +19,7 @@
 - [Troubleshooting](Troubleshooting.md)
 - [Migration Instructions](Migration-Instructions.md)
 - [Sample Integration](Sample-Integration.md)
+- [Time Synchronization](Time-Synchronization.md)
 - [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
 - [Additional Utilities](Additional-Utilities.md)
 

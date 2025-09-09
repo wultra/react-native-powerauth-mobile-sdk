@@ -48,7 +48,7 @@ export class TestRunnerTests extends TestSuite {
         this.monitorRef = monit
         this.loggerRef = logger
         this.interactionRef = interact
-        return new TestRunner('TestRunnerTests', this.config, m, interact)
+        return new TestRunner('TestRunnerTests', m, interact)
     }
 
     get testMonitor(): CustomMonitor {
