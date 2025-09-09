@@ -1,6 +1,15 @@
 # PowerAuth Mobile JS SDK
 
-[![npm](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) ![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
+[![npmrn](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk?label=npm%3Areact-native)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) 
+[![npmcordova](https://img.shields.io/npm/v/cordova-powerauth-mobile-sdk?label=npm%3Acordova
+)](https://www.npmjs.com/package/cordova-powerauth-mobile-sdk) 
+![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
+
+[![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml)
+[![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml)
+[![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml)
+
+
 
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use This PowerAuth JS SDK library (for Android and iOS) from this repository.
 
