@@ -1,9 +1,9 @@
 # PowerAuth Mobile JS SDK
 
 [![npmrn](https://img.shields.io/npm/v/react-native-powerauth-mobile-sdk?label=npm%3Areact-native)](https://www.npmjs.com/package/react-native-powerauth-mobile-sdk) 
-[![npmcordova](https://img.shields.io/npm/v/cordova-powerauth-mobile-sdk?label=npm%3Acordova
-)](https://www.npmjs.com/package/cordova-powerauth-mobile-sdk) 
-![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
+[![npmcordova](https://img.shields.io/npm/v/cordova-powerauth-mobile-sdk?label=npm%3Acordova)](https://www.npmjs.com/package/cordova-powerauth-mobile-sdk) 
+![license](https://img.shields.io/github/license/wultra/react-native-powerauth-mobile-sdk) 
+![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
 
 [![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml)
 [![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml)
