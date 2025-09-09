@@ -1,4 +1,4 @@
-name: Build
+name: Build Library
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-library:
-    name: Build and Pack the Library
+    name: Build and Pack
     runs-on: macos-latest
     steps:
       - name: Checkout the repo
