@@ -957,23 +957,16 @@ PAJS_METHOD_START(generateHeaderForToken,
                   PAJS_ARGUMENT(tokenName, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthToken* token = [[powerAuth tokenStore] localTokenWithName:tokenName];
-    if (token == nil) {
-        reject(EC_LOCAL_TOKEN_NOT_AVAILABLE, @"This token is no longer available in the local store.", nil);
-    }
-    else if ([token canGenerateHeader]) {
-        PowerAuthAuthorizationHttpHeader* header = [token generateHeader];
+    [[powerAuth tokenStore] generateAuthorizationHeaderWithName:tokenName completion:^(PowerAuthAuthorizationHttpHeader * header, NSError * error) {
         if (header) {
             resolve(@{
                 @"key": header.key,
                 @"value": header.value
             });
         } else {
-            reject(EC_CANNOT_GENERATE_TOKEN, @"Cannot generate header for this token.", nil);
+            reject(EC_CANNOT_GENERATE_TOKEN, @"Failed to generate header for this token.", error);
         }
-    } else {
-        reject(EC_CANNOT_GENERATE_TOKEN, @"Cannot generate header for this token.", nil);
-    }
+    }];
     PA_BLOCK_END
 }
 PAJS_METHOD_END

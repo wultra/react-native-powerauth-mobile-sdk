@@ -12,9 +12,10 @@ const timeService = powerAuthSDK.timeSynchronizationService
 
 The time is synchronized automatically in the following situations:
 
-- After an activation is created
-- After getting an activation status
-- After receiving any response encrypted with our End-To-End Encryption scheme
+- After an [activation is created](Device-Activation.md)
+- After getting an [activation status](Requesting-Device-Activation-Status.md)
+- After receiving any response encrypted with our [End-To-End Encryption scheme](End-To-End-Encryption.md)
+- After generating an authorization header for a token (see [Token-Based Authentication](Token-Based-Authentication.md) for more details)
 
 <!-- begin box warning -->
 The time synchronization is reset automatically once your application transitions from the background to the foreground.
