@@ -43,11 +43,12 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
     expect(userInfo).toEqual({allClaims: {}});
 
     // persist user info and fetch it again through SDK
-    const result = await this.helper.fillUserInfo(this.helper.userInfo);
+    const userId = this.helper.userId ?? "1";
+    const result = await this.helper.fillUserInfo(this.helper.userInfo(userId));
     expect(result.status).toBe("OK");
 
     const filledUser = await this.sdk.fetchUserInfo();
-    expect(filledUser).toEqual(this.helper.userInfo);
+    expect(filledUser).toEqual(this.helper.userInfo(userId));
     const lastFilled = await this.sdk.getLastFetchedUserInfo();
     expect(filledUser).toEqual(lastFilled);
   }
@@ -56,19 +57,7 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
   async testUserInfoCreateActivation() {
     // put user data into UDS using fillUserInfo (for a specific userId)
     const userId = IntegrationHelper.randomString(20);
-    const expectedUserInfo = {
-      allClaims: {
-        subject: userId,
-        name: `User ${userId}`,
-        email: `${userId}@wultra.com`,
-        address: {
-          allClaims: {
-            formatted: "Prague",
-            country: "Czech Republic",
-          },
-        },
-      },
-    };
+    const expectedUserInfo = this.helper.userInfo(userId);
 
     const storeResult = await this.helper.fillUserInfo(expectedUserInfo as any);
     expect(storeResult.status).toBe("OK");
