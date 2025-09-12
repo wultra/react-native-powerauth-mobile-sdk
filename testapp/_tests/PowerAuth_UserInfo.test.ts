@@ -1,6 +1,10 @@
 import { expect } from '../src/testbed';
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthActivation, PowerAuthError } from 'react-native-powerauth-mobile-sdk';
+import {
+  PowerAuthActivation,
+  PowerAuthAuthentication,
+  PowerAuthError,
+} from 'react-native-powerauth-mobile-sdk';
 import {IntegrationHelper} from '../src/IntegrationUtils.ts';
 
 export class PowerAuth_UserInfoTest extends TestWithActivation {
@@ -9,7 +13,7 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
   }
 
   // Test case with explicit user data fetching from SDK.
-  async testUserInfoPersistence() {
+  async testFetchUserInfo() {
     // calling fetchUserInfo before activation throws an error
     try {
       await this.sdk.fetchUserInfo();
@@ -73,12 +77,14 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
     const before = await this.sdk.getLastFetchedUserInfo();
     expect(before).toBeUndefined();
 
-    // create activation with user data (same userId as used for UDS)
-    await this.helper.prepareActiveActivation(
-      this.credentials.validPassword,
-      userId,
-      this.activateWithBiometrics()
-    );
+    // can't use the helper to create activation here, because we need to get the user info object
+    const createdActivation = await this.helper.createActivation(userId, true);
+    const response = await this.sdk.createActivation(PowerAuthActivation.createWithActivationCode(createdActivation.activationCode, "tests"));
+    await this.sdk.persistActivation(PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword));
+
+    expect(response).toBeDefined();
+    const userInfoClaims = response.userInfoClaims;
+    expect(userInfoClaims).toEqual(expectedUserInfo.allClaims);
 
     // after activation, implicit user info should be available immediately
     const after = await this.sdk.getLastFetchedUserInfo();
