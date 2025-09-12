@@ -8,9 +8,9 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
     return false;
   }
 
-  // Test of user info persistence and fetching
+  // Test case with explicit user data fetching from SDK.
   async testUserInfoPersistence() {
-    // calling fetchUserInfo before activation throws error
+    // calling fetchUserInfo before activation throws an error
     try {
       await this.sdk.fetchUserInfo();
     } catch (error) {
@@ -30,11 +30,11 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
       this.activateWithBiometrics()
     );
 
-    // activation creates empty user info object, RN bridge wraps it in a allClaims empty directory
+    // activation creates an empty user info object, RN bridge wraps it in an allClaims empty directory
     const after = await this.sdk.getLastFetchedUserInfo();
     expect(after).toEqual({allClaims: {}});
 
-    // fetch user info from sdk, it should return empty allClaims object, because no user info is persisted yet
+    // fetching user info from sdk should return an empty allClaims object, no user info is persisted yet
     const userInfo = await this.sdk.fetchUserInfo();
     expect(userInfo).toEqual({allClaims: {}});
 
@@ -48,9 +48,9 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
     expect(filledUser).toEqual(lastFilled);
   }
 
-  // Test with implicit user data in create activation flow
-  async testUserInfoActivation() {
-    // 1. put user data into UDS using fillUserInfo (for a specific userId)
+  // Test case with a user data object passed from the createActivation SDK call.
+  async testUserInfoCreateActivation() {
+    // put user data into UDS using fillUserInfo (for a specific userId)
     const userId = IntegrationHelper.randomString(20);
     const expectedUserInfo = {
       allClaims: {
@@ -69,22 +69,22 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
     const storeResult = await this.helper.fillUserInfo(expectedUserInfo as any);
     expect(storeResult.status).toBe("OK");
 
-    // Before activation, last fetched info should be undefined
+    // before activation, last fetched info should be undefined
     const before = await this.sdk.getLastFetchedUserInfo();
     expect(before).toBeUndefined();
 
-    // 2. create activation with user data (same userId as used for UDS)
+    // create activation with user data (same userId as used for UDS)
     await this.helper.prepareActiveActivation(
       this.credentials.validPassword,
       userId,
       this.activateWithBiometrics()
     );
 
-    // After activation, implicit user info should be available immediately
+    // after activation, implicit user info should be available immediately
     const after = await this.sdk.getLastFetchedUserInfo();
     expect(after).toEqual(expectedUserInfo);
 
-    // Fetching explicitly should return the same data
+    // fetching explicitly should return the same data
     const fetched = await this.sdk.fetchUserInfo();
     expect(fetched).toEqual(expectedUserInfo);
   }

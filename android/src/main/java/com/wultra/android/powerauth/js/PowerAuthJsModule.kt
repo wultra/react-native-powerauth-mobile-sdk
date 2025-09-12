@@ -288,7 +288,6 @@ class PowerAuthJsModule(
 
                     sdk.createActivation(paActivation.build(), object : ICreateActivationListener {
                         override fun onActivationCreateSucceed(result: CreateActivationResult) {
-
                             val map: WritableMap = Arguments.createMap()
                             map.putString(
                                 "activationFingerprint",

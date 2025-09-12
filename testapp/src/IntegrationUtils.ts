@@ -82,7 +82,7 @@ export class IntegrationHelper {
     /// Creates a new activation on the server and locally.
     async prepareActiveActivation(password: string, userId: string | undefined = undefined, setupBiometry: boolean = false, biometryPrompt: string = "Create activation with biometrics"): Promise<void> {
 
-        const resp = await this.createActivation(userId)
+        const resp = await this.createActivation(userId, true);
 
         // CREATE ACTIVATION LOCALLY
 
