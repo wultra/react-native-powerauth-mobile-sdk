@@ -197,7 +197,7 @@ class PowerAuthJsModule(
                     override fun onUserInfoSucceed(userInfo: UserInfo) {
                         val response: WritableMap = Arguments.createMap()
                         val claims = userInfo.allClaims
-                        response.putMap("allClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                        response.putMap("allClaims", Arguments.makeNativeMap(claims))
                         promise.resolve(response)
                     }
                     override fun onUserInfoFailed(t: Throwable) {
@@ -217,7 +217,7 @@ class PowerAuthJsModule(
                     if (info != null) {
                         val response: WritableMap = Arguments.createMap()
                         val claims = info.allClaims
-                        response.putMap("allClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                        response.putMap("allClaims", Arguments.makeNativeMap(claims))
                         promise.resolve(response)
                     } else {
                         promise.resolve(null)
@@ -288,6 +288,7 @@ class PowerAuthJsModule(
 
                     sdk.createActivation(paActivation.build(), object : ICreateActivationListener {
                         override fun onActivationCreateSucceed(result: CreateActivationResult) {
+
                             val map: WritableMap = Arguments.createMap()
                             map.putString(
                                 "activationFingerprint",
@@ -311,7 +312,7 @@ class PowerAuthJsModule(
                             val userInfo = result.userInfo
                             if (userInfo != null) {
                                 val claims = userInfo.allClaims
-                                map.putMap("userInfoClaims", if (claims != null) Arguments.makeNativeMap(claims) else Arguments.createMap())
+                                map.putMap("userInfoClaims", Arguments.makeNativeMap(claims))
                             } else {
                                 map.putNull("userInfoClaims")
                             }

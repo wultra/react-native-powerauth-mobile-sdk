@@ -1,6 +1,7 @@
 import { expect } from '../src/testbed';
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { PowerAuthActivation, PowerAuthError } from 'react-native-powerauth-mobile-sdk';
+import {IntegrationHelper} from '../src/IntegrationUtils.ts';
 
 export class PowerAuth_UserInfoTest extends TestWithActivation {
   shouldCreateActivationBeforeTest(): boolean {
@@ -14,7 +15,8 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
       await this.sdk.fetchUserInfo();
     } catch (error) {
       const err = error as PowerAuthError;
-      expect(err.code).toBe("MISSING_ACTIVATION");
+      // iOS SDK returns MISSING_ACTIVATION, Android returns INVALID_ACTIVATION_STATE
+      expect(["INVALID_ACTIVATION_STATE", "MISSING_ACTIVATION"]).toContain(err.code);
     }
 
     // before activation sdk returns nil for last fetched user info
@@ -49,10 +51,7 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
   // Test with implicit user data in create activation flow
   async testUserInfoActivation() {
     // 1. put user data into UDS using fillUserInfo (for a specific userId)
-    const userId = this.helper.constructor['randomString']
-      ? (this.helper.constructor as any).randomString(20)
-      : Math.random().toString(36).substring(2, 22);
-
+    const userId = IntegrationHelper.randomString(20);
     const expectedUserInfo = {
       allClaims: {
         subject: userId,
