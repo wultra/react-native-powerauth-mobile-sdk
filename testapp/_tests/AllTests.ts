@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { TestSuite } from '../src/testbed';
+import { TestSuite } from "../src/testbed";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
 import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
@@ -36,7 +36,7 @@ import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
 import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
-import {PowerAuth_UserInfoTest} from './PowerAuth_UserInfo.test.ts';
+import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test.ts";
 
 export function getLibraryTests(): TestSuite[] {
     return [
