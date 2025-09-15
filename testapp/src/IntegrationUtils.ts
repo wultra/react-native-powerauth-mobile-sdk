@@ -14,7 +14,10 @@
 // and limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
+  PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration,
+  PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
+} from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
 
 export class AppConfig {
@@ -24,6 +27,10 @@ export class AppConfig {
     static cloudApplicationId = EnvConfig.POWERAUTH_CLOUD_APP_ID || ""
     static enrollmentUrl = EnvConfig.ENROLLMENT_SERVER_URL || ""
     static sdkConfig = EnvConfig.SDK_CONFIG || ""
+    // User Data Store
+    static udsServerUrl = EnvConfig.UDS_SERVER_URL || ""
+    static udsServerUsername = EnvConfig.UDS_SERVER_USERNAME || ""
+    static udsServerPassword = EnvConfig.UDS_SERVER_PASSWORD || ""
 }
 
 export interface CustomConfig {
@@ -35,12 +42,29 @@ export interface CustomConfig {
 }
 
 export class IntegrationHelper {
-    
+
     private jsonMediaType = "application/json; charset=UTF-8"
 
     get userId(): string | undefined {
         return this._userId
     }
+
+    // mocked user info based on the user id
+    userInfo(userId: string): PowerAuthUserInfo {
+      return {
+        allClaims: {
+          subject: userId,
+          name: `User ${userId}`,
+          email: `${userId}@wultra.com`,
+          address: {
+            allClaims: {
+              formatted: 'Prague',
+              country: 'Czech Republic',
+            }
+          }
+        }
+      }
+    };
 
     get sdk(): PowerAuth {
         return this._sdk
@@ -101,10 +125,10 @@ export class IntegrationHelper {
 
         // CONFIGURE SDK
         await this._sdk.configure(
-            config?.configuration ?? new PowerAuthConfiguration(AppConfig.sdkConfig, AppConfig.enrollmentUrl), 
-            config?.clientConfiguration, 
-            config?.biometryConfiguration, 
-            config?.keychainConfiguration, 
+            config?.configuration ?? new PowerAuthConfiguration(AppConfig.sdkConfig, AppConfig.enrollmentUrl),
+            config?.clientConfiguration,
+            config?.biometryConfiguration,
+            config?.keychainConfiguration,
             config?.sharingConfiguration
         )
 
@@ -171,6 +195,20 @@ export class IntegrationHelper {
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/token/verify`)
     }
 
+    async fillUserInfo(userInfo: PowerAuthUserInfo | undefined) {
+      if (!userInfo || userInfo.allClaims === undefined) {
+        throw new Error('UserInfo is undefined');
+      }
+      const user = userInfo.allClaims;
+      const payload = JSON.stringify({...user});
+
+      return await this.makeCall(
+        payload,
+        `${AppConfig.udsServerUrl}/public/user-claims?userId=${user.subject}`,
+        "POST"
+      );
+    }
+
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
@@ -188,11 +226,10 @@ export class IntegrationHelper {
     }
 
     private async makeCall(payload: string | undefined, url: string, method: string = "POST"): Promise<any> {
-        const creds = `${AppConfig.cloudServerLogin}:${AppConfig.cloudServerPassword}`
         const request: RequestInit = {
             body: payload,
             headers: {
-                "authorization": `Basic ${btoa(creds)}`,
+                "authorization": `Basic ${btoa(this.credentialsForUrl(url))}`,
                 "content-type": this.jsonMediaType
             },
             method: method
@@ -201,7 +238,18 @@ export class IntegrationHelper {
             .then(response => response.text())
             .then(stringResp => {
                 return JSON.parse(stringResp)
-            })
+        })
+    }
+
+    // Create credentials for the given URL - PowerAuth Cloud or UDS Server
+    private credentialsForUrl(url: string): string {
+        if (url.startsWith(AppConfig.cloudServerUrl)) {
+            return `${AppConfig.cloudServerLogin}:${AppConfig.cloudServerPassword}`
+        } else if (url.startsWith(AppConfig.udsServerUrl)) {
+            return `${AppConfig.udsServerUsername}:${AppConfig.udsServerPassword}`
+        } else {
+            throw new Error(`Unknown server URL: ${url}`)
+        }
     }
 
     static randomString(length: number): string {

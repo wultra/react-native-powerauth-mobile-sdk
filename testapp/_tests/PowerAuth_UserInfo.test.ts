@@ -5,7 +5,7 @@ import {
   PowerAuthAuthentication,
   PowerAuthError,
 } from "react-native-powerauth-mobile-sdk";
-import { IntegrationHelper } from '../src/IntegrationUtils';
+import { IntegrationHelper } from "../src/IntegrationUtils";
 
 export class PowerAuth_UserInfoTest extends TestWithActivation {
   shouldCreateActivationBeforeTest(): boolean {

@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { TestSuite } from "../src/testbed";
+import { TestSuite } from "../src/testbed/TestSuite";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
 import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
