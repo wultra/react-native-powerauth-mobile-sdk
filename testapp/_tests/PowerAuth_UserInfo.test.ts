@@ -1,11 +1,11 @@
-import { expect } from '../src/testbed';
+import { expect } from "../src/testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import {
   PowerAuthActivation,
   PowerAuthAuthentication,
   PowerAuthError,
-} from 'react-native-powerauth-mobile-sdk';
-import {IntegrationHelper} from '../src/IntegrationUtils.ts';
+} from "react-native-powerauth-mobile-sdk";
+import { IntegrationHelper } from '../src/IntegrationUtils';
 
 export class PowerAuth_UserInfoTest extends TestWithActivation {
   shouldCreateActivationBeforeTest(): boolean {
