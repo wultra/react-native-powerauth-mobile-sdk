@@ -162,6 +162,15 @@ export class IntegrationHelper {
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/signature/verify`)
     }
 
+    async verifyToken(authHeader: string): Promise<TokenResponse> {
+        const payload = `
+            {
+                "authHeader": "${authHeader.replace(/\"/g, '\\\"')}"
+            }
+        `;
+        return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/token/verify`)
+    }
+
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
@@ -236,4 +245,12 @@ interface SignatureResponse {
   registrationStatus: string
   signatureType: string
   remainingAttempts: number
+}
+
+interface TokenResponse {
+  tokenValid: boolean
+  userId?: string
+  registrationId?: string
+  registrationStatus?: string
+  signatureType?: string
 }

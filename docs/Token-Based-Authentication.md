@@ -46,6 +46,9 @@ try {
 }
 ```
 
+If time is not synchronized with the server before the header generation, it will be performed automatically during this call (an HTTP request). 
+This behavior ensures that the generated token is always valid, even if the device's clock is slightly off.
+
 ## Removing Token From the Server
 
 To remove the token from the server, you can use the following code:

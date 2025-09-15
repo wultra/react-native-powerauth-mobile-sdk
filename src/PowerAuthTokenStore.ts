@@ -100,6 +100,8 @@ export class PowerAuthTokenStore {
     /**
      * Generates a http header for the token in local storage.
      * 
+     * If needed, the method automatically performs time synchronization (via additional HTTP request).
+     * 
      * @param tokenName Name of token in the local storage that will be used for generating
      * @returns header or throws
      */
