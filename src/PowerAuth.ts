@@ -38,6 +38,7 @@ import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
 import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
 import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizationService';
+import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -567,6 +568,26 @@ export class PowerAuth {
      */
     private async authenticate(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
         return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
+    }
+
+    /**
+     * Fetch information about the user from the server.
+     * If the operation succeeds, then the user information object is also
+     * internally stored and available in [getLastFetchedUserInfo] method.
+     */
+    fetchUserInfo(): Promise<PowerAuthUserInfo> {
+        return NativeWrapper.thisCall("fetchUserInfo", this.instanceId);
+    }
+
+    /**
+     * Returns the last fetched user info or undefined when there's no cached user info available.
+     *
+     * Notes:
+     * - On iOS native SDK, `PowerAuthSDK.lastFetchedUserInfo` is nullable and may be `nil` until user info is fetched.
+     * - This bridge returns `undefined` when the native value is `nil`, or when the claims are missing/empty.
+     */
+    getLastFetchedUserInfo(): Promise<PowerAuthUserInfo | undefined> {
+        return NativeWrapper.thisCallNull("getLastFetchedUserInfo", this.instanceId);
     }
 }
 

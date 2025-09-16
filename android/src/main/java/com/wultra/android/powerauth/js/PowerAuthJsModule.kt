@@ -267,6 +267,13 @@ class PowerAuthJsModule(
                                 if (customAttr == null) null
                                 else Arguments.makeNativeMap(customAttr)
                             )
+                            val userInfo = result.userInfo
+                            if (userInfo != null) {
+                                val claims = userInfo.allClaims
+                                map.putMap("userInfoClaims", Arguments.makeNativeMap(claims))
+                            } else {
+                                map.putNull("userInfoClaims")
+                            }
                             promise.resolve(map)
                         }
 
@@ -1029,6 +1036,47 @@ class PowerAuthJsModule(
                         )
                     }
                 })
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun fetchUserInfo(instanceId: String, promise: Promise) {
+        val context: Context = this.context
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.fetchUserInfo(context, object : IUserInfoListener {
+                    override fun onUserInfoSucceed(userInfo: UserInfo) {
+                        val response: WritableMap = Arguments.createMap()
+                        val claims = userInfo.allClaims
+                        response.putMap("allClaims", Arguments.makeNativeMap(claims))
+                        promise.resolve(response)
+                    }
+                    override fun onUserInfoFailed(t: Throwable) {
+                        Errors.rejectPromise(promise, t)
+                    }
+                })
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun getLastFetchedUserInfo(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                try {
+                    val info = sdk.lastFetchedUserInfo
+                    if (info != null) {
+                        val response: WritableMap = Arguments.createMap()
+                        val claims = info.allClaims
+                        response.putMap("allClaims", Arguments.makeNativeMap(claims))
+                        promise.resolve(response)
+                    } else {
+                        promise.resolve(null)
+                    }
+                } catch (t: Throwable) {
+                    Errors.rejectPromise(promise, t)
+                }
             }
         })
     }

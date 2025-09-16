@@ -15,6 +15,7 @@
  */
 
 import {PowerAuthRecoveryActivationData} from "./PowerAuthRecoveryActivationData";
+import { PowerAuthUserInfo } from "./PowerAuthUserInfo";
 
 /**
  * Success object returned by "createActivation" call.
@@ -35,4 +36,6 @@ export interface PowerAuthCreateActivationResult {
      * When available, contents of this object depends of your enrollment server configuration.
      */
     customAttributes?: any
+
+    userInfoClaims?: PowerAuthUserInfo
 }
