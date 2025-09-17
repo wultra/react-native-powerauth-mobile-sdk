@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {PowerAuthUserAddress, PowerAuthUserInfo} from "./model/PowerAuthUserInfo";
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { SDK_VERSION } from "./internal/SDKVersion";
 
@@ -30,6 +31,69 @@ export class PowerAuthUtils {
     static async getEnvironmentInfo(): Promise<PowerAuthEnvironmentInfo> {
         const info = (await NativeWrapper.staticCall("getEnvironmentInfo")) as PowerAuthEnvironmentInfo
         return { ...info, sdkVersion: SDK_VERSION } as PowerAuthEnvironmentInfo;
+    }
+
+    /**
+     * Method expands the `userInfo` object properties with values returned from the SDK (that only fills `allClaims` property).
+     *
+     * @param userInfo The `userInfo` object to expand.
+     * @returns The expanded `userInfo` object.
+     * */
+    static expandUserInfoObject(userInfo: PowerAuthUserInfo): PowerAuthUserInfo {
+        const claims = userInfo.allClaims;
+        if (!claims) {
+            return userInfo;
+        }
+
+        const result: PowerAuthUserInfo = {
+            subject: claims.sub,
+            name: claims.name,
+            givenName: claims.given_name,
+            familyName: claims.family_name,
+            middleName: claims.middle_name,
+            nickname: claims.nickname,
+            preferredUsername: claims.preferred_username,
+            profileUrl: claims.profile,
+            pictureUrl: claims.picture,
+            websiteUrl: claims.website,
+            email: claims.email,
+            isEmailVerified: claims.email_verified,
+            phoneNumber: claims.phone_number,
+            isPhoneNumberVerified: claims.phone_number_verified,
+            gender: claims.gender,
+            birthdate: claims.birthdate, // expected format: yyyy-MM-dd
+            zoneInfo: claims.zoneinfo,
+            locale: claims.locale,
+            userAddress: PowerAuthUtils.expandUserInfoAddress(claims.address),
+            updatedAt: timestampToDate(claims.updated_at),
+            allClaims: claims,
+        };
+
+        return result;
+    }
+
+    /**
+     * Method expands the `address` object properties with values returned from the SDK (that only fills `allClaims` property).
+     * @param address The `address` object to expand.
+     * @returns The expanded `address` object.
+     */
+    static expandUserInfoAddress(address: any | undefined): PowerAuthUserAddress | undefined {
+        if (!address) {
+            return;
+        }
+
+        const formatted: string | undefined = address.formatted?.replace(/\r\n/g, "\n");
+
+        const result: PowerAuthUserAddress = {
+            formatted,
+            street: address.street_address,
+            locality: address.locality,
+            region: address.region,
+            postalCode: address.postal_code,
+            country: address.country,
+            allClaims: {...address},
+        };
+        return result;
     }
 }
 
@@ -56,4 +120,24 @@ export interface PowerAuthEnvironmentInfo {
 
     /** PowerAuth JS SDK version, for example "4.0.0" */
     sdkVersion: string
+}
+
+/**
+ * Method converts a timestamp value to a `Date` object. String and number values are supported.
+ * @param value in seconds to convert.
+ * */
+function timestampToDate(value: unknown): Date | undefined {
+    try {
+        if (typeof value === "string") {
+            const num = parseInt(value, 10);
+            if (isNaN(num)) return undefined;
+            return new Date(num * 1000);
+        }
+
+        if (typeof value === "number") {
+            return new Date(value * 1000);
+        }
+    } catch {
+        return undefined;
+    }
 }

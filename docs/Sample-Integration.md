@@ -12,4 +12,4 @@ The test application is using direct calls to PowerAuth Cloud component to manag
 
 ## Read Next
 
-- [Time Synchronization](Time-Synchronization.md)
+- [User Info](User-Info.md)

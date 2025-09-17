@@ -22,6 +22,7 @@ We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platfor
 - [Secure Vault](Secure-Vault.md)
 - [Recovery Codes](Recovery-Codes.md)
 - [Token Based Authentication](Token-Based-Authentication.md)
+- [User Info](User-Info.md)
 
 ## Additional Topics
 

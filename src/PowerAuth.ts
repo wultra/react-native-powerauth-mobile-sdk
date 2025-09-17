@@ -29,6 +29,7 @@ import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
+import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { resolveAuthentication } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
@@ -38,6 +39,7 @@ import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
 import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
 import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizationService';
+import { PowerAuthUtils } from "./PowerAuthUtils";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -217,8 +219,13 @@ export class PowerAuth {
      * 
      * @param activation A PowerAuthActivation object containg all information required for the activation creation.
      */
-    createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
-        return NativeWrapper.thisCall("createActivation", this.instanceId, activation);
+    async createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
+        const result: PowerAuthCreateActivationResult = await NativeWrapper.thisCall("createActivation", this.instanceId, activation);
+        // if userInfo object exists, we need to expand it from allClaims
+        if (result.userInfo) {
+            result.userInfo = PowerAuthUtils.expandUserInfoObject(result.userInfo);
+        }
+        return result;
     }
 
     /**
@@ -263,8 +270,8 @@ export class PowerAuth {
     /**
      * Compute the HTTP signature header for GET HTTP method, URI identifier and HTTP query parameters using provided authentication information.
      * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
-     * may take an undefined amount of time to complete. 
-     * 
+     * may take an undefined amount of time to complete.
+     *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      * @param uriId URI identifier.
      * @param params HTTP query params.
@@ -278,7 +285,7 @@ export class PowerAuth {
      * Compute the HTTP signature header for given HTTP method, URI identifier and HTTP request body using provided authentication information.
      * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
      * may take an undefined amount of time to complete.
-     * 
+     *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      * @param method HTTP method used for the signature computation.
      * @param uriId URI identifier.
@@ -290,10 +297,10 @@ export class PowerAuth {
     }
 
     /**
-     * Compute the offline signature for given HTTP method, URI identifier and HTTP request body using provided authentication information. Be aware that if 
-     * `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined 
-     * amount of time to complete. 
-     * 
+     * Compute the offline signature for given HTTP method, URI identifier and HTTP request body using provided authentication information. Be aware that if
+     * `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined
+     * amount of time to complete.
+     *
      * @param authentication An authentication instance specifying what factors should be used to sign the request. The possession and knowledge is recommended.
      * @param uriId URI identifier.
      * @param body HTTP request body.
@@ -306,7 +313,7 @@ export class PowerAuth {
 
     /**
      * Validates whether the data has been signed with master server private key or personalized server's private key.
-     * 
+     *
      * @param data An arbitrary data
      * @param signature A signature calculated for data, in Base64 format
      * @param masterKey If `true`, then master server public key is used for validation, otherwise personalized server's public key.
@@ -317,7 +324,7 @@ export class PowerAuth {
 
     /**
      * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint `/pa/signature/validate`.
-     * 
+     *
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
      */
@@ -327,11 +334,11 @@ export class PowerAuth {
 
     /**
      * Change the password using local re-encryption, do not validate old password by calling any endpoint.
-     * 
+     *
      * You are responsible for validating the old password against some server endpoint yourself before using it in this method.
      * If you do not validate the old password to make sure it is correct, calling this method will corrupt the local data, since
      * existing data will be decrypted using invalid PIN code and re-encrypted with a new one.
- 
+
      @param oldPassword Old password, currently set to store the data.
      @param newPassword New password, to be set in case authentication with old password passes.
      @returns Returns true in case password was changed without error, false otherwise.
@@ -343,15 +350,15 @@ export class PowerAuth {
     /**
      * Regenerate a biometry related factor key. This variant of method is useful only on iOS platform or on Android, if `authenticateOnBiometricKeySetup` is `false`.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
-     * 
+     *
      * @param password Password used for authentication during vault unlocking call.
      */
     addBiometryFactor(password: PasswordType): Promise<void>
-    
+
     /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
-     * 
+     *
      * @param password Password used for authentication during vault unlocking call.
      * @param prompt Prompt to be displayed. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
      */
@@ -360,7 +367,7 @@ export class PowerAuth {
     /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
-     * 
+     *
      * @param password Password used for authentication during vault unlocking call.
      * @param title Title for biometry dialog. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
      * @param description Description for biometry dialog. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
@@ -394,21 +401,21 @@ export class PowerAuth {
 
     /**
      * Returns biometry info data.
-     * 
+     *
      * @returns object with information data about biometry
      */
     getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
         return NativeWrapper.thisCall("getBiometryInfo", this.instanceId);
     }
 
-    /** 
+    /**
      * Generate a derived encryption key with given index. The key is returned in form of base64 encoded string.
-     * 
-     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used 
+     *
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used
      * for subsequent key derivation using given index.
-     * 
+     *
      * @param authentication Authentication used for vault unlocking call.
-     * @param index Index of the derived key using KDF. 
+     * @param index Index of the derived key using KDF.
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
         return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticate(authentication), index);
@@ -416,10 +423,10 @@ export class PowerAuth {
 
     /**
      * Sign given data with the original device private key (asymetric signature).
-     * 
-     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key 
+     *
+     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key
      * used for private key decryption. Data is then signed using ECDSA algorithm with this key and can be validated on the server side.
-     * 
+     *
      * @param authentication Authentication used for vault unlocking call.
      * @param data Data to be signed with the private key.
      * @param dataFormat Data format of the input data.
@@ -428,11 +435,11 @@ export class PowerAuth {
         return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data, dataFormat);
     }
 
-    /** 
+    /**
      * Validate a user password.
-     * 
+     *
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/signature/validate` to validate the signature value.
-     * 
+     *
      * @param password Password to be verified.
      */
     async validatePassword(password: PasswordType): Promise<void> {
@@ -448,9 +455,9 @@ export class PowerAuth {
 
     /**
      * Get an activation recovery data.
-     * 
+     *
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for private recovery data decryption.
-     * 
+     *
      * @param authentication Authentication used for vault unlocking call.
      */
     async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
@@ -459,28 +466,28 @@ export class PowerAuth {
 
     /**
      * Confirm given recovery code on the server by calling a PowerAuth Standard RESTful API endpoint `/pa/recovery/confirm`.
-     * 
-     * The method is useful for situations when user receives a recovery information via OOB channel (for example via postcard). 
+     *
+     * The method is useful for situations when user receives a recovery information via OOB channel (for example via postcard).
      * Such recovery codes cannot be used without a proper confirmation on the server. To confirm codes, user has to authenticate himself
      * with a knowledge factor.
-     * 
+     *
      * Note that the provided recovery code can contain a `"R:"` prefix, if it's scanned from QR code.
-     * 
+     *
      * @param recoveryCode Recovery code to confirm
      * @param authentication Authentication used for recovery code confirmation
-     * 
+     *
      * @returns Result of the confirmation
      */
     async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult> {
-        return { 
-            alreadyConfirmed: await NativeWrapper.thisCall("confirmRecoveryCode", this.instanceId, recoveryCode, await this.authenticate(authentication)) 
+        return {
+            alreadyConfirmed: await NativeWrapper.thisCall("confirmRecoveryCode", this.instanceId, recoveryCode, await this.authenticate(authentication))
         }
     }
 
     /**
      * Function verify activation code scanned from QR code whethner it's formally valid and is issued by
      * the PowerAuth Server.
-     * @param activationCode Activation code to scan. 
+     * @param activationCode Activation code to scan.
      * @returns true if activation code is valid and is issued by PowerAuth Server.
      */
     async verifyScannedActivationCode(activationCode: string): Promise<boolean> {
@@ -497,13 +504,13 @@ export class PowerAuth {
 
     /**
      * Helper method for grouping biometric authentications.
-     * 
+     *
      * With this method, you can use 1 biometric authentication (dialog) for several operations.
      * Just use the `reusableAuthentication` variable inside the `groupedAuthenticationCalls` callback.
-     * 
-     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one 
+     *
+     * Be aware, that you must not execute the next HTTP request signed with the same credentials when the previous one
      * fails with the 401 HTTP status code. If you do, then you risk blocking the user's activation on the server.
-     * 
+     *
      * @param authentication authentication object
      * @param groupedAuthenticationCalls call that will use reusable authentication object
      */
@@ -526,11 +533,11 @@ export class PowerAuth {
         } catch (e) {
             // catching biometry authentication error and rethrowing it as PowerAuthError
             throw NativeWrapper.processException(e);
-        }  
+        }
     }
 
     /**
-     * Create new PowerAuthPassword object that will be destroyed automatically when this PowerAuth instance is deconfigured.
+     * Create a new PowerAuthPassword object that will be destroyed automatically when this PowerAuth instance is deconfigured.
      * @param destroyOnUse If `true` then the underlying native password is destroyed immediately after it's used for a cryptographic operation.
      * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
      * @returns new instance of PowerAuthPassword class that's owned by this PowerAuth instance.
@@ -539,10 +546,38 @@ export class PowerAuth {
         return new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, this.instanceId)
     }
 
+    /**
+     * Fetch information about the user from the server.
+     * If the operation succeeds, then the user information object is also
+     * internally stored and available in the [getLastFetchedUserInfo] method.
+     */
+    async fetchUserInfo(): Promise<PowerAuthUserInfo | undefined> {
+        const userInfo: PowerAuthUserInfo | undefined = await NativeWrapper.thisCallNull("fetchUserInfo", this.instanceId)
+        if (userInfo) {
+            // userInfo object has all properties stored in allClaims. We need to unwrap these into properties before returning
+            return PowerAuthUtils.expandUserInfoObject(userInfo);
+        }
+    }
+
+    /**
+     * Returns the last fetched user info or undefined when there's no cached user info available.
+     *
+     * Notes:
+     * - On iOS native SDK, `PowerAuthSDK.lastFetchedUserInfo` is nullable and may be `nil` until user info is fetched.
+     * - This bridge returns `undefined` when the native value is `nil`, or when the claims are missing/empty.
+     */
+    async getLastFetchedUserInfo(): Promise<PowerAuthUserInfo | undefined> {
+        const userInfo: PowerAuthUserInfo | undefined = await NativeWrapper.thisCallNull("getLastFetchedUserInfo", this.instanceId);
+        if (userInfo) {
+            // userInfo object has all properties stored in allClaims. We need to unwrap these into properties before returning
+            return PowerAuthUtils.expandUserInfoObject(userInfo);
+        }
+    }
+
     // End-To-End Encryption
 
     /**
-     * Creates a new instance of encryptor suited for general end-to-end encryption purposes. The returned 
+     * Creates a new instance of encryptor suited for general end-to-end encryption purposes. The returned
      * encryptor is cryptographically bounded to the PowerAuth configuration, so it can be used with or
      * without a valid activation.
      */
@@ -561,7 +596,7 @@ export class PowerAuth {
 
     /**
      * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
-     * 
+     *
      * @param authentication authentication configuration
      * @returns configured authorization object
      */

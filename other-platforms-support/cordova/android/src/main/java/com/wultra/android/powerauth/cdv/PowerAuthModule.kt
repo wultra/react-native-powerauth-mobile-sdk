@@ -245,6 +245,15 @@ class PowerAuthModule : CordovaPlugin() {
                 synchronizeTime(args, promise)
                 return true
             }
+            // USER INFO
+            "fetchUserInfo" -> {
+                fetchUserInfo(args, promise)
+                return true
+            }
+            "getLastFetchedUserInfo" -> {
+                getLastFetchedUserInfo(args, promise)
+                return true
+            }
         }
         return false  // Returning false results in a "MethodNotFound" error.
     }
@@ -576,5 +585,16 @@ class PowerAuthModule : CordovaPlugin() {
     private fun synchronizeTime(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         powerAuthJsModule.synchronizeTime(instanceId, promise)
+    }
+
+    // USER INFO METHODS
+    private fun fetchUserInfo(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.fetchUserInfo(instanceId, promise)
+    }
+
+    private fun getLastFetchedUserInfo(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.getLastFetchedUserInfo(instanceId, promise)
     }
 }
