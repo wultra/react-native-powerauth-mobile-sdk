@@ -15,7 +15,6 @@
 //
 
 import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
-import { getTestConfig } from './Config'
 import { TestContext, UserPromptDuration, UserInteraction, TestProgressObserver, TestProgress } from './testbed'
 import { TestLog } from './testbed/TestLog'
 import { TestMonitorGroup } from './testbed/TestMonitor'
@@ -49,10 +48,9 @@ export class TestExecutor implements UserInteraction {
     this.onCompletion(true)
     this.isRunning = true
     
-    const cfg = await getTestConfig()
     const logger = new TestLog()
     const monitor = new TestMonitorGroup([ logger ])
-    const runner = this.testRunner = new TestRunner('Automatic tests', cfg, monitor, this)
+    const runner = this.testRunner = new TestRunner('Automatic tests', monitor, this)
     runner.allTestsCounter.addObserver(this.onProgress)
     const tests = interactive ? getInteractiveLibraryTests() :  getLibraryTests().concat(getTestbedTests())
     await runner.runTests(tests)

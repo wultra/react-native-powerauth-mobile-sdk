@@ -1,5 +1,12 @@
 # Changelog
 
+## TBA
+- Token-based authentication now automatically synchronizes time if needed (see [Token-Based Authentication](./Token-Based-Authentication.md) for more details)
+
+## 4.1.2 (9/2025)
+- Fixed Android Encryptor crashing on missing `putLong` JNI bindings (issue [#264](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/264))
+- Added [Time Synchronization service](./Time-Synchronization.md)
+
 ## 4.1.1 (7/2025)
 
 - Upgraded the [PowerAuth native SDK to `1.9.5`](https://github.com/wultra/powerauth-mobile-sdk/releases/tag/1.9.5)

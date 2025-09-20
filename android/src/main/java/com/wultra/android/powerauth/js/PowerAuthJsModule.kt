@@ -15,7 +15,6 @@
  */
 package com.wultra.android.powerauth.js
 
-
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -36,7 +35,6 @@ import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStr
 import io.getlime.security.powerauth.sdk.*
 import io.getlime.security.powerauth.sdk.impl.MainThreadExecutor
 import java.nio.charset.StandardCharsets
-
 
 class PowerAuthJsModule(
     private val context: Context,
@@ -1018,20 +1016,19 @@ class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                val token: PowerAuthToken? = sdk.tokenStore.getLocalToken(context, tokenName)
-                if (token == null) {
-                    promise.reject(
-                        Errors.EC_LOCAL_TOKEN_NOT_AVAILABLE,
-                        "This token is no longer available in the local store."
-                    )
-                } else if (token.canGenerateHeader()) {
-                    promise.resolve(getHttpHeaderObject(token.generateHeader()))
-                } else {
-                    promise.reject(
-                        Errors.EC_CANNOT_GENERATE_TOKEN,
-                        "Cannot generate header for this token."
-                    )
-                }
+                sdk.tokenStore.generateAuthorizationHeader(context, tokenName, object: IGenerateTokenHeaderListener {
+                    override fun onGenerateTokenHeaderSucceeded(header: PowerAuthAuthorizationHttpHeader) {
+                        promise.resolve(getHttpHeaderObject(header))
+                    }
+
+                    override fun onGenerateTokenHeaderFailed(t: Throwable) {
+                        promise.reject(
+                            Errors.EC_CANNOT_GENERATE_TOKEN,
+                            "Cannot generate header for this token.",
+                            t
+                        )
+                    }
+                })
             }
         })
     }
@@ -1126,6 +1123,72 @@ class PowerAuthJsModule(
         promise.resolve(map)
     }
 
+    @JsApiMethod
+    fun isTimeSynchronized(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                promise.resolve(sdk.timeSynchronizationService.isTimeSynchronized)
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun localTimeAdjustment(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun localTimeAdjustmentPrecision(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun currentTime(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                // In integer milliseconds to match JS expectations
+                promise.resolve(sdk.timeSynchronizationService.currentTime.toInt())
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun resetTimeSynchronization(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.timeSynchronizationService.resetTimeSynchronization()
+                promise.resolve(null)
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun synchronizeTime(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.timeSynchronizationService.synchronizeTime(object: ITimeSynchronizationListener {
+                    override fun onTimeSynchronizationSucceeded() {
+                        promise.resolve(null)
+                    }
+                    override fun onTimeSynchronizationFailed(t: Throwable) {
+                        Errors.rejectPromise(promise, t)
+                    }
+                })
+            }
+        })
+    }
+
+    // -- PRIVATE HELPERS --
 
     /**
      * Helper function converts input readable map to PowerAuthAuthentication object.

@@ -22,7 +22,7 @@ import { CustomMonitor } from "./CustomMonitor";
 export class TestSuiteTests extends TestSuite {
     async testRunOnlyOneTest() {
         const monitor = new CustomMonitor()
-        const runner = new TestRunner('testRunOnlyOneTest', this.config, monitor, undefined)
+        const runner = new TestRunner('testRunOnlyOneTest', monitor, undefined)
         const t = new ConfigurableTest()
         t.runOnlyOneTest = 'test2'
         const result = await runner.runTests([ t ])
@@ -43,7 +43,7 @@ export class TestSuiteTests extends TestSuite {
     async testInfoMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testInfoMessages', this.config, monitor, interaction)
+        const runner = new TestRunner('testInfoMessages', monitor, interaction)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         const result = await runner.runTests([ t ])
@@ -56,7 +56,7 @@ export class TestSuiteTests extends TestSuite {
     async testSkipMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testSkipMessages', this.config, monitor, interaction)
+        const runner = new TestRunner('testSkipMessages', monitor, interaction)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         t.confAllowSkipFromFunc = true

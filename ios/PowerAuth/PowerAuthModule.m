@@ -957,23 +957,16 @@ PAJS_METHOD_START(generateHeaderForToken,
                   PAJS_ARGUMENT(tokenName, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthToken* token = [[powerAuth tokenStore] localTokenWithName:tokenName];
-    if (token == nil) {
-        reject(EC_LOCAL_TOKEN_NOT_AVAILABLE, @"This token is no longer available in the local store.", nil);
-    }
-    else if ([token canGenerateHeader]) {
-        PowerAuthAuthorizationHttpHeader* header = [token generateHeader];
+    [[powerAuth tokenStore] generateAuthorizationHeaderWithName:tokenName completion:^(PowerAuthAuthorizationHttpHeader * header, NSError * error) {
         if (header) {
             resolve(@{
                 @"key": header.key,
                 @"value": header.value
             });
         } else {
-            reject(EC_CANNOT_GENERATE_TOKEN, @"Cannot generate header for this token.", nil);
+            reject(EC_CANNOT_GENERATE_TOKEN, @"Failed to generate header for this token.", error);
         }
-    } else {
-        reject(EC_CANNOT_GENERATE_TOKEN, @"Cannot generate header for this token.", nil);
-    }
+    }];
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -996,6 +989,72 @@ PAJS_METHOD_NO_ARGS_START(getEnvironmentInfo)
         @"deviceManufacturer": @"apple",
         @"deviceId": [currentDevice model]
     });
+}
+PAJS_METHOD_END
+
+// MARK: - Time synchronization methods
+
+PAJS_METHOD_START(isTimeSynchronized,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve([[powerAuth timeSynchronizationService] isTimeSynchronized] ? @YES : @NO);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(localTimeAdjustment,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustment]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(localTimeAdjustmentPrecision,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] localTimeAdjustmentPrecision]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(currentTime,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    int timestamp = [self convertTimestamp:[[powerAuth timeSynchronizationService] currentTime]];
+    resolve([[NSNumber alloc] initWithInt:timestamp]);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(synchronizeTime,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    [[powerAuth timeSynchronizationService] synchronizeTimeWithCallback:^(NSError * error) {
+        if (error) {
+            ProcessError(error, reject);
+        } else {
+            resolve(nil);
+        }
+    } callbackQueue:nil];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(resetTimeSynchronization,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    [[powerAuth timeSynchronizationService] resetTimeSynchronization];
+    resolve(nil);
+    PA_BLOCK_END
 }
 PAJS_METHOD_END
 
@@ -1098,6 +1157,13 @@ PAJS_METHOD_END
         case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
         default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
     }
+}
+
+- (int) convertTimestamp:(double)timestamp
+{
+    // PowerAuth provides timestamp in seconds, but JS expect milliseconds.
+    // Also, convert it to integer to get rid of the decimal part.
+    return (int)(timestamp * 1000);
 }
 
 @end

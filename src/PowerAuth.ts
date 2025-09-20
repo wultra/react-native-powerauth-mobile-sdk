@@ -37,46 +37,43 @@ import { PowerAuthRawAuthentication, toPowerAuthRawPassword } from './model/Powe
 import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
 import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
+import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizationService';
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
 export class PowerAuth {
-    /**
-     * Configuration used to configure this instance of class.
-     */
+
+    /** Configuration used to configure this instance of class. */
     get configuration(): PowerAuthConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.configuration
     }
-    /**
-     * Client configuration used to configure this instance of class.
-     */
+
+    /** Client configuration used to configure this instance of class. */
     get clientConfiguration(): PowerAuthClientConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.clientConfiguration
     }
-    /**
-     * Biometry configuration used to configure this instance of class.
-     */
+
+    /** Biometry configuration used to configure this instance of class. */
     get biometryConfiguration(): PowerAuthBiometryConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.biometryConfiguration
     }
-    /**
-     * Keychain configuration used to configure this instance of class.
-     */
+
+    /** Keychain configuration used to configure this instance of class. */
     get keychainConfiguration(): PowerAuthKeychainConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.keychainConfiguration
     }
-    /**
-     * Sharing configuration used to configure this instance of class.
-     */
+
+    /** Sharing configuration used to configure this instance of class. */
     get sharingConfiguration(): PowerAuthSharingConfigurationType | undefined {
         return configRegister.get(this.instanceId)?.sharingConfiguration
     }
 
-    /**
-     * Object for managing access tokens.
-     */
+    /** Object for managing access tokens. */
     readonly tokenStore: PowerAuthTokenStore;
+
+    /** Object providing functions to synchronize time with the server. */
+    readonly timeSynchronizationService: PowerAuthTimeSynchronizationService;
 
     /**
      * Prepares the PowerAuth instance.
@@ -87,11 +84,10 @@ export class PowerAuth {
      */
     constructor(public readonly instanceId: string) {
         this.tokenStore = new PowerAuthTokenStore(instanceId);
+        this.timeSynchronizationService = new PowerAuthTimeSynchronizationService(instanceId);
     }
 
-    /** 
-     * If this PowerAuth instance was configured.
-     */
+    /** If this PowerAuth instance was configured. */
     async isConfigured(): Promise<boolean> {
         return NativeWrapper.thisCallBool("isConfigured", this.instanceId);
     }
@@ -159,9 +155,7 @@ export class PowerAuth {
         return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration)
     }
 
-    /** 
-     * Deconfigures the instance
-     */
+    /** Deconfigures the instance */
     deconfigure(): Promise<boolean> {
         configRegister.delete(this.instanceId)
         return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
@@ -196,6 +190,7 @@ export class PowerAuth {
 
     /**
      * Check if there's an external pending operation started in another application.
+     * 
      * @returns A promise with information about external pending operation.
      */
     getExternalPendingOperation(): Promise<PowerAuthExternalPendingOperation | undefined> {
@@ -235,16 +230,12 @@ export class PowerAuth {
         return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
     }
 
-    /**
-     * Activation identifier or undefined if object has no valid activation.
-     */
+    /** Activation identifier or undefined if object has no valid activation. */
     getActivationIdentifier(): Promise<string | undefined> {
         return NativeWrapper.thisCallNull("activationIdentifier", this.instanceId);
     }
 
-    /**
-     * Fingerprint calculated from device's public key or undefined if object has no valid activation.
-     */
+    /** Fingerprint calculated from device's public key or undefined if object has no valid activation. */
     getActivationFingerprint(): Promise<string | undefined> {
         return NativeWrapper.thisCallNull("activationFingerprint", this.instanceId);
     }
@@ -356,6 +347,7 @@ export class PowerAuth {
      * @param password Password used for authentication during vault unlocking call.
      */
     addBiometryFactor(password: PasswordType): Promise<void>
+    
     /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.
@@ -364,6 +356,7 @@ export class PowerAuth {
      * @param prompt Prompt to be displayed. Parameter is required on Android platform if `authenticateOnBiometricKeySetup` is `true`.
      */
     addBiometryFactor(password: PasswordType, prompt: PowerAuthBiometricPrompt | undefined): Promise<void>
+
     /**
      * Regenerate a biometry related factor key.
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for original private key decryption.

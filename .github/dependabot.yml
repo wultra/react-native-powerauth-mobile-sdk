@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/" # Root directory
+    schedule:
+      interval: weekly
+    exclude-paths:
+      - "testapp/**"
+      - "testapp-cordova/**"

@@ -80,7 +80,7 @@
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
-    "pod-install": "^0.2.2",
+    "pod-install": "^1.0.1",
     "react-native-builder-bob": "^0.40.13",
     "react": "19.0.0",
     "react-native": "^0.78.1",
