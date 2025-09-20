@@ -18,7 +18,7 @@ import { NativeModules } from "react-native";
 import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
 
 export class NativePowerAuth implements NativePowerAuthIfc {
-    callNative<T>(name: string, ...args): Promise<T> {
-        return (NativeModules.PowerAuth[name] as Function).apply(null, ...args);
+    callNative<T>(name: string, ...args: any[]): Promise<T> {
+        return (NativeModules.PowerAuth[name] as Function).apply(null, args);
     }
 }

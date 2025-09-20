@@ -1,16 +1,13 @@
 {
+  "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
-    "module": "ES6",
-    "noImplicitAny": false,
-    "removeComments": false,
-    "declaration": true,
-    "target": "ES5",
-    "skipLibCheck": true,
-    "lib": ["ES2016"],
-    "outDir": "lib",
+    "declaration": false,
+    "composite": false,
     "strict": true,
-    "moduleResolution": "node"
+    "skipLibCheck": false,
+    "baseUrl": ".",
+    "types": []
   },
-  "exclude": [ "node_modules" ],
-  "include": [ "src/*.ts", "src/model/*.ts", "src/debug/*.ts" ]
+  "exclude": ["node_modules", "lib"],
+  "include": ["src"]
 }

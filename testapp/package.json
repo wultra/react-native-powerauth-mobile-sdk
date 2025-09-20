@@ -7,19 +7,17 @@
     "ios": "npx react-native run-ios",
     "start": "npx react-native start",
     "pods": "pushd ios; pod install; popd",
-    "rebuildPlugin": "pushd .. && gulp rn && popd",
-    "reinstallPlugin": "(npm r react-native-powerauth-mobile-sdk || true) && npm run rebuildPlugin && npm i ../build/react-native/$(pushd ../build/react-native/ > /dev/null && ls | grep .tgz) --save",
-    "buildAndroid": "npm run reinstallPlugin && pushd android && ./gradlew assemble",
-    "buildIos": "npm run reinstallPlugin && npm run pods && pushd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO",
-    "freshAndroid": "npm run reinstallPlugin && npm run android",
-    "freshIos": "npm run reinstallPlugin && npm run pods && npm run ios"
+    "buildAndroid": "pushd android && ./gradlew assemble",
+    "buildIos": "npm run pods && pushd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO",
+    "freshAndroid": "npm run android",
+    "freshIos": "npm run pods && npm run ios"
   },
   "dependencies": {
     "powerauth-js-test-client": "^0.2.14",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "file:../build/react-native/react-native-powerauth-mobile-sdk-0.0.1-dev.tgz"
+    "react-native-powerauth-mobile-sdk": "link:.."
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

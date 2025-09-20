@@ -15,5 +15,5 @@
  */
 
 export interface NativePowerAuthIfc {
-    callNative<T>(...args): Promise<T>;
+    callNative<T>(...args: any[]): Promise<T>;
 }

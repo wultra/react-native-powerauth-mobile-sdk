@@ -3,11 +3,18 @@
   "title": "PowerAuth SDK for React Native Mobile Apps",
   "version": "0.0.1-dev",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "source": "src/index",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index",
+  "source": "src",
   "scripts": {
-    "build": "node node_modules/gulp/bin/gulp.js",
+    "build": "npm run generate:sdk-version && bob build && npm run build:types",
+    "prepare": "npm run build",
+    "build:types": "tsc -p tsconfig.build-types.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "generate:sdk-version": "node scripts/generate-sdk-version.cjs",
 
     "freshCordovaIos": "pushd testapp-cordova && npm run freshIos",
     "freshCordovaAndroid": "npm run build && pushd testapp-cordova && npm run freshAndroid",
@@ -30,10 +37,7 @@
     "android/src/main/java/com/wultra/android/powerauth/js/*.*",
     "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
     "android/build.gradle",
-    "lib/*.*",
-    "lib/internal/*.js",
-    "lib/model/*.*",
-    "lib/debug/*.*",
+    "lib/**/*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/*.m",
     "ios/PowerAuth/*.c",
@@ -64,6 +68,8 @@
     "react-native": "*"
   },
   "devDependencies": {
+    "@react-native/typescript-config": "^0.78.0",
+    "@types/react": "^19.0.0",
     "@capacitor/core": "^6.1.2",
     "@react-native-community/cli": "^18.0.0",
     "esbuild": "^0.25.0",
@@ -75,8 +81,18 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
     "pod-install": "^0.2.2",
+    "react-native-builder-bob": "^0.40.13",
     "react": "19.0.0",
     "react-native": "^0.78.1",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "typescript": "^5.4.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      ["module", { "esm": true }],
+      "commonjs"
+    ]
   }
 }

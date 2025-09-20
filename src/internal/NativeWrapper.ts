@@ -121,7 +121,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with return type.
      */
-    static thisCall<T>(name: string, instanceId: string, ...args): Promise<T> {
+    static thisCall<T>(name: string, instanceId: string, ...args: any[]): Promise<T> {
         return this.thisTrampoline.call(name, instanceId, [ ...args ])
     }
 
@@ -132,7 +132,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with optional return type.
      */
-    static thisCallNull<T>(name: string, instanceId: string, ...args): Promise<T | undefined> {
+    static thisCallNull<T>(name: string, instanceId: string, ...args: any[]): Promise<T | undefined> {
         return patchNull(this.thisTrampoline.call(name, instanceId, [ ...args ]))
     }
 
@@ -143,7 +143,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with boolean type.
      */
-    static thisCallBool(name: string, instanceId: string, ...args): Promise<boolean> {
+    static thisCallBool(name: string, instanceId: string, ...args: any[]): Promise<boolean> {
         return patchBool(this.thisTrampoline.call(name, instanceId, [ ...args ]))
     }
 
@@ -154,7 +154,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with type.
      */
-    static staticCall<T>(name: string, ...args): Promise<T> {
+    static staticCall<T>(name: string, ...args: any[]): Promise<T> {
         return this.staticTrampoline.call(name, [ ...args ])
     }
     
@@ -165,7 +165,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with optiomal return type.
      */
-    static staticCallNull<T>(name: string, ...args): Promise<T | undefined> {
+    static staticCallNull<T>(name: string, ...args: any[]): Promise<T | undefined> {
         return patchNull(this.staticTrampoline.call(name, [ ...args ]))
     }
 
@@ -176,7 +176,7 @@ export class NativeWrapper {
      * @param args Additional arguments for the function.
      * @returns Promise with bool type.
      */
-    static staticCallBool(name: string, ...args): Promise<boolean> {
+    static staticCallBool(name: string, ...args: any[]): Promise<boolean> {
         return patchBool(this.staticTrampoline.call(name, [ ...args ]))
     }
 

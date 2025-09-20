@@ -38,38 +38,6 @@ console.log(`\x1b[32m\n#########################\n## POWERAUTH MOBILE SDK JS BUI
 // Create SDK version file with the current version
 const patchSDKVersionTask = () => exec(`echo "// THIS FILE IS AUTO-GENERATED\nexport const SDK_VERSION = '${libVersion}';" > src/internal/SDKVersion.ts`);
 
-/***********************
-* REACT-NATIVE SECTION *
-************************/
-{
-    const RN_packageJson = "package.json";
-    const RN_tsConfig = "tsconfig.json";
-    const RN_buildDir = `${buildDir}/react-native`;
-    const RN_sources = "src/**/**.ts";
-    const RN_libDir = "lib";
-
-    const clearRN = () => rimraf([ RN_buildDir ]);
-
-    const compileRNTask = () =>
-        gulp
-            .src(RN_sources)
-            .pipe(ts(RN_tsConfig))
-            .pipe(gulp.dest(`${RN_buildDir}/${RN_libDir}`));
-
-    const copyRNFiles = () =>
-        gulp
-            .src(JSON.parse(fs.readFileSync(RN_packageJson, 'utf8')).files.filter((file) => !file.startsWith(`${RN_libDir}/`)), { base: "." })
-            .pipe(gulp.dest(RN_buildDir));
-
-    const copyRNPackageJson = () => 
-        gulp
-            .src(RN_packageJson)
-            .pipe(gulp.dest(RN_buildDir));
-
-    const packRNPackage = () => exec(`pushd ${RN_buildDir} && npm pack`);
-
-    var RN_buildTask = gulp.series(clearRN, compileRNTask, copyRNFiles, copyRNPackageJson, packRNPackage);
-}
 
 /***********************
 * CAPACITOR.JS SECTION *
@@ -275,13 +243,12 @@ let purge = () => {
 let cleanBuild = () => rimraf([ buildDir ])
 let cleanTemp = () => rimraf([ tmpDir ])
 
-// first, delete output folders, then compile cordova and capacitor in parallel
+// first, delete output folders, then compile cordova
 const buildAllTask = gulp.series(
     cleanBuild,
     cleanTemp,
     patchSDKVersionTask,
     gulp.parallel(
-        RN_buildTask,
         //CAP_buildTask,
         CDV_buildTask
     ),
@@ -293,6 +260,5 @@ gulp.task("watch", () => { gulp.watch("src/ts/**/*.ts", buildAllTask) });
 gulp.task("default", buildAllTask);
 gulp.task("clean", gulp.parallel(cleanBuild, cleanTemp));
 gulp.task("purge", purge);
-gulp.task("rn", gulp.series(patchSDKVersionTask, RN_buildTask));
 // gulp.task("cap", gulp.series(patchSDKVersionTask, CAP_buildTask));
 gulp.task("cdv", gulp.series(patchSDKVersionTask, CDV_buildTask));
