@@ -70,7 +70,7 @@ export class IntegrationHelper {
             gender: "female",
             zoneInfo: "Europe/Prague",
             locale: "cs-CZ",
-            updatedAt: new Date(2025, 4, 1, 19, 20, 21),
+            updatedAt: new Date(2025, 4, 1, 19, 20, 21).getMilliseconds(),
             userAddress: {
                 formatted: "Street 1, Prague, Czech Republic",
                 street: "Street 1",
@@ -241,7 +241,7 @@ export class IntegrationHelper {
             birthdate: userInfo.birthdate,
             zoneinfo: userInfo.zoneInfo,
             locale: userInfo.locale,
-            updated_at: `${userInfo.updatedAt?.toISOString()}`,
+            updated_at: userInfo.updatedAt,
             address: {
                 street_address: userInfo.userAddress?.street,
                 postal_code: userInfo.userAddress?.postalCode,

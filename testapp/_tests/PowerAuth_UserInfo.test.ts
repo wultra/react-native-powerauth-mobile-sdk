@@ -72,7 +72,7 @@ export class PowerAuth_UserInfoTest extends TestWithActivation {
         expect(filledUser?.birthdate).toEqual(expectedUser.birthdate)
         expect(filledUser?.zoneInfo).toEqual(expectedUser.zoneInfo)
         expect(filledUser?.locale).toEqual(expectedUser.locale)
-        expect(filledUser?.updatedAt?.toISOString()).toEqual(expectedUser.updatedAt?.toISOString())
+        expect(filledUser?.updatedAt).toEqual(expectedUser.updatedAt)
         // compare address
         expect(filledUser?.userAddress?.formatted).toEqual(expectedUser.userAddress?.formatted)
         expect(filledUser?.userAddress?.street).toEqual(expectedUser.userAddress?.street)

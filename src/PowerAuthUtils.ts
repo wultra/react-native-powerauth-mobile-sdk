@@ -126,16 +126,16 @@ export interface PowerAuthEnvironmentInfo {
  * Method converts a timestamp value to a `Date` object. String and number values are supported.
  * @param value in seconds to convert.
  * */
-function timestampToDate(value: unknown): Date | undefined {
+function timestampToDate(value: unknown): number | undefined {
     try {
         if (typeof value === "string") {
             const num = parseInt(value, 10);
             if (isNaN(num)) return undefined;
-            return new Date(num * 1000);
+            return new Date(num).getMilliseconds();
         }
 
         if (typeof value === "number") {
-            return new Date(value * 1000);
+            return new Date(value).getMilliseconds();
         }
     } catch {
         return undefined;

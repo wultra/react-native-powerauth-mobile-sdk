@@ -83,7 +83,7 @@ export interface PowerAuthUserInfo {
     /** The user’s preferred postal address */
     userAddress?: PowerAuthUserAddress
     /** The time the user’s information was last updated */
-    updatedAt?: Date
+    updatedAt?: number
 
     /** Contains a full collection of claims received from the server. */
     allClaims?: Record<string, any>
