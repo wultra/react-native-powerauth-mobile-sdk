@@ -271,7 +271,7 @@ class PowerAuthJsModule(
                                 else Arguments.makeNativeMap(customAttr)
                             )
                             // user info
-                            val userInfo: Map<String, Any>? = result.userInfo
+                            val userInfo: UserInfo? = result.userInfo
                             map.putMap(
                                 "userInfo",
                                 if(userInfo == null) null
