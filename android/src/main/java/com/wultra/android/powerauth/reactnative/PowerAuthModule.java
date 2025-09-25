@@ -332,4 +332,16 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     public void synchronizeTime(String instanceId, final Promise promise) {
         powerAuthJsModule.synchronizeTime(instanceId, promise);
     }
+
+    // USER INFO
+
+    @ReactMethod
+    public void fetchUserInfo(String instanceId, final Promise promise) {
+        powerAuthJsModule.fetchUserInfo(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getLastFetchedUserInfo(String instanceId, final Promise promise) {
+        powerAuthJsModule.getLastFetchedUserInfo(instanceId, promise);
+    }
 }
