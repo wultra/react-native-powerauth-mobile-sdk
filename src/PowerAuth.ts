@@ -221,7 +221,7 @@ export class PowerAuth {
      */
     async createActivation(activation: PowerAuthActivation): Promise<PowerAuthCreateActivationResult> {
         const result: PowerAuthCreateActivationResult = await NativeWrapper.thisCall("createActivation", this.instanceId, activation);
-        // if userInfo object exists, we need to expand it from allClaims
+        // if the userInfo object exists, we need to expand it from allClaims
         if (result.userInfo) {
             result.userInfo = PowerAuthUtils.expandUserInfoObject(result.userInfo);
         }
@@ -556,6 +556,8 @@ export class PowerAuth {
         if (userInfo) {
             // userInfo object has all properties stored in allClaims. We need to unwrap these into properties before returning
             return PowerAuthUtils.expandUserInfoObject(userInfo);
+        } else {
+            return undefined;
         }
     }
 
@@ -571,6 +573,8 @@ export class PowerAuth {
         if (userInfo) {
             // userInfo object has all properties stored in allClaims. We need to unwrap these into properties before returning
             return PowerAuthUtils.expandUserInfoObject(userInfo);
+        } else {
+            return undefined;
         }
     }
 

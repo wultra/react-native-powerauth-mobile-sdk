@@ -70,7 +70,7 @@ export class IntegrationHelper {
             gender: "female",
             zoneInfo: "Europe/Prague",
             locale: "cs-CZ",
-            updatedAt: new Date(2025, 4, 1, 19, 20, 21).getMilliseconds(),
+            updatedAt: new Date(2025, 4, 1, 19, 20, 21).getTime(),
             userAddress: {
                 formatted: "Street 1, Prague, Czech Republic",
                 street: "Street 1",
