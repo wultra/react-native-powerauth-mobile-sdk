@@ -23,13 +23,15 @@ import { NativeObject } from "./NativeObject";
 import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
 import { NativeCordovaModule } from "./NativeCordovaModule";
-import { NativePowerAuth } from "./NativePowerAuth"
+import { NativePowerAuth } from "./NativePowerAuth";
+import { PowerAuthCryptoUtilsIfc } from "./NativeCryptoUtils";
 
 class Provider implements NativeModulesProviderIfc {
     PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
     PowerAuthEncryptor = new NativePowerAuthEncryptorImpl() as PowerAuthEncryptorIfc;
     PowerAuthPassphraseMeter = new PowerAuthPassphraseMeterImpl() as PowerAuthPassphraseMeterIfc;
     PowerAuthPassword = new PowerAuthPasswordImpl() as PowerAuthPasswordIfc;
+    PowerAuthCryptoUtils = new PowerAuthCryptoUtilsImpl() as PowerAuthCryptoUtilsIfc;
     PowerAuth = new NativePowerAuth();
 }
 
@@ -126,6 +128,19 @@ class PowerAuthPasswordImpl extends NativeCordovaModule implements PowerAuthPass
     
     async removeLastCharacter(objectId: string): Promise<number> {
         return await this.callNative("removeLastCharacter", [objectId]);
+    }
+}
+
+class PowerAuthCryptoUtilsImpl extends NativeCordovaModule implements PowerAuthCryptoUtilsIfc {
+
+    readonly pluginName = "PowerAuthCryptoUtilsModule";
+
+    async hashSha256(data: string): Promise<string> {
+        return await this.callNative("hashSha256", [data]);
+    }
+
+    async randomBytes(length: number): Promise<string> {
+        return await this.callNative("randomBytes", [length]);
     }
 }
 

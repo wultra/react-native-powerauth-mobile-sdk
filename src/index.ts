@@ -21,6 +21,7 @@ export * from './PowerAuthActivationCodeUtil';
 export * from './PowerAuthUtils';
 export * from './PowerAuthTokenStore';
 export * from './PowerAuthPassphraseMeter';
+export * from './PowerAuthCryptoUtils';
 
 // Model objects
 

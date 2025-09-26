@@ -30,6 +30,9 @@
             <feature name="PowerAuthEncryptorModule">
                 <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthEncryptorModule" />
             </feature>
+            <feature name="PowerAuthCryptoUtilsModule">
+                <param name="android-package" value="com.wultra.android.powerauth.cordova.plugin.PowerAuthCryptoUtilsModule" />
+            </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
@@ -37,6 +40,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPassphraseMeterModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthPasswordModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthEncryptorModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/cdv/PowerAuthCryptoUtilsModule.kt" target-dir="java/com/wultra/android/powerauth/cdv/" />
 
         <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Aliases.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/bridge/Mappings.kt" target-dir="java/com/wultra/android/powerauth/bridge" />
@@ -69,6 +73,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPassphraseMeterJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthPasswordJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthCryptoUtilsJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ReleasePolicy.java" target-dir="com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Utils.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/WrapperException.java" target-dir="com/wultra/android/powerauth/js" />
@@ -93,6 +98,9 @@
             <feature name="PowerAuthEncryptorModule">
                 <param name="ios-package" value="PowerAuthEncryptorModule"/>
             </feature>
+            <feature name="PowerAuthCryptoUtilsModule">
+                <param name="ios-package" value="PowerAuthCryptoUtilsModule"/>
+            </feature>
             <preference name="deployment-target" value="12.0" />
             <preference name="UseSwiftLanguageVersion" value="5" />
         </config-file>
@@ -113,6 +121,8 @@
         <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.m" />
         <header-file src="ios/PowerAuth/PowerAuthPasswordModule.h" />
         <source-file src="ios/PowerAuth/PowerAuthPasswordModule.m" />
+        <header-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.h" />
+        <source-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.m" />
         <header-file src="ios/PowerAuth/Utilities.h" />
         <source-file src="ios/PowerAuth/Utilities.m" />
         <source-file src="ios/PowerAuth/pin_tester.c" />
