@@ -37,7 +37,7 @@ import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
 import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test";
-import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test.ts";
+import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
