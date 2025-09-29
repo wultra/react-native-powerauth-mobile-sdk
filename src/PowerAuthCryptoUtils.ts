@@ -13,7 +13,7 @@ export class PowerAuthCryptoUtils {
      * Hashes given data using SHA-256 algorithm.
      * @param data String data encoded in Base64 format.
      * @returns Hashed data in Base64 format
-     * @throws `PowerAuthErrorCode.WRONG_PARAM` if data is not Base64 encoded.
+     * @throws `PowerAuthErrorCode.WRONG_PARAMETER` if data is not Base64 encoded.
      */
     static async hashSha256(data: Base64String): Promise<Base64String> {
         try {
