@@ -21,6 +21,7 @@
 - [Sample Integration](Sample-Integration.md)
 - [User Info](User-Info.md)
 - [Time Synchronization](Time-Synchronization.md)
+- [Crypto Utilities](Crypto-Utilities.md)
 - [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
 - [Additional Utilities](Additional-Utilities.md)
 

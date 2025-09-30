@@ -59,4 +59,4 @@ The precision value represents a maximum absolute deviation of synchronized time
 
 ## Read Next
 
-- [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
+- [Crypto Utilities](Crypto-Utilities.md)
