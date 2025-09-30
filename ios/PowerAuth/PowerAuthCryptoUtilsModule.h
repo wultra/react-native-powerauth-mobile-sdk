@@ -19,6 +19,6 @@
 /**
  Bridge module implementing PowerAuthCryptoUtils JavaScript class for iOS.
  */
-PAJS_MODULE(PowerAuthCryptoUtilsModule)
+PAJS_MODULE_BASIC(PowerAuthCryptoUtilsModule)
 
 @end
