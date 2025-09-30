@@ -10,6 +10,9 @@ const b64FromUtf8 = (text: string): string =>
 const b64DecodeLength = (b64: string): number =>
     Buffer.from(b64, 'base64').length
 
+const b64ToUintArray = (b64: string): Uint8Array =>
+    Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
 const isValidBase64 = (b64: string): boolean => {
     try {
         // Buffer throws for invalid base64 in RN polyfill as well
@@ -93,6 +96,10 @@ export class PowerAuth_CryptoUtilsTest extends TestWithActivation {
             // There is a very small probability that this test fails even for correct implementation.
             // To fix, just re-run the test. If it fails again, go buy a lottery ticket :)
             expect(r1).toNotBe(r2);
+
+            const bytesFromB64 = b64ToUintArray(r1);
+            expect(bytesFromB64.length).toBe(len);
+            expect(bytesFromB64.length).toBe(b64DecodeLength(r1));
         }
 
         // Zero length = zero bytes
