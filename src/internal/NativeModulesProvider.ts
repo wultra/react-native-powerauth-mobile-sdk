@@ -23,6 +23,7 @@ class Provider implements NativeModulesProviderIfc {
     PowerAuthEncryptor = NativeModules.PowerAuthEncryptor
     PowerAuthPassphraseMeter = NativeModules.PowerAuthPassphraseMeter
     PowerAuthPassword = NativeModules.PowerAuthPassword
+    PowerAuthCryptoUtils = NativeModules.PowerAuthCryptoUtils
     PowerAuth = new NativePowerAuth()
 }
 

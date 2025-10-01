@@ -36,6 +36,7 @@ public class PowerAuthReactPackage implements ReactPackage {
         modules.add(encryptorModule);
         modules.add(new PowerAuthModule(reactContext, objectRegister, passwordModule));
         modules.add(new PowerAuthPassphraseMeterModule(passwordModule));
+        modules.add(new PowerAuthCryptoUtilsModule());
         return modules;
     }
 }
