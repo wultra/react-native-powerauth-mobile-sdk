@@ -32,6 +32,7 @@
   },
   "files": [
     "README.md",
+    "src/**/*",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
     "android/src/main/java/com/wultra/android/powerauth/js/*.*",
