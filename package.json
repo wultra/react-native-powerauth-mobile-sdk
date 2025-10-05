@@ -3,6 +3,7 @@
   "title": "PowerAuth SDK for React Native Mobile Apps",
   "version": "0.0.1-dev",
   "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
+  "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
@@ -15,19 +16,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "generate:sdk-version": "node scripts/generate-sdk-version.cjs",
-
     "freshCordovaIos": "pushd testapp-cordova && npm run freshIos",
     "freshCordovaAndroid": "npm run build && pushd testapp-cordova && npm run freshAndroid",
-
     "freshReactIos": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
     "freshReactAndroid": "npm run build && pushd testapp && npm run freshAndroid",
-
     "buildReactIos": "pushd testapp && npm run buildIos",
     "buildReactAndroid": "pushd testapp && npm run buildAndroid",
-
     "buildCordovaIos": "pushd testapp-cordova && npm run buildIos",
     "buildCordovaAndroid": "pushd testapp-cordova && npm run buildAndroid",
-
     "purge": "node node_modules/gulp/bin/gulp.js purge"
   },
   "files": [
@@ -45,6 +41,14 @@
     "ios/PowerAuth/*.h",
     "react-native-powerauth-mobile-sdk.podspec"
   ],
+  "private": true,
+  "workspaces": [
+    "testapp"
+  ],
+  "resolutions": {
+    "react": "19.0.0",
+    "react-native": "0.78.1"
+  },
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
     "type": "git",
@@ -69,10 +73,10 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@react-native/typescript-config": "^0.78.0",
-    "@types/react": "^19.0.0",
     "@capacitor/core": "^6.1.2",
     "@react-native-community/cli": "^18.0.0",
+    "@react-native/typescript-config": "^0.78.0",
+    "@types/react": "^19.0.0",
     "esbuild": "^0.25.0",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
@@ -82,9 +86,9 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "lodash": "^4.17.21",
     "pod-install": "^1.0.1",
-    "react-native-builder-bob": "^0.40.13",
     "react": "19.0.0",
     "react-native": "^0.78.1",
+    "react-native-builder-bob": "^0.40.13",
     "rimraf": "^6.0.1",
     "typescript": "^5.4.0"
   },
@@ -92,7 +96,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      ["module", { "esm": true }],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
       "commonjs"
     ]
   }

@@ -16,7 +16,7 @@
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-config": "^1.5.0",
-    "react-native-powerauth-mobile-sdk": "file:.."
+    "react-native-powerauth-mobile-sdk": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
