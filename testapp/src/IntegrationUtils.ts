@@ -14,7 +14,10 @@
 // and limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
+    PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration,
+    PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
+} from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
 
 export class AppConfig {
@@ -24,6 +27,10 @@ export class AppConfig {
     static cloudApplicationId = EnvConfig.POWERAUTH_CLOUD_APP_ID || ""
     static enrollmentUrl = EnvConfig.ENROLLMENT_SERVER_URL || ""
     static sdkConfig = EnvConfig.SDK_CONFIG || ""
+    // User Data Store
+    static udsServerUrl = EnvConfig.UDS_SERVER_URL || ""
+    static udsServerUsername = EnvConfig.UDS_SERVER_USERNAME || ""
+    static udsServerPassword = EnvConfig.UDS_SERVER_PASSWORD || ""
 }
 
 export interface CustomConfig {
@@ -35,12 +42,45 @@ export interface CustomConfig {
 }
 
 export class IntegrationHelper {
-    
+
     private jsonMediaType = "application/json; charset=UTF-8"
 
     get userId(): string | undefined {
         return this._userId
     }
+
+    // mocked user info based on the user id
+    userInfo(userId: string): PowerAuthUserInfo {
+        return {
+            subject: `${userId}`,
+            name: `Name ${userId}`,
+            givenName: `given`,
+            familyName: `family`,
+            middleName: `middle`,
+            nickname: `nickname`,
+            preferredUsername: `preferred${userId}`,
+            profileUrl: `https://wultra.com/profile`,
+            pictureUrl: `https://wultra.com/icon.png`,
+            websiteUrl: `https://wultra.com`,
+            email: `${userId}@wultra.com`,
+            isEmailVerified: true,
+            isPhoneNumberVerified: true,
+            phoneNumber: "+56 (2) 687 2400",
+            birthdate: "2000-04-01",
+            gender: "female",
+            zoneInfo: "Europe/Prague",
+            locale: "cs-CZ",
+            updatedAt: new Date(2025, 4, 1, 19, 20, 21).getTime(),
+            userAddress: {
+                formatted: "Street 1, Prague, Czech Republic",
+                street: "Street 1",
+                locality: "Prague",
+                region: "Prague",
+                postalCode: "15000",
+                country: "CZ"
+            }
+        }
+    };
 
     get sdk(): PowerAuth {
         return this._sdk
@@ -82,7 +122,7 @@ export class IntegrationHelper {
     /// Creates a new activation on the server and locally.
     async prepareActiveActivation(password: string, userId: string | undefined = undefined, setupBiometry: boolean = false, biometryPrompt: string = "Create activation with biometrics"): Promise<void> {
 
-        const resp = await this.createActivation(userId)
+        const resp = await this.createActivation(userId, true)
 
         // CREATE ACTIVATION LOCALLY
 
@@ -101,10 +141,10 @@ export class IntegrationHelper {
 
         // CONFIGURE SDK
         await this._sdk.configure(
-            config?.configuration ?? new PowerAuthConfiguration(AppConfig.sdkConfig, AppConfig.enrollmentUrl), 
-            config?.clientConfiguration, 
-            config?.biometryConfiguration, 
-            config?.keychainConfiguration, 
+            config?.configuration ?? new PowerAuthConfiguration(AppConfig.sdkConfig, AppConfig.enrollmentUrl),
+            config?.clientConfiguration,
+            config?.biometryConfiguration,
+            config?.keychainConfiguration,
             config?.sharingConfiguration
         )
 
@@ -171,6 +211,54 @@ export class IntegrationHelper {
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/token/verify`)
     }
 
+    /**
+     * Function fills user info to the UDS server.
+     *
+     * @param userInfo User info to be filled.
+     * */
+    async fillUserInfo(userInfo: PowerAuthUserInfo | undefined) {
+        if (!userInfo) {
+            throw new Error("UserInfo is undefined");
+        }
+
+        // we need to convert PowerAuthUserInfo into payload
+        const payload = {
+            sub: userInfo.subject,
+            name: userInfo.name,
+            given_name: userInfo.givenName,
+            family_name: userInfo.familyName,
+            middle_name: userInfo.middleName,
+            nickname: userInfo.nickname,
+            preferred_username: userInfo.preferredUsername,
+            profile: userInfo.profileUrl,
+            picture: userInfo.pictureUrl,
+            website: userInfo.websiteUrl,
+            email: userInfo.email,
+            email_verified: userInfo.isEmailVerified,
+            phone_number: userInfo.phoneNumber,
+            phone_number_verified: userInfo.isPhoneNumberVerified,
+            gender: userInfo.gender,
+            birthdate: userInfo.birthdate,
+            zoneinfo: userInfo.zoneInfo,
+            locale: userInfo.locale,
+            updated_at: userInfo.updatedAt,
+            address: {
+                street_address: userInfo.userAddress?.street,
+                postal_code: userInfo.userAddress?.postalCode,
+                locality: userInfo.userAddress?.locality,
+                region: userInfo.userAddress?.region,
+                country: userInfo.userAddress?.country,
+                formatted: userInfo.userAddress?.formatted
+            }
+        }
+
+        return await this.makeCall(
+            JSON.stringify(payload),
+            `${AppConfig.udsServerUrl}/public/user-claims?userId=${userInfo.subject}`,
+            "POST"
+        );
+    }
+
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
@@ -188,11 +276,10 @@ export class IntegrationHelper {
     }
 
     private async makeCall(payload: string | undefined, url: string, method: string = "POST"): Promise<any> {
-        const creds = `${AppConfig.cloudServerLogin}:${AppConfig.cloudServerPassword}`
         const request: RequestInit = {
             body: payload,
             headers: {
-                "authorization": `Basic ${btoa(creds)}`,
+                "authorization": `Basic ${btoa(this.credentialsForUrl(url))}`,
                 "content-type": this.jsonMediaType
             },
             method: method
@@ -202,6 +289,17 @@ export class IntegrationHelper {
             .then(stringResp => {
                 return JSON.parse(stringResp)
             })
+    }
+
+    // Create credentials for the given URL - PowerAuth Cloud or UDS Server
+    private credentialsForUrl(url: string): string {
+        if (url.startsWith(AppConfig.cloudServerUrl)) {
+            return `${AppConfig.cloudServerLogin}:${AppConfig.cloudServerPassword}`
+        } else if (url.startsWith(AppConfig.udsServerUrl)) {
+            return `${AppConfig.udsServerUsername}:${AppConfig.udsServerPassword}`
+        } else {
+            throw new Error(`Unknown server URL: ${url}`)
+        }
     }
 
     static randomString(length: number): string {

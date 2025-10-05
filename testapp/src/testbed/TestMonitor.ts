@@ -14,7 +14,6 @@
 // limitations under the License.
 //
 
-import { PowerAuthError } from "react-native-powerauth-mobile-sdk";
 import { describeError } from "./private/ErrorHelper";
 import { TestProgress } from "./TestProgress";
 import { TestContext } from "./TestSuite";

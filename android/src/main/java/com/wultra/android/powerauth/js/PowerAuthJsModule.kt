@@ -247,11 +247,13 @@ class PowerAuthJsModule(
 
                     sdk.createActivation(paActivation.build(), object : ICreateActivationListener {
                         override fun onActivationCreateSucceed(result: CreateActivationResult) {
+                            // activation fingerprint
                             val map: WritableMap = Arguments.createMap()
                             map.putString(
                                 "activationFingerprint",
                                 result.activationFingerprint
                             )
+                            // recovery data
                             val rData: RecoveryData? = result.recoveryData
                             if (rData != null) {
                                 val recoveryMap: WritableMap = Arguments.createMap()
@@ -261,11 +263,19 @@ class PowerAuthJsModule(
                             } else {
                                 map.putMap("activationRecovery", null)
                             }
+                            // custom attrs
                             val customAttr: Map<String, Any>? = result.customActivationAttributes
                             map.putMap(
                                 "customAttributes",
                                 if (customAttr == null) null
                                 else Arguments.makeNativeMap(customAttr)
+                            )
+                            // user info
+                            val userInfo: UserInfo? = result.userInfo
+                            map.putMap(
+                                "userInfo",
+                                if(userInfo == null) null
+                                else convertUserInfoToDict(userInfo)
                             )
                             promise.resolve(map)
                         }
@@ -1188,6 +1198,40 @@ class PowerAuthJsModule(
         })
     }
 
+    // USER INFO
+
+    @JsApiMethod
+    fun fetchUserInfo(instanceId: String, promise: Promise) {
+        val context: Context = this.context
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                sdk.fetchUserInfo(context, object : IUserInfoListener {
+                    override fun onUserInfoSucceed(userInfo: UserInfo) {
+                        val userDict = convertUserInfoToDict(userInfo)
+                        promise.resolve(userDict)
+                    }
+                    override fun onUserInfoFailed(t: Throwable) {
+                        Errors.rejectPromise(promise, t)
+                    }
+                })
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun getLastFetchedUserInfo(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
+            override fun run(sdk: PowerAuthSDK) {
+                try {
+                    val userInfo = convertUserInfoToDict(sdk.lastFetchedUserInfo)
+                    promise.resolve(userInfo)
+                } catch (t: Throwable) {
+                    Errors.rejectPromise(promise, t)
+                }
+            }
+        })
+    }
+
     // -- PRIVATE HELPERS --
 
     /**
@@ -1371,6 +1415,19 @@ class PowerAuthJsModule(
             listOf(ReleasePolicy.manual()),
             factory
         )
+    }
+
+    /**
+     * Function converts UserInfo to dictionary.
+     * */
+    private fun convertUserInfoToDict(userInfo: UserInfo?): WritableMap? {
+        val claims = userInfo?.getAllClaims() ?: return null
+
+        val map: WritableMap = Arguments.createMap()
+        val nativeMap = Arguments.makeNativeMap(claims) ?: return null
+
+        map.putMap("allClaims", nativeMap)
+        return map
     }
 
     companion object {

@@ -277,7 +277,10 @@ PAJS_METHOD_START(createActivation,
                     @"recoveryCode": result.activationRecovery.recoveryCode,
                     @"puk": result.activationRecovery.puk
                 } : [NSNull null],
-                @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null]
+                @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null],
+                @"userInfo": result.userInfo
+                    ? @{ @"allClaims": result.userInfo.allClaims ?: [NSNull null] }
+                    : [NSNull null]
             }));
         } else {
             ProcessError(error, reject);
@@ -989,6 +992,39 @@ PAJS_METHOD_NO_ARGS_START(getEnvironmentInfo)
         @"deviceManufacturer": @"apple",
         @"deviceId": [currentDevice model]
     });
+}
+PAJS_METHOD_END
+
+// MARK: - UserInfo methods
+
+PAJS_METHOD_START(fetchUserInfo,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    [powerAuth fetchUserInfo:^(PowerAuthUserInfo * _Nullable userInfo, NSError * _Nullable error) {
+        if (error == nil) {
+            NSDictionary * response = @{ @"allClaims": userInfo && userInfo.allClaims ? userInfo.allClaims : @{} };
+            resolve(response);
+        } else {
+            ProcessError(error, reject);
+        }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getLastFetchedUserInfo,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthUserInfo * userInfo = powerAuth.lastFetchedUserInfo;
+    if (userInfo) {
+        NSDictionary * response = @{ @"allClaims": userInfo.allClaims ? userInfo.allClaims : @{} };
+        resolve(response);
+    } else {
+        resolve(nil);
+    }
+    PA_BLOCK_END
 }
 PAJS_METHOD_END
 
