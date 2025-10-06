@@ -50,7 +50,10 @@ npm-shrinkwrap.json
 
 # Yarn and monorepo
 .yarn
-.yarn/install-state.gz
+yarn/*
 !.yarn/releases
 !.yarn/plugins
+!.yarn/patches
+!.yarn/sdks
+!.yarn/versions
 .pnp.*
