@@ -31,8 +31,10 @@
     "@react-native/typescript-config": "0.78.0",
     "@types/react": "^19.0.0",
     "@types/react-test-renderer": "^19.0.0",
-    "eslint": "^8.19.0",
-    "prettier": "2.8.8",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
     "react-test-renderer": "19.0.0",
     "typescript": "5.0.4"
   },

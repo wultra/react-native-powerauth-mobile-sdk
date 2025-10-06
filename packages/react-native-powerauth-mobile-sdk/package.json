@@ -15,6 +15,7 @@
     "build:types": "tsc -p tsconfig.build-types.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
+    "format": "prettier -w .",
     "generate:sdk-version": "node scripts/generate-sdk-version.cjs"
   },
   "files": [
@@ -59,6 +60,10 @@
   "devDependencies": {
     "@react-native/typescript-config": "^0.78.0",
     "@types/react": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
     "react": "19.0.0",
     "react-native": "^0.78.1",
     "react-native-builder-bob": "^0.40.13",

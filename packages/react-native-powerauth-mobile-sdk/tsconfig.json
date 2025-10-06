@@ -4,6 +4,9 @@
     "declaration": false,
     "composite": false,
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
     "skipLibCheck": false,
     "baseUrl": ".",
     "types": []
