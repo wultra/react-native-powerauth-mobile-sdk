@@ -42,7 +42,13 @@
     "runCordovaIos": "yarn workspace com.wultra.pwatest ios",
     "runCordovaAndroid": "yarn workspace com.wultra.pwatest android",
     "freshCordovaIos": "yarn workspace com.wultra.pwatest freshIos",
-    "freshCordovaAndroid": "yarn workspace com.wultra.pwatest freshAndroid"
+    "freshCordovaAndroid": "yarn workspace com.wultra.pwatest freshAndroid",
+    "lint": "yarn lint:rn && yarn lint:testapp",
+    "lint:rn": "yarn workspace react-native-powerauth-mobile-sdk lint",
+    "lint:testapp": "yarn workspace testapp lint",
+    "format": "yarn format:rn && yarn format:testapp",
+    "format:rn": "yarn workspace react-native-powerauth-mobile-sdk format",
+    "format:testapp": "yarn workspace testapp format"
   },
   "workspaces": [
     "testapp",

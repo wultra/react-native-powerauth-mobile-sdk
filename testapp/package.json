@@ -10,7 +10,9 @@
     "buildAndroid": "(cd android && ./gradlew assemble)",
     "buildIos": "yarn pods && (cd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO)",
     "freshAndroid": "yarn android",
-    "freshIos": "yarn pods && yarn ios"
+    "freshIos": "yarn pods && yarn ios",
+    "lint": "eslint .",
+    "format": "prettier -w ."
   },
   "dependencies": {
     "react": "19.0.0",

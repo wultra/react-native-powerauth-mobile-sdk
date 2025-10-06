@@ -2705,10 +2705,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/eslint-config@npm:^0.78.0":
+  version: 0.78.3
+  resolution: "@react-native/eslint-config@npm:0.78.3"
+  dependencies:
+    "@babel/core": "npm:^7.25.2"
+    "@babel/eslint-parser": "npm:^7.25.1"
+    "@react-native/eslint-plugin": "npm:0.78.3"
+    "@typescript-eslint/eslint-plugin": "npm:^7.1.1"
+    "@typescript-eslint/parser": "npm:^7.1.1"
+    eslint-config-prettier: "npm:^8.5.0"
+    eslint-plugin-eslint-comments: "npm:^3.2.0"
+    eslint-plugin-ft-flow: "npm:^2.0.1"
+    eslint-plugin-jest: "npm:^27.9.0"
+    eslint-plugin-react: "npm:^7.30.1"
+    eslint-plugin-react-hooks: "npm:^4.6.0"
+    eslint-plugin-react-native: "npm:^4.0.0"
+  peerDependencies:
+    eslint: ">=8"
+    prettier: ">=2"
+  checksum: 10c0/d44798fecb2446db94227ca0e8bf53722de80de4c7e7a076461e88fc51980301c66652b599324a97d5a68b1aa3e9fe86f350a18225412402fbd6ff846d4e7d17
+  languageName: node
+  linkType: hard
+
 "@react-native/eslint-plugin@npm:0.78.0":
   version: 0.78.0
   resolution: "@react-native/eslint-plugin@npm:0.78.0"
   checksum: 10c0/6382776c799d170ce5f37bb18b51d6eb5a452bf07e189bd194804eff0c93697dd347b6e3ebed3e65155f35a2c5e5ad3cb45b7c20dc3649e8c10a49cba03eac92
+  languageName: node
+  linkType: hard
+
+"@react-native/eslint-plugin@npm:0.78.3":
+  version: 0.78.3
+  resolution: "@react-native/eslint-plugin@npm:0.78.3"
+  checksum: 10c0/08ddad87aea0749c80576be5cd00fd39c207c0a3abc64e96194b5945546ae2586f68269a58c38e0ea52c18c12ce355d90975f509bfb4b148b78008e06ecefe58
   languageName: node
   linkType: hard
 
@@ -5397,6 +5427,17 @@ __metadata:
   bin:
     eslint-config-prettier: bin/cli.js
   checksum: 10c0/b5953cf7a86f685e1218b16707bf36643b525513d08495226a6820caccd8b7bfc6b9aa64ac7cb2415dbe2c1f7dc4995832148bdc53ad45777f75a8ded1073b29
+  languageName: node
+  linkType: hard
+
+"eslint-config-prettier@npm:^9.1.0":
+  version: 9.1.2
+  resolution: "eslint-config-prettier@npm:9.1.2"
+  peerDependencies:
+    eslint: ">=7.0.0"
+  bin:
+    eslint-config-prettier: bin/cli.js
+  checksum: 10c0/d2e9dc913b1677764a4732433d83d258f40820458c65d0274cb9e3eaf6559b39f2136446f310c05abed065a4b3c2e901807ccf583dff76c6227eaebf4132c39a
   languageName: node
   linkType: hard
 
@@ -9457,11 +9498,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "react-native-powerauth-mobile-sdk@workspace:packages/react-native-powerauth-mobile-sdk"
   dependencies:
+    "@react-native/eslint-config": "npm:^0.78.0"
     "@react-native/typescript-config": "npm:^0.78.0"
     "@types/react": "npm:^19.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^7.0.0"
     "@typescript-eslint/parser": "npm:^7.0.0"
     eslint: "npm:^8.57.0"
+    eslint-config-prettier: "npm:^9.1.0"
     node-fetch: "npm:>=2.6.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"

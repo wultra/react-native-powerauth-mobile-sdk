@@ -51,9 +51,9 @@ export class BaseNativeObject implements BaseReleasableObject {
     /**
      * Function called when native object is manually released by the application. The derived class must
      * override this function.
-     * @param objectId Native object identifier.
+     * @param _objectId Native object identifier.
      */
-    protected onRelease(objectId: string): Promise<void> {
+    protected onRelease(_objectId: string): Promise<void> {
         return Promise.reject(new Error("Missing implementation"))
     }
 
