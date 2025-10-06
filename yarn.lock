@@ -9512,6 +9512,7 @@ __metadata:
     react-native-builder-bob: "npm:^0.40.13"
     typescript: "npm:^5.4.0"
   peerDependencies:
+    react: "*"
     react-native: "*"
   languageName: unknown
   linkType: soft
