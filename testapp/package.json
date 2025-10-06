@@ -3,19 +3,19 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "npx react-native run-android",
-    "ios": "npx react-native run-ios",
-    "start": "npx react-native start",
-    "pods": "pushd ios; pod install; popd",
-    "buildAndroid": "pushd android && ./gradlew assemble",
-    "buildIos": "npm run pods && pushd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO",
-    "freshAndroid": "npm run android",
-    "freshIos": "npm run pods && npm run ios"
+    "android": "yarn dlx react-native run-android",
+    "ios": "yarn dlx react-native run-ios",
+    "start": "yarn dlx react-native start",
+    "pods": "(cd ios && yarn dlx pod-install --non-interactive)",
+    "buildAndroid": "(cd android && ./gradlew assemble)",
+    "buildIos": "yarn pods && (cd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO)",
+    "freshAndroid": "yarn android",
+    "freshIos": "yarn pods && yarn ios"
   },
   "dependencies": {
     "react": "19.0.0",
     "react-native": "0.78.0",
-    "react-native-config": "^1.5.0",
+    "react-native-config": "1.5.5",
     "react-native-powerauth-mobile-sdk": "workspace:*"
   },
   "devDependencies": {

@@ -1241,9 +1241,9 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
-  - react-native-config (1.5.9):
-    - react-native-config/App (= 1.5.9)
-  - react-native-config/App (1.5.9):
+  - react-native-config (1.5.5):
+    - react-native-config/App (= 1.5.5)
+  - react-native-config/App (1.5.5):
     - React-Core
   - react-native-powerauth-mobile-sdk (0.0.1-dev):
     - DoubleConversion
@@ -1598,7 +1598,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-config (from `../node_modules/react-native-config`)
-  - react-native-powerauth-mobile-sdk (from `../..`)
+  - react-native-powerauth-mobile-sdk (from `../../packages/react-native-powerauth-mobile-sdk`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-performancetimeline (from `../node_modules/react-native/ReactCommon/react/performance/timeline`)
@@ -1714,7 +1714,7 @@ EXTERNAL SOURCES:
   react-native-config:
     :path: "../node_modules/react-native-config"
   react-native-powerauth-mobile-sdk:
-    :path: "../.."
+    :path: "../../packages/react-native-powerauth-mobile-sdk"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-perflogger:
@@ -1814,7 +1814,7 @@ SPEC CHECKSUMS:
   React-logger: 74ddb793d36b48bba176328c7af75e5e656fd405
   React-Mapbuffer: 39e87693178fd6483bb5ca8b851fae362d49409a
   React-microtasksnativemodule: b740ebae7fad70aa78bc24cc0dfc15ac9637b6eb
-  react-native-config: d08b60865268872495a43e211059b4606131fe01
+  react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-powerauth-mobile-sdk: 1af3e8a570395ea00708ce034ef2798286cc5de2
   React-NativeModulesApple: af0571ac115d09c9a669ed45ce6a4ca960598a2d
   React-perflogger: 26d07766b033f84559bd520e949453dba8bf1cd8
@@ -1849,4 +1849,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: f728a1088ca19de2882dcd600b098362b0101817
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2
