@@ -4397,7 +4397,6 @@ __metadata:
     chalk: "npm:^4.1.2"
     cordova-android: "npm:^13.0.0"
     cordova-ios: "npm:^7.1.1"
-    cordova-powerauth-mobile-sdk: "file:../packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-0.0.1-dev.tgz"
     dotenv: "npm:^16.4.5"
     esbuild: "npm:^0.23.1"
     gulp: "npm:^5.0.0"
@@ -4572,13 +4571,6 @@ __metadata:
     xcode: "npm:^3.0.1"
     xml-escape: "npm:^1.1.0"
   checksum: 10c0/2f0a981adec86d2bdd9ff467728af82d1623b151b459792c83a47144488b5c3ec341901518f5557259fd25fee5edbba81647aba371338c8eda97960e5aaa4fbf
-  languageName: node
-  linkType: hard
-
-"cordova-powerauth-mobile-sdk@file:../packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-0.0.1-dev.tgz::locator=com.wultra.pwatest%40workspace%3Atestapp-cordova":
-  version: 0.0.1-dev
-  resolution: "cordova-powerauth-mobile-sdk@file:../packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-0.0.1-dev.tgz#../packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-0.0.1-dev.tgz::hash=2cbdc7&locator=com.wultra.pwatest%40workspace%3Atestapp-cordova"
-  checksum: 10c0/a2d00a32ff1598de96182827f6674d5200fb528276ddb307144a4d81f9709f734ac1dd19a455d1655ebd900c262f12a2575016b6b76780e99e4721adae73f64c
   languageName: node
   linkType: hard
 
