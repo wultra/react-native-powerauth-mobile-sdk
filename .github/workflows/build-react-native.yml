@@ -19,7 +19,7 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Build RN iOS
-        run: npm run buildReactIos
+        run: yarn buildReactIos
   build-android:
     name: Android
     runs-on: macos-latest
@@ -30,5 +30,11 @@ jobs:
         uses: ./.github/actions/prepare
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
       - name: Build RN Android
-        run: npm run buildReactAndroid
+        run: yarn buildReactAndroid

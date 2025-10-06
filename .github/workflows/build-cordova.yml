@@ -19,7 +19,7 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Build Cordova iOS
-        run: npm run buildCordovaIos
+        run: yarn buildCordovaIos
   build-android:
     name: Android
     runs-on: macos-latest
@@ -37,4 +37,4 @@ jobs:
           java-version: '17'
           cache: 'gradle'
       - name: Build Cordova Android
-        run: npm run buildCordovaAndroid
+        run: yarn buildCordovaAndroid
