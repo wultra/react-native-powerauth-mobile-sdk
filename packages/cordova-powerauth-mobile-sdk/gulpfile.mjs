@@ -9,10 +9,11 @@ import { rimraf } from "rimraf"
 import fs from "fs"
 import { exec } from "child_process"
 import path from "path"
-import pkg from "./package.json" with { type: "json" }
 
 const buildDir = "build"
 const tmpDir = ".build"
+
+const RN_sourcesDir = "../react-native-powerauth-mobile-sdk"
 
 let libVersion = "0.0.1-dev"
 try {
@@ -23,8 +24,6 @@ try {
   }
 } catch {}
 
-const CDV_patchSourcesDir = "."
-const RN_sourcesDir = "../react-native-powerauth-mobile-sdk"
 const CDV_packageJson = `./package.json`
 const CDV_pluginXml = `./plugin.xml`
 const CDV_buildDir = `${buildDir}/cdv`
@@ -73,13 +72,6 @@ const createCDVDtsTask = () =>
     .pipe(stripImportExport())
     .pipe(ts({ declaration: true, emitDeclarationOnly: true }))
     .pipe(filter(f => !f.path.includes(`${CDV_tempDir}/src/internal/`)))
-    // Strip import/export statements from the emitted declarations to produce ambient typings
-    // .pipe(replace(/^import[^\n]*\n/gm, ''))
-    // .pipe(replace(/^export\s+declare\s+/gm, 'declare '))
-    // .pipe(replace(/^export\s+default[\s\S]*?;\n?/gm, ''))
-    // .pipe(replace(/^export\s+\{[^}]*\};?\n?/gm, ''))
-    // .pipe(replace(/^export\s+(type|interface)\s+/gm, '$1 '))
-    // .pipe(replace(/^export\s+(const|function|class)\s+/gm, 'declare $1 '))
     .pipe(concat(CDV_typingsFile))
     .pipe(gulp.dest(CDV_buildDir))
 
@@ -89,7 +81,7 @@ const processCDVobjectsToExport = () => new Promise(resolve => {
   try {
     const typingsPath = `${CDV_buildDir}/${CDV_typingsFile}`
     if (fs.existsSync(typingsPath)) {
-      const matches = fs.readFileSync(typingsPath, 'utf8').matchAll(/declare(\sabstract)? [a-z]* (?<name>[a-zA-z0-9_]*)/g)
+      const matches = fs.readFileSync(typingsPath, 'utf8').matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
       objectsToExport = [...matches].flatMap(r => r.groups).flatMap(r => r?.name).filter(Boolean)
     } else {
       objectsToExport = []
@@ -107,13 +99,15 @@ const exportModules = () => new Promise(resolve => {
   resolve()
 })
 
+// Copy sources based on package.json for cordova, but the source directory (the root project) doesn't contain all the mentioned files.
+// It's necessary to filter files not present in the source directory. Otherwise it fails completely.
 const cdvPackageRegex = /.*\/powerauth\/cdv\/.*/
 const copyCDVFiles = () =>
   gulp
     .src((() => {
       const files = JSON.parse(fs.readFileSync(CDV_packageJson, 'utf8')).files
         .filter((file) => !file.startsWith(`${CDV_libDir}/`) && !file.match(cdvPackageRegex))
-        // Exclude patterns whose base directory doesn't exist in this package (they may come from RN and are copied separately)
+        // Exclude patterns whose base directory doesn't exist in this package (they may come from RN and are copied separately - like Android patches etc)
         .filter((pattern) => {
           const lastSlash = pattern.lastIndexOf('/')
           const baseDir = lastSlash >= 0 ? pattern.substring(0, lastSlash) : pattern
