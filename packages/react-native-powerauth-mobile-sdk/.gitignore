@@ -45,15 +45,10 @@ demoapp/ios/Pods/*
 
 # artifacts
 *.tgz
-package-lock.json
-npm-shrinkwrap.json
 
 # Yarn and monorepo
 .yarn
-yarn/*
+.yarn/*
 !.yarn/releases
 !.yarn/plugins
-!.yarn/patches
-!.yarn/sdks
-!.yarn/versions
 .pnp.*

@@ -1,25 +1,25 @@
 {
-  "name": "capacitor-powerauth-mobile-sdk",
-  "title": "PowerAuth SDK for Capacitor.js Mobile Apps",
-  "version": "2.5.0",
-  "description": "Wultra PowerAuth Mobile SDK Capacitor.js component for iOS and Android",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "source": "src/index",
+  "name": "cordova-powerauth-mobile-sdk",
+  "title": "PowerAuth Mobile JS SDK for Cordova Mobile Apps",
+  "version": "<!-- PLACEHOLDER_VERSION -->",
+  "description": "Wultra PowerAuth Mobile JS SDK for Cordova (iOS and Android)",
+  "types": "typings.d.ts",
   "files": [
     "README.md",
     "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.java",
+    "android/src/main/java/com/wultra/android/powerauth/cdv/*",
+    "android/src/main/java/com/wultra/android/powerauth/bridge/*",
+    "android/src/main/java/com/wultra/android/powerauth/js/*",
     "android/build.gradle",
-    "lib/*.*",
-    "lib/internal/*.js",
-    "lib/model/*.*",
-    "lib/debug/*.*",
+    "lib/*",
     "ios/PowerAuth.xcodeproj/project.pbxproj",
+    "ios/PowerAuth/Info.plist",
     "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.mm",
     "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
-    "react-native-powerauth-mobile-sdk.podspec"
+    "plugin.xml",
+    "typings.d.ts"
   ],
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
@@ -27,7 +27,7 @@
     "url": "https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
   },
   "keywords": [
-    "react-native",
+    "cordova",
     "powerauth",
     "security"
   ],
@@ -38,19 +38,18 @@
   "license": "Apache 2.0",
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
-  "dependencies": {
-    "node-fetch": ">=2.6.1"
-  },
-  "peerDependencies": {
-    "react-native": "*"
+  "scripts": {
+    "cdv": "gulp cdv"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "gulp": "^5.0.0",
-    "gulp-footer": "^2.1.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-filter": "^9.0.1",
+    "gulp-replace": "^1.1.4",
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
-    "lodash": "^4.17.21",
-    "react-native": "^0.73.4",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "typescript": "^5.4.0"
   }
 }

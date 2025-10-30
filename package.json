@@ -1,45 +1,9 @@
 {
-  "name": "react-native-powerauth-mobile-sdk",
-  "title": "PowerAuth SDK for React Native Mobile Apps",
-  "version": "0.0.1-dev",
-  "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "source": "src/index",
-  "scripts": {
-    "build": "node node_modules/gulp/bin/gulp.js",
-
-    "freshCordovaIos": "pushd testapp-cordova && npm run freshIos",
-    "freshCordovaAndroid": "npm run build && pushd testapp-cordova && npm run freshAndroid",
-
-    "freshReactIos": "npm run build && pushd testapp && npm run freshIos && npx pod-install && npm run ios",
-    "freshReactAndroid": "npm run build && pushd testapp && npm run freshAndroid",
-
-    "buildReactIos": "pushd testapp && npm run buildIos",
-    "buildReactAndroid": "pushd testapp && npm run buildAndroid",
-
-    "buildCordovaIos": "pushd testapp-cordova && npm run buildIos",
-    "buildCordovaAndroid": "pushd testapp-cordova && npm run buildAndroid",
-
-    "purge": "node node_modules/gulp/bin/gulp.js purge"
-  },
-  "files": [
-    "README.md",
-    "android/src/main/AndroidManifest.xml",
-    "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
-    "android/src/main/java/com/wultra/android/powerauth/js/*.*",
-    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
-    "android/build.gradle",
-    "lib/*.*",
-    "lib/internal/*.js",
-    "lib/model/*.*",
-    "lib/debug/*.*",
-    "ios/PowerAuth.xcodeproj/project.pbxproj",
-    "ios/PowerAuth/*.m",
-    "ios/PowerAuth/*.c",
-    "ios/PowerAuth/*.h",
-    "react-native-powerauth-mobile-sdk.podspec"
-  ],
+  "name": "powerauth-mobile-sdk-js-monorepo",
+  "title": "PowerAuth Mobile SDK",
+  "description": "Wultra PowerAuth Mobile SDK for React Native and Cordova",
+  "version": "0.0.0",
+  "private": true,
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {
     "type": "git",
@@ -47,36 +11,53 @@
   },
   "keywords": [
     "react-native",
+    "cordova",
     "powerauth",
-    "security"
+    "security",
+    "sdk"
   ],
   "author": {
     "name": "Wultra s.r.o.",
     "email": "support@wultra.com"
   },
-  "license": "Apache 2.0",
-  "licenseFilename": "LICENSE",
-  "readmeFilename": "README.md",
-  "dependencies": {
-    "node-fetch": ">=2.6.1"
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "yarn build:rn && yarn build:cdv",
+    "build:rn": "yarn workspace react-native-powerauth-mobile-sdk build",
+    "build:cdv": "yarn workspace cordova-powerauth-mobile-sdk cdv",
+    "buildReactIos": "yarn build:rn && yarn workspace testapp buildIos",
+    "buildReactAndroid": "yarn build:rn && yarn workspace testapp buildAndroid",
+    "buildCordovaIos": "yarn build:cdv && yarn workspace com.wultra.pwatest buildIos",
+    "buildCordovaAndroid": "yarn build:cdv && yarn workspace com.wultra.pwatest buildAndroid",
+    "runReactIos": "yarn workspace testapp ios",
+    "runReactAndroid": "yarn workspace testapp android",
+    "startReact": "yarn workspace testapp start",
+    "freshReactIos": "yarn workspace testapp freshIos",
+    "freshReactAndroid": "yarn workspace testapp freshAndroid",
+    "packReactNative": "yarn build:rn && (cd packages/react-native-powerauth-mobile-sdk && npm pack)",
+    "testapp:ios": "yarn workspace testapp buildIos",
+    "testapp:android": "yarn workspace testapp buildAndroid",
+    "testapp-cordova:ios": "yarn workspace com.wultra.pwatest buildIos",
+    "testapp-cordova:android": "yarn workspace com.wultra.pwatest buildAndroid",
+    "runCordovaIos": "yarn workspace com.wultra.pwatest ios",
+    "runCordovaAndroid": "yarn workspace com.wultra.pwatest android",
+    "freshCordovaIos": "yarn workspace com.wultra.pwatest freshIos",
+    "freshCordovaAndroid": "yarn workspace com.wultra.pwatest freshAndroid",
+    "lint": "yarn lint:rn && yarn lint:testapp",
+    "lint:rn": "yarn workspace react-native-powerauth-mobile-sdk lint",
+    "lint:testapp": "yarn workspace testapp lint",
+    "format": "yarn format:rn && yarn format:testapp",
+    "format:rn": "yarn workspace react-native-powerauth-mobile-sdk format",
+    "format:testapp": "yarn workspace testapp format"
   },
-  "peerDependencies": {
-    "react-native": "*"
-  },
-  "devDependencies": {
-    "@capacitor/core": "^6.1.2",
-    "@react-native-community/cli": "^18.0.0",
-    "esbuild": "^0.25.0",
-    "gulp": "^5.0.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-filter": "^9.0.1",
-    "gulp-replace": "^1.1.4",
-    "gulp-strip-import-export": "^1.0.0",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "lodash": "^4.17.21",
-    "pod-install": "^1.0.1",
+  "workspaces": [
+    "testapp",
+    "testapp-cordova",
+    "packages/*"
+  ],
+  "resolutions": {
     "react": "19.0.0",
-    "react-native": "^0.78.1",
-    "rimraf": "^6.0.1"
-  }
+    "react-native": "0.78.1"
+  },
+  "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774"
 }

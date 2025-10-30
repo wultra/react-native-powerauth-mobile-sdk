@@ -18,7 +18,8 @@ import { NativeModules } from "react-native";
 import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
 
 export class NativePowerAuth implements NativePowerAuthIfc {
-    callNative<T>(name: string, ...args): Promise<T> {
+    callNative<T>(name: string, ...args: any[]): Promise<T> {
+        // eslint-disable-next-line @typescript-eslint/ban-types
         return (NativeModules.PowerAuth[name] as Function).apply(null, ...args);
     }
 }

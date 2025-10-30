@@ -13,9 +13,13 @@ runs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
+      - name: Enable Yarn 
         shell: bash
-        run: npm i
+        run: corepack enable
+      - name: Install dependencies (Yarn)
+        shell: bash
+        run: yarn install --immutable
       - name: Set .env file
         shell: bash
-        run: echo -e "${{ inputs.env-file }}" > testapp/.env
+        run: |
+          echo -e "${{ inputs.env-file }}" > testapp/.env
