@@ -9508,7 +9508,7 @@ __metadata:
     node-fetch: "npm:>=2.6.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
-    react-native: "npm:^0.78.1"
+    react-native: "npm:^0.82.1"
     react-native-builder-bob: "npm:^0.40.13"
     typescript: "npm:^5.4.0"
   peerDependencies:
