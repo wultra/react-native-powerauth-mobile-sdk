@@ -21,6 +21,7 @@ import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
 import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
 import { PowerAuthCryptoUtilsIfc } from "./NativeCryptoUtils";
+import { PowerAuthStorageUtilsIfc } from "./NativeStorageUtils";
 
 
 export interface NativeModulesProviderIfc {
@@ -29,5 +30,6 @@ export interface NativeModulesProviderIfc {
     PowerAuthPassphraseMeter: PowerAuthPassphraseMeterIfc;
     PowerAuthPassword: PowerAuthPasswordIfc;
     PowerAuthCryptoUtils: PowerAuthCryptoUtilsIfc;
+    PowerAuthStorageUtils: PowerAuthStorageUtilsIfc;
     PowerAuth: NativePowerAuthIfc;
 }
