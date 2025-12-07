@@ -22,7 +22,7 @@ import { NativeStorageUtils } from "./internal/NativeStorageUtils";
  */
 export enum PowerAuthStorageType {
     /**
-     * Secure storage: Keychain (iOS) / EncryptedSharedPreferences (Android)
+     * Secure storage: PowerAuth Keychain (iOS & Android)
      */
     SECURE = "SECURE",
     /**
@@ -34,14 +34,6 @@ export enum PowerAuthStorageType {
 /**
  * The `PowerAuthStorageUtils` class provides utility methods for storing and retrieving
  * string values in platform-specific secure and standard storage.
- * 
- * On iOS:
- * - SECURE: Keychain
- * - STANDARD: UserDefaults
- * 
- * On Android:
- * - SECURE: EncryptedSharedPreferences
- * - STANDARD: SharedPreferences
  */
 export class PowerAuthStorageUtils {
 
@@ -106,4 +98,3 @@ export class PowerAuthStorageUtils {
         }
     }
 }
-
