@@ -25,7 +25,7 @@ export class PowerAuth_StorageUtilsTest extends TestWithActivation {
     }
 
     private uniqueKey(prefix: string): string {
-        return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     }
 
     async testSecureStorageSetAndGet() {

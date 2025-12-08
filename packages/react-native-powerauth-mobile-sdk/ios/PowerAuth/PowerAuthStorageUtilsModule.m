@@ -80,10 +80,10 @@ PAJS_METHOD_START(setString,
             if (updateResult == PowerAuthKeychainStoreItemResult_Ok) {
                 resolve([NSNull null]);
             } else {
-                reject(EC_WRONG_PARAMETER, @"Failed to update value in Keychain", nil);
+                reject(EC_ENCRYPTION_ERROR, @"Failed to update value in Keychain", nil);
             }
         } else {
-            reject(EC_WRONG_PARAMETER, @"Failed to store value in Keychain", nil);
+            reject(EC_ENCRYPTION_ERROR, @"Failed to store value in Keychain", nil);
         }
     } else if ([storageTypeStr isEqualToString:kStorageTypeStandard]) {
         [[self userDefaults] setObject:valueStr forKey:keyStr];
