@@ -142,6 +142,7 @@ export class PowerAuth_StorageUtilsTest extends TestWithActivation {
         await PowerAuthStorageUtils.setString(key, jsonValue, PowerAuthStorageType.SECURE);
 
         const retrieved = await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE);
+
         expect(retrieved).toBe(jsonValue);
         
         const parsed = JSON.parse(retrieved!);
@@ -170,4 +171,62 @@ export class PowerAuth_StorageUtilsTest extends TestWithActivation {
         }).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER });
     }
 
+    async testStorageTypesIsolation() {
+        const key = this.uniqueKey("test_isolation");
+
+        const secureValue = "secure_isolation_test";
+        const standardValue = "standard_isolation_test";
+
+        await PowerAuthStorageUtils.setString(key, secureValue, PowerAuthStorageType.SECURE);
+        await PowerAuthStorageUtils.setString(key, standardValue, PowerAuthStorageType.STANDARD);
+
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE)).toBe(secureValue);
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.STANDARD)).toBe(standardValue);
+
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.SECURE);
+        expect(await PowerAuthStorageUtils.exists(key, PowerAuthStorageType.SECURE)).toBe(false);
+        expect(await PowerAuthStorageUtils.exists(key, PowerAuthStorageType.STANDARD)).toBe(true);
+
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.STANDARD);
+    }
+
+    async testLongValue() {
+        const key = this.uniqueKey("test_long");
+        const longValue = "x".repeat(10 * 1024);
+
+        await PowerAuthStorageUtils.setString(key, longValue, PowerAuthStorageType.SECURE);
+
+        const value = await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE);
+        expect(value).toBe(longValue);
+        expect(value!.length).toBe(10 * 1024);
+
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.SECURE);
+    }
+
+    async testOverwriteValue() {
+        const key = this.uniqueKey("test_overwrite");
+        const value1 = "first_value";
+        const value2 = "second_value";
+
+        await PowerAuthStorageUtils.setString(key, value1, PowerAuthStorageType.SECURE);
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE)).toBe(value1);
+
+        await PowerAuthStorageUtils.setString(key, value2, PowerAuthStorageType.SECURE);
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE)).toBe(value2);
+
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.SECURE);
+    }
+
+    async testUnicodeValues() {
+        const key = this.uniqueKey("test_unicode");
+        const unicodeValue = "Test 🌍 ñ č ř ž";
+
+        await PowerAuthStorageUtils.setString(key, unicodeValue, PowerAuthStorageType.SECURE);
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.SECURE)).toBe(unicodeValue);
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.SECURE);
+
+        await PowerAuthStorageUtils.setString(key, unicodeValue, PowerAuthStorageType.STANDARD);
+        expect(await PowerAuthStorageUtils.getString(key, PowerAuthStorageType.STANDARD)).toBe(unicodeValue);
+        await PowerAuthStorageUtils.remove(key, PowerAuthStorageType.STANDARD);
+    }
 }
