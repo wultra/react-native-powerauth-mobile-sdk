@@ -88,7 +88,12 @@ typedef void (^RCTPromiseResolveBlock)(id result);
     parameters \
     RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
         NSError *writeError = nil; \
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSDictionary *userInfo = [error userInfo]; \
+        NSMutableDictionary *errorDict = [NSMutableDictionary dictionaryWithDictionary:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] }]; \
+        if (userInfo && [NSJSONSerialization isValidJSONObject:userInfo]) { \
+            errorDict[@"userInfo"] = userInfo; \
+        } \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:errorDict options:NSJSONWritingPrettyPrinted error:&writeError]; \
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
     }; \
@@ -104,7 +109,12 @@ typedef void (^RCTPromiseResolveBlock)(id result);
 { \
     RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
         NSError *writeError = nil; \
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSDictionary *userInfo = [error userInfo]; \
+        NSMutableDictionary *errorDict = [NSMutableDictionary dictionaryWithDictionary:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] }]; \
+        if (userInfo && [NSJSONSerialization isValidJSONObject:userInfo]) { \
+            errorDict[@"userInfo"] = userInfo; \
+        } \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:errorDict options:NSJSONWritingPrettyPrinted error:&writeError]; \
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
     }; \
