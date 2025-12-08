@@ -65,7 +65,7 @@ class Promise(
    * @param throwable Throwable
    */
   fun reject(code: String, message: String?, throwable: Throwable?) {
-    callbackContext.error(buildErrorJson(code, message ?: throwable?.message, null))
+    callbackContext.error(buildErrorJson(code, message?.takeIf { it.isNotEmpty() } ?: throwable?.message, null))
   }
 
   /**
@@ -134,6 +134,6 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?) {
-    callbackContext.error(buildErrorJson(code, message ?: throwable?.message, userInfo))
+    callbackContext.error(buildErrorJson(code, message?.takeIf { it.isNotEmpty() } ?: throwable?.message, userInfo))
   }
 }

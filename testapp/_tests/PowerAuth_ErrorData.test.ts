@@ -21,9 +21,11 @@ import { TestWithActivation } from "./helpers/TestWithActivation";
 export class PowerAuth_ErrorDataTests extends TestWithActivation {
 
     async testErrorContainsParsedData() {
+        let errorThrown = false
         try {
             await this.sdk.validatePassword(this.credentials.invalidPassword)
         } catch (e) {
+            errorThrown = true
             expect(e instanceof PowerAuthError).toBe(true)
             const error = e as PowerAuthError
 
@@ -33,12 +35,15 @@ export class PowerAuth_ErrorDataTests extends TestWithActivation {
             expect(error.errorData.httpStatusCode).toBe(401)
             expect(typeof error.errorData.responseBody).toBe('string')
         }
+        expect(errorThrown).toBe(true)
     }
 
     async testResponseErrorContainsParsedData() {
+        let errorThrown = false
         try {
             await this.sdk.confirmRecoveryCode('AAAAA-AAAAA-AAAAA-AAAAA', this.credentials.knowledge)
         } catch (e) {
+            errorThrown = true
             expect(e instanceof PowerAuthError).toBe(true)
             const error = e as PowerAuthError
 
@@ -46,5 +51,6 @@ export class PowerAuth_ErrorDataTests extends TestWithActivation {
             expect(error.errorData).toBeDefined()
             expect(typeof error.errorData.httpStatusCode).toBe('number')
         }
+        expect(errorThrown).toBe(true)
     }
 }
