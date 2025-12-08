@@ -28,6 +28,16 @@ class Promise(
     }
   }
 
+  private fun buildErrorJson(code: String?, message: String?, userInfo: WritableMap?): JSONObject {
+    val m = mutableMapOf<String, Any?>()
+
+    code?.let { m["code"] = it }
+    message?.let { m["message"] = it }
+    userInfo?.let { m["userInfo"] = it.toHashMap() }
+
+    return JSONObject(m.toMap())
+  }
+
   /**
    * Report an error without an exception using a custom code and error message.
    *
@@ -35,8 +45,7 @@ class Promise(
    * @param message String
    */
   fun reject(code: String, message: String?) {
-    val m = mapOf("code" to code, "message" to message)
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, message, null))
   }
 
   /**
@@ -46,8 +55,7 @@ class Promise(
    * @param throwable Throwable
    */
   fun reject(code: String, throwable: Throwable?) {
-    val m = mapOf("code" to code, "throwable" to throwable)
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, throwable?.message, null))
   }
 
   /**
@@ -58,8 +66,7 @@ class Promise(
    * @param throwable Throwable
    */
   fun reject(code: String, message: String?, throwable: Throwable?) {
-    val m = mapOf("code" to code, "message" to message, "throwable" to throwable)
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, message ?: throwable?.message, null))
   }
 
   /**
@@ -69,8 +76,7 @@ class Promise(
    * @param throwable Throwable
    */
   fun reject(throwable: Throwable) {
-    val m = mapOf("throwable" to throwable)
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(null, throwable.message, null))
   }
 
   /* ---------------------------
@@ -84,8 +90,7 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(throwable: Throwable, userInfo: WritableMap) {
-    val m = mapOf("throwable" to throwable, "userInfo" to JSONObject(userInfo.toHashMap().toMap()))
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(null, throwable.message, userInfo))
   }
 
   /**
@@ -95,8 +100,7 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(code: String, userInfo: WritableMap) {
-    val m = mapOf("code" to code, "userInfo" to JSONObject(userInfo.toHashMap().toMap()))
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, null, userInfo))
   }
 
   /**
@@ -107,8 +111,7 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(code: String, throwable: Throwable?, userInfo: WritableMap) {
-    val m = mapOf("code" to code, "throwable" to throwable, "userInfo" to JSONObject(userInfo.toHashMap().toMap()))
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, throwable?.message, userInfo))
   }
 
   /**
@@ -120,8 +123,7 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(code: String, message: String?, userInfo: WritableMap) {
-    val m = mapOf("code" to code, "message" to message, "userInfo" to JSONObject(userInfo.toHashMap().toMap()))
-    callbackContext.error(JSONObject(m))
+    callbackContext.error(buildErrorJson(code, message, userInfo))
   }
 
   /**
@@ -133,10 +135,6 @@ class Promise(
    * @param userInfo WritableMap
    */
   fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?) {
-    val m = mutableMapOf("code" to code, "message" to message, "throwable" to throwable)
-    userInfo?.let { 
-      m["userInfo"] = userInfo.toHashMap()
-    }
-    callbackContext.error(JSONObject(m.toMap()))
+    callbackContext.error(buildErrorJson(code, message ?: throwable?.message, userInfo))
   }
 }
