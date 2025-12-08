@@ -29,12 +29,11 @@ class Promise(
   }
 
   private fun buildErrorJson(code: String?, message: String?, userInfo: WritableMap?): JSONObject {
-    val m = mutableMapOf<String, Any?>()
-
-    code?.let { m["code"] = it }
-    message?.let { m["message"] = it }
+    val m = mutableMapOf<String, Any?>(
+      "code" to code,
+      "message" to message
+    )
     userInfo?.let { m["userInfo"] = it.toHashMap() }
-
     return JSONObject(m.toMap())
   }
 
