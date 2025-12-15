@@ -363,7 +363,7 @@ export class PowerAuthPasswordTests extends TestSuite {
 
     async testFromString() {
         const passwordString = "Sk💀ll" // to contain other than unicode char
-        const codepoints = [83, 107, 128128, 108, 108] // S k 💀 l l
+        const codepoints = [83, 107, 128128/*, 56448*/, 108, 108] // S k 💀 l l (current implementation ommits `56448` codepoint)
         
         console.log("Length: " + passwordString.length)
         for (let i = 0; i <= passwordString.length; i++) {
