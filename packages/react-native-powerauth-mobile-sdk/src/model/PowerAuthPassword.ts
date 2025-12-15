@@ -71,7 +71,7 @@ export class PowerAuthPassword extends BaseNativeObject {
     /**
      * Construct password object and specify whether it's re-usable and/or should be destroyed 
      * together with the owning PowerAuth class instance.
-     * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptograhic operation.
+     * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptograhic operation. Default is `true`.
      * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
      * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
      * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
@@ -86,6 +86,29 @@ export class PowerAuthPassword extends BaseNativeObject {
         this.powerAuthInstanceId = powerAuthInstanceId
         this.autoreleaseTime = autoreleaseTime
         this.automaticCleanupCallback = onAutomaticCleanup
+    }
+
+    /**
+     * Creating password from already obtained string.
+     * 
+     * Note that this is not recommended. Do this only when you retrieve the whole string form a text input.
+     * 
+     * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptograhic operation. Default is `true`.
+     * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
+     * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
+     * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
+     */
+    static async fromString(
+        password: string,
+        destroyOnUse: boolean = true,
+        onAutomaticCleanup: (() => void) | undefined = undefined,
+        powerAuthInstanceId: string | undefined = undefined,
+        autoreleaseTime: number = 0): Promise<PowerAuthPassword> {
+        const pwd = new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, powerAuthInstanceId, autoreleaseTime)
+        for (const c of password) {
+            await pwd.addCharacter(c)
+        }
+        return pwd
     }
 
     /**

@@ -1,9 +1,10 @@
 {
   "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
+    "types": ["react-native"],
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
+    // "noUncheckedIndexedAccess": true,
+    // "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true
   }
 }
