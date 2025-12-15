@@ -2,6 +2,7 @@
 
 ## TBA
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
+- Added helper method to create `PowerAuthPassword` from string (`PowerAuthPassword.fromString`) (see [Secure Password](./Secure-Password.md) for more details)
 
 ## 4.1.3 (9/2025)
 - Token-based authentication now automatically synchronizes time if needed (see [Token-Based Authentication](./Token-Based-Authentication.md) for more details)
