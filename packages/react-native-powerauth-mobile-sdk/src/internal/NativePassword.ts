@@ -23,7 +23,7 @@ export interface PowerAuthPasswordIfc {
     
     /**
      * Initialize native password object.
-     * @param destroyOnUse If `true`, then native password will be destroyed after its use for the cryptograhic operation.
+     * @param destroyOnUse If `true`, then native password will be destroyed after its use for the cryptographic operation.
      * @param ownerId If specified, then native password will be destroyed together with owning PowerAuth instance.
      * @param autoreleaseTime Defines autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
      * @returns Underlying native object identifier.

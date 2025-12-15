@@ -64,7 +64,7 @@ try {
 You can also create `PowerAuthPassword` from an already obtained string.
 
 <!-- begin box warning -->
-Note that this is not recommended. Do this only when you retrieve the whole string form a text input.
+Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
 <!-- end -->
 
 ```javascript

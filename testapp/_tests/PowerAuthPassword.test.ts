@@ -364,11 +364,6 @@ export class PowerAuthPasswordTests extends TestSuite {
     async testFromString() {
         const passwordString = "Sk💀ll" // to contain other than unicode char
         const codepoints = [83, 107, 128128/*, 56448*/, 108, 108] // S k 💀 l l (current implementation ommits `56448` codepoint)
-        
-        console.log("Length: " + passwordString.length)
-        for (let i = 0; i <= passwordString.length; i++) {
-            console.log(passwordString.codePointAt(i))
-        }
 
         const p1 = await PowerAuthPassword.fromString(passwordString)
         const p2 = new PowerAuthPassword()
@@ -376,7 +371,6 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(p1, p2, p3)
 
         for (const c of passwordString) {
-            console.log(`Adding character: ${c}`)
             await p2.addCharacter(c)
         }
 
