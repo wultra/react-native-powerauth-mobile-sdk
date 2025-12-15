@@ -49,7 +49,7 @@
     "gulp-replace": "^1.1.4",
     "gulp-strip-import-export": "^1.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.2",
     "typescript": "^5.4.0"
   }
 }
