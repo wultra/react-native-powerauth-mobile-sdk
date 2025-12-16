@@ -2,6 +2,8 @@
 
 ## TBA
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
+- Added `PowerAuthStorageUtils` cache API with secure & standard storage (see [Storage Utilities](./Storage-Utilities.md))
+- Fixed bridged native error processing on Cordova (issue[#302](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/302))
 
 ## 4.1.3 (9/2025)
 - Token-based authentication now automatically synchronizes time if needed (see [Token-Based Authentication](./Token-Based-Authentication.md) for more details)
