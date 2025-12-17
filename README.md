@@ -10,7 +10,6 @@
 [![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml)
 
 
-
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use This PowerAuth JS SDK library (for Android and iOS) from this repository.
 
 > [!NOTE]
@@ -25,7 +24,7 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 | Version | React-Native<sup>1</sup> | Cordova   | Native SDK   | Server version | Support Status    |
 |---------|--------------------------|-----------|--------------|----------------|-------------------|
 | `4.1.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Fully supported   |
-| `3.2.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Bugfixes          |
+| `3.2.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Security fixes    |
 | `4.0.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Not supported     |
 | `3.1.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Not supported     |
 | `3.0.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Not supported     |
@@ -35,7 +34,7 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 | `2.2.x` |                          | -         | `1.6.x`      | `0.24+`        | Not supported     |
 
 <!-- begin box info -->
-> Note 1: The library may also work with other React-Native versions but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
+> Note 1: The library may also work with other React-Native versions, but we don't guarantee compatibility. The specified version is the version that we use for the development and for the tests.
 <!-- end -->
 
 ## License

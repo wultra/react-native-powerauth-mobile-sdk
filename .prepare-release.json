@@ -1,0 +1,43 @@
+{
+    "metadata": {
+        "purpose": "This file is used as a definition file for the prepare-release script.",
+        "info": "It defines files that contains version number that should be updated during the release preparation.",
+        "customBuildscript": "If needed, in the library object, set \"buildscript\": \"your-custom-build-command\" command if your build command is different than 'npm i && npm run build'"
+    },
+    "library": {
+        "name": "digital-onboarding-js",
+        "type": "yarn",
+        "artifacts": [
+            "packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
+            "packages/react-native-powerauth-mobile-sdk/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
+        ],
+        "buildscript": "corepack enable && yarn install && yarn packReactNative && yarn build:cdv"
+    },
+    "files": [
+        {
+            "description": "React package definition file.",
+            "path": "packages/react-native-powerauth-mobile-sdk/package.json",
+            "type": "version_replace",
+            "match": "\"version\": \"%VERSION%\",\n",
+            "_comment": "Based on this version, all other versions are derived during the build."
+        },
+        {
+            "description": "Changelog",
+            "path": "docs/Changelog.md",
+            "type": "version_verify",
+            "match": "## %VERSION%"
+        },
+        {
+            "description": "Compatibility in the documentation.",
+            "path": "docs/Readme.md",
+            "type": "versionstream_verify",
+            "match": "| `%VERSION_STREAM%`"
+        },
+        {
+            "description": "Compatibility in the documentation.",
+            "path": "README.md",
+            "type": "versionstream_verify",
+            "match": "| `%VERSION_STREAM%`"
+        }
+    ]
+}
