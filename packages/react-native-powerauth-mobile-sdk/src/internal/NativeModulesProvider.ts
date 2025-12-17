@@ -24,6 +24,7 @@ class Provider implements NativeModulesProviderIfc {
     PowerAuthPassphraseMeter = NativeModules.PowerAuthPassphraseMeter
     PowerAuthPassword = NativeModules.PowerAuthPassword
     PowerAuthCryptoUtils = NativeModules.PowerAuthCryptoUtils
+    PowerAuthStorageUtils = NativeModules.PowerAuthStorageUtils
     PowerAuth = new NativePowerAuth()
 }
 

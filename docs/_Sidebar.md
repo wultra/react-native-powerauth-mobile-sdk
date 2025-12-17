@@ -22,6 +22,7 @@
 - [User Info](User-Info.md)
 - [Time Synchronization](Time-Synchronization.md)
 - [Crypto Utilities](Crypto-Utilities.md)
+- [Storage Utilities](Storage-Utilities.md)
 - [Accessing the Native PowerAuthSDK](Accessing-Native-PowerAuthSDK.md)
 - [Additional Utilities](Additional-Utilities.md)
 
