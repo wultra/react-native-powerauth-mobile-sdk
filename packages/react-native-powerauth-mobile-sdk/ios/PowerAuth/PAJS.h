@@ -88,8 +88,13 @@ typedef void (^RCTPromiseResolveBlock)(id result);
     parameters \
     RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
         NSError *writeError = nil; \
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
-        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
+        NSDictionary *userInfo = error ? [error userInfo] : nil; \
+        NSMutableDictionary *errorDict = [NSMutableDictionary dictionaryWithDictionary:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] }]; \
+        if (userInfo && [NSJSONSerialization isValidJSONObject:userInfo]) { \
+            errorDict[@"userInfo"] = userInfo; \
+        } \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:errorDict options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSString *jsonString = jsonData ? [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] : @"{\"code\":\"SERIALIZATION_ERROR\",\"message\":\"Failed to serialize error\"}"; \
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
     }; \
     RCTPromiseResolveBlock resolve = ^(id result) { \
@@ -104,8 +109,13 @@ typedef void (^RCTPromiseResolveBlock)(id result);
 { \
     RCTPromiseRejectBlock reject = ^(NSString *code, NSString *message, NSError *error) { \
         NSError *writeError = nil; \
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] } options:NSJSONWritingPrettyPrinted error:&writeError]; \
-        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];   \
+        NSDictionary *userInfo = error ? [error userInfo] : nil; \
+        NSMutableDictionary *errorDict = [NSMutableDictionary dictionaryWithDictionary:@{ @"code": code ? code : [NSNull null], @"message": message ? message: [NSNull null] }]; \
+        if (userInfo && [NSJSONSerialization isValidJSONObject:userInfo]) { \
+            errorDict[@"userInfo"] = userInfo; \
+        } \
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:errorDict options:NSJSONWritingPrettyPrinted error:&writeError]; \
+        NSString *jsonString = jsonData ? [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] : @"{\"code\":\"SERIALIZATION_ERROR\",\"message\":\"Failed to serialize error\"}"; \
         [[self commandDelegate] sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:jsonString] callbackId: cmd.callbackId]; \
     }; \
     RCTPromiseResolveBlock resolve = ^(id result) { \

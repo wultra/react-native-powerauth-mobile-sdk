@@ -38,6 +38,7 @@ import { PowerAuth_RecoveryTests } from "./PowerAuth_Recovery.test";
 import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test";
 import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test";
+import { PowerAuth_ErrorDataTests } from "./PowerAuth_ErrorData.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
@@ -60,7 +61,8 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_UserInfoTest(),
         new PowerAuth_LegacyAuthTests(),
         new NativeObjectRegisterTests(),
-        new PowerAuth_CryptoUtilsTest()
+        new PowerAuth_CryptoUtilsTest(),
+        new PowerAuth_ErrorDataTests()
     ]
 }
 

@@ -25,6 +25,7 @@ import { PowerAuthPasswordIfc } from "./NativePassword";
 import { NativeCordovaModule } from "./NativeCordovaModule";
 import { NativePowerAuth } from "./NativePowerAuth";
 import { PowerAuthCryptoUtilsIfc } from "./NativeCryptoUtils";
+import { PowerAuthStorageUtilsIfc } from "./NativeStorageUtils";
 
 class Provider implements NativeModulesProviderIfc {
     PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
@@ -32,6 +33,7 @@ class Provider implements NativeModulesProviderIfc {
     PowerAuthPassphraseMeter = new PowerAuthPassphraseMeterImpl() as PowerAuthPassphraseMeterIfc;
     PowerAuthPassword = new PowerAuthPasswordImpl() as PowerAuthPasswordIfc;
     PowerAuthCryptoUtils = new PowerAuthCryptoUtilsImpl() as PowerAuthCryptoUtilsIfc;
+    PowerAuthStorageUtils = new PowerAuthStorageUtilsImpl() as PowerAuthStorageUtilsIfc;
     PowerAuth = new NativePowerAuth();
 }
 
@@ -141,6 +143,27 @@ class PowerAuthCryptoUtilsImpl extends NativeCordovaModule implements PowerAuthC
 
     async randomBytes(length: number): Promise<string> {
         return await this.callNative("randomBytes", [length]);
+    }
+}
+
+class PowerAuthStorageUtilsImpl extends NativeCordovaModule implements PowerAuthStorageUtilsIfc {
+
+    readonly pluginName = "PowerAuthStorageUtilsModule";
+
+    async setString(key: string, value: string, storageType: string): Promise<void> {
+        return await this.callNative("setString", [key, value, storageType]);
+    }
+
+    async getString(key: string, storageType: string): Promise<string | null> {
+        return await this.callNative("getString", [key, storageType]);
+    }
+
+    async exists(key: string, storageType: string): Promise<boolean> {
+        return await this.callNative("exists", [key, storageType]);
+    }
+
+    async remove(key: string, storageType: string): Promise<boolean> {
+        return await this.callNative("remove", [key, storageType]);
     }
 }
 
