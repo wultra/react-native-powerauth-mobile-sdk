@@ -2,6 +2,7 @@
 
 ## TBA
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
+- Added helper method to create `PowerAuthPassword` from string (`PowerAuthPassword.fromString`) (see [Secure Password](./Secure-Password.md) for more details)
 - Added `PowerAuthStorageUtils` cache API with secure & standard storage (see [Storage Utilities](./Storage-Utilities.md))
 - Fixed bridged native error processing on Cordova (issue[#302](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/302))
 

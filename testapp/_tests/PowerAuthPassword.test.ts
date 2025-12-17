@@ -360,4 +360,26 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEmpty()).toBe(true)
         expect(await p2.isEmpty()).toBe(true)
     }
+
+    async testFromString() {
+        const passwordString = "Sk💀ll" // to contain other than unicode char
+        const codepoints = [83, 107, 128128/*, 56448*/, 108, 108] // S k 💀 l l (current implementation ommits `56448` codepoint)
+
+        const p1 = await PowerAuthPassword.fromString(passwordString)
+        const p2 = new PowerAuthPassword()
+        const p3 = new PowerAuthPassword()
+        this.cleanup.push(p1, p2, p3)
+
+        for (const c of passwordString) {
+            await p2.addCharacter(c)
+        }
+
+        for (const cp of codepoints) {
+            await p3.addCharacter(cp)
+        }
+
+        expect(await p1.isEqualTo(p2)).toBe(true)
+        expect(await p1.isEqualTo(p3)).toBe(true)
+        expect(await p2.isEqualTo(p3)).toBe(true)
+    }
 }
