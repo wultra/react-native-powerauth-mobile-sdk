@@ -207,4 +207,78 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.verifyScannedActivationCode(`${code}`)).toBe(false)
         expect(await sdk.verifyScannedActivationCode(`VVVVV-VVVVV-VVVVV-VTFVA#${sign}`)).toBe(false)
     }
+
+    async testOidcActivationData() {
+        const sdk = this.helper.sdk
+        expect(sdk).toBeDefined()
+        if (await sdk.hasValidActivation()) {
+            sdk.removeActivationLocal()
+        }
+
+        // Same initial assertions as createActivationTest()
+        expect(await sdk.canStartActivation()).toBe(true)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(false)
+        expect(await sdk.getActivationIdentifier()).toBeUndefined()
+        expect(await sdk.getActivationFingerprint()).toBeUndefined()
+        expect(await sdk.getExternalPendingOperation()).toBeUndefined()
+
+        // OIDC activation with codeVerifier (made up -> expect server/response error)
+        const activation1 = PowerAuthActivation.createWithOIDCParameters(
+            'RN OIDC Test',
+            'exampleProvider',
+            'ABCDEFG1234567890',
+            'K1mP3rT9bQ8lV6zN7sW2xY4dJ5oU0fA1gH29o',
+            'G3hsI1KZX1o~K0p-5lT3F7yZ4bC8dE2jX9aQ6nO2rP3uS7wT5mV8jW1oY6xB3sD09tR4vU3qM1nG7kL6hV5wY2pJ0aF3eK9dQ8xN4mS2zB7oU5tL1cJ3vX6yP8rE2wO9n'
+        )
+        activation1.extras = 'Some extras'
+        activation1.customAttributes = { key1: 'value1', key2: 2 }
+
+        await expect(async () => await sdk.createActivation(activation1))
+            .toThrow({ errorCode: PowerAuthErrorCode.RESPONSE_ERROR })
+
+        // After failure, state should remain unchanged
+        expect(await sdk.canStartActivation()).toBe(true)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(false)
+        expect(await sdk.getActivationIdentifier()).toBeUndefined()
+        expect(await sdk.getActivationFingerprint()).toBeUndefined()
+
+        // OIDC activation without codeVerifier (still made up -> expect server/response error)
+        const activation2 = PowerAuthActivation.createWithOIDCParameters(
+            'RN OIDC Test',
+            'exampleProvider',
+            'ABCDEFG1234567890',
+            'K1mP3rT9bQ8lV6zN7sW2xY4dJ5oU0fA1gH29o'
+            // no codeVerifier
+        )
+
+        await expect(async () => await sdk.createActivation(activation2))
+            .toThrow({ errorCode: PowerAuthErrorCode.RESPONSE_ERROR })
+            
+        // Still unchanged
+        expect(await sdk.canStartActivation()).toBe(true)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(false)
+        expect(await sdk.getActivationIdentifier()).toBeUndefined()
+        expect(await sdk.getActivationFingerprint()).toBeUndefined()
+
+        // Invalid OIDC parameters: empty code -> expect invalid activation object
+        const activation3 = PowerAuthActivation.createWithOIDCParameters(
+            'RN OIDC Test',
+            'exampleProvider',
+            '', // empty - invalid code
+            'K1mP3rT9bQ8lV6zN7sW2xY4dJ5oU0fA1gH29o'
+        )
+
+        await expect(async () => await sdk.createActivation(activation3))
+            .toThrow({ errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_OBJECT })
+
+        // Final sanity: still no activation created
+        expect(await sdk.canStartActivation()).toBe(true)
+        expect(await sdk.hasPendingActivation()).toBe(false)
+        expect(await sdk.hasValidActivation()).toBe(false)
+        expect(await sdk.getActivationIdentifier()).toBeUndefined()
+        expect(await sdk.getActivationFingerprint()).toBeUndefined()
+    }
 }

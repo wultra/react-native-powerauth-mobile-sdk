@@ -37,6 +37,9 @@ export class PowerAuthActivation {
     /** Additional activation OTP that can be used only with a regular activation, by activation code */
     additionalActivationOtp?: string
 
+    /** OpenID Connect parameters for activation. */
+    oidcParameters: any
+
     /**
      * Private constructor, used internally.
      * @param activationName Activation name to be assigned to new activation.
@@ -97,5 +100,24 @@ export class PowerAuthActivation {
         a.activationName = name;
         a.identityAttributes = identityAttributes;
         return a;
+    }
+
+    /**
+     * Creates an instance of `PowerAuthActivation` with OpenID Connect credentials.
+     *
+     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
+     * an activation record on PowerAuth Server.
+     *
+     * @param name Activation name to be used for the activation.
+     * @param providerId OAuth 2.0 provider identification.
+     * @param code OAuth 2.0 authorization code.
+     * @param nonce Nonce used in the OAuth 2.0 flow.
+     * @param codeVerifier Optional code verifier, in case that PKCE extension is used for an activation.
+     * @returns New instance of `PowerAuthActivation`.
+     */
+    static createWithOIDCParameters(name: string, providerId: string, code: string, nonce: string, codeVerifier?: string): PowerAuthActivation {
+        const a = new PowerAuthActivation(name)
+        a.oidcParameters = { providerId, code, nonce, codeVerifier }
+        return a
     }
 };
