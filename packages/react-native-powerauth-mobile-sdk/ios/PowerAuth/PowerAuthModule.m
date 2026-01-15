@@ -262,10 +262,11 @@ PAJS_METHOD_START(createActivation,
             return;
         }
 
-        paActivation = [PowerAuthActivation activationWithOidcProviderId:providerId code:code nonce:nonce codeVerifier:codeVerifier error:activationError];
+        NSError * activationError = nil;
+        paActivation = [PowerAuthActivation activationWithOidcProviderId:providerId code:code nonce:nonce codeVerifier:codeVerifier error:&activationError];
         
         if (activationError) {
-            reject(EC_INVALID_ACTIVATION_OBJECT, @"OIDC Activation object is invalid.", nil);
+            reject(EC_INVALID_ACTIVATION_OBJECT, @"OIDC Activation object is invalid.", activationError);
             return;
         }
 
