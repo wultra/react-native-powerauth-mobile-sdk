@@ -72,12 +72,16 @@ export class PowerAuthActivationTests extends TestSuite {
     }
 
     testOidcActivation() {
+        const oidcParameters = {
+            providerId: "provider-123",
+            code: "auth-code-xyz",
+            nonce: "nonce-abc",
+            codeVerifier: "verifier-optional"
+        };
+
         const a = PowerAuthActivation.createWithOIDCParameters(
-            this.name,
-            "provider-123",
-            "auth-code-xyz",
-            "nonce-abc",
-            "verifier-optional"
+            oidcParameters,
+            this.name
         );
 
         expect(a).toBeDefined();
