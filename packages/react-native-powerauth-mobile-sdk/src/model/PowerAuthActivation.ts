@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { PowerAuthOIDCParameters } from "./PowerAuthOIDCParameters"
+
 /**
  * The `PowerAuthActivation` object contains activation data required for the activation creation. The object supports
  * all types of activation currently supported in the SDK.
@@ -38,7 +40,7 @@ export class PowerAuthActivation {
     additionalActivationOtp?: string
 
     /** OpenID Connect parameters for activation. */
-    oidcParameters: any
+    oidcParameters?: PowerAuthOIDCParameters
 
     /**
      * Private constructor, used internally.
@@ -105,19 +107,18 @@ export class PowerAuthActivation {
     /**
      * Creates an instance of `PowerAuthActivation` with OpenID Connect credentials.
      *
-     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
-     * an activation record on PowerAuth Server.
+     * This activation method is intended to be used with an external OpenID Connect provider.
+     * The activation's `name` parameter is recommended to be set to the device name.
+     * The name of activation will be associated with an activation record on the PowerAuth Server.
      *
+     * @param oidcParameters Parameters required for activation via OpenID Connect provider.
      * @param name Activation name to be used for the activation.
-     * @param providerId OAuth 2.0 provider identification.
-     * @param code OAuth 2.0 authorization code.
-     * @param nonce Nonce used in the OAuth 2.0 flow.
-     * @param codeVerifier Optional code verifier, in case that PKCE extension is used for an activation.
      * @returns New instance of `PowerAuthActivation`.
+     *
      */
-    static createWithOIDCParameters(name: string, providerId: string, code: string, nonce: string, codeVerifier?: string): PowerAuthActivation {
+    static createWithOIDCParameters(oidcParameters: PowerAuthOIDCParameters, name: string): PowerAuthActivation {
         const a = new PowerAuthActivation(name)
-        a.oidcParameters = { providerId, code, nonce, codeVerifier }
+        a.oidcParameters = oidcParameters
         return a
     }
 };

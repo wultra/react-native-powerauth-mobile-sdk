@@ -108,21 +108,23 @@ You may also create an activation using OIDC protocol:
 ```javascript
 const name = "Petr's iPhone"; // user's phone name
 
-// Get the following information from your OpenID provider
-const providerId = "my-provider-id";
-const code = "1234567890abcdef";
-const nonce = "K1mP3rT9bQ8lV6zN7sW2xY4dJ5oU0fA1gH29o";
-const codeVerifier = "G3hsI1KZX1o~K0p-5lT3F7yZ4...6yP8rE2wO9n"; // code verifier is optional
+// Get the following information from your OpenID Connect provider
+const oidcParameters = {
+    providerId: "my-provider-id",
+    code: "1234567890abcdef",
+    nonce: "K1mP3rT9bQ8lV6zN7sW2xY4dJ5oU0fA1gH29o",
+    codeVerifier: "G3hsI1KZX1o~K0p-5lT3F7yZ4...6yP8rE2wO9n" // optional (PKCE)
+};
 
 // Create activation object with OIDC parameters.
-const activation = PowerAuthActivation.createWithOIDCParameters(name, providerId, code, nonce, codeVerifier);
+const activation = PowerAuthActivation.createWithOIDCParameters(oidcParameters, name);
 
 // Create a new activation with the just-created activation object
 try {
     const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation
 } catch (e) {
-// Error occurred, report it to the user
+    // Error occurred, report it to the user
 }
 ```
 
