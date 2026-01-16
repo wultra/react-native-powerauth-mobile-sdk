@@ -1,0 +1,185 @@
+# Copyright 2026 Wultra s.r.o.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Mobile E2E (simulator/emulator)
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
+
+      POWERAUTH_CLOUD_URL: ${{ secrets.POWERAUTH_CLOUD_URL }}
+      POWERAUTH_CLOUD_USERNAME: ${{ secrets.POWERAUTH_CLOUD_USERNAME }}
+      POWERAUTH_CLOUD_PASSWORD: ${{ secrets.POWERAUTH_CLOUD_PASSWORD }}
+      POWERAUTH_CLOUD_APP_ID: ${{ secrets.POWERAUTH_CLOUD_APP_ID }}
+      ENROLLMENT_SERVER_URL: ${{ secrets.ENROLLMENT_SERVER_URL }}
+      SDK_CONFIG: ${{ secrets.SDK_CONFIG }}
+
+      UDS_SERVER_URL: ${{ secrets.UDS_SERVER_URL }}
+      UDS_SERVER_USERNAME: ${{ secrets.UDS_SERVER_USERNAME }}
+      UDS_SERVER_PASSWORD: ${{ secrets.UDS_SERVER_PASSWORD }}
+
+      EXPECTED_RUNS: "4"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        run: |
+          cat > testapp/.env <<EOF
+          POWERAUTH_CLOUD_URL=${POWERAUTH_CLOUD_URL}
+          POWERAUTH_CLOUD_USERNAME=${POWERAUTH_CLOUD_USERNAME}
+          POWERAUTH_CLOUD_PASSWORD=${POWERAUTH_CLOUD_PASSWORD}
+          POWERAUTH_CLOUD_APP_ID=${POWERAUTH_CLOUD_APP_ID}
+          ENROLLMENT_SERVER_URL=${ENROLLMENT_SERVER_URL}
+          SDK_CONFIG=${SDK_CONFIG}
+          UDS_SERVER_URL=${UDS_SERVER_URL}
+          UDS_SERVER_USERNAME=${UDS_SERVER_USERNAME}
+          UDS_SERVER_PASSWORD=${UDS_SERVER_PASSWORD}
+          TEST_COLLECTOR_URL=${TEST_COLLECTOR_URL}
+          EOF
+
+      - name: Run E2E (Android emulator + iOS simulator)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -euo pipefail
+
+            mkdir -p artifacts/e2e
+
+            # Start collector (will exit when EXPECTED_RUNS complete, or timeout)
+            node packages/mobile-test-runner/dist/cli.js collect \
+              --host 0.0.0.0 \
+              --port 8137 \
+              --out artifacts/e2e \
+              --expected-runs "${EXPECTED_RUNS}" \
+              --timeout 45m &
+            COLLECTOR_PID=$!
+
+            yarn workspace testapp start --reset-cache &
+            METRO_PID=$!
+
+            # Utility function to force wait between RN and Cordovar uns to prevent race conditions
+            wait_for_completed() {
+              local expected="$1"
+              local start_time
+              start_time="$(date +%s)"
+              while true; do
+                local completed
+                completed="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.completed ?? ''))).catch(()=>{})" 2>/dev/null || true)"
+                if [[ -n "${completed}" && "${completed}" -ge "${expected}" ]]; then
+                  echo "[e2e] collector completed runs=${completed}"
+                  break
+                fi
+                local now
+                now="$(date +%s)"
+                if [[ $((now - start_time)) -gt 2700 ]]; then
+                  echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
+                  break
+                fi
+                sleep 10
+              done
+            }
+
+            xcrun simctl list devices available
+            SIM_ID="$(xcrun simctl list devices available | grep 'iPhone' | head -n 1 | grep -oE '[A-F0-9-]{36}' || true)"
+            if [[ -n "${SIM_ID}" ]]; then
+              echo "[e2e] Booting iOS simulator id=${SIM_ID}"
+              open -a Simulator || true
+              xcrun simctl boot "${SIM_ID}" || true
+              xcrun simctl bootstatus "${SIM_ID}" -b || true
+              xcrun simctl biometric enroll "${SIM_ID}" face || true
+              xcrun simctl biometric enroll "${SIM_ID}" finger || true
+            else
+              echo "[e2e] WARNING: No available iPhone simulator found."
+            fi
+
+            # React Native testapp (Android + iOS)
+            yarn workspace testapp android -- --no-packager || true
+            if [[ -n "${SIM_ID}" ]]; then
+              yarn workspace testapp ios -- --no-packager --udid "${SIM_ID}" || true
+            else
+              yarn workspace testapp ios -- --no-packager || true
+            fi
+            wait_for_completed 2
+
+            # Cordova testapp (Android + iOS)
+            yarn workspace com.wultra.pwatest freshAndroid || true
+            yarn workspace com.wultra.pwatest freshIos || true
+            wait_for_completed 4
+
+            # Wait for collector to decide pass/fail and write artifacts
+            set +e
+            wait "${COLLECTOR_PID}"
+            COLLECTOR_EXIT=$?
+            set -e
+
+            # Cleanup Metro also here to make sure
+            kill "${METRO_PID}" || true
+
+            # TODO this is an experiment whether it'll be useful at all
+            # Save device/simulator logs for debugging failures
+            adb logcat -d > artifacts/e2e/android-logcat.txt || true
+            xcrun simctl spawn booted log show --style syslog --last 10m > artifacts/e2e/ios-simulator.log || true
+
+            exit "${COLLECTOR_EXIT}"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts
+          path: artifacts/e2e
+
+      - name: Publish JUnit report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: mobile-e2e
+          path: artifacts/e2e/junit.xml
+          reporter: java-junit
+          fail-on-error: "false"
