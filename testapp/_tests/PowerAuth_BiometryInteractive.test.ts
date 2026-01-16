@@ -15,7 +15,7 @@
 //
 
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { expect, UserPromptDuration } from "../src/testbed";
+import { expect, UserPromptDuration } from "mobile-testbed";
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Platform } from "react-native";
 import { importPassword } from "./helpers/PasswordHelper";

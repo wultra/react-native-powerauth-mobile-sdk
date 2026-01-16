@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { TestSuite } from "../src/testbed/TestSuite";
+import { TestSuite } from "mobile-testbed";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
 import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
@@ -30,7 +30,7 @@ import { PowerAuth_KDFTests } from "./PowerAuth_KDF.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
 import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
-import { PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
+import { PowerAuth_LegacyAuthBiometryTests, PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
@@ -48,7 +48,6 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_ActivationTests(),
         new PowerAuth_RecoveryTests(),
         new PowerAuth_PasswordTests(),
-        new PowerAuth_BiometryTests(),
         new PowerAuth_SignatureTests(),
         new PowerAuth_TokenTests(),
         new PowerAuth_KDFTests(),
@@ -68,7 +67,9 @@ export function getLibraryTests(): TestSuite[] {
 
 export function getInteractiveLibraryTests(): TestSuite[] {
     return [
-        new PowerAuth_BiometryInteractiveTests()
+        new PowerAuth_BiometryTests(),
+        new PowerAuth_BiometryInteractiveTests(),
+        new PowerAuth_LegacyAuthBiometryTests()
     ]
 }
 

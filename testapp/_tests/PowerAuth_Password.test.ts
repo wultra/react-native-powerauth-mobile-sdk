@@ -15,7 +15,7 @@
 //
 
 import { PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 

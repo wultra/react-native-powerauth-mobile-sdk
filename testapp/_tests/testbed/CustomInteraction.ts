@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { TestContext, UserInteraction, UserPromptDuration } from "../../src/testbed";
+import { TestContext, UserInteraction, UserPromptDuration } from "mobile-testbed";
 
 export interface PromptWithDuration {
     prompt: string

@@ -14,8 +14,7 @@
 // limitations under the License.
 //
 
-import { TestEvent, TestMonitor } from "../../src/testbed/TestMonitor"
-import { TestProgress } from "../../src/testbed/TestProgress"
+import { TestEvent, TestMonitor, TestProgress } from "mobile-testbed"
 
 export class CustomMonitor implements TestMonitor {
     

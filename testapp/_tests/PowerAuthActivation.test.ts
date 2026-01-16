@@ -15,7 +15,7 @@
 //
 
 import { PowerAuthActivation } from "react-native-powerauth-mobile-sdk";
-import { expect, TestSuite } from "../src/testbed";
+import { expect, TestSuite } from "mobile-testbed";
 
 export class PowerAuthActivationTests extends TestSuite {
 

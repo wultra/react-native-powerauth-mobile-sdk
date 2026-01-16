@@ -15,7 +15,7 @@
 //
 
 import { Platform } from "react-native";
-import { TestSuite, expect } from "../../src/testbed"
+import { TestSuite, expect } from "mobile-testbed"
 
 /**
  * This test suite allows you to configure point of skip or failure during the testing.
