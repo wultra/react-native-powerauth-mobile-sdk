@@ -51,9 +51,13 @@ jobs:
           node-version: "20"
           cache: "yarn"
 
-      - name: Install dependencies
+      - name: Enable Corepack
         run: |
           corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
           yarn install --immutable
 
       - name: Build test infra packages
@@ -88,6 +92,8 @@ jobs:
           disable-animations: true
           script: |
             set -euo pipefail
+            corepack enable
+            corepack prepare yarn@4.3.1 --activate
 
             mkdir -p artifacts/e2e
 
