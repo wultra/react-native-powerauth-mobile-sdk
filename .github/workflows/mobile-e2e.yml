@@ -64,6 +64,7 @@ jobs:
           TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
         run: |
           printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
+          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
@@ -119,6 +120,7 @@ jobs:
           TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
         run: |
           printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
+          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (iOS simulator)
         run: bash scripts/e2e/run-ios-ci.sh
