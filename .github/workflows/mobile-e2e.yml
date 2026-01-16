@@ -174,12 +174,3 @@ jobs:
         with:
           name: mobile-e2e-artifacts
           path: artifacts/e2e
-
-      - name: Publish JUnit report
-        if: always()
-        uses: dorny/test-reporter@v1
-        with:
-          name: mobile-e2e
-          path: artifacts/e2e/junit.xml
-          reporter: java-junit
-          fail-on-error: "false"
