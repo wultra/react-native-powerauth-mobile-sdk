@@ -61,9 +61,9 @@ jobs:
 
       - name: Write testapp env (.env)
         env:
-          TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
-          printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
           printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (Android emulator)
@@ -117,9 +117,9 @@ jobs:
 
       - name: Write testapp env (.env)
         env:
-          TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
-          printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
           printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (iOS simulator)
