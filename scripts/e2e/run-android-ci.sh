@@ -40,7 +40,7 @@ wait_for_completed() {
       fi
     fi
     now="$(date +%s)"
-    if [ "$((now - start_time))" -gt 2700 ]; then
+  if [ "$((now - start_time))" -gt 600 ]; then
       echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
       break
     fi
@@ -61,8 +61,11 @@ wait "${COLLECTOR_PID}"
 COLLECTOR_EXIT=$?
 set -e
 
+echo "[e2e] Stopping Metro..."
 kill "${METRO_PID}" || true
 
-adb logcat -d > artifacts/e2e/android-logcat.txt || true
+echo "[e2e] Capturing Android logcat..."
+timeout 60s adb logcat -d > artifacts/e2e/android-logcat.txt || true
+echo "[e2e] Android E2E script finished (collector exit=${COLLECTOR_EXIT})."
 
 exit "${COLLECTOR_EXIT}"
