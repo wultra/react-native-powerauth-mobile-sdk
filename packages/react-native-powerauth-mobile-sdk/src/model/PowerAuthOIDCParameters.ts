@@ -20,7 +20,7 @@
 export interface PowerAuthOIDCParameters {
     
     /** OAuth 2.0 provider identification. */
-    providerUrl: string;
+    providerId: string;
     
     /** OAuth 2.0 authorization code. */
     code: string;
