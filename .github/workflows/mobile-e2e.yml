@@ -73,18 +73,7 @@ jobs:
 
       - name: Write testapp env (.env)
         run: |
-          cat > testapp/.env <<EOF
-          POWERAUTH_CLOUD_URL=${POWERAUTH_CLOUD_URL}
-          POWERAUTH_CLOUD_USERNAME=${POWERAUTH_CLOUD_USERNAME}
-          POWERAUTH_CLOUD_PASSWORD=${POWERAUTH_CLOUD_PASSWORD}
-          POWERAUTH_CLOUD_APP_ID=${POWERAUTH_CLOUD_APP_ID}
-          ENROLLMENT_SERVER_URL=${ENROLLMENT_SERVER_URL}
-          SDK_CONFIG=${SDK_CONFIG}
-          UDS_SERVER_URL=${UDS_SERVER_URL}
-          UDS_SERVER_USERNAME=${UDS_SERVER_USERNAME}
-          UDS_SERVER_PASSWORD=${UDS_SERVER_PASSWORD}
-          TEST_COLLECTOR_URL=${TEST_COLLECTOR_URL}
-          EOF
+          node scripts/e2e/write-testapp-env.cjs --ci --force
 
       - name: Run E2E (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
@@ -149,18 +138,7 @@ jobs:
 
       - name: Write testapp env (.env)
         run: |
-          cat > testapp/.env <<EOF
-          POWERAUTH_CLOUD_URL=${POWERAUTH_CLOUD_URL}
-          POWERAUTH_CLOUD_USERNAME=${POWERAUTH_CLOUD_USERNAME}
-          POWERAUTH_CLOUD_PASSWORD=${POWERAUTH_CLOUD_PASSWORD}
-          POWERAUTH_CLOUD_APP_ID=${POWERAUTH_CLOUD_APP_ID}
-          ENROLLMENT_SERVER_URL=${ENROLLMENT_SERVER_URL}
-          SDK_CONFIG=${SDK_CONFIG}
-          UDS_SERVER_URL=${UDS_SERVER_URL}
-          UDS_SERVER_USERNAME=${UDS_SERVER_USERNAME}
-          UDS_SERVER_PASSWORD=${UDS_SERVER_PASSWORD}
-          TEST_COLLECTOR_URL=${TEST_COLLECTOR_URL}
-          EOF
+          node scripts/e2e/write-testapp-env.cjs --ci --force
 
       - name: Run E2E (iOS simulator)
         run: bash scripts/e2e/run-ios-ci.sh
