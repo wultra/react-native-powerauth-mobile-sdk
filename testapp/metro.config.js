@@ -10,10 +10,15 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
  */
 const root = path.resolve(__dirname, '..');
 const sdk = path.resolve(root, 'packages', 'react-native-powerauth-mobile-sdk');
+// TODO remove this watcher when/if the packages are fully separated
+const testInfraPackages = [
+  path.resolve(root, 'packages', 'mobile-testbed'),
+  path.resolve(root, 'packages', 'mobile-test-reporter'),
+];
 const singletons = ['react', 'react-native'];
 
 const config = {
-  watchFolders: [sdk],
+  watchFolders: [sdk, ...testInfraPackages],
   resolver: {
     unstable_enableSymlinks: true,
     enablePackageExports: true,

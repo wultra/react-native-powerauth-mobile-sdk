@@ -16,6 +16,30 @@
         </edit-config>
     </platform>
 
+    <platform name="ios">
+        <edit-config file="*-Info.plist" mode="merge" target="NSAppTransportSecurity">
+            <dict>
+                <key>NSExceptionDomains</key>
+                <dict>
+                    <key>127.0.0.1</key>
+                    <dict>
+                        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                        <true/>
+                        <key>NSIncludesSubdomains</key>
+                        <true/>
+                    </dict>
+                    <key>localhost</key>
+                    <dict>
+                        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                        <true/>
+                        <key>NSIncludesSubdomains</key>
+                        <true/>
+                    </dict>
+                </dict>
+            </dict>
+        </edit-config>
+    </platform>
+
     <!-- turn off CORS for the tests where localhost test server accesses azure.com -->
     <preference name="AndroidInsecureFileModeEnabled" value="true" />
 
