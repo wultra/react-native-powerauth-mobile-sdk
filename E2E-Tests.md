@@ -100,7 +100,7 @@ The collector supports an "indefinite" watch mode when running test locally. It 
 You can run it with:
 
 ```bash
-
+node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --watch
 ```
 
 ## CI workflow
