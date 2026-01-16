@@ -27,18 +27,6 @@ jobs:
     timeout-minutes: 90
     env:
       TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
-
-      POWERAUTH_CLOUD_URL: ${{ secrets.POWERAUTH_CLOUD_URL }}
-      POWERAUTH_CLOUD_USERNAME: ${{ secrets.POWERAUTH_CLOUD_USERNAME }}
-      POWERAUTH_CLOUD_PASSWORD: ${{ secrets.POWERAUTH_CLOUD_PASSWORD }}
-      POWERAUTH_CLOUD_APP_ID: ${{ secrets.POWERAUTH_CLOUD_APP_ID }}
-      ENROLLMENT_SERVER_URL: ${{ secrets.ENROLLMENT_SERVER_URL }}
-      SDK_CONFIG: ${{ secrets.SDK_CONFIG }}
-
-      UDS_SERVER_URL: ${{ secrets.UDS_SERVER_URL }}
-      UDS_SERVER_USERNAME: ${{ secrets.UDS_SERVER_USERNAME }}
-      UDS_SERVER_PASSWORD: ${{ secrets.UDS_SERVER_PASSWORD }}
-
       EXPECTED_RUNS: "2"
 
     steps:
@@ -72,8 +60,10 @@ jobs:
           yarn workspace mobile-test-runner build
 
       - name: Write testapp env (.env)
+        env:
+          TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
         run: |
-          node scripts/e2e/write-testapp-env.cjs --ci --force
+          printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
 
       - name: Run E2E (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
@@ -98,18 +88,6 @@ jobs:
     timeout-minutes: 90
     env:
       TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
-
-      POWERAUTH_CLOUD_URL: ${{ secrets.POWERAUTH_CLOUD_URL }}
-      POWERAUTH_CLOUD_USERNAME: ${{ secrets.POWERAUTH_CLOUD_USERNAME }}
-      POWERAUTH_CLOUD_PASSWORD: ${{ secrets.POWERAUTH_CLOUD_PASSWORD }}
-      POWERAUTH_CLOUD_APP_ID: ${{ secrets.POWERAUTH_CLOUD_APP_ID }}
-      ENROLLMENT_SERVER_URL: ${{ secrets.ENROLLMENT_SERVER_URL }}
-      SDK_CONFIG: ${{ secrets.SDK_CONFIG }}
-
-      UDS_SERVER_URL: ${{ secrets.UDS_SERVER_URL }}
-      UDS_SERVER_USERNAME: ${{ secrets.UDS_SERVER_USERNAME }}
-      UDS_SERVER_PASSWORD: ${{ secrets.UDS_SERVER_PASSWORD }}
-
       EXPECTED_RUNS: "2"
 
     steps:
@@ -137,8 +115,10 @@ jobs:
           yarn workspace mobile-test-runner build
 
       - name: Write testapp env (.env)
+        env:
+          TESTAPP_ENV_FILE: ${{ secrets.TESTAPP_ENV_FILE }}
         run: |
-          node scripts/e2e/write-testapp-env.cjs --ci --force
+          printf '%s\n' "${TESTAPP_ENV_FILE}" > testapp/.env
 
       - name: Run E2E (iOS simulator)
         run: bash scripts/e2e/run-ios-ci.sh

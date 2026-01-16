@@ -69,40 +69,11 @@ function parseEnvFile(filePath) {
   return out;
 }
 
-function ensureTestappEnv(envPath, ciMode) {
+function ensureTestappEnv(envPath) {
   if (fs.existsSync(envPath)) {
-    return false;
-  }
-
-  if (!ciMode) {
-    throw new Error(`Missing ${envPath}.`);
-  }
-
-  const writer = resolveFromRepoRoot('scripts/e2e/write-testapp-env.cjs');
-  const result = spawnSync(process.execPath, [writer, '--ci', '--force', '--output', envPath], {
-    stdio: 'inherit',
-  });
-  if (result.status !== 0) {
-    throw new Error('Failed to write testapp/.env from CI environment variables.');
-  }
-  if (!fs.existsSync(envPath)) {
-    throw new Error(`Failed to create ${envPath}.`);
-  }
-  return true;
-}
-
-function cleanupEnvFile(envPath) {
-  if (!fs.existsSync(envPath)) {
     return;
   }
-  try {
-    fs.unlinkSync(envPath);
-    // eslint-disable-next-line no-console
-    console.log(`[e2e] Removed ${envPath}.`);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(`Failed to remove ${envPath}: ${e?.message ?? String(e)}`);
-  }
+  throw new Error(`Missing ${envPath}.`);
 }
 
 function spawnLogged(command, args, options = {}) {
@@ -307,18 +278,7 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const envPath = resolveFromRepoRoot('testapp/.env');
-  const envGenerated = ensureTestappEnv(envPath, args.ci);
-  let envCleanupDone = false;
-  const cleanupEnv = () => {
-    if (!envGenerated || envCleanupDone) {
-      return;
-    }
-    envCleanupDone = true;
-    cleanupEnvFile(envPath);
-  };
-  if (envGenerated) {
-    process.on('exit', cleanupEnv);
-  }
+  ensureTestappEnv(envPath);
   const env = parseEnvFile(envPath);
 
   if (!env.TEST_COLLECTOR_URL) {
@@ -348,13 +308,11 @@ async function main() {
 
   process.on('SIGINT', () => {
     shutdown();
-    cleanupEnv();
     process.exit(130);
   });
 
   process.on('SIGTERM', () => {
     shutdown();
-    cleanupEnv();
     process.exit(143);
   });
 
@@ -411,7 +369,6 @@ async function main() {
         console.error(`[e2e] No run started within the startup timeout. Verify HTTP access to TEST_COLLECTOR_URL from the apps.`);
 
         shutdown();
-        cleanupEnv();
         process.exit(1);
       }
     } catch (e) {
