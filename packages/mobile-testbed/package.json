@@ -1,0 +1,24 @@
+{
+  "name": "mobile-testbed",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reusable integration test framework for TS-based mobile apps.",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "src/index",
+  "source": "src",
+  "files": [
+    "README.md",
+    "src/**/*",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
