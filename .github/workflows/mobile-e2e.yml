@@ -102,12 +102,7 @@ jobs:
 
             mkdir -p artifacts/e2e
 
-            node packages/mobile-test-runner/dist/cli.js collect \
-              --host 127.0.0.1 \
-              --port 8137 \
-              --out artifacts/e2e \
-              --expected-runs "${EXPECTED_RUNS}" \
-              --timeout 45m &
+            node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS}" --timeout 45m &
             COLLECTOR_PID=$!
 
             yarn workspace testapp start --reset-cache &
@@ -115,19 +110,18 @@ jobs:
 
             # Utility function to force wait between RN and Cordovar uns to prevent race conditions
             wait_for_completed() {
-              local expected="$1"
-              local start_time
+              expected="$1"
               start_time="$(date +%s)"
               while true; do
-                local completed
                 completed="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.completed ?? ''))).catch(()=>{})" 2>/dev/null || true)"
-                if [[ -n "${completed}" && "${completed}" -ge "${expected}" ]]; then
-                  echo "[e2e] collector completed runs=${completed}"
-                  break
+                if [ -n "${completed}" ]; then
+                  if [ "${completed}" -ge "${expected}" ] 2>/dev/null; then
+                    echo "[e2e] collector completed runs=${completed}"
+                    break
+                  fi
                 fi
-                local now
                 now="$(date +%s)"
-                if [[ $((now - start_time)) -gt 2700 ]]; then
+                if [ "$((now - start_time))" -gt 2700 ]; then
                   echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
                   break
                 fi
@@ -231,12 +225,7 @@ jobs:
 
           mkdir -p artifacts/e2e
 
-          node packages/mobile-test-runner/dist/cli.js collect \
-            --host 127.0.0.1 \
-            --port 8137 \
-            --out artifacts/e2e \
-            --expected-runs "${EXPECTED_RUNS}" \
-            --timeout 45m &
+          node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS}" --timeout 45m &
           COLLECTOR_PID=$!
 
           yarn workspace testapp start --reset-cache &
