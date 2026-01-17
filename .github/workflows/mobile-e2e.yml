@@ -169,7 +169,7 @@ jobs:
         run: |
           yarn install --immutable
 
-      - name: Cache CocoaPods and DerivedData (RN)
+      - name: Cache CocoaPods (RN)
         uses: actions/cache@v4
         with:
           path: |
@@ -234,11 +234,10 @@ jobs:
         run: |
           yarn install --immutable
 
-      - name: Cache CocoaPods and DerivedData (Cordova)
+      - name: Cache CocoaPods (Cordova)
         uses: actions/cache@v4
         with:
           path: |
-            testapp-cordova/platforms/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
           key: ${{ runner.os }}-e2e-ios-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp-cordova/package.json', 'testapp-cordova/config.xml', 'packages/cordova-powerauth-mobile-sdk/**') }}
