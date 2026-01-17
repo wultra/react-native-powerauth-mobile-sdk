@@ -42,11 +42,31 @@ require_env_key "ENROLLMENT_SERVER_URL"
 require_env_key "SDK_CONFIG"
 require_env_key "TEST_COLLECTOR_URL"
 
-node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS}" --timeout 45m &
+MODE="${E2E_MODE:-full}"
+case "${MODE}" in
+  rn|cordova|full)
+    ;;
+  *)
+    echo "[e2e] Invalid E2E_MODE '${MODE}'."
+    exit 1
+    ;;
+esac
+if [ "${MODE}" = "full" ]; then
+  derived_expected=2
+else
+  derived_expected=1
+fi
+EXPECTED_RUNS_VALUE="${EXPECTED_RUNS:-$derived_expected}"
+if [ -n "${EXPECTED_RUNS:-}" ] && [ "${EXPECTED_RUNS_VALUE}" -ne "${derived_expected}" ] 2>/dev/null; then
+  EXPECTED_RUNS_VALUE="${derived_expected}"
+fi
+
+node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout 45m &
 COLLECTOR_PID=$!
 
-yarn workspace testapp start --reset-cache &
-METRO_PID=$!
+METRO_PID=""
+RN_PID=""
+CDV_PID=""
 
 wait_for_completed() {
   expected="$1"
@@ -58,9 +78,20 @@ wait_for_completed() {
         echo "[e2e] collector completed runs=${completed}"
         break
       fi
+    else
+      if ! kill -0 "${COLLECTOR_PID}" 2>/dev/null; then
+        completed="$(node -e "const fs=require('fs');const p='artifacts/e2e/summary.json';if(fs.existsSync(p)){const s=JSON.parse(fs.readFileSync(p,'utf8'));process.stdout.write(String(s.receivedRuns ?? ''));}" 2>/dev/null || true)"
+        if [ -n "${completed}" ]; then
+          if [ "${completed}" -ge "${expected}" ] 2>/dev/null; then
+            echo "[e2e] collector completed runs=${completed} (summary)"
+            break
+          fi
+        fi
+        return 1
+      fi
     fi
     now="$(date +%s)"
-  if [ "$((now - start_time))" -gt 600 ]; then
+    if [ "$((now - start_time))" -gt 600 ]; then
       echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
       return 1
     fi
@@ -93,30 +124,52 @@ wait_for_runs() {
 
 abort_with_logs() {
   echo "[e2e] Aborting due to missing collector completion."
+  if [ -n "${RN_PID:-}" ]; then
+    kill "${RN_PID}" || true
+  fi
+  if [ -n "${CDV_PID:-}" ]; then
+    kill "${CDV_PID}" || true
+  fi
   kill "${COLLECTOR_PID}" || true
-  echo "[e2e] Stopping Metro..."
-  kill "${METRO_PID}" || true
-  echo "[e2e] Capturing Android logcat..."
-  timeout 60s adb logcat -d > artifacts/e2e/android-logcat.txt || true
+  if [ -n "${METRO_PID:-}" ]; then
+    echo "[e2e] Stopping Metro..."
+    kill "${METRO_PID}" || true
+  fi
+  # echo "[e2e] Capturing Android logcat..."
+  # timeout 60s adb logcat -d > artifacts/e2e/android-logcat.txt || true
   exit 1
 }
 
-# React Native (Android)
-yarn workspace testapp android -- --no-packager || true
-if ! wait_for_runs 1 300; then
-  abort_with_logs
-fi
-if ! wait_for_completed 1; then
-  abort_with_logs
+run_count=0
+
+if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
+  yarn workspace testapp start --reset-cache &
+  METRO_PID=$!
+  echo "[e2e] Launching RN Android..."
+  yarn workspace testapp android -- --no-packager &
+  RN_PID=$!
+  run_count=$((run_count + 1))
+  if ! wait_for_runs "${run_count}" 300; then
+    abort_with_logs
+  fi
+  if ! wait_for_completed "${run_count}"; then
+    abort_with_logs
+  fi
+  kill "${RN_PID}" || true
 fi
 
-# Cordova (Android)
-yarn workspace com.wultra.pwatest freshAndroid || true
-if ! wait_for_runs 2 300; then
-  abort_with_logs
-fi
-if ! wait_for_completed 2; then
-  abort_with_logs
+if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
+  echo "[e2e] Launching Cordova Android..."
+  yarn workspace com.wultra.pwatest freshAndroid &
+  CDV_PID=$!
+  run_count=$((run_count + 1))
+  if ! wait_for_runs "${run_count}" 300; then
+    abort_with_logs
+  fi
+  if ! wait_for_completed "${run_count}"; then
+    abort_with_logs
+  fi
+  kill "${CDV_PID}" || true
 fi
 
 set +e
@@ -124,11 +177,13 @@ wait "${COLLECTOR_PID}"
 COLLECTOR_EXIT=$?
 set -e
 
-echo "[e2e] Stopping Metro..."
-kill "${METRO_PID}" || true
+if [ -n "${METRO_PID:-}" ]; then
+  echo "[e2e] Stopping Metro..."
+  kill "${METRO_PID}" || true
+fi
 
-echo "[e2e] Capturing Android logcat..."
-timeout 60s adb logcat -d > artifacts/e2e/android-logcat.txt || true
+echo "[e2e] Android logcat capture disabled (logs can be very large)."
+# timeout 60s adb logcat -d > artifacts/e2e/android-logcat.txt || true
 echo "[e2e] Android E2E script finished (collector exit=${COLLECTOR_EXIT})."
 
 exit "${COLLECTOR_EXIT}"

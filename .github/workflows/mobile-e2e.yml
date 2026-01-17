@@ -22,12 +22,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  e2e-android:
+  e2e-android-rn:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
-      EXPECTED_RUNS: "2"
 
     steps:
       - name: Checkout
@@ -66,8 +65,10 @@ jobs:
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
           printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
-      - name: Run E2E (Android emulator)
+      - name: Run E2E (Android emulator, RN)
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_MODE: rn
         with:
           api-level: 34
           arch: x86_64
@@ -81,15 +82,77 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-artifacts-android
+          name: mobile-e2e-artifacts-android-rn
           path: artifacts/e2e
 
-  e2e-ios:
+  e2e-android-cordova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
+
+      - name: Run E2E (Android emulator, Cordova)
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_MODE: cordova
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: bash scripts/e2e/run-android-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-android-cordova
+          path: artifacts/e2e
+
+  e2e-ios-rn:
     runs-on: macos-latest
     timeout-minutes: 90
     env:
       TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
-      EXPECTED_RUNS: "2"
 
     steps:
       - name: Checkout
@@ -122,12 +185,63 @@ jobs:
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
           printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
-      - name: Run E2E (iOS simulator)
+      - name: Run E2E (iOS simulator, RN)
+        env:
+          E2E_MODE: rn
         run: bash scripts/e2e/run-ios-ci.sh
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-artifacts-ios
+          name: mobile-e2e-artifacts-ios-rn
+          path: artifacts/e2e
+
+  e2e-ios-cordova:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
+
+      - name: Run E2E (iOS simulator, Cordova)
+        env:
+          E2E_MODE: cordova
+        run: bash scripts/e2e/run-ios-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-ios-cordova
           path: artifacts/e2e
