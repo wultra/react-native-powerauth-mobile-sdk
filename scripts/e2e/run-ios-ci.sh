@@ -63,6 +63,7 @@ if [ -n "${EXPECTED_RUNS:-}" ] && [ "${EXPECTED_RUNS_VALUE}" -ne "${derived_expe
 fi
 RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-3600}"
 RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
+SIM_BOOT_TIMEOUT_SEC="${E2E_SIM_BOOT_TIMEOUT_SEC:-900}"
 COLLECTOR_TIMEOUT="${E2E_COLLECTOR_TIMEOUT:-90m}"
 
 node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout "${COLLECTOR_TIMEOUT}" &
@@ -126,6 +127,21 @@ wait_for_runs() {
   return 0
 }
 
+wait_for_simulator_boot() {
+  timeout_sec="$1"
+  start_time="$(date +%s)"
+  while true; do
+    if xcrun simctl list devices booted | grep -q "${SIM_ID}"; then
+      return 0
+    fi
+    now="$(date +%s)"
+    if [ "$((now - start_time))" -gt "${timeout_sec}" ]; then
+      return 1
+    fi
+    sleep 5
+  done
+}
+
 abort_with_logs() {
   echo "[e2e] Aborting due to missing collector completion."
   if [ -n "${RN_PID:-}" ]; then
@@ -144,25 +160,53 @@ abort_with_logs() {
 }
 
 SIM_ID=""
+SIM_LINE=""
+
+pick_simulator_from_list() {
+  local list="$1"
+  local line
+  line="$(printf '%s\n' "${list}" | grep -E 'iPhone' | head -n 1)"
+  if [ -z "${line}" ]; then
+    line="$(printf '%s\n' "${list}" | grep -E 'iPad' | head -n 1)"
+  fi
+  if [ -z "${line}" ]; then
+    return 1
+  fi
+  SIM_LINE="${line}"
+  SIM_ID="$(printf '%s\n' "${line}" | grep -oE '[A-F0-9-]{36}')"
+  [ -n "${SIM_ID}" ]
+}
+
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
-  xcrun simctl list devices available
-  SIM_ID="$(xcrun simctl list devices available | grep 'iPhone' | head -n 1 | grep -oE '[A-F0-9-]{36}' || true)"
-  if [ -n "${SIM_ID}" ]; then
-    echo "[e2e] Booting iOS simulator id=${SIM_ID}"
-    open -a Simulator || true
-    xcrun simctl boot "${SIM_ID}" || true
-    xcrun simctl bootstatus "${SIM_ID}" -b || true
-    if xcrun simctl help 2>&1 | grep -q "biometric"; then
-      xcrun simctl biometric enroll "${SIM_ID}" face || true
-      xcrun simctl biometric enroll "${SIM_ID}" finger || true
-    else
-      echo "[e2e] simctl biometric is not available on this runner."
-      # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
-      xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
-      xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
-    fi
+  booted_list="$(xcrun simctl list devices booted)"
+  if pick_simulator_from_list "${booted_list}"; then
+    echo "[e2e] Using booted simulator: ${SIM_LINE}"
   else
-    echo "[e2e] WARNING: No available iPhone simulator found."
+    available_list="$(xcrun simctl list devices available)"
+    if pick_simulator_from_list "${available_list}"; then
+      echo "[e2e] Booting iOS simulator: ${SIM_LINE}"
+      open -a Simulator || true
+      xcrun simctl boot "${SIM_ID}" || true
+      if wait_for_simulator_boot "${SIM_BOOT_TIMEOUT_SEC}"; then
+        if xcrun simctl help 2>&1 | grep -q "biometric"; then
+          xcrun simctl biometric enroll "${SIM_ID}" face || true
+          xcrun simctl biometric enroll "${SIM_ID}" finger || true
+        else
+          echo "[e2e] simctl biometric is not available on this runner."
+          # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
+          xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
+          xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
+        fi
+      else
+        echo "[e2e] WARNING: Timeout waiting for simulator boot."
+      fi
+    else
+      echo "[e2e] WARNING: No available iOS simulator found."
+    fi
+  fi
+  if [ -z "${SIM_ID}" ]; then
+    echo "[e2e] ERROR: No iOS simulator UDID available for RN run."
+    exit 1
   fi
 else
   echo "[e2e] Skipping simulator boot for Cordova"
