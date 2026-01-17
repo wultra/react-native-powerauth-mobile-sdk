@@ -25,8 +25,6 @@ jobs:
   e2e-android-rn:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,8 +84,6 @@ jobs:
   e2e-android-cordova:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -147,8 +143,6 @@ jobs:
   e2e-ios-rn:
     runs-on: macos-latest
     timeout-minutes: 90
-    env:
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -194,8 +188,6 @@ jobs:
   e2e-ios-cordova:
     runs-on: macos-latest
     timeout-minutes: 90
-    env:
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
