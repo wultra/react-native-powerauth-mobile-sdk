@@ -176,7 +176,6 @@ jobs:
             testapp/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-            ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-e2e-ios-rn-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-e2e-ios-rn-
@@ -242,7 +241,6 @@ jobs:
             testapp-cordova/platforms/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-            ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-e2e-ios-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp-cordova/package.json', 'testapp-cordova/config.xml', 'packages/cordova-powerauth-mobile-sdk/**') }}
           restore-keys: |
             ${{ runner.os }}-e2e-ios-cordova-
