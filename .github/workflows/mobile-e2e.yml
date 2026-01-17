@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
 
     steps:
       - name: Checkout
@@ -63,7 +62,6 @@ jobs:
           ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
-          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (Android emulator, RN)
         uses: reactivecircus/android-emulator-runner@v2
@@ -89,7 +87,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
 
     steps:
       - name: Checkout
@@ -126,7 +123,6 @@ jobs:
           ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
-          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (Android emulator, Cordova)
         uses: reactivecircus/android-emulator-runner@v2
@@ -152,7 +148,6 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 90
     env:
-      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
 
     steps:
       - name: Checkout
@@ -183,7 +178,6 @@ jobs:
           ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
-          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (iOS simulator, RN)
         env:
@@ -201,7 +195,6 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 90
     env:
-      TEST_COLLECTOR_URL: "http://127.0.0.1:8137"
 
     steps:
       - name: Checkout
@@ -232,7 +225,6 @@ jobs:
           ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
         run: |
           printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
-          printf 'TEST_COLLECTOR_URL=%s\n' "${TEST_COLLECTOR_URL}" >> testapp/.env
 
       - name: Run E2E (iOS simulator, Cordova)
         env:

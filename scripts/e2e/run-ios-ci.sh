@@ -61,6 +61,8 @@ EXPECTED_RUNS_VALUE="${EXPECTED_RUNS:-$derived_expected}"
 if [ -n "${EXPECTED_RUNS:-}" ] && [ "${EXPECTED_RUNS_VALUE}" -ne "${derived_expected}" ] 2>/dev/null; then
   EXPECTED_RUNS_VALUE="${derived_expected}"
 fi
+RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-3600}"
+RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
 
 node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout 45m &
 COLLECTOR_PID=$!
@@ -92,7 +94,7 @@ wait_for_completed() {
       fi
     fi
     now="$(date +%s)"
-    if [ "$((now - start_time))" -gt 2700 ]; then
+    if [ "$((now - start_time))" -gt "${RUN_COMPLETE_TIMEOUT_SEC}" ]; then
       echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
       return 1
     fi
@@ -177,7 +179,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   RN_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" 300; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
@@ -193,7 +195,7 @@ if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
   CDV_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" 300; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
