@@ -49,7 +49,7 @@ yarn workspace mobile-test-runner build
 
 ```bash
 mkdir -p artifacts/e2e
-node packages/mobile-test-runner/dist/cli.js collect --host 0.0.0.0 --port 8137 --out artifacts/e2e --expected-runs 1 --timeout 30m
+node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs 1 --timeout 30m
 ```
 
 4. Run the app on device/simulator (tests auto-start in `TestExecutor`):

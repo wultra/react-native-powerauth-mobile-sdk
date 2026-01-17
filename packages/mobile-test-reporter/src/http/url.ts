@@ -19,8 +19,8 @@ export function adjustCollectorUrlForPlatform(collectorUrl: string, platformOS: 
   const withSchemeAndPort = normalizeCollectorBaseUrl(collectorUrl);
 
   const normalized = withSchemeAndPort
-    .replace('http://0.0.0.0', 'http://localhost')
-    .replace('https://0.0.0.0', 'https://localhost');
+    .replace('http://0.0.0.0', 'http://127.0.0.1')
+    .replace('https://0.0.0.0', 'https://127.0.0.1');
 
   if (platformOS === 'android') {
     return normalized

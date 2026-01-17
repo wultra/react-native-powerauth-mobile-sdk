@@ -143,6 +143,10 @@ jobs:
   e2e-ios-rn:
     runs-on: macos-latest
     timeout-minutes: 90
+    env:
+      E2E_COLLECTOR_TIMEOUT: "90m"
+      E2E_RUN_START_TIMEOUT_SEC: "5400"
+      E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -152,6 +156,10 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Detect Xcode version
+        run: |
+          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+
       - name: Enable Corepack
         run: |
           corepack enable
@@ -160,6 +168,19 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --immutable
+
+      - name: Cache CocoaPods and DerivedData (RN)
+        uses: actions/cache@v4
+        with:
+          path: |
+            testapp/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-e2e-ios-rn-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-ios-rn-
+            ${{ runner.os }}-e2e-ios-
 
       - name: Build test infra packages
         run: |
@@ -188,6 +209,10 @@ jobs:
   e2e-ios-cordova:
     runs-on: macos-latest
     timeout-minutes: 90
+    env:
+      E2E_COLLECTOR_TIMEOUT: "90m"
+      E2E_RUN_START_TIMEOUT_SEC: "5400"
+      E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -197,6 +222,10 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Detect Xcode version
+        run: |
+          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+
       - name: Enable Corepack
         run: |
           corepack enable
@@ -205,6 +234,19 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --immutable
+
+      - name: Cache CocoaPods and DerivedData (Cordova)
+        uses: actions/cache@v4
+        with:
+          path: |
+            testapp-cordova/platforms/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-e2e-ios-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp-cordova/package.json', 'testapp-cordova/config.xml', 'packages/cordova-powerauth-mobile-sdk/**') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-ios-cordova-
+            ${{ runner.os }}-e2e-ios-
 
       - name: Build test infra packages
         run: |

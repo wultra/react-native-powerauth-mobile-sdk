@@ -63,8 +63,9 @@ if [ -n "${EXPECTED_RUNS:-}" ] && [ "${EXPECTED_RUNS_VALUE}" -ne "${derived_expe
 fi
 RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-3600}"
 RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
+COLLECTOR_TIMEOUT="${E2E_COLLECTOR_TIMEOUT:-90m}"
 
-node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout 45m &
+node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout "${COLLECTOR_TIMEOUT}" &
 COLLECTOR_PID=$!
 
 METRO_PID=""
@@ -142,30 +143,36 @@ abort_with_logs() {
   exit 1
 }
 
-xcrun simctl list devices available
-SIM_ID="$(xcrun simctl list devices available | grep 'iPhone' | head -n 1 | grep -oE '[A-F0-9-]{36}' || true)"
-if [ -n "${SIM_ID}" ]; then
-  echo "[e2e] Booting iOS simulator id=${SIM_ID}"
-  open -a Simulator || true
-  xcrun simctl boot "${SIM_ID}" || true
-  xcrun simctl bootstatus "${SIM_ID}" -b || true
-  if xcrun simctl help 2>&1 | grep -q "biometric"; then
-    xcrun simctl biometric enroll "${SIM_ID}" face || true
-    xcrun simctl biometric enroll "${SIM_ID}" finger || true
+SIM_ID=""
+if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
+  xcrun simctl list devices available
+  SIM_ID="$(xcrun simctl list devices available | grep 'iPhone' | head -n 1 | grep -oE '[A-F0-9-]{36}' || true)"
+  if [ -n "${SIM_ID}" ]; then
+    echo "[e2e] Booting iOS simulator id=${SIM_ID}"
+    open -a Simulator || true
+    xcrun simctl boot "${SIM_ID}" || true
+    xcrun simctl bootstatus "${SIM_ID}" -b || true
+    if xcrun simctl help 2>&1 | grep -q "biometric"; then
+      xcrun simctl biometric enroll "${SIM_ID}" face || true
+      xcrun simctl biometric enroll "${SIM_ID}" finger || true
+    else
+      echo "[e2e] simctl biometric is not available on this runner."
+      # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
+      xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
+      xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
+    fi
   else
-    echo "[e2e] simctl biometric is not available on this runner."
-    # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
-    xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
-    xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
+    echo "[e2e] WARNING: No available iPhone simulator found."
   fi
 else
-  echo "[e2e] WARNING: No available iPhone simulator found."
+  echo "[e2e] Skipping simulator boot for Cordova"
+  xcrun simctl shutdown booted || true
 fi
 
 run_count=0
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
-  yarn workspace testapp start --reset-cache &
+  yarn workspace testapp start &
   METRO_PID=$!
 
   if [ -n "${SIM_ID}" ]; then

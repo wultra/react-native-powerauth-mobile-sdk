@@ -169,7 +169,7 @@ function printHelp(exitCode) {
       'Options:',
       '  --platforms android,ios        Platforms to run (default: android,ios)',
       '  --out artifacts/e2e            Output directory (default: artifacts/e2e)',
-      '  --collector-host 127.0.0.1     Collector bind host (default: 0.0.0.0)',
+      '  --collector-host 127.0.0.1     Collector bind host (default: 127.0.0.1)',
       '  --collector-port 8137          Collector port (default: 8137)',
       '  --timeout 45m                  Collector timeout (default: 45m)',
       '  --expected-runs N              Override expected runs',
