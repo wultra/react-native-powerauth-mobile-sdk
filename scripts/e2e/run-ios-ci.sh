@@ -77,6 +77,7 @@ wait_for_completed() {
   expected="$1"
   start_time="$(date +%s)"
   while true; do
+    # This is kinda a hacky way to check if the collector has completed all runs and exit early.
     completed="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.completed ?? ''))).catch(()=>{})" 2>/dev/null || true)"
     if [ -n "${completed}" ]; then
       if [ "${completed}" -ge "${expected}" ] 2>/dev/null; then
@@ -159,6 +160,27 @@ abort_with_logs() {
   exit 1
 }
 
+install_rn_pods() {
+  echo "[e2e] Installing RN iOS Ruby gems..."
+  if ! command -v bundle >/dev/null 2>&1; then
+    echo "[e2e] Installing Bundler..."
+    gem install bundler -v 2.6.2
+  fi
+
+  if ! (cd testapp && bundle check); then
+    (cd testapp && bundle install)
+  fi
+
+  echo "[e2e] Installing RN iOS CocoaPods..."
+  (
+    cd testapp/ios
+    COCOAPODS_DISABLE_STATS=1 \
+      RCT_USE_RN_DEP=1 \
+      RCT_USE_PREBUILT_RNCORE=1 \
+      bundle exec pod install --repo-update --verbose
+  )
+}
+
 SIM_ID=""
 SIM_LINE=""
 
@@ -216,6 +238,8 @@ fi
 run_count=0
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
+  install_rn_pods
+
   yarn workspace testapp start &
   METRO_PID=$!
 
