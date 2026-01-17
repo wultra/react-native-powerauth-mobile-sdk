@@ -1,6 +1,9 @@
 # Uncomment, if you want to build the app with the old architecture
 # ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
+# New thingy since 0.80 - downloads precompiled React Core libraries instead of building from source
+ENV['RCT_USE_RN_DEP'] = '1'
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(

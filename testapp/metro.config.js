@@ -1,6 +1,30 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
+
+// Metro 0.83+ enforces package "exports" in `metro-config`, which means our hack import failed. We're filtering manually now.
+function escapeForMetroExclusionList(pattern) {
+  if (pattern instanceof RegExp) {
+    return pattern.source.replace(/\/|\\\//g, '\\' + path.sep);
+  } else if (typeof pattern === 'string') {
+    const escaped = pattern.replace(/[\-\[\]\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+    return escaped.replaceAll('/', '\\' + path.sep);
+  }
+  throw new Error(
+    `Expected exclusionList pattern to be RegExp or string, got: ${typeof pattern}`
+  );
+}
+
+function exclusionList(additionalExclusions) {
+  const defaults = [/\/__tests__\/.*/];
+  return new RegExp(
+    '(' +
+      (additionalExclusions || [])
+        .concat(defaults)
+        .map(escapeForMetroExclusionList)
+        .join('|') +
+      ')$'
+  );
+}
 
 /**
  * Metro configuration
@@ -21,9 +45,9 @@ const config = {
   watchFolders: [sdk, ...testInfraPackages],
   resolver: {
     unstable_enableSymlinks: true,
-    enablePackageExports: true,
+    unstable_enablePackageExports: true,
     nodeModulesPaths: [path.resolve(__dirname, 'node_modules')],
-    blacklistRE: exclusionList(
+    blockList: exclusionList(
       singletons.map(m => new RegExp(`^${path.join(root, 'node_modules', m).replace(/[\\/]/g, '[\\/]')}\/.*$`))
     ),
     extraNodeModules: singletons.reduce((acc, name) => {

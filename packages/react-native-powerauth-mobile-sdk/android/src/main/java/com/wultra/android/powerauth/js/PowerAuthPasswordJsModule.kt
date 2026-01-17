@@ -161,7 +161,13 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
             }
             if (anyPassword.type === ReadableType.Map) {
                 // Object is provided
+
+                // RN 0.80+ added nullable annotations to most of these types - this is a backward compatible fix as it shouldnt even happen
                 val map: ReadableMap = anyPassword.asMap()
+                    ?: throw WrapperException(
+                        Errors.EC_WRONG_PARAMETER,
+                        "PowerAuthPassword map is required"
+                    )
                 val passwordObjectId: String = map.getString("objectId")
                     ?: throw WrapperException(
                         Errors.EC_INVALID_NATIVE_OBJECT,
