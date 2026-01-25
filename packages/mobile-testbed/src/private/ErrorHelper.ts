@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type AnyObject = Record<string, any>
+type AnyObject = Record<string, unknown>
 
-function isObject(value: any): value is AnyObject {
+function isObject(value: unknown): value is AnyObject {
     return typeof value === 'object' && value !== null
 }
 
-function getConstructorName(value: any): string | undefined {
+function getConstructorName(value: unknown): string | undefined {
     if (!isObject(value)) {
         return undefined
     }
@@ -35,7 +35,7 @@ function getConstructorName(value: any): string | undefined {
  * @param curlyBrackets If true, then the description is wrapped into curly brackets.
  * @returns String description from given error.
  */
-export function describeError(error: any, curlyBrackets: boolean = false): string {
+export function describeError(error: unknown, curlyBrackets: boolean = false): string {
     // Native `Error`
     if (error instanceof Error) {
         return curlyBrackets ? `{ ${error.name}: ${error.message} }` : `${error.name}: ${error.message}` 

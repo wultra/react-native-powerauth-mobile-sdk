@@ -66,42 +66,7 @@ async function main(): Promise<void> {
     printHelp(1);
   }
 
-  let host = '127.0.0.1';
-  let port = 8137;
-  let outDir = 'artifacts/e2e';
-  let expectedRuns = 1;
-  let timeoutMs = parseDurationToMs('20m');
-  let watch = false;
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    const next = args[i + 1];
-
-    if (arg === '--host' && next) {
-      host = next;
-      i++;
-    } else if (arg === '--port' && next) {
-      port = Number(next);
-      i++;
-    } else if (arg === '--out' && next) {
-      outDir = next;
-      i++;
-    } else if (arg === '--expected-runs' && next) {
-      expectedRuns = Number(next);
-      i++;
-    } else if (arg === '--timeout' && next) {
-      timeoutMs = parseDurationToMs(next);
-      i++;
-    } else if (arg === '--watch') {
-      watch = true;
-    } else if (arg === '--help' || arg === '-h') {
-      printHelp(0);
-    } else {
-      // eslint-disable-next-line no-console
-      console.error(`Unknown argument: ${arg}`);
-      printHelp(1);
-    }
-  }
+  let { host, port, outDir, expectedRuns, timeoutMs, watch } = parseArgs(args);
 
   if (!Number.isFinite(port) || port <= 0) {
     throw new Error(`Invalid --port value '${port}'.`);
@@ -137,3 +102,75 @@ main().catch((e) => {
   console.error(e?.stack ?? String(e));
   process.exit(2);
 });
+
+type CliArgs = {
+  host: string;
+  port: number;
+  outDir: string;
+  expectedRuns: number;
+  timeoutMs: number;
+  watch: boolean;
+};
+
+function parseArgs(args: string[]): CliArgs {
+  const options: CliArgs = {
+    host: '127.0.0.1',
+    port: 8137,
+    outDir: 'artifacts/e2e',
+    expectedRuns: 1,
+    timeoutMs: parseDurationToMs('20m'),
+    watch: false,
+  };
+
+  for (let i = 0; i < args.length; ) {
+    const arg = args[i];
+
+    switch (arg) {
+      case '--host':
+        options.host = requireValue(arg, args[i + 1]);
+        i += 2;
+        break;
+      case '--port':
+        options.port = Number(requireValue(arg, args[i + 1]));
+        i += 2;
+        break;
+      case '--out':
+        options.outDir = requireValue(arg, args[i + 1]);
+        i += 2;
+        break;
+      case '--expected-runs':
+        options.expectedRuns = Number(requireValue(arg, args[i + 1]));
+        i += 2;
+        break;
+      case '--timeout':
+        options.timeoutMs = parseDurationToMs(requireValue(arg, args[i + 1]));
+        i += 2;
+        break;
+      case '--watch':
+        options.watch = true;
+        i += 1;
+        break;
+      case '--help':
+      case '-h':
+        printHelp(0);
+        return options;
+      default:
+        // eslint-disable-next-line no-console
+        console.error(`Unknown argument: ${arg}`);
+        printHelp(1);
+        return options;
+    }
+  }
+
+  return options;
+}
+
+function requireValue(flag: string, value: string | undefined): string {
+  if (!value) {
+    // eslint-disable-next-line no-console
+    console.error(`Missing value for ${flag}.`);
+    printHelp(1);
+    return '';
+  }
+  return value;
+}

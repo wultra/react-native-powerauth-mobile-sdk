@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { PlatformOS } from '../protocol';
+
 /**
  * Adjusts a collector URL to be reachable from the current platform.
  */
-export function adjustCollectorUrlForPlatform(collectorUrl: string, platformOS: string): string {
+export function adjustCollectorUrlForPlatform(collectorUrl: string, platformOS: PlatformOS): string {
   const withSchemeAndPort = normalizeCollectorBaseUrl(collectorUrl);
 
   const normalized = withSchemeAndPort

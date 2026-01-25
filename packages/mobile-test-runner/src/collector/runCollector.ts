@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { createServer } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
@@ -128,136 +129,187 @@ export async function runCollector(options: CollectorOptions): Promise<Collector
     return { runsSummary, junitPath, overallSuccess };
   };
 
+  // Matches run creation: /runs or /runs/
+  const runStartPattern = /^\/runs\/?$/;
+
+  // Matches run events: /runs/<runId>/events
+  const runEventsPattern = /^\/runs\/([^/]+)\/events\/?$/;
+
+  // Matches run completion: /runs/<runId>/complete
+  const runCompletePattern = /^\/runs\/([^/]+)\/complete\/?$/;
+
+  const handleRunStart = async (req: IncomingMessage, res: ServerResponse, method: string, url: string) => {
+    if (method !== 'POST') return false;
+
+    const match = runStartPattern.exec(url);
+    if (!match) return false;
+
+    const body = await readJson(req);
+    if (!isRunStartRequest(body)) {
+      sendJson(res, 400, { error: 'Invalid RunStartRequest' });
+      return true;
+    }
+
+    const start = body as RunStartRequest;
+    const runId = randomUUID();
+
+    const state: RunState = {
+      runId,
+      start,
+      events: [],
+      nextEventLogThreshold: 50,
+      testsStarted: 0,
+      testsSucceeded: 0,
+      testsFailed: 0,
+      testsSkipped: 0,
+    };
+    runs.set(runId, state);
+
+    const displayName = displayNameFor(start);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[mobile-test-runner] run started: runId=${runId} name="${start.runName}" client=${displayName} interactive=${Boolean(start.interactive)}`
+    );
+
+    sendJson(res, 200, { runId });
+
+    return true;
+  };
+
+  const handleRunEvents = async (req: IncomingMessage, res: ServerResponse, method: string, url: string) => {
+    if (method !== 'POST') return false;
+
+    const match = runEventsPattern.exec(url);
+    if (!match) return false;
+
+    const runId = match[1];
+    const state = runs.get(runId);
+
+    if (!state) {
+      sendJson(res, 404, { error: `Unknown runId ${runId}` });
+
+      return true;
+    }
+
+    const body = await readJson(req);
+    if (!isRunEventBatchRequest(body)) {
+      sendJson(res, 400, { error: 'Invalid RunEventBatchRequest' });
+
+      return true;
+    }
+
+    const batch = body as RunEventBatchRequest;
+    if (batch.runId !== runId) {
+      sendJson(res, 400, { error: `runId mismatch (${batch.runId} != ${runId})` });
+
+      return true;
+    }
+
+    state.events.push(...batch.events);
+    for (const e of batch.events) {
+      switch (e.type) {
+        case 'TEST_START':
+          state.testsStarted += 1;
+          break;
+        case 'TEST_SUCCESS':
+          state.testsSucceeded += 1;
+          break;
+        case 'TEST_FAIL':
+          state.testsFailed += 1;
+          break;
+        case 'TEST_SKIPPED':
+          state.testsSkipped += 1;
+          break;
+        default:
+          break;
+      }
+    }
+
+    // TODO a naive processing for batches for now
+    if (state.events.length >= state.nextEventLogThreshold) {
+      const displayName = displayNameFor(state.start);
+      // eslint-disable-next-line no-console
+      console.log(
+        `[mobile-test-runner] run progress: runId=${runId} client=${displayName} events=${state.events.length} testsStarted=${state.testsStarted} testsPassed=${state.testsSucceeded} testsFailed=${state.testsFailed} testsSkipped=${state.testsSkipped}`
+      );
+      state.nextEventLogThreshold += 50;
+    }
+
+    sendJson(res, 200, { ok: true });
+    return true;
+  };
+
+  const handleRunComplete = async (req: IncomingMessage, res: ServerResponse, method: string, url: string) => {
+    if (method !== 'POST') return false;
+
+    const match = runCompletePattern.exec(url);
+    if (!match) return false;
+
+    const runId = match[1];
+    const state = runs.get(runId);
+
+    if (!state) {
+      sendJson(res, 404, { error: `Unknown runId ${runId}` });
+
+      return true;
+    }
+
+    const body = await readJson(req);
+    if (!isRunCompleteRequest(body)) {
+      sendJson(res, 400, { error: 'Invalid RunCompleteRequest' });
+
+      return true;
+    }
+
+    const complete = body as RunCompleteRequest;
+    if (complete.runId !== runId) {
+      sendJson(res, 400, { error: `runId mismatch (${complete.runId} != ${runId})` });
+
+      return true;
+    }
+
+    if (!state.completed) {
+      state.completed = complete;
+      completedCount += 1;
+
+      const displayName = displayNameFor(state.start);
+      const counters = complete.counters ? JSON.stringify(complete.counters) : '{}';
+      // eslint-disable-next-line no-console
+      console.log(
+        `[mobile-test-runner] run completed: runId=${runId} client=${displayName} success=${complete.success} events=${state.events.length} testsPassed=${state.testsSucceeded} testsFailed=${state.testsFailed} testsSkipped=${state.testsSkipped} counters=${counters}`
+      );
+
+      // Persist artifacts after every completed run so the collector can be used as a long-running dev service.
+      writeArtifactsSnapshot(false);
+    }
+
+    sendJson(res, 200, { ok: true });
+
+    if (autoFinish && completedCount >= options.expectedRuns) {
+      resolveDone?.();
+    }
+
+    return true;
+  };
+
   const server = createServer(async (req, res) => {
     try {
       const method = req.method ?? 'GET';
       const url = req.url ?? '/';
 
-      // Poor man's URL parsing...
-      const matchRuns = /^\/runs\/?$/.exec(url);
-      const matchEvents = /^\/runs\/([^/]+)\/events\/?$/.exec(url);
-      const matchComplete = /^\/runs\/([^/]+)\/complete\/?$/.exec(url);
-
-      if (method === 'POST' && matchRuns) {
-        const body = await readJson(req);
-        if (!isRunStartRequest(body)) {
-          return sendJson(res, 400, { error: 'Invalid RunStartRequest' });
-        }
-
-        const start = body as RunStartRequest;
-        const runId = randomUUID();
-
-        const state: RunState = {
-          runId,
-          start,
-          events: [],
-          nextEventLogThreshold: 50,
-          testsStarted: 0,
-          testsSucceeded: 0,
-          testsFailed: 0,
-          testsSkipped: 0,
-        };
-        runs.set(runId, state);
-
-        const displayName = displayNameFor(start);
-        // eslint-disable-next-line no-console
-        console.log(
-          `[mobile-test-runner] run started: runId=${runId} name="${start.runName}" client=${displayName} interactive=${Boolean(start.interactive)}`
-        );
-
-        return sendJson(res, 200, { runId });
+      if (method === 'OPTIONS') {
+        return sendText(res, 204, '');
       }
 
-      if (method === 'POST' && matchEvents) {
-        const runId = matchEvents[1];
-        const state = runs.get(runId);
-
-        if (!state) {
-          return sendJson(res, 404, { error: `Unknown runId ${runId}` });
-        }
-
-        const body = await readJson(req);
-        if (!isRunEventBatchRequest(body)) {
-          return sendJson(res, 400, { error: 'Invalid RunEventBatchRequest' });
-        }
-
-        const batch = body as RunEventBatchRequest;
-        if (batch.runId !== runId) {
-          return sendJson(res, 400, { error: `runId mismatch (${batch.runId} != ${runId})` });
-        }
-
-        state.events.push(...batch.events);
-        for (const e of batch.events) {
-          switch (e.type) {
-            case 'TEST_START':
-              state.testsStarted += 1;
-              break;
-            case 'TEST_SUCCESS':
-              state.testsSucceeded += 1;
-              break;
-            case 'TEST_FAIL':
-              state.testsFailed += 1;
-              break;
-            case 'TEST_SKIPPED':
-              state.testsSkipped += 1;
-              break;
-            default:
-              break;
-          }
-        }
-
-        // TODO a naive processing for batches for now
-        if (state.events.length >= state.nextEventLogThreshold) {
-          const displayName = displayNameFor(state.start);
-          // eslint-disable-next-line no-console
-          console.log(
-            `[mobile-test-runner] run progress: runId=${runId} client=${displayName} events=${state.events.length} testsStarted=${state.testsStarted} testsPassed=${state.testsSucceeded} testsFailed=${state.testsFailed} testsSkipped=${state.testsSkipped}`
-          );
-          state.nextEventLogThreshold += 50;
-        }
-
-        return sendJson(res, 200, { ok: true });
+      if (await handleRunStart(req, res, method, url)) {
+        return;
       }
 
-      if (method === 'POST' && matchComplete) {
-        const runId = matchComplete[1];
-        const state = runs.get(runId);
+      if (await handleRunEvents(req, res, method, url)) {
+        return;
+      }
 
-        if (!state) {
-          return sendJson(res, 404, { error: `Unknown runId ${runId}` });
-        }
-
-        const body = await readJson(req);
-        if (!isRunCompleteRequest(body)) {
-          return sendJson(res, 400, { error: 'Invalid RunCompleteRequest' });
-        }
-
-        const complete = body as RunCompleteRequest;
-        if (complete.runId !== runId) {
-          return sendJson(res, 400, { error: `runId mismatch (${complete.runId} != ${runId})` });
-        }
-
-        if (!state.completed) {
-          state.completed = complete;
-          completedCount += 1;
-
-          const displayName = displayNameFor(state.start);
-          const counters = complete.counters ? JSON.stringify(complete.counters) : '{}';
-          // eslint-disable-next-line no-console
-          console.log(
-            `[mobile-test-runner] run completed: runId=${runId} client=${displayName} success=${complete.success} events=${state.events.length} testsPassed=${state.testsSucceeded} testsFailed=${state.testsFailed} testsSkipped=${state.testsSkipped} counters=${counters}`
-          );
-
-          // Persist artifacts after every completed run so the collector can be used as a long-running dev service.
-          writeArtifactsSnapshot(false);
-        }
-
-        sendJson(res, 200, { ok: true });
-
-        if (autoFinish && completedCount >= options.expectedRuns) {
-          resolveDone?.();
-        }
-
+      if (await handleRunComplete(req, res, method, url)) {
         return;
       }
 

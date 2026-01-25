@@ -18,6 +18,7 @@ import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '..
 import { Platform } from "react-native";
 import { AppConfig } from './IntegrationUtils'
 import { HttpTestReporter } from 'mobile-test-reporter'
+import type { PlatformOS } from 'mobile-test-reporter'
 import { TestContext, TestMonitor, UserPromptDuration, UserInteraction, TestProgressObserver, TestLog, TestMonitorGroup, TestRunner } from 'mobile-testbed'
 
 export class TestExecutor implements UserInteraction {
@@ -49,7 +50,17 @@ export class TestExecutor implements UserInteraction {
     this.isRunning = true
 
     const batchName = interactive ? 'Interactive tests' : 'Automatic tests'
-    const platformOS = Platform.OS
+    const platformOS = toPlatformOS(Platform.OS)
+
+    if (!platformOS) {
+      console.error(`Unsupported platform: ${Platform.OS}`)
+
+      this.isRunning = false
+      this.testRunner = undefined
+      this.onCompletion(false)
+
+      return
+    }
     const runtime = (globalThis as any).cordova ? 'cordova' : 'react-native'
     const appName = runtime === 'cordova' ? 'testapp-cordova' : 'testapp'
 
@@ -161,4 +172,8 @@ export class TestExecutor implements UserInteraction {
       }
     }
   }
+}
+
+function toPlatformOS(value: string): PlatformOS | undefined {
+  return value === 'android' || value === 'ios' ? value : undefined
 }

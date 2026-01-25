@@ -68,8 +68,8 @@ export class HttpTestReporter implements TestMonitor {
    * Creates a run in the collector.
    */
   async startRun(): Promise<string> {
-    if (this.runId) {
-      return this.runId;
+    if (this.isStarted) {
+      return this.runId!;
     }
 
     this.logger.info(`[HttpTestReporter] connecting collector=${this.collectorUrl}`);
@@ -108,19 +108,20 @@ export class HttpTestReporter implements TestMonitor {
    * Flushes remaining events and completes the run in the collector.
    */
   async completeRun(success: boolean, counters?: Partial<RunCounters>): Promise<void> {
-    if (!this.runId) {
+    if (!this.isStarted) {
       return;
     }
 
     await this.flush();
 
+    const runId = this.runId!;
     const body: RunCompleteRequest = {
-      runId: this.runId,
+      runId,
       completedAt: new Date().toISOString(),
       success,
       counters,
     };
-    const resp = await globalThis.fetch(normalizeUrl(this.collectorUrl, `/runs/${this.runId}/complete`), {
+    const resp = await globalThis.fetch(normalizeUrl(this.collectorUrl, `/runs/${runId}/complete`), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
@@ -156,7 +157,7 @@ export class HttpTestReporter implements TestMonitor {
    * Sends buffered events to the collector. Safe to call multiple times.
    */
   async flush(): Promise<void> {
-    if (!this.runId) {
+    if (!this.isStarted) {
       return;
     }
 
@@ -168,15 +169,16 @@ export class HttpTestReporter implements TestMonitor {
       return;
     }
 
+    const runId = this.runId!;
     this.flushing = true;
     try {
       while (this.queue.length > 0) {
         const chunk = this.queue.splice(0, this.batchSize);
         const body: RunEventBatchRequest = {
-          runId: this.runId,
+          runId,
           events: chunk,
         };
-        const resp = await globalThis.fetch(normalizeUrl(this.collectorUrl, `/runs/${this.runId}/events`), {
+        const resp = await globalThis.fetch(normalizeUrl(this.collectorUrl, `/runs/${runId}/events`), {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(body),

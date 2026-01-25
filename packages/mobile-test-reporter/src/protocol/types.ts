@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type PlatformOS = 'android' | 'ios' | string;
+export type PlatformOS = 'android' | 'ios';
 
-export type Runtime = 'react-native' | 'cordova' | string;
+export type Runtime = 'react-native' | 'cordova';
 
 // Note that most of the timestamp types are ISO-8601 strings for JUnit compatibility - we can change later.
 
@@ -69,8 +69,7 @@ export type EventType =
   | 'TEST_FAIL'
   | 'TEST_SKIPPED'
   | 'TEST_INFO'
-  | 'TEST_WARN'
-  | string;
+  | 'TEST_WARN';
 
 export interface RunFailure {
   name?: string;
