@@ -14,9 +14,16 @@
 
 import type { IncomingMessage, ServerResponse } from 'http';
 
+const corsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET,POST,OPTIONS',
+  'access-control-allow-headers': 'content-type',
+};
+
 export function sendJson(res: ServerResponse, status: number, body: unknown) {
   const data = JSON.stringify(body);
   res.writeHead(status, {
+    ...corsHeaders,
     'content-type': 'application/json; charset=utf-8',
     'content-length': Buffer.byteLength(data),
   });
@@ -25,6 +32,7 @@ export function sendJson(res: ServerResponse, status: number, body: unknown) {
 
 export function sendText(res: ServerResponse, status: number, body: string) {
   res.writeHead(status, {
+    ...corsHeaders,
     'content-type': 'text/plain; charset=utf-8',
     'content-length': Buffer.byteLength(body),
   });

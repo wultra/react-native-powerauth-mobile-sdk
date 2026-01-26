@@ -82,16 +82,41 @@ const patchNativeFiles = () =>
 
 const patchIOSPlists = () => {
 
-    const plistPath = "platforms/ios/PowerAuthTest/PowerAuthTest-Info.plist";
-    const entlPaths = ["platforms/ios/PowerAuthTest/Entitlements-Debug.plist", "platforms/ios/PowerAuthTest/Entitlements-Release.plist"]
+    const appDirCandidates = ["platforms/ios/App", "platforms/ios/PowerAuthTest"];
+    const appDir = appDirCandidates.find((dir) => fs.existsSync(dir));
+    if (!appDir) {
+        console.warn("iOS app directory not found, skipping plist patch.");
+        return Promise.resolve();
+    }
+
+    const plistPath = appDir.endsWith("/App")
+        ? `${appDir}/App-Info.plist`
+        : `${appDir}/PowerAuthTest-Info.plist`;
+    const entlPaths = [`${appDir}/Entitlements-Debug.plist`, `${appDir}/Entitlements-Release.plist`]
     const plistBuddy = "/usr/libexec/PlistBuddy"
     const faceIdKey = "NSFaceIDUsageDescription"
+    const atsKey = "NSAppTransportSecurity"
+    const atsAllowsArbitraryLoadsKey = "NSAllowsArbitraryLoads"
+    const atsAllowsArbitraryLoadsInWebContentKey = "NSAllowsArbitraryLoadsInWebContent"
+    const atsExceptionDomainsKey = "NSExceptionDomains"
     const secGroupKey = "com.apple.security.application-groups"
     const secGroupValue = "group.com.wultra.testGroup"
+    const atsExceptionHosts = ["127.0.0.1", "localhost"]
 
     return new Promise((resolve) => {
         // we need to modify ios plist so we can test on faceid phones. The command checks if the faceid key exist and if not, it will add it
         exec(`${plistBuddy} -c "print :${faceIdKey}" ${plistPath} || ${plistBuddy} -c "add :${faceIdKey} string For Tests" ${plistPath}`)
+
+        // allow test app to reach local/insecure endpoints - TODO: this is now needed even with the content of config.xml, lets re-test with later cordova-ios releases
+        exec(`${plistBuddy} -c "print :${atsKey}" ${plistPath} || ${plistBuddy} -c "add :${atsKey} dict" ${plistPath}`)
+        exec(`${plistBuddy} -c "print :${atsKey}:${atsAllowsArbitraryLoadsKey}" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsAllowsArbitraryLoadsKey} bool true" ${plistPath}`)
+        exec(`${plistBuddy} -c "print :${atsKey}:${atsAllowsArbitraryLoadsInWebContentKey}" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsAllowsArbitraryLoadsInWebContentKey} bool true" ${plistPath}`)
+        exec(`${plistBuddy} -c "print :${atsKey}:${atsExceptionDomainsKey}" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsExceptionDomainsKey} dict" ${plistPath}`)
+        atsExceptionHosts.forEach((host) => {
+            exec(`${plistBuddy} -c "print :${atsKey}:${atsExceptionDomainsKey}:${host}" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsExceptionDomainsKey}:${host} dict" ${plistPath}`)
+            exec(`${plistBuddy} -c "print :${atsKey}:${atsExceptionDomainsKey}:${host}:NSExceptionAllowsInsecureHTTPLoads" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsExceptionDomainsKey}:${host}:NSExceptionAllowsInsecureHTTPLoads bool true" ${plistPath}`)
+            exec(`${plistBuddy} -c "print :${atsKey}:${atsExceptionDomainsKey}:${host}:NSIncludesSubdomains" ${plistPath} || ${plistBuddy} -c "add :${atsKey}:${atsExceptionDomainsKey}:${host}:NSIncludesSubdomains bool true" ${plistPath}`)
+        })
 
         // we also need to add entitlements to ensure that the shared data tests will work
         entlPaths.forEach((entlFile) => {
