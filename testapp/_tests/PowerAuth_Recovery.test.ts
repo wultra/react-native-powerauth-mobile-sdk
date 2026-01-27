@@ -15,7 +15,7 @@
 //
 
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_RecoveryTests extends TestWithActivation {

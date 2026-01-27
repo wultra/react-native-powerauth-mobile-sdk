@@ -1,7 +1,7 @@
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 import { PowerAuthCryptoUtils, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { Buffer } from "buffer";
 
 const b64FromUtf8 = (text: string): string =>

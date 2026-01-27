@@ -15,18 +15,21 @@
 //
 
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration } from "react-native-powerauth-mobile-sdk";
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { CustomConfig } from "../src/IntegrationUtils";
 
-export class PowerAuth_LegacyAuthTests extends TestWithActivation {
+class PowerAuth_LegacyAuthBase extends TestWithActivation {
+
+    constructor(suiteName: string | undefined = undefined, isInteractive: boolean = false) {
+        super(suiteName, isInteractive)
+    }
 
     shouldCreateActivationBeforeTest(): boolean {
         return this.context.testName?.startsWith('testWithActivation') ?? false
     }
 
     provideCustomConfig(): CustomConfig {
-        const useBiometry = (this.context.testName?.indexOf("Biometry") ?? 0) > 0
         // Use config that allows create activation with biometry key with no user's interaction
         const config = new PowerAuthBiometryConfiguration()
         config.authenticateOnBiometricKeySetup = false
@@ -35,37 +38,39 @@ export class PowerAuth_LegacyAuthTests extends TestWithActivation {
         }
     }
 
-    async testActivationWithLegacyAuth() {
+    protected async persistActivationWithLegacyAuth(useBiometry: boolean): Promise<void> {
         const sdk = await this.helper.sdk
         const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         
         // Now persist activation with a legacy authentication
-
         const persistAuth = new PowerAuthAuthentication()
         persistAuth.usePossession = true
         persistAuth.userPassword = this.credentials.validPassword
+        if (useBiometry) {
+            persistAuth.useBiometry = true
+        }
         await sdk.persistActivation(persistAuth)
 
         expect(await sdk.hasValidActivation())
+    }
+}
+
+export class PowerAuth_LegacyAuthTests extends PowerAuth_LegacyAuthBase {
+
+    async testActivationWithLegacyAuth() {
+        await this.persistActivationWithLegacyAuth(false)
+    }
+}
+
+export class PowerAuth_LegacyAuthBiometryTests extends PowerAuth_LegacyAuthBase {
+
+    constructor(suiteName: string | undefined = undefined) {
+        super(suiteName, true)
     }
 
     async testActivationWithLegacyAuth_WithBiometry() {
-        const sdk = await this.helper.sdk
-        const activatioData = await this.helper.createActivation()
-        const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
-        await sdk.createActivation(activation)
-        
-        // Now persist activation with a legacy authentication
-
-        const persistAuth = new PowerAuthAuthentication()
-        persistAuth.usePossession = true
-        persistAuth.userPassword = this.credentials.validPassword
-        persistAuth.useBiometry = true
-        await sdk.persistActivation(persistAuth)
-
-        expect(await sdk.hasValidActivation())
+        await this.persistActivationWithLegacyAuth(true)
     }
-
 }

@@ -15,7 +15,7 @@
 //
 
 import { Platform } from "react-native";
-import { expect, TestLog, TestMonitor, TestMonitorGroup, TestRunner, TestSuite } from "../../src/testbed";
+import { expect, TestLog, TestMonitor, TestMonitorGroup, TestRunner, TestSuite } from "mobile-testbed";
 import { ConfigurableTest } from "./ConfigurableTest";
 import { CustomInteraction } from "./CustomInteraction";
 import { CustomMonitor } from "./CustomMonitor";
@@ -27,7 +27,7 @@ export class TestRunnerTests extends TestSuite {
     expectOnIos = Platform.OS === 'ios' ? 1 : 0;
 
     monitorRef = new CustomMonitor();
-    loggerRef = new TestLog();
+    loggerRef = new TestLog(Platform.OS);
     interactionRef = new CustomInteraction();
 
     // Tests debugging
@@ -38,7 +38,7 @@ export class TestRunnerTests extends TestSuite {
     createRunner(): TestRunner {
         let m: TestMonitor
         const monit = new CustomMonitor()
-        const logger = new TestLog()
+        const logger = new TestLog(Platform.OS)
         const interact = new CustomInteraction()
         if (this.runWithLogger) {
             m = new TestMonitorGroup([ monit, logger ])
@@ -48,7 +48,7 @@ export class TestRunnerTests extends TestSuite {
         this.monitorRef = monit
         this.loggerRef = logger
         this.interactionRef = interact
-        return new TestRunner('TestRunnerTests', m, interact)
+        return new TestRunner('TestRunnerTests', m, interact, Platform.OS)
     }
 
     get testMonitor(): CustomMonitor {
