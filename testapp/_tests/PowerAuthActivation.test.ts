@@ -70,4 +70,25 @@ export class PowerAuthActivationTests extends TestSuite {
         expect(a1.recoveryCode).toBeUndefined()
         expect(a1.recoveryPuk).toBeUndefined()
     }
+
+    testOidcActivation() {
+        const oidcParameters = {
+            providerId: "provider-123",
+            code: "auth-code-xyz",
+            nonce: "nonce-abc",
+            codeVerifier: "verifier-optional"
+        };
+
+        const a = PowerAuthActivation.createWithOIDCParameters(
+            oidcParameters,
+            this.name
+        );
+
+        expect(a).toBeDefined();
+        expect(a.activationName).toBe(this.name);
+        expect(a.oidcParameters.providerId).toBe("provider-123");
+        expect(a.oidcParameters.code).toBe("auth-code-xyz");
+        expect(a.oidcParameters.nonce).toBe("nonce-abc");
+        expect(a.oidcParameters.codeVerifier).toBe("verifier-optional");
+    }
 }

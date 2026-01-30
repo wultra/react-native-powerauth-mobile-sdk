@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { PowerAuthOIDCParameters } from "./PowerAuthOIDCParameters"
+
 /**
  * The `PowerAuthActivation` object contains activation data required for the activation creation. The object supports
  * all types of activation currently supported in the SDK.
@@ -36,6 +38,9 @@ export class PowerAuthActivation {
 
     /** Additional activation OTP that can be used only with a regular activation, by activation code */
     additionalActivationOtp?: string
+
+    /** OpenID Connect parameters for activation. */
+    oidcParameters?: PowerAuthOIDCParameters
 
     /**
      * Private constructor, used internally.
@@ -97,5 +102,23 @@ export class PowerAuthActivation {
         a.activationName = name;
         a.identityAttributes = identityAttributes;
         return a;
+    }
+
+    /**
+     * Creates an instance of `PowerAuthActivation` with OpenID Connect credentials.
+     *
+     * This activation method is intended to be used with an external OpenID Connect provider.
+     * The activation's `name` parameter is recommended to be set to the device name.
+     * The name of activation will be associated with an activation record on the PowerAuth Server.
+     *
+     * @param oidcParameters Parameters required for activation via OpenID Connect provider.
+     * @param name Activation name to be used for the activation.
+     * @returns New instance of `PowerAuthActivation`.
+     *
+     */
+    static createWithOIDCParameters(oidcParameters: PowerAuthOIDCParameters, name: string): PowerAuthActivation {
+        const a = new PowerAuthActivation(name)
+        a.oidcParameters = oidcParameters
+        return a
     }
 };
