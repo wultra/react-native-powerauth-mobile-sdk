@@ -1,5 +1,4 @@
-//
-// Copyright 2022 Wultra s.r.o.
+// Copyright 2026 Wultra s.r.o.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-import { PowerAuthError } from "react-native-powerauth-mobile-sdk";
 import { describeError } from "./private/ErrorHelper";
 
 /**
@@ -22,9 +19,7 @@ import { describeError } from "./private/ErrorHelper";
  */
 export interface ExpectedErrorInfo {
     /**
-     * Error's name, in case that Error object is expected. You can also use
-     * `PowerAuthError` if such error type is expected. If not provided, then `PowerAuthError`
-     * name is expected by default.
+     * Expected error's name (or constructor name). If not provided, then error name is not checked.
      */
     errorName?: string
     /**
@@ -32,7 +27,7 @@ export interface ExpectedErrorInfo {
      */
     errorMessage?: string
     /**
-     * Expected error code if error is `PowerAuthError` instance.
+     * Expected error code if the thrown object contains a `code` (or `errorCode`) property.
      */
     errorCode?: string
 }
@@ -55,10 +50,10 @@ class ExpectFailure extends Error {
     constructor(reason: any) {
         if (reason instanceof Error) {
             super(reason.message)
-        } else if (reason instanceof PowerAuthError) {
-            super(reason.message)
         } else if (typeof reason === 'string') {
             super(reason)
+        } else if (reason && typeof reason === 'object' && typeof reason.message === 'string') {
+            super(reason.message)
         } else {
             super()
         }
@@ -467,19 +462,24 @@ function evaluateError(error: any, expected: ExpectedError) {
     let receivedErrorName: string
     let receivedErrorCode: string | undefined
     let receivedMessage: string | undefined
+
     if (error instanceof Error) {
         receivedErrorName = error.name
         receivedErrorCode = undefined
         receivedMessage = error.message
-    } else if (error instanceof PowerAuthError) {
-        receivedErrorName = 'PowerAuthError'
-        receivedErrorCode = error.code
-        receivedMessage = error.message
     } else if (typeof error === 'string') {
         receivedErrorName = error
+        receivedErrorCode = undefined
+        receivedMessage = undefined
+    } else if (error && typeof error === 'object') {
+        const ctorName = (typeof error.constructor?.name === 'string') ? error.constructor.name : undefined
+        receivedErrorName = (typeof error.name === 'string' && error.name.length > 0) ? error.name : (ctorName ?? 'Error')
+        receivedErrorCode = (typeof error.code === 'string') ? error.code : ((typeof error.errorCode === 'string') ? error.errorCode : undefined)
+        receivedMessage = (typeof error.message === 'string') ? error.message : undefined
     } else {
         throw new Error(`Received unexpected error ${error}`)
     }
+
     const ri = errorInfo(receivedErrorName, receivedErrorCode, receivedMessage)
     if (typeof expected === 'string') {
         // String is expected
@@ -489,7 +489,7 @@ function evaluateError(error: any, expected: ExpectedError) {
         return
     }
     // Compare error
-    let expectedErrorName: string
+    let expectedErrorName: string | undefined
     let expectedErrorCode: string | undefined
     let expectedMessage: string | undefined
     if (expected instanceof Error) {
@@ -497,11 +497,15 @@ function evaluateError(error: any, expected: ExpectedError) {
         expectedErrorCode = undefined
         expectedMessage = expected.message
     } else {
-        expectedErrorName = expected.errorName ?? 'PowerAuthError'
+        expectedErrorName = expected.errorName
         expectedErrorCode = expected.errorCode
         expectedMessage = expected.errorMessage
     }
-    let isUnexpected = expectedErrorName !== receivedErrorName
+
+    let isUnexpected = false
+    if (expectedErrorName !== undefined) {
+        isUnexpected = expectedErrorName !== receivedErrorName
+    }
     if (expectedErrorCode !== undefined) {
         isUnexpected = isUnexpected || (expectedErrorCode !== receivedErrorCode)
     }
@@ -509,7 +513,7 @@ function evaluateError(error: any, expected: ExpectedError) {
         isUnexpected = isUnexpected || (expectedMessage !== receivedMessage)
     }
     if (isUnexpected) {
-        const ei = errorInfo(expectedErrorName, expectedErrorCode, expectedMessage)
+        const ei = errorInfo(expectedErrorName ?? '<any>', expectedErrorCode, expectedMessage)
         throw new Error(`Expected ${ei} but received ${ri}`)
     }
 }

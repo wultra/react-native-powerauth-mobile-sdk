@@ -1,0 +1,259 @@
+# Copyright 2026 Wultra s.r.o.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Mobile E2E (simulator/emulator)
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  e2e-android-rn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+
+      - name: Run E2E (Android emulator, RN)
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_MODE: rn
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: bash scripts/e2e/run-android-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-android-rn
+          path: artifacts/e2e
+
+  e2e-android-cordova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+
+      - name: Run E2E (Android emulator, Cordova)
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_MODE: cordova
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: bash scripts/e2e/run-android-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-android-cordova
+          path: artifacts/e2e
+
+  e2e-ios-rn:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      E2E_COLLECTOR_TIMEOUT: "90m"
+      E2E_RUN_START_TIMEOUT_SEC: "5400"
+      E2E_COMPLETE_TIMEOUT_SEC: "5400"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Detect Xcode version
+        run: |
+          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Cache CocoaPods (RN)
+        uses: actions/cache@v4
+        with:
+          path: |
+            testapp/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-e2e-ios-rn-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-ios-rn-
+            ${{ runner.os }}-e2e-ios-
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+
+      - name: Run E2E (iOS simulator, RN)
+        env:
+          E2E_MODE: rn
+        run: bash scripts/e2e/run-ios-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-ios-rn
+          path: artifacts/e2e
+
+  e2e-ios-cordova:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      E2E_COLLECTOR_TIMEOUT: "90m"
+      E2E_RUN_START_TIMEOUT_SEC: "5400"
+      E2E_COMPLETE_TIMEOUT_SEC: "5400"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Detect Xcode version
+        run: |
+          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.3.1 --activate
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build test infra packages
+        run: |
+          yarn workspace mobile-testbed build
+          yarn workspace mobile-test-reporter build
+          yarn workspace mobile-test-runner build
+
+      - name: Write testapp env (.env)
+        env:
+          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
+        run: |
+          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
+
+      - name: Run E2E (iOS simulator, Cordova)
+        env:
+          E2E_MODE: cordova
+        run: bash scripts/e2e/run-ios-ci.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-e2e-artifacts-ios-cordova
+          path: artifacts/e2e

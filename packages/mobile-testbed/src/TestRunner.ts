@@ -1,5 +1,4 @@
-//
-// Copyright 2022 Wultra s.r.o.
+// Copyright 2026 Wultra s.r.o.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-import { Platform } from "react-native";
 import { describeError } from "./private/ErrorHelper";
 import { getAllObjectMethods } from "./private/ObjectHelper";
 import { TestInteraction, UserInteraction, UserPromptDuration } from "./TestInteraction";
@@ -26,6 +23,7 @@ export class TestRunner {
     readonly batchName: string
     readonly monitor: TestMonitor
     readonly interaction?: UserInteraction
+    readonly platformOS: string
 
     readonly allSuitesCounter: TestCounter
     readonly allTestsCounter: TestCounter
@@ -33,11 +31,13 @@ export class TestRunner {
     constructor(
         batchName: string,
         monitor: TestMonitor,
-        interaction: UserInteraction | undefined
+        interaction: UserInteraction | undefined,
+        platformOS: string = 'unknown'
     ) {
         this.batchName = batchName
         this.monitor = monitor
         this.interaction = interaction
+        this.platformOS = platformOS
         this.allSuitesCounter = new TestCounter("Test suites")
         this.allTestsCounter = new TestCounter("All tests")
         this.allSuitesCounter.addObserver(() => monitor.reportTestSuitesProgress)
@@ -135,7 +135,7 @@ export class TestRunner {
 
     private async runTestSuite(testSuite: TestSuite) {
         // Create context for this test suite
-        const ctx = new RunnerContext(this.monitor, this.interaction, this.allSuitesCounter, this.allTestsCounter)
+        const ctx = new RunnerContext(this.monitor, this.interaction, this.allSuitesCounter, this.allTestsCounter, this.platformOS)
         const testMethods = this.populateTestMethods(testSuite)
 
         // Call "beforeAll()"
@@ -184,10 +184,10 @@ export class TestRunner {
     private populateTestMethods(testSuite: TestSuite): string[] {
         const allMethods = getAllObjectMethods(testSuite)
         let testMethods = allMethods.filter(method => method.startsWith("test"))
-        if (Platform.OS === 'android') {
+        if (this.platformOS === 'android') {
             // On Android, find and add all 'androidTest*' methods
             testMethods = testMethods.concat(allMethods.filter(method => method.startsWith("androidTest")))
-        } else if (Platform.OS === 'ios') {
+        } else if (this.platformOS === 'ios') {
             // on iOS, find and add all 'iosTest*' methods
             testMethods = testMethods.concat(allMethods.filter(method => method.startsWith("iosTest")))
         }
@@ -212,6 +212,7 @@ enum RunnerState {
 class RunnerContext implements TestInteraction {
 
     readonly interaction?: UserInteraction
+    private readonly platformOS: string
 
     private currentSuiteName?: string
     get testSuiteName(): string {
@@ -233,12 +234,14 @@ class RunnerContext implements TestInteraction {
         monitor: TestMonitor,
         interaction: UserInteraction | undefined,
         suitesCounter: TestCounter,
-        testsCounter: TestCounter) {
+        testsCounter: TestCounter,
+        platformOS: string) {
         this.monitor = monitor
         this.interaction = interaction
         this.suitesCounter = suitesCounter
         this.testsCounter = testsCounter
         this.testMethodsCount = 0
+        this.platformOS = platformOS
     }
 
     private isSkipped = false
@@ -368,7 +371,7 @@ class RunnerContext implements TestInteraction {
             current.testSuiteName !== pContext.testSuiteName ||
             current.testName !== pContext.testName) {
             const locationMessage = failure()
-            const p = Platform.OS === 'android' ? 'Android' : 'iOS'
+            const p = this.platformOS === 'android' ? 'Android' : (this.platformOS === 'ios' ? 'iOS' : this.platformOS)
             const contextInfo: TestContextInfo = { testSuiteName: pContext.testSuiteName, testName: pContext.testName, contextState: pContext.contextState }
             console.error(`${p}: It appears that test code did not wait for some promise. The context reported from the test is wrong, so the event is reported after the test did finish.`)
             console.error(`${p}:   location : ${locationMessage}`)

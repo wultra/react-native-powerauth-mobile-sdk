@@ -1,5 +1,4 @@
-//
-// Copyright 2022 Wultra s.r.o.
+// Copyright 2026 Wultra s.r.o.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-import { Platform } from "react-native";
 import { parseRnCallStack } from "./private/CallStack";
 import { TestEvent, TestEventType, TestMonitor } from "./TestMonitor";
 import { TestProgress } from "./TestProgress";
@@ -46,25 +43,23 @@ export class TestLog implements TestMonitor {
 
     platform: string
 
-    constructor() {
-        if (Platform.OS === 'android') {
+    constructor(platformOS: string = 'unknown') {
+        if (platformOS === 'android') {
             this.platform = 'Android :  ';
-        } else if (Platform.OS === 'ios') {
+        } else if (platformOS === 'ios') {
             this.platform = '    iOS :  ';
         } else {
-            this.platform = `${Platform.OS} :  `;
+            this.platform = `${platformOS} :  `;
         }
     }
 
     reportEvent(event: TestEvent): void {
         const desc = event.eventDescription;
-        const test = event.testName ?? `<?T ${event.suite}>`;
         const msg = event.message ?? '';
         const ep = this.paddings.errorPadding + this.platform;
         const ip = this.paddings.infoPadding + this.platform;
         const lp = this.paddings.logPadding + this.platform;
         const wp = this.paddings.warnPadding + this.platform;
-        const p = this.platform;
         let errDesc = event.failureDescription
         if (errDesc.length > 0) {
             errDesc = ` - ${event.failureDescription}${parseStack(event.failCallstack)}`

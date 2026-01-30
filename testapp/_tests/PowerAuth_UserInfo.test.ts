@@ -1,4 +1,4 @@
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import {
     PowerAuthActivation,

@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { PowerAuthCryptogram, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Buffer } from 'buffer'

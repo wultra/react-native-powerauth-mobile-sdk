@@ -48,7 +48,16 @@
     "lint:testapp": "yarn workspace testapp lint",
     "format": "yarn format:rn && yarn format:testapp",
     "format:rn": "yarn workspace react-native-powerauth-mobile-sdk format",
-    "format:testapp": "yarn workspace testapp format"
+    "format:testapp": "yarn workspace testapp format",
+    "e2e:clean": "node scripts/e2e/clean.cjs",
+    "e2e:infra:build": "yarn workspace mobile-testbed build && yarn workspace mobile-test-reporter build && yarn workspace mobile-test-runner build",
+    "e2e:collector": "mkdir -p artifacts/e2e && node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs 1 --timeout 30m",
+    "e2e:collector:watch": "mkdir -p artifacts/e2e && node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --watch",
+    "e2e:local:rn": "yarn e2e:clean && yarn e2e:infra:build && node scripts/e2e/run.cjs rn --platforms android,ios",
+    "e2e:local:cordova": "yarn e2e:clean && yarn e2e:infra:build && node scripts/e2e/run.cjs cordova --platforms android,ios",
+    "e2e:local:full": "yarn e2e:clean && yarn e2e:infra:build && node scripts/e2e/run.cjs full --platforms android,ios",
+    "e2e:ci:rn": "yarn e2e:infra:build && node scripts/e2e/run.cjs rn --platforms android,ios --ci",
+    "e2e:ci:full": "yarn e2e:infra:build && node scripts/e2e/run.cjs full --platforms android,ios --ci"
   },
   "workspaces": [
     "testapp",
@@ -56,8 +65,8 @@
     "packages/*"
   ],
   "resolutions": {
-    "react": "19.0.0",
-    "react-native": "0.78.1"
+    "react": "19.1.1",
+    "react-native": "0.82.1"
   },
   "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774"
 }

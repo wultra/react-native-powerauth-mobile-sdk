@@ -45,8 +45,14 @@ demoapp/ios/Pods/*
 
 # artifacts
 *.tgz
+artifacts/
 package-lock.json
 npm-shrinkwrap.json
+
+# Test app environment files
+testapp/.env
+testapp/.env.*
+!testapp/.env-example
 
 # Yarn and monorepo
 .yarn
@@ -57,3 +63,6 @@ yarn/*
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+# Package build outputs
+packages/*/dist

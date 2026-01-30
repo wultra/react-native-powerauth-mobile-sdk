@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { TestSuite } from "../../src/testbed";
+import { TestSuite } from "mobile-testbed";
 
 export class EmptyTestSuite extends TestSuite {
 }

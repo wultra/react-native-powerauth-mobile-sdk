@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthDebug, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthSharingConfigurationType } from "react-native-powerauth-mobile-sdk"
-import { expect } from "../src/testbed"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
-import { AppConfig, IntegrationHelper } from "../src/IntegrationUtils"
+import { IntegrationHelper } from "../src/IntegrationUtils"
 
 export class PowerAuth_ConfigureTests extends TestWithActivation {
 
@@ -184,7 +184,7 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.validatePassword('')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.activationRecoveryData(signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.confirmRecoveryCode('', signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async _auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         
         // TODO: getBiometryInfo() doesn't depend on configuration. We should move this to separate class
         // await expect(async () => await sdk.getBiometryInfo()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
@@ -195,6 +195,14 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         const sdk1 = helper1.sdk
         const helper2 = await this.getHelper2()
         const sdk2 = helper2.sdk
+
+        // TODO This is because of Android on CI.
+        // We can revisit this once we settle on a reliable emulator on CI with enrollable biometry
+        const biometryInfo = await sdk1.getBiometryInfo()
+        if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
+            this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
+            return
+        }
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
@@ -289,7 +297,7 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
                 "tst1"
             )
         }
-        if (this.currentTestName == 'testConfigurationWithBiometry') {
+        if (this.currentTestName === 'testConfigurationWithBiometry') {
             biometryConfig = new PowerAuthBiometryConfiguration()
             biometryConfig.authenticateOnBiometricKeySetup = false
         }

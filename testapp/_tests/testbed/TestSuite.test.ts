@@ -14,7 +14,8 @@
 // limitations under the License.
 //
 
-import { TestRunner, TestSuite, expect, TestEventType } from "../../src/testbed";
+import { Platform } from "react-native";
+import { TestRunner, TestSuite, expect, TestEventType } from "mobile-testbed";
 import { ConfigurableTest } from "./ConfigurableTest";
 import { CustomInteraction } from "./CustomInteraction";
 import { CustomMonitor } from "./CustomMonitor";
@@ -22,7 +23,7 @@ import { CustomMonitor } from "./CustomMonitor";
 export class TestSuiteTests extends TestSuite {
     async testRunOnlyOneTest() {
         const monitor = new CustomMonitor()
-        const runner = new TestRunner('testRunOnlyOneTest', monitor, undefined)
+        const runner = new TestRunner('testRunOnlyOneTest', monitor, undefined, Platform.OS)
         const t = new ConfigurableTest()
         t.runOnlyOneTest = 'test2'
         const result = await runner.runTests([ t ])
@@ -43,7 +44,7 @@ export class TestSuiteTests extends TestSuite {
     async testInfoMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testInfoMessages', monitor, interaction)
+        const runner = new TestRunner('testInfoMessages', monitor, interaction, Platform.OS)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         const result = await runner.runTests([ t ])
@@ -56,7 +57,7 @@ export class TestSuiteTests extends TestSuite {
     async testSkipMessages() {
         const monitor = new CustomMonitor()
         const interaction = new CustomInteraction()
-        const runner = new TestRunner('testSkipMessages', monitor, interaction)
+        const runner = new TestRunner('testSkipMessages', monitor, interaction, Platform.OS)
         const t = new ConfigurableTest()
         t.printDebugMessages = true
         t.confAllowSkipFromFunc = true
