@@ -212,7 +212,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         const sdk = this.helper.sdk
         expect(sdk).toBeDefined()
         if (await sdk.hasValidActivation()) {
-            sdk.removeActivationLocal()
+            await sdk.removeActivationLocal()
         }
 
         // Same initial assertions as createActivationTest()
