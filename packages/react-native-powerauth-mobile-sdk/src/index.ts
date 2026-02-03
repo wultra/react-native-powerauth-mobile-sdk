@@ -22,6 +22,7 @@ export * from './PowerAuthUtils';
 export * from './PowerAuthTokenStore';
 export * from './PowerAuthPassphraseMeter';
 export * from './PowerAuthCryptoUtils';
+export * from './PowerAuthStorageUtils';
 
 // Model objects
 
@@ -47,6 +48,7 @@ export * from './model/PowerAuthEncryptor';
 export * from './model/PowerAuthDataFormat';
 export * from './model/PowerAuthUserInfo';
 export * from './model/BaseNativeObject';
+export * from './model/PowerAuthOIDCParameters';
 
 // Debug features
 

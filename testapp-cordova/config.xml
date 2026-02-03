@@ -6,7 +6,10 @@
         Wultra
     </author>
     <content src="index.html" />
+    <access origin="*" />
 
+    <allow-navigation href="http://*/*" />
+    <allow-navigation href="https://*/*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
 
@@ -14,6 +17,35 @@
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:usesCleartextTraffic="true" />
         </edit-config>
+    </platform>
+
+    <platform name="ios">
+        <edit-config file="*-Info.plist" mode="merge" target="NSAppTransportSecurity">
+            <dict>
+                <key>NSAllowsArbitraryLoads</key>
+                <true/>
+                <key>NSAllowsArbitraryLoadsInWebContent</key>
+                <true/>
+                <key>NSExceptionDomains</key>
+                <dict>
+                    <key>127.0.0.1</key>
+                    <dict>
+                        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                        <true/>
+                        <key>NSIncludesSubdomains</key>
+                        <true/>
+                    </dict>
+                    <key>localhost</key>
+                    <dict>
+                        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                        <true/>
+                        <key>NSIncludesSubdomains</key>
+                        <true/>
+                    </dict>
+                </dict>
+            </dict>
+        </edit-config>
+        <preference name="Scheme" value="file" />
     </platform>
 
     <!-- turn off CORS for the tests where localhost test server accesses azure.com -->

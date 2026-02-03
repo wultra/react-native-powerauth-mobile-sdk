@@ -243,6 +243,7 @@ PAJS_METHOD_START(createActivation,
     NSString* extras = activation[@"extras"];
     NSDictionary* customAttributes = activation[@"customAttributes"];
     NSString* additionalActivationOtp = activation[@"additionalActivationOtp"];
+    NSDictionary* oidcParameters = activation[@"oidcParameters"];
     
     if (activationCode) {
         paActivation = [PowerAuthActivation activationWithActivationCode:activationCode name:name error:nil];
@@ -250,6 +251,28 @@ PAJS_METHOD_START(createActivation,
         paActivation = [PowerAuthActivation activationWithRecoveryCode:recoveryCode recoveryPuk:recoveryPuk name:name error:nil];
     } else if (identityAttributes) {
         paActivation = [PowerAuthActivation activationWithIdentityAttributes:identityAttributes name:name error:nil];
+    } else if (oidcParameters) {
+        NSString * providerId = oidcParameters[@"providerId"];
+        NSString * code = oidcParameters[@"code"];
+        NSString * nonce = oidcParameters[@"nonce"];
+        NSString * codeVerifier = oidcParameters[@"codeVerifier"];
+
+        if (!providerId || !code || !nonce) {
+            reject(EC_INVALID_ACTIVATION_OBJECT, @"OIDC parameters are invalid.", nil);
+            return;
+        }
+
+        NSError * activationError = nil;
+        paActivation = [PowerAuthActivation activationWithOidcProviderId:providerId code:code nonce:nonce codeVerifier:codeVerifier error:&activationError];
+        
+        if (activationError) {
+            reject(EC_INVALID_ACTIVATION_OBJECT, @"OIDC Activation object is invalid.", activationError);
+            return;
+        }
+
+        if (paActivation && name) {
+            [paActivation withActivationName:name];
+        }
     }
     
     if (!paActivation) {

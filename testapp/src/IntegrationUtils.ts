@@ -27,6 +27,8 @@ export class AppConfig {
     static cloudApplicationId = EnvConfig.POWERAUTH_CLOUD_APP_ID || ""
     static enrollmentUrl = EnvConfig.ENROLLMENT_SERVER_URL || ""
     static sdkConfig = EnvConfig.SDK_CONFIG || ""
+    // Test results collector
+    static testCollectorUrl = EnvConfig.TEST_COLLECTOR_URL || ""
     // User Data Store
     static udsServerUrl = EnvConfig.UDS_SERVER_URL || ""
     static udsServerUsername = EnvConfig.UDS_SERVER_USERNAME || ""

@@ -15,7 +15,7 @@
 //
 
 import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthCreateActivationResult, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
-import { TestSuite } from "../../src/testbed";
+import { TestSuite } from "mobile-testbed";
 import { CustomConfig, IntegrationHelper } from "../../src/IntegrationUtils";
 
 /**

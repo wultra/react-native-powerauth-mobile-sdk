@@ -61,6 +61,16 @@ try {
 }
 ```
 
+You can also create `PowerAuthPassword` from an already obtained string.
+
+<!-- begin box warning -->
+Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
+<!-- end -->
+
+```javascript
+const password = await PowerAuthPassword.fromString("1234")
+```
+
 ## Adding or removing characters
 
 ```javascript

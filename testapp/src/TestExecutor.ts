@@ -15,10 +15,11 @@
 //
 
 import { getInteractiveLibraryTests, getLibraryTests, getTestbedTests } from '../_tests/AllTests'
-import { TestContext, UserPromptDuration, UserInteraction, TestProgressObserver, TestProgress } from './testbed'
-import { TestLog } from './testbed/TestLog'
-import { TestMonitorGroup } from './testbed/TestMonitor'
-import { TestRunner } from './testbed/TestRunner'
+import { Platform } from "react-native";
+import { AppConfig } from './IntegrationUtils'
+import { HttpTestReporter } from 'mobile-test-reporter'
+import type { PlatformOS } from 'mobile-test-reporter'
+import { TestContext, TestMonitor, UserPromptDuration, UserInteraction, TestProgressObserver, TestLog, TestMonitorGroup, TestRunner } from 'mobile-testbed'
 
 export class TestExecutor implements UserInteraction {
 
@@ -47,16 +48,90 @@ export class TestExecutor implements UserInteraction {
     }
     this.onCompletion(true)
     this.isRunning = true
-    
-    const logger = new TestLog()
-    const monitor = new TestMonitorGroup([ logger ])
-    const runner = this.testRunner = new TestRunner('Automatic tests', monitor, this)
+
+    const batchName = interactive ? 'Interactive tests' : 'Automatic tests'
+    const platformOS = toPlatformOS(Platform.OS)
+
+    if (!platformOS) {
+      console.error(`Unsupported platform: ${Platform.OS}`)
+
+      this.isRunning = false
+      this.testRunner = undefined
+      this.onCompletion(false)
+
+      return
+    }
+    const runtime = (globalThis as any).cordova ? 'cordova' : 'react-native'
+    const appName = runtime === 'cordova' ? 'testapp-cordova' : 'testapp'
+
+    console.info(`TestExecutor: platform=${platformOS} runtime=${runtime} collectorUrl='${AppConfig.testCollectorUrl}' interactive=${interactive}`)
+
+    const logger = new TestLog(platformOS)
+    const monitors: TestMonitor[] = [ logger ]
+    let reporter: HttpTestReporter | undefined
+    if (AppConfig.testCollectorUrl) {
+      try {
+        reporter = new HttpTestReporter({
+          collectorUrl: AppConfig.testCollectorUrl,
+          runName: batchName,
+          interactive,
+          client: {
+            platformOS,
+            runtime,
+            appName
+          }
+        })
+      } catch (e) {
+        console.error(`Test collector URL is invalid: '${AppConfig.testCollectorUrl}'.`)
+        console.error(`Details: ${e}`)
+        this.isRunning = false
+        this.testRunner = undefined
+        this.onCompletion(false)
+        return
+      }
+    }
+
+    if (reporter) {
+      try {
+        await reporter.startRun()
+        monitors.push(reporter)
+      } catch (e) {
+        console.error(`Test collector is not reachable at '${AppConfig.testCollectorUrl}'.`)
+        console.error(`Details: ${e}`)
+        this.isRunning = false
+        this.testRunner = undefined
+        this.onCompletion(false)
+        return
+      }
+    }
+
+    const monitor = new TestMonitorGroup(monitors)
+    const runner = this.testRunner = new TestRunner(batchName, monitor, this, platformOS)
     runner.allTestsCounter.addObserver(this.onProgress)
     const tests = interactive ? getInteractiveLibraryTests() :  getLibraryTests().concat(getTestbedTests())
-    await runner.runTests(tests)
-    this.isRunning = false
-    this.testRunner = undefined
-    this.onCompletion(false)
+
+    let runSuccess = false
+    try {
+      runSuccess = await runner.runTests(tests)
+    } finally {
+      try {
+        await reporter?.completeRun(runSuccess, {
+          suitesTotal: runner.allSuitesCounter.total,
+          suitesSucceeded: runner.allSuitesCounter.succeeded,
+          suitesFailed: runner.allSuitesCounter.failed,
+          suitesSkipped: runner.allSuitesCounter.skipped,
+          testsTotal: runner.allTestsCounter.total,
+          testsSucceeded: runner.allTestsCounter.succeeded,
+          testsFailed: runner.allTestsCounter.failed,
+          testsSkipped: runner.allTestsCounter.skipped
+        })
+      } catch (e) {
+        console.error(`Failed to report test results: ${e}`)
+      }
+      this.isRunning = false
+      this.testRunner = undefined
+      this.onCompletion(false)
+    }
   }
 
   cancelTests() {
@@ -97,4 +172,8 @@ export class TestExecutor implements UserInteraction {
       }
     }
   }
+}
+
+function toPlatformOS(value: string): PlatformOS | undefined {
+  return value === 'android' || value === 'ios' ? value : undefined
 }

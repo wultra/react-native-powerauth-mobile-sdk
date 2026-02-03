@@ -209,6 +209,8 @@ class PowerAuthJsModule(
                     if (activation.hasKey("customAttributes")) activation.getMap("customAttributes") else null
                 val additionalActivationOtp: String? =
                     if (activation.hasKey("additionalActivationOtp")) activation.getString("additionalActivationOtp") else null
+                val oidcParameters: ReadableMap? =
+                    if (activation.hasKey("oidcParameters")) activation.getMap("oidcParameters") else null
 
                 try {
                     if (activationCode != null) {
@@ -223,6 +225,33 @@ class PowerAuthJsModule(
                         paActivation = PowerAuthActivation.Builder.customActivation(
                             getStringMap(identityAttributes), name
                         )
+                    } else if (oidcParameters != null) {
+                        val providerId = oidcParameters.getString("providerId")
+                        val code = oidcParameters.getString("code")
+                        val nonce = oidcParameters.getString("nonce")
+                        val codeVerifier = if (oidcParameters.hasKey("codeVerifier")) oidcParameters.getString("codeVerifier") else null
+
+                        if (providerId == null || code == null || nonce == null) {
+                            promise.reject(
+                                Errors.EC_INVALID_ACTIVATION_OBJECT,
+                                "OIDC parameters are invalid."
+                            )
+                            return
+                        }
+
+                        try {
+                            paActivation = PowerAuthActivation.Builder.oidcActivation(
+                                providerId,
+                                code,
+                                nonce,
+                                codeVerifier
+                            ).also { builder ->
+                                name?.let { builder.setActivationName(it) }
+                            }
+                        } catch (e: PowerAuthErrorException) {
+                            promise.reject(Errors.EC_INVALID_ACTIVATION_OBJECT, "Invalid OIDC parameters provided")
+                            return
+                        }
                     }
 
                     if (paActivation == null) {

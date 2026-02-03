@@ -14,21 +14,28 @@
 // limitations under the License.
 //
 
-import { Platform } from "react-native";
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { expect } from "../src/testbed";
+import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_BiometryTests extends TestWithActivation {
 
+    /**
+     * Construct this test suite as interactive to avoid running in CI.
+     * @param suiteName Optional test suite name.
+     */
+    constructor(suiteName: string | undefined = undefined) {
+        super(suiteName, true)
+    }
+
     shouldCreateActivationBeforeTest(): boolean {
         const n = this.context.testName
-        return !(n == 'androidTestCreateActivationWithRSABiometryKey')
+        return n !== 'androidTestCreateActivationWithRSABiometryKey'
     }
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
-        let biometryInfo = await this.sdk.getBiometryInfo()
+        const biometryInfo = await this.sdk.getBiometryInfo()
         if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
             this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
         }

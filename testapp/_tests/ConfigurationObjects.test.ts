@@ -25,7 +25,7 @@ import {
     PowerAuthConfiguration, 
     PowerAuthKeychainConfiguration,
     PowerAuthKeychainProtection} from "react-native-powerauth-mobile-sdk";
-import { TestSuite, expect } from "../src/testbed";
+import { TestSuite, expect } from "mobile-testbed";
 
 const SDK_CONFIG = 'ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ=='
 const BASE_URL = 'http://localhost'

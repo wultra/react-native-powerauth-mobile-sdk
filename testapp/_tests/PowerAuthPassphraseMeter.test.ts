@@ -15,7 +15,7 @@
 //
 
 import { PinTestIssue, PowerAuthErrorCode, PowerAuthPassphraseMeter, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
-import { TestSuite, expect } from "../src/testbed";
+import { TestSuite, expect } from "mobile-testbed";
 import { importPassword } from "./helpers/PasswordHelper";
 
 interface IssuesData {
