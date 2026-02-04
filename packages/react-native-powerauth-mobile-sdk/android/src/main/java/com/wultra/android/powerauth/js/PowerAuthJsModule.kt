@@ -560,18 +560,30 @@ class PowerAuthJsModule(
     ) {
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            val coreOldPassword: Password = passwordModule.usePassword(oldPassword)
-            val coreNewPassword: Password = passwordModule.usePassword(newPassword)
+
+            // Making copies of passwords to immutable form, as they will be used in `sdk.changePassword` call.
+            // This call is actually 2 http requests, so it may take some time and the original password could
+            // be released in the meantime by the object register.
+
+            val coreOldPassword: Password = passwordModule.usePassword(oldPassword).copyToImmutable()
+            val coreNewPassword: Password = passwordModule.usePassword(newPassword).copyToImmutable()
+            val clear = { // Clear passwords from memory to not depend on garbage collector
+                coreOldPassword.clear()
+                coreNewPassword.clear()
+            }
+
             sdk.changePassword(
                 context,
                 coreOldPassword,
                 coreNewPassword,
                 object : IChangePasswordListener {
                     override fun onPasswordChangeSucceed() {
+                        clear()
                         promise.resolve(null)
                     }
 
                     override fun onPasswordChangeFailed(t: Throwable) {
+                        clear()
                         Errors.rejectPromise(promise, t)
                     }
                 })
