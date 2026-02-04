@@ -505,7 +505,11 @@ PAJS_METHOD_START(changePassword,
     if (!newCorePassword) {
         return;
     }
-    [powerAuth changeCorePasswordFrom:coreOldPassword to:newCorePassword callback:^(NSError * error) {
+    // Making copies of passwords to immutable form, as they will be used in `sdk.changePassword` call.
+    // This call is actually 2 http requests, so it may take some time and the original password could
+    // be released in the meantime by the object register.
+    // We depends on the ARC to deref the objects, which calls clean.
+    [powerAuth changeCorePasswordFrom:[coreOldPassword copyToImmutable] to:[newCorePassword copyToImmutable] callback:^(NSError * error) {
         if (error) {
             ProcessError(error, reject);
         } else {
