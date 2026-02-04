@@ -23,7 +23,6 @@ import { PowerAuth, PowerAuthPassword } from "react-native-powerauth-mobile-sdk"
  * @param password String with password to import.
  * @param destroyOnUse Password will be destroyed on use.
  * @param owner If provided, then the password will be associated with given PowerAuth instance.
- * @param pass If provided, then the string will be imported to this object.
  * @returns PowerAuthPassword with imported passphrase.
  */
 export function importPassword(password: string, destroyOnUse: boolean = true, owner: PowerAuth | undefined = undefined): Promise<PowerAuthPassword> {
