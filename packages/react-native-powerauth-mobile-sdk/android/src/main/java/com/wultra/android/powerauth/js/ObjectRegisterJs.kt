@@ -612,9 +612,6 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 // it should be ready for remove after a short delay period.
                 val readyForRemove = removedTime == 0L ||
                         currentTime() - removedTime >= Constants.CLEANUP_REMOVE_DELAY.toLong()
-                if (readyForRemove) {
-                    `object`.cleanup()
-                }
                 return readyForRemove
             }
 
