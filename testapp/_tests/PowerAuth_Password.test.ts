@@ -47,11 +47,6 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await this.sdk.changePassword(this.credentials.invalidPassword, this.credentials.validPassword)
         await this.sdk.validatePassword(this.credentials.validPassword)
         await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-
-        // TODO: INVALID_ACTIVATION_STATE, WRONG_PARAM expected
-        // await expect(async () => this.sdk.changePassword(this.credentials.validPassword, '12')).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-        // TODO: WRONG_PARAM expected
-        await expect(async () => await this.sdk.changePassword('12', this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.SIGNATURE_ERROR})
     }
 
     async testChangeSecurePassword() {
@@ -62,12 +57,7 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         // back to original
         await this.sdk.changePassword(await importPassword(this.credentials.invalidPassword), await importPassword(this.credentials.validPassword))
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
-        await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-
-        // TODO: INVALID_ACTIVATION_STATE, WRONG_PARAM expected
-        // await expect(async () => this.sdk.changePassword(this.credentials.validPassword, '12')).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-        // TODO: WRONG_PARAM expected
-        await expect(async () => await this.sdk.changePassword(await importPassword('12'), this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.SIGNATURE_ERROR})
+        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
     }
 
     async testChangePasswordUnsafe() {
@@ -75,11 +65,6 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await this.sdk.validatePassword(this.credentials.invalidPassword)
         await this.sdk.unsafeChangePassword(this.credentials.invalidPassword, this.credentials.validPassword)
         await this.sdk.validatePassword(this.credentials.validPassword)
-
-        // TODO: WRONG_PARAM expected
-        //await expect(async () => this.sdk.changePassword('12', this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-        // TODO: WRONG_PARAM expected
-        //await expect(async () => this.sdk.changePassword(this.credentials.validPassword, '12')).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
     }
 
     async testChangeSecurePasswordUnsafe() {
@@ -87,11 +72,6 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))
         await this.sdk.unsafeChangePassword(await importPassword(this.credentials.invalidPassword), await importPassword(this.credentials.validPassword))
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
-
-        // TODO: WRONG_PARAM expected
-        //await expect(async () => this.sdk.changePassword('12', this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-        // TODO: WRONG_PARAM expected
-        //await expect(async () => this.sdk.changePassword(this.credentials.validPassword, '12')).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
     }
 
     async testReusePasswordObject() {

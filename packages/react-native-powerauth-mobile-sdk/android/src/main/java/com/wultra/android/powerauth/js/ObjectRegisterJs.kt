@@ -50,6 +50,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     private val randomGenerator: Random = Random()
     private var cleanupPeriod: Int = Constants.CLEANUP_PERIOD_DEFAULT
     private var cleanupTimer: Timer? = null
+    private var isCleanupScheduled = false
 
     // ---------------------------------------------------------------------------------------------
     // RN integration
@@ -474,15 +475,20 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
      */
     private fun scheduleCleanup() {
         if (register.isNotEmpty()) {
-            // Register is not empty
-            if (cleanupTimer == null) {
-                // Timer is not created, so create timer and schedule the task
-                cleanupTimer = Timer()
+            // Register is not empty, make sure timer is not already scheduled
+            if (isCleanupScheduled) {
+                return
             }
+            // make sure timer is created
+            val timer = cleanupTimer ?: Timer().also { cleanupTimer = it }
+            isCleanupScheduled = true
             // Schedule new job to timer.
-            cleanupTimer!!.schedule(object : TimerTask() {
+            timer.schedule(object : TimerTask() {
                 override fun run() {
-                    synchronize { doCleanup() }
+                    synchronize {
+                        isCleanupScheduled = false
+                        doCleanup()
+                    }
                 }
             }, cleanupPeriod.toLong())
         } else {
@@ -490,6 +496,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
             if (cleanupTimer != null) {
                 cleanupTimer!!.cancel()
                 cleanupTimer = null
+                isCleanupScheduled = false
             }
         }
     }
@@ -605,9 +612,6 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 // it should be ready for remove after a short delay period.
                 val readyForRemove = removedTime == 0L ||
                         currentTime() - removedTime >= Constants.CLEANUP_REMOVE_DELAY.toLong()
-                if (readyForRemove) {
-                    `object`.cleanup()
-                }
                 return readyForRemove
             }
 

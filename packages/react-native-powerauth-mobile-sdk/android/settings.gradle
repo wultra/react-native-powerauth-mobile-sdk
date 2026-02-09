@@ -1,1 +1,2 @@
 rootProject.name = 'PowerAuthReactNative'
+includeBuild('../node_modules/@react-native/gradle-plugin')
