@@ -40,7 +40,9 @@ We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platfor
 
 | Version | React-Native<sup>1</sup> | Cordova   | Native SDK   | Server version | Support Status    |
 |---------|--------------------------|-----------|--------------|----------------|-------------------|
-| `4.1.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Fully supported   |
+| `4.3.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Fully supported   |
+| `4.2.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Not supported     |
+| `4.1.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Not supported.    |
 | `3.2.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Security fixes    |
 | `4.0.x` | `0.73+`                  | `12.0.0+` | `1.9.x`      | `1.9+`         | Not supported     |
 | `3.1.x` | `0.73+`                  | `12.0.0+` | `1.7.x`      | `0.24+`        | Not supported     |

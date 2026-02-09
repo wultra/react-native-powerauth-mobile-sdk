@@ -1,6 +1,6 @@
 # Changelog
 
-## TBA
+## 4.3.0 (2/2026)
 - Added support for OIDC Activation (issue[#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed issue, when entered correct password was reported as invalid in some rare cases (issue[#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 
