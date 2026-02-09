@@ -5,7 +5,7 @@
         "customBuildscript": "If needed, in the library object, set \"buildscript\": \"your-custom-build-command\" command if your build command is different than 'npm i && npm run build'"
     },
     "library": {
-        "name": "digital-onboarding-js",
+        "name": "powerauth-mobile-js",
         "type": "yarn",
         "artifacts": [
             "packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
