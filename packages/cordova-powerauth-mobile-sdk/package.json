@@ -42,7 +42,7 @@
     "cdv": "gulp cdv"
   },
   "devDependencies": {
-    "esbuild": "^0.25.12",
+    "esbuild": "^0.27.3",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-filter": "^9.0.1",
