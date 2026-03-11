@@ -7,3 +7,13 @@ updates:
     exclude-paths:
       - "testapp/**"
       - "testapp-cordova/**"
+    ignore:
+      # some dependencies are updated manually to avoid breaking changes, so we ignore them in dependabot
+      - dependency-name: "react"
+      - dependency-name: "react-native"
+      - dependency-name: "@types/node"
+      - dependency-name: "@types/react"
+      - dependency-name: "@react-native/typescript-config"
+      - dependency-name: "@react-native/eslint-config"
+      - dependency-name: "eslint"
+      - dependency-name: "esbuild"
