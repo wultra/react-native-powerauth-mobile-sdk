@@ -9706,6 +9706,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"prettier@npm:^3.8.2":
+  version: 3.8.2
+  resolution: "prettier@npm:3.8.2"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 10c0/2d64bd01d269c8dd6d8c423a2a2e1fb88230a53aac523204b327de40059ccf8bd8e6fe70b8ce6154b97ed4442e9fd878504ff8a5330f3a4f64bd13d1576f7652
+  languageName: node
+  linkType: hard
+
 "pretty-format@npm:^29.7.0":
   version: 29.7.0
   resolution: "pretty-format@npm:29.7.0"
@@ -9965,7 +9974,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-config-prettier: "npm:^9.1.0"
     node-fetch: "npm:>=2.6.1"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:^3.8.2"
     react: "npm:19.0.0"
     react-native: "npm:^0.78.1"
     react-native-builder-bob: "npm:^0.41.0"
