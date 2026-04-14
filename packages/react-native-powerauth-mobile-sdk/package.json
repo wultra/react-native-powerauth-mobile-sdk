@@ -71,7 +71,7 @@
     "react": "19.0.0",
     "react-native": "^0.78.1",
     "react-native-builder-bob": "^0.41.0",
-    "typescript": "^5.4.0"
+    "typescript": "^6.0.2"
   },
   "react-native-builder-bob": {
     "source": "src",
