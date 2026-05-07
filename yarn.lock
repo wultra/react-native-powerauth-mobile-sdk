@@ -5114,7 +5114,7 @@ __metadata:
     esbuild: "npm:^0.25.12"
     gulp: "npm:^5.0.0"
     gulp-concat: "npm:^2.6.1"
-    gulp-filter: "npm:^9.0.1"
+    gulp-filter: "npm:^10.0.0"
     gulp-replace: "npm:^1.1.4"
     gulp-strip-import-export: "npm:^1.0.0"
     gulp-typescript: "npm:^6.0.0-alpha.1"
@@ -5434,6 +5434,13 @@ __metadata:
     is-plain-object: "npm:^5.0.0"
     object.defaults: "npm:^1.1.0"
   checksum: 10c0/6a9f12d84c7918adcd92fa9dadbf952a09b9c1d7800cc25ae601976d955f3dc4d67ddbfa89f62b2624aafe598bf9f1afa0c4c8f895e7da2017c7b98f9dd9cb96
+  languageName: node
+  linkType: hard
+
+"easy-transform-stream@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "easy-transform-stream@npm:1.0.1"
+  checksum: 10c0/5f6c30a58e567b2273b19562fbe71d87ae23ad7e975563df12c7dbac0b6085678367bc64b17241d0c24de0054eaf2b877e022f5ded0c9400001b7dc53a85dd97
   languageName: node
   linkType: hard
 
@@ -7066,21 +7073,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gulp-filter@npm:^9.0.1":
-  version: 9.0.1
-  resolution: "gulp-filter@npm:9.0.1"
+"gulp-filter@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "gulp-filter@npm:10.0.0"
   dependencies:
-    multimatch: "npm:^7.0.0"
+    easy-transform-stream: "npm:^1.0.1"
+    multimatch: "npm:^8.0.0"
     plugin-error: "npm:^2.0.1"
     slash: "npm:^5.1.0"
-    streamfilter: "npm:^3.0.0"
     to-absolute-glob: "npm:^3.0.0"
   peerDependencies:
-    gulp: ">=4"
+    gulp: ">=5"
   peerDependenciesMeta:
     gulp:
       optional: true
-  checksum: 10c0/68d6171fd8cb6c3ad35a17942d6cfe53f8fad99a4843456db08a347a7a8bcc6f6bd20bc9e65f8e67cb566ec689ce310fa39b92a48e0c0657817057749c3540b2
+  checksum: 10c0/5e0652f351130712bd6bcfb804fe8146574dc902339b8bfcba2d738db6b7ef78a69af9b81e861d6610db552ccff95757b06efd033b3db5984ab93ccd624b9d32
   languageName: node
   linkType: hard
 
@@ -8841,7 +8848,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^9.0.3, minimatch@npm:^9.0.4, minimatch@npm:^9.0.5":
+"minimatch@npm:^9.0.4, minimatch@npm:^9.0.5":
   version: 9.0.5
   resolution: "minimatch@npm:9.0.5"
   dependencies:
@@ -8985,14 +8992,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"multimatch@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "multimatch@npm:7.0.0"
+"multimatch@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "multimatch@npm:8.0.0"
   dependencies:
     array-differ: "npm:^4.0.0"
     array-union: "npm:^3.0.1"
-    minimatch: "npm:^9.0.3"
-  checksum: 10c0/ce5b6e8a8d114830dd621b128a4a5364792bab281d861e68c7d719d2c04e8f9a4a0a566b37cbbc0a3cbaa0a62eb50e869c9d43ab439a314186b113a34c91a9c7
+    minimatch: "npm:^10.2.2"
+  checksum: 10c0/de12fe93c713eab11d5375d5a46d51180193ec5a0b002b1230f38d77fc1a1eda54dbbe7af7edfeccb9c9a6a4c273c9377e8d69d4c9b3096e2891af4392edb429
   languageName: node
   linkType: hard
 
@@ -10082,7 +10089,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:2 || 3, readable-stream@npm:^3.0.6, readable-stream@npm:^3.4.0":
+"readable-stream@npm:2 || 3, readable-stream@npm:^3.4.0":
   version: 3.6.2
   resolution: "readable-stream@npm:3.6.2"
   dependencies:
@@ -10945,15 +10952,6 @@ __metadata:
   version: 1.0.3
   resolution: "stream-shift@npm:1.0.3"
   checksum: 10c0/939cd1051ca750d240a0625b106a2b988c45fb5a3be0cebe9a9858cb01bc1955e8c7b9fac17a9462976bea4a7b704e317c5c2200c70f0ca715a3363b9aa4fd3b
-  languageName: node
-  linkType: hard
-
-"streamfilter@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "streamfilter@npm:3.0.0"
-  dependencies:
-    readable-stream: "npm:^3.0.6"
-  checksum: 10c0/6d85f2416e71196c492c670999ac1cbec121c8d80e280de36b371b731172727b7b16586ef7885fcebc52d17621ef07d331116187d0ea951a49fdde412fad7302
   languageName: node
   linkType: hard
 
