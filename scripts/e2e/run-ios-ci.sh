@@ -40,7 +40,6 @@ require_env_key "POWERAUTH_CLOUD_USERNAME"
 require_env_key "POWERAUTH_CLOUD_PASSWORD"
 require_env_key "POWERAUTH_CLOUD_APP_ID"
 require_env_key "ENROLLMENT_SERVER_URL"
-require_env_key "SDK_CONFIG"
 require_env_key "TEST_COLLECTOR_URL"
 
 MODE="${E2E_MODE:-full}"
