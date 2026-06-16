@@ -45,6 +45,7 @@ export interface CustomConfig {
 export class IntegrationHelper {
 
     private jsonMediaType = "application/json; charset=UTF-8"
+    private applicationDetail?: ApplicationDetail
 
     get userId(): string | undefined {
         return this._userId
@@ -160,7 +161,15 @@ export class IntegrationHelper {
     // --- SERVER CALLS ---
 
     async getApplicationDetail(): Promise<ApplicationDetail> {
-        return await this.makeCall(undefined, `${AppConfig.cloudServerUrl}/admin/applications/${AppConfig.cloudApplicationId}`, "GET")
+        // If not cached, get application detail from the server.
+        if (!this.applicationDetail) {
+            this.applicationDetail = await this.makeCall(undefined, `${AppConfig.cloudServerUrl}/admin/applications/${AppConfig.cloudApplicationId}`, "GET")
+        }
+        // Check if the application detail contains mobileSdkConfig, which is required for SDK configuration.
+        if (!this.applicationDetail?.mobileSdkConfig) {
+            throw new Error("Application detail is missing mobileSdkConfig")
+        }
+        return this.applicationDetail!!
     }
 
     async createActivation(userId?: string, autoCommit: boolean = true): Promise<CreatedActivation> {
