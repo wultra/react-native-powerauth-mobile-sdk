@@ -26,7 +26,6 @@ export class AppConfig {
     static cloudServerPassword = EnvConfig.POWERAUTH_CLOUD_PASSWORD || ""
     static cloudApplicationId = EnvConfig.POWERAUTH_CLOUD_APP_ID || ""
     static enrollmentUrl = EnvConfig.ENROLLMENT_SERVER_URL || ""
-    static sdkConfig = EnvConfig.SDK_CONFIG || ""
     // Test results collector
     static testCollectorUrl = EnvConfig.TEST_COLLECTOR_URL || ""
     // User Data Store
@@ -46,6 +45,7 @@ export interface CustomConfig {
 export class IntegrationHelper {
 
     private jsonMediaType = "application/json; charset=UTF-8"
+    private applicationDetail?: ApplicationDetail
 
     get userId(): string | undefined {
         return this._userId
@@ -141,9 +141,12 @@ export class IntegrationHelper {
 
     async configure(config?: CustomConfig): Promise<void> {
 
+        // GET APPLICATION DETAIL FROM THE SERVER
+        const appDetail = await this.getApplicationDetail()
+
         // CONFIGURE SDK
         await this._sdk.configure(
-            config?.configuration ?? new PowerAuthConfiguration(AppConfig.sdkConfig, AppConfig.enrollmentUrl),
+            config?.configuration ?? new PowerAuthConfiguration(appDetail.mobileSdkConfig, AppConfig.enrollmentUrl),
             config?.clientConfiguration,
             config?.biometryConfiguration,
             config?.keychainConfiguration,
@@ -156,6 +159,18 @@ export class IntegrationHelper {
     }
 
     // --- SERVER CALLS ---
+
+    async getApplicationDetail(): Promise<ApplicationDetail> {
+        // If not cached, get application detail from the server.
+        if (!this.applicationDetail) {
+            this.applicationDetail = await this.makeCall(undefined, `${AppConfig.cloudServerUrl}/admin/applications/${AppConfig.cloudApplicationId}`, "GET")
+        }
+        // Check if the application detail contains mobileSdkConfig, which is required for SDK configuration.
+        if (!this.applicationDetail?.mobileSdkConfig) {
+            throw new Error("Application detail is missing mobileSdkConfig")
+        }
+        return this.applicationDetail!!
+    }
 
     async createActivation(userId?: string, autoCommit: boolean = true): Promise<CreatedActivation> {
 
@@ -319,6 +334,14 @@ interface CreatedActivation {
   activationCodeSignature: string
   activationQrCodeData: string
   registrationId: string
+}
+
+interface ApplicationDetail {
+    id: string
+    serviceBaseUrl: string
+    appKey: string
+    appSecret: string
+    mobileSdkConfig: string
 }
 
 interface RegistrationDetail {
