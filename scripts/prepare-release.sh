@@ -37,7 +37,7 @@ set -u # stop when undefined variable is used
 SCRIPT_FOLDER=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # URL of the JavaScript prepare-release script in Wultra infrastructure repository
-URL="https://raw.githubusercontent.com/wultra/wultra-infrastructure/refs/heads/mobile-release/mobile-release/v1/prepare-release.js"
+URL="https://raw.githubusercontent.com/wultra/wultra-infrastructure/refs/heads/mobile/mobile/release/prepare/v1/prepare-release.js"
 
 # execute the remote node and pass all parameters to it + add path parameter to the root of the repository
 curl -fsSL "${URL}" | node - -p "${SCRIPT_FOLDER}/.." "${@}"
