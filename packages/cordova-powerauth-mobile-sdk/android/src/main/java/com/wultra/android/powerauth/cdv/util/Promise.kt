@@ -18,6 +18,9 @@ class Promise(
     when (value) {
       null -> callbackContext.sendPluginResult(PluginResult(Status.OK, null as String?))
       is Int -> callbackContext.success(value)
+      // Cordova supports only Int and Float numeric plugin results. A String preserves
+      // the full precision and is converted back to Number in the public JS API.
+      is Double -> callbackContext.success(value.toString())
       is String -> callbackContext.success(value)
       is Boolean -> callbackContext.sendPluginResult(PluginResult(Status.OK, value))
       is Collection<*> -> callbackContext.success(JSONArray(value))

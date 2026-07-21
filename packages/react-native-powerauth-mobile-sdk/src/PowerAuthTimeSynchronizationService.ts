@@ -44,8 +44,9 @@ export class PowerAuthTimeSynchronizationService {
      *
      * You can test `isTimeSynchronized` method if this is not sufficient for your purposes.
      */
-    currentTime(): Promise<number> {
-        return NativeWrapper.thisCall("currentTime", this.instanceId);
+    async currentTime(): Promise<number> {
+        const value = await NativeWrapper.thisCall<number | string>("currentTime", this.instanceId);
+        return Number(value);
     }
 
     /** Synchronize the local time with the time on the server. */

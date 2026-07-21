@@ -1207,8 +1207,9 @@ class PowerAuthJsModule(
     fun currentTime(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.currentTime.toInt())
+                // In milliseconds to match JS expectations. Must be resolved as a Double,
+                // since the epoch-millisecond value overflows a 32-bit Int.
+                promise.resolve(sdk.timeSynchronizationService.currentTime.toDouble())
             }
         })
     }

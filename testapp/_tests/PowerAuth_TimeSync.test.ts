@@ -32,12 +32,17 @@ export class PowerAuth_TimeSyncTests extends TestWithActivation {
         expect(await this.sdk.timeSynchronizationService.isTimeSynchronized()).toBe(true)
 
         const timestamp = await this.sdk.timeSynchronizationService.currentTime()
+        const localTimeAdjustment = await this.sdk.timeSynchronizationService.localTimeAdjustment()
         
-        // just check if actual non-zero values are returned
-        expect(timestamp).toNotBe(0)
+        // Epoch milliseconds must not overflow a 32-bit integer in the native bridge.
+        expect(timestamp).toBeGreaterThan(0x7fffffff)
         expect(await this.sdk.timeSynchronizationService.localTimeAdjustmentPrecision()).toNotBe(0)
 
         const date = new Date(timestamp)
         expect(date.getTime()).toBe(timestamp)
+
+        // Allow for the short delay between the two native calls and reading local time.
+        const expectedCurrentTime = Date.now() + localTimeAdjustment
+        expect(Math.abs(timestamp - expectedCurrentTime)).toBeLessThan(5000)
     }
 }
