@@ -63,8 +63,9 @@ export class PowerAuthTimeSynchronizationService {
      * Contains calculated local time difference against the server in milliseconds. The value of the property
      * is informational and is provided only for the testing or the debugging purposes.
      */
-    localTimeAdjustment(): Promise<number> {
-        return NativeWrapper.thisCall("localTimeAdjustment", this.instanceId);
+    async localTimeAdjustment(): Promise<number> {
+        const value = await NativeWrapper.thisCall<number | string>("localTimeAdjustment", this.instanceId);
+        return Number(value);
     }
 
     /**
@@ -73,7 +74,8 @@ export class PowerAuthTimeSynchronizationService {
      * Depending on this value you can determine whether this deviation is within your expected margins. If the current
      * synchronized time is out of your expectations, then try to synchronize the time again.
      */
-    localTimeAdjustmentPrecision(): Promise<number> {
-        return NativeWrapper.thisCall("localTimeAdjustmentPrecision", this.instanceId);
+    async localTimeAdjustmentPrecision(): Promise<number> {
+        const value = await NativeWrapper.thisCall<number | string>("localTimeAdjustmentPrecision", this.instanceId);
+        return Number(value);
     }
 }

@@ -1187,8 +1187,9 @@ class PowerAuthJsModule(
     fun localTimeAdjustment(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toInt())
+                // In milliseconds to match JS expectations. Must be resolved as a Double,
+                // since the value may overflow a 32-bit Int.
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toDouble())
             }
         })
     }
@@ -1197,8 +1198,9 @@ class PowerAuthJsModule(
     fun localTimeAdjustmentPrecision(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toInt())
+                // In milliseconds to match JS expectations. Must be resolved as a Double,
+                // since the value may overflow a 32-bit Int.
+                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toDouble())
             }
         })
     }
