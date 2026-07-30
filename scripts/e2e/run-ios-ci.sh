@@ -40,7 +40,6 @@ require_env_key "POWERAUTH_CLOUD_USERNAME"
 require_env_key "POWERAUTH_CLOUD_PASSWORD"
 require_env_key "POWERAUTH_CLOUD_APP_ID"
 require_env_key "ENROLLMENT_SERVER_URL"
-require_env_key "SDK_CONFIG"
 require_env_key "TEST_COLLECTOR_URL"
 
 MODE="${E2E_MODE:-full}"
@@ -183,6 +182,7 @@ install_rn_pods() {
 
 SIM_ID=""
 SIM_LINE=""
+CORDOVA_SIM_TARGET=""
 
 pick_simulator_from_list() {
   local list="$1"
@@ -197,6 +197,31 @@ pick_simulator_from_list() {
   SIM_LINE="${line}"
   SIM_ID="$(printf '%s\n' "${line}" | grep -oE '[A-F0-9-]{36}')"
   [ -n "${SIM_ID}" ]
+}
+
+resolve_cordova_sim_target() {
+  if [ -n "${E2E_IOS_SIMULATOR_TARGET:-}" ]; then
+    CORDOVA_SIM_TARGET="${E2E_IOS_SIMULATOR_TARGET}"
+    return 0
+  fi
+
+  local sdk_version runtime_id
+  sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
+  runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
+
+  if ! CORDOVA_SIM_TARGET="$(
+    xcrun simctl list devices available --json |
+      RUNTIME_ID="${runtime_id}" node -e '
+        const devices = JSON.parse(require("node:fs").readFileSync(0)).devices[process.env.RUNTIME_ID] || [];
+        const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
+          devices.find(d => d.deviceTypeIdentifier.includes(".iPad-"));
+        if (!device) process.exit(1);
+        process.stdout.write(device.deviceTypeIdentifier.split(".").pop());
+      '
+  )"; then
+    echo "[e2e] ERROR: No simulator matches the active iOS ${sdk_version} SDK."
+    return 1
+  fi
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
@@ -235,6 +260,13 @@ else
   xcrun simctl shutdown booted || true
 fi
 
+if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
+  if ! resolve_cordova_sim_target; then
+    exit 1
+  fi
+  echo "[e2e] Using Cordova simulator target: ${CORDOVA_SIM_TARGET}"
+fi
+
 run_count=0
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
@@ -266,7 +298,7 @@ fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
   echo "[e2e] Launching Cordova iOS..."
-  yarn workspace com.wultra.pwatest freshIos &
+  yarn workspace com.wultra.pwatest freshIos --target="${CORDOVA_SIM_TARGET}" &
   CDV_PID=$!
   run_count=$((run_count + 1))
 
