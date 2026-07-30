@@ -70,7 +70,7 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: Nexus 6
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -no-snapshot-save -wipe-data
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot
           disable-animations: true
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
@@ -130,7 +130,7 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: Nexus 6
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -no-snapshot-save -wipe-data
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot
           disable-animations: true
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
