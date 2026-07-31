@@ -1183,13 +1183,16 @@ class PowerAuthJsModule(
         })
     }
 
+    /** Resolve a millisecond value as a bridge-compatible number. */
+    private fun resolveTimeValue(promise: Promise, value: Long) {
+        promise.resolve(value.toDouble())
+    }
+
     @JsApiMethod
     fun localTimeAdjustment(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In milliseconds to match JS expectations. Must be resolved as a Double,
-                // since the value may overflow a 32-bit Int.
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toDouble())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.localTimeAdjustment)
             }
         })
     }
@@ -1198,9 +1201,7 @@ class PowerAuthJsModule(
     fun localTimeAdjustmentPrecision(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In milliseconds to match JS expectations. Must be resolved as a Double,
-                // since the value may overflow a 32-bit Int.
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toDouble())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.localTimeAdjustmentPrecision)
             }
         })
     }
@@ -1209,9 +1210,7 @@ class PowerAuthJsModule(
     fun currentTime(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In milliseconds to match JS expectations. Must be resolved as a Double,
-                // since the epoch-millisecond value overflows a 32-bit Int.
-                promise.resolve(sdk.timeSynchronizationService.currentTime.toDouble())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.currentTime)
             }
         })
     }
