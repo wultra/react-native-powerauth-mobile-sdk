@@ -41,6 +41,17 @@ target 'testapp' do
 
     # Wultra specific
     fix_dev_team(installer, 'KTT9G859MR')
+
+    # Suppress deprecated-declarations warnings from PowerAuth pods.
+    # PowerAuth2 1.9.5 uses kSecUseAuthenticationUIFail which was deprecated
+    # in iOS 14. In newer Xcode/SDK versions this may be treated as a build error.
+    installer.pods_project.targets.each do |target|
+      next unless target.name.start_with?('PowerAuth')
+      target.build_configurations.each do |config|
+        flags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
+        config.build_settings['OTHER_CFLAGS'] = "#{flags} -Wno-deprecated-declarations"
+      end
+    end
   end
 end
 

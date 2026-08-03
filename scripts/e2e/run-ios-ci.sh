@@ -195,7 +195,7 @@ pick_simulator_from_list() {
     return 1
   fi
   SIM_LINE="${line}"
-  SIM_ID="$(printf '%s\n' "${line}" | grep -oE '[A-F0-9-]{36}')"
+  SIM_ID="$(printf '%s\n' "${line}" | grep -oEi '[A-F0-9-]{36}')"
   [ -n "${SIM_ID}" ]
 }
 
