@@ -1183,12 +1183,16 @@ class PowerAuthJsModule(
         })
     }
 
+    /** Resolve a millisecond value as a bridge-compatible number. */
+    private fun resolveTimeValue(promise: Promise, value: Long) {
+        promise.resolve(value.toDouble())
+    }
+
     @JsApiMethod
     fun localTimeAdjustment(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustment.toInt())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.localTimeAdjustment)
             }
         })
     }
@@ -1197,8 +1201,7 @@ class PowerAuthJsModule(
     fun localTimeAdjustmentPrecision(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.localTimeAdjustmentPrecision.toInt())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.localTimeAdjustmentPrecision)
             }
         })
     }
@@ -1207,8 +1210,7 @@ class PowerAuthJsModule(
     fun currentTime(instanceId: String, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                // In integer milliseconds to match JS expectations
-                promise.resolve(sdk.timeSynchronizationService.currentTime.toInt())
+                resolveTimeValue(promise, sdk.timeSynchronizationService.currentTime)
             }
         })
     }
