@@ -32,12 +32,24 @@ export class PowerAuth_TimeSyncTests extends TestWithActivation {
         expect(await this.sdk.timeSynchronizationService.isTimeSynchronized()).toBe(true)
 
         const timestamp = await this.sdk.timeSynchronizationService.currentTime()
+        const localTimeAdjustment = await this.sdk.timeSynchronizationService.localTimeAdjustment()
+        const localTimeAdjustmentPrecision = await this.sdk.timeSynchronizationService.localTimeAdjustmentPrecision()
         
-        // just check if actual non-zero values are returned
-        expect(timestamp).toNotBe(0)
-        expect(await this.sdk.timeSynchronizationService.localTimeAdjustmentPrecision()).toNotBe(0)
+        // All time values must cross both native bridges as finite JavaScript numbers.
+        // Cordova Android transports 64-bit-safe values as strings internally.
+        expect(Number.isFinite(timestamp)).toBe(true)
+        expect(Number.isFinite(localTimeAdjustment)).toBe(true)
+        expect(Number.isFinite(localTimeAdjustmentPrecision)).toBe(true)
+
+        // Epoch milliseconds must not overflow a 32-bit integer in the native bridge.
+        expect(timestamp).toBeGreaterThan(0x7fffffff)
+        expect(localTimeAdjustmentPrecision).toBeGreaterThanOrEqual(0)
 
         const date = new Date(timestamp)
         expect(date.getTime()).toBe(timestamp)
+
+        // Allow for the short delay between the two native calls and reading local time.
+        const expectedCurrentTime = Date.now() + localTimeAdjustment
+        expect(Math.abs(timestamp - expectedCurrentTime)).toBeLessThan(5000)
     }
 }
