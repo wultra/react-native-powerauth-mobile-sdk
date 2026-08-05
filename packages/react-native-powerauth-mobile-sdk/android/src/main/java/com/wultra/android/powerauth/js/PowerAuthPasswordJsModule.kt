@@ -15,9 +15,11 @@
  */
 package com.wultra.android.powerauth.js
 
+import android.content.Context
 import com.wultra.android.powerauth.bridge.Dynamic
 import com.wultra.android.powerauth.bridge.Promise
 import com.wultra.android.powerauth.bridge.JsApiMethod
+import com.wultra.android.powerauth.bridge.ReadableArray
 import com.wultra.android.powerauth.bridge.ReadableMap
 import com.wultra.android.powerauth.bridge.ReadableType
 import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.Action
@@ -28,7 +30,10 @@ import io.getlime.security.powerauth.core.Password
 import java.util.Arrays
 import kotlin.math.min
 
-class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : BaseJavaJsModule {
+class PowerAuthPasswordJsModule(
+    private val context: Context,
+    private val objectRegister: ObjectRegisterJs
+) : BaseJavaJsModule {
     override fun getName(): String {
         return "PowerAuthPassword"
     }
@@ -96,30 +101,38 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     }
 
     @JsApiMethod
-    fun addCharacter(objectId: String, character: Int, promise: Promise) {
+    fun addCharacter(objectId: String, codePoints: ReadableArray, instanceId: String?, promise: Promise) {
         withPassword(
             objectId,
-            character,
+            codePoints,
             promise,
-            characterAction { password: Password, codePoint: Int ->
-                password.addCharacter(codePoint)
+            codePointsAction { password: Password, points: List<Int> ->
+                val useCorrectedScheme = shouldUseCorrectedPasswordScheme(context, instanceId, objectRegister)
+                val count = if (useCorrectedScheme) points.size else 1
+                for (i in 0 until count) {
+                    password.addCharacter(points[i])
+                }
                 promise.resolve(password.length())
             })
     }
 
     @JsApiMethod
-    fun insertCharacter(objectId: String, character: Int, position: Int, promise: Promise) {
+    fun insertCharacter(objectId: String, codePoints: ReadableArray, position: Int, instanceId: String?, promise: Promise) {
         withPassword(
             objectId,
-            character,
+            codePoints,
             promise,
-            characterAction { password: Password, codePoint: Int ->
-                if (position >= 0 && position <= password.length()) {
-                    password.insertCharacter(codePoint, position)
-                    promise.resolve(password.length())
-                } else {
+            codePointsAction { password: Password, points: List<Int> ->
+                if (position < 0 || position > password.length()) {
                     promise.reject(Errors.EC_WRONG_PARAMETER, "Position is out of range")
+                    return@codePointsAction
                 }
+                val useCorrectedScheme = shouldUseCorrectedPasswordScheme(context, instanceId, objectRegister)
+                val count = if (useCorrectedScheme) points.size else 1
+                for (i in 0 until count) {
+                    password.insertCharacter(points[i], position + i)
+                }
+                promise.resolve(password.length())
             })
     }
 
@@ -245,16 +258,17 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     }
 
     /**
-     * Action to execute with valid code point, when password object is found in object register.
+     * Action to execute with a valid, non-empty list of code points, when password object is found
+     * in object register.
      */
-    private interface CharacterAction {
-        fun action(password: Password, codePoint: Int)
+    private interface CodePointsAction {
+        fun action(password: Password, codePoints: List<Int>)
     }
 
-    private fun characterAction(fce: (Password, Int) -> Unit): CharacterAction {
-        return object: CharacterAction {
-            override fun action(password: Password, codePoint: Int) {
-                fce(password, codePoint)
+    private fun codePointsAction(fce: (Password, List<Int>) -> Unit): CodePointsAction {
+        return object: CodePointsAction {
+            override fun action(password: Password, codePoints: List<Int>) {
+                fce(password, codePoints)
             }
         }
     }
@@ -262,23 +276,32 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     /**
      * Execute action when Password is found in object register.
      * @param objectId Password object identifier.
-     * @param character Character that represents an unicode code point.
+     * @param codePoints Array of Unicode code points, in the order they should be stored.
      * @param promise Promise to reject or resolve.
      * @param action Action to execute.
      */
     private fun withPassword(
         objectId: String,
-        character: Int,
+        codePoints: ReadableArray,
         promise: Promise,
-        action: CharacterAction
+        action: CodePointsAction
     ) {
-        if (character < 0 || character > Constants.CODEPOINT_MAX) {
-            promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
+        if (codePoints.size() == 0) {
+            promise.reject(Errors.EC_WRONG_PARAMETER, "Empty code points array")
             return
+        }
+        val points = ArrayList<Int>(codePoints.size())
+        for (i in 0 until codePoints.size()) {
+            val codePoint = codePoints.getInt(i)
+            if (codePoint < 0 || codePoint > Constants.CODEPOINT_MAX) {
+                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
+                return
+            }
+            points.add(codePoint)
         }
         val password = objectRegister.touchObject(objectId, Password::class.java)
         if (password != null) {
-            action.action(password, character)
+            action.action(password, points)
         } else {
             promise.reject(Errors.EC_INVALID_NATIVE_OBJECT, "Password object is no longer valid")
         }

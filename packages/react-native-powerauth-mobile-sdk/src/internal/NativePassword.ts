@@ -56,19 +56,32 @@ export interface PowerAuthPasswordIfc {
     isEqual(objectId1: string, objectId2: string): Promise<boolean>
 
     /**
-     * Add character at the end of password and return the number of stored characters.
+     * Add code points at the end of password and return the number of stored characters.
+     *
+     * `codePoints` has more than one element when a string passed to `addCharacter()` expanded into
+     * multiple code points (e.g. a decomposed diacritic or a multi-code-point emoji). Native code
+     * decides, per activation, whether to store just the 1st. one (legacy) or all of them (corrected
+     * scheme) - see `PasswordCodePointScheme` on each platform.
+     *
      * @param objectId Underlying object identifier.
-     * @param character Character to add
+     * @param codePoints Unicode code points to add, in order.
+     * @param instanceId PowerAuth instance identifier this password is bound to, if any. Used natively
+     * to resolve which password code point scheme applies.
      */
-    addCharacter(objectId: string, character: number): Promise<number>
-    
+    addCharacter(objectId: string, codePoints: number[], instanceId: string | undefined): Promise<number>
+
     /**
-     * Insert character at the specified position and return the number of stored characters.
+     * Insert code points at the specified position and return the number of stored characters.
+     *
+     * See `addCharacter` for why `codePoints` may contain more than one element.
+     *
      * @param objectId Underlying object identifier.
-     * @param character Character to add.
-     * @param position Position where character will be added.
+     * @param codePoints Unicode code points to insert, in order, starting at `position`.
+     * @param position Position where code points will be inserted.
+     * @param instanceId PowerAuth instance identifier this password is bound to, if any. Used natively
+     * to resolve which password code point scheme applies.
      */
-    insertCharacter(objectId: string, character: number, position: number): Promise<number>
+    insertCharacter(objectId: string, codePoints: number[], position: number, instanceId: string | undefined): Promise<number>
 
     /**
      * Remove character at given position.

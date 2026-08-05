@@ -352,6 +352,7 @@ class PowerAuthJsModule(
                             }
 
                             override fun onBiometricDialogSuccess() {
+                                markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
                                 promise.resolve(null)
                             }
 
@@ -366,6 +367,7 @@ class PowerAuthJsModule(
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, false)
                 val result: Int = sdk.persistActivationWithAuthentication(context, auth)
                 if (result == PowerAuthErrorCodes.SUCCEED) {
+                    markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
                     promise.resolve(null)
                 } else {
                     promise.reject(Errors.getErrorCodeFromError(result), "Persist failed.")
@@ -384,12 +386,14 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
+                val activationId = sdk.activationIdentifier
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 sdk.removeActivationWithAuthentication(
                     context,
                     auth,
                     object : IActivationRemoveListener {
                         override fun onActivationRemoveSucceed() {
+                            clearPasswordCodePointScheme(context, activationId)
                             promise.resolve(null)
                         }
 
@@ -407,7 +411,9 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
                 try {
+                    val activationId = sdk.activationIdentifier
                     sdk.removeActivationLocal(context)
+                    clearPasswordCodePointScheme(context, activationId)
                     promise.resolve(null)
                 } catch (t: Throwable) {
                     Errors.rejectPromise(promise, t)

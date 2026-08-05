@@ -19,6 +19,7 @@
 #import "Utilities.h"
 #import "Constants.h"
 #import "PAJS.h"
+#import "PasswordCodePointScheme.h"
 
 @import PowerAuthCore;
 
@@ -109,10 +110,15 @@ PAJS_METHOD_END
 
 PAJS_METHOD_START(addCharacter,
                   PAJS_ARGUMENT(objectId, NSString*)
-                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*))
+                  PAJS_ARGUMENT(codePoints, PAJS_NONNULL_ARGUMENT NSArray<NSNumber*>*)
+                  PAJS_ARGUMENT(instanceId, NSString*))
 {
-    [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
-        [password addCharacter:character];
+    [self withPassword:objectId codePoints:codePoints rejecter:reject action:^(PowerAuthCoreMutablePassword *password, NSArray<NSNumber*> *codePoints) {
+        BOOL useCorrectedScheme = PACPS_ShouldUseCorrectedPasswordScheme(instanceId, self->_objectRegister);
+        NSUInteger count = useCorrectedScheme ? codePoints.count : 1;
+        for (NSUInteger i = 0; i < count; i++) {
+            [password addCharacter:(UInt32)[codePoints[i] unsignedIntValue]];
+        }
         resolve(@(password.length));
     }];
 }
@@ -120,17 +126,22 @@ PAJS_METHOD_END
 
 PAJS_METHOD_START(insertCharacter,
                   PAJS_ARGUMENT(objectId, NSString*)
-                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*)
-                  PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*))
+                  PAJS_ARGUMENT(codePoints, PAJS_NONNULL_ARGUMENT NSArray<NSNumber*>*)
+                  PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*)
+                  PAJS_ARGUMENT(instanceId, NSString*))
 {
-    [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
+    [self withPassword:objectId codePoints:codePoints rejecter:reject action:^(PowerAuthCoreMutablePassword *password, NSArray<NSNumber*> *codePoints) {
         NSInteger pos = [[RCTConvert NSNumber:position] integerValue];
-        if (pos >= 0 && pos <= password.length) {
-            [password insertCharacter:character atIndex:pos];
-            resolve(@(password.length));
-        } else {
+        if (pos < 0 || pos > password.length) {
             reject(EC_WRONG_PARAMETER, @"Position is out of range", nil);
+            return;
         }
+        BOOL useCorrectedScheme = PACPS_ShouldUseCorrectedPasswordScheme(instanceId, self->_objectRegister);
+        NSUInteger count = useCorrectedScheme ? codePoints.count : 1;
+        for (NSUInteger i = 0; i < count; i++) {
+            [password insertCharacter:(UInt32)[codePoints[i] unsignedIntValue] atIndex:pos + i];
+        }
+        resolve(@(password.length));
     }];
 }
 PAJS_METHOD_END
@@ -176,23 +187,23 @@ PAJS_METHOD_END
 }
 
 - (void) withPassword:(NSString*)passwordId
-            character:(NSNumber*)character
+            codePoints:(NSArray<NSNumber*>*)codePoints
              rejecter:(RCTPromiseRejectBlock)reject
-               action:(NS_NOESCAPE void(^)(PowerAuthCoreMutablePassword * password, UInt32 character))action
+               action:(NS_NOESCAPE void(^)(PowerAuthCoreMutablePassword * password, NSArray<NSNumber*> * codePoints))action
 {
-    NSNumber * cp = [RCTConvert NSNumber:character];
-    if (!cp) {
-        reject(EC_WRONG_PARAMETER, @"Empty or invalid character object", nil);
+    if (codePoints.count == 0) {
+        reject(EC_WRONG_PARAMETER, @"Empty code points array", nil);
         return;
     }
-    NSUInteger codePoint = [cp unsignedIntValue];
-    if (codePoint > CODEPOINT_MAX) {
-        reject(EC_WRONG_PARAMETER, @"CodePoint is too big", nil);
-        return;
+    for (NSNumber * cp in codePoints) {
+        if (!cp || [cp unsignedIntValue] > CODEPOINT_MAX) {
+            reject(EC_WRONG_PARAMETER, @"CodePoint is invalid or too big", nil);
+            return;
+        }
     }
     PowerAuthCoreMutablePassword * password = [_objectRegister touchObjectWithId:passwordId expectedClass:[PowerAuthCoreMutablePassword class]];
     if (password) {
-        action(password, (UInt32)codePoint);
+        action(password, codePoints);
     } else {
         reject(EC_INVALID_NATIVE_OBJECT, @"Password object is no longer valid", nil);
     }
