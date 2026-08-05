@@ -43,13 +43,13 @@ PowerAuth Mobile JS SDK allows you to use both strings and special password obje
 ```javascript
 // Change password from "0123" to "3210".
 try {
-    const oldPassword = new PowerAuthPassword();
+    const oldPassword = powerAuth.createPassword();
     await oldPassword.addCharacter('0');
     await oldPassword.addCharacter('1');
     await oldPassword.addCharacter('2');
     await oldPassword.addCharacter('3');
     
-    const newPassword = new PowerAuthPassword();
+    const newPassword = powerAuth.createPassword();
     await newPassword.addCharacter(51);
     await newPassword.addCharacter(50);
     await newPassword.addCharacter(49);
