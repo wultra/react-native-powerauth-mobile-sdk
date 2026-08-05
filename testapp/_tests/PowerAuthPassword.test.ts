@@ -389,9 +389,11 @@ export class PowerAuthPasswordTests extends TestSuite {
     // `testUnicode`/`testFromString` above). Configured but not-yet-activated instance -> corrected
     // (all code points kept).
 
-    // 'e' + combining acute accent (U+0301) - decomposed on purpose, unlike a literal 'é' in source
-    // (usually already precomposed), so this actually exercises NFC composition.
-    decomposedEAcute = "é"
+    // 'e' + combining acute accent (U+0301), written as an explicit escape (not a literal 'é') so it
+    // stays genuinely decomposed no matter how this file is saved/edited - a literal accented character
+    // in source is commonly re-saved as its precomposed form by editors/tools, which would silently turn
+    // this into a single-code-point string and make the test below a no-op for NFC composition.
+    decomposedEAcute = "e\u0301"
     // ZWJ family emoji: man, ZWJ, woman, ZWJ, girl - 5 code points, no NFC composition rule.
     familyEmoji = "👨‍👩‍👧"
     // Flag sequence: 2 regional indicator code points, no NFC composition rule.

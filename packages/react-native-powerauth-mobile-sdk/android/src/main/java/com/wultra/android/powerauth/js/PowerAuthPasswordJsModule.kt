@@ -292,6 +292,10 @@ class PowerAuthPasswordJsModule(
         }
         val points = ArrayList<Int>(codePoints.size())
         for (i in 0 until codePoints.size()) {
+            if (codePoints.getType(i) != ReadableType.Number) {
+                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
+                return
+            }
             val codePoint = codePoints.getInt(i)
             if (codePoint < 0 || codePoint > Constants.CODEPOINT_MAX) {
                 promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")

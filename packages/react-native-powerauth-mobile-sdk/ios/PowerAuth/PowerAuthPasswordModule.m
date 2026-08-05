@@ -195,8 +195,8 @@ PAJS_METHOD_END
         reject(EC_WRONG_PARAMETER, @"Empty code points array", nil);
         return;
     }
-    for (NSNumber * cp in codePoints) {
-        if (!cp || [cp unsignedIntValue] > CODEPOINT_MAX) {
+    for (id cp in codePoints) {
+        if (![cp isKindOfClass:[NSNumber class]] || [(NSNumber*)cp unsignedIntValue] > CODEPOINT_MAX) {
             reject(EC_WRONG_PARAMETER, @"CodePoint is invalid or too big", nil);
             return;
         }
