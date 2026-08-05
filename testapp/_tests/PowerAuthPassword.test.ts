@@ -382,4 +382,54 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
     }
+
+    // A multi-code-point string (decomposed diacritic or multi-code-point emoji) may or may not
+    // get stored in full - it is a native, per-instance/activation decision, see
+    // `PasswordCodePointScheme`. No owning instance -> legacy (1st. code point only, see
+    // `testUnicode`/`testFromString` above). Configured but not-yet-activated instance -> corrected
+    // (all code points kept).
+
+    // 'e' + combining acute accent (U+0301) - decomposed on purpose, unlike a literal 'é' in source
+    // (usually already precomposed), so this actually exercises NFC composition.
+    decomposedEAcute = "é"
+    // ZWJ family emoji: man, ZWJ, woman, ZWJ, girl - 5 code points, no NFC composition rule.
+    familyEmoji = "👨‍👩‍👧"
+    // Flag sequence: 2 regional indicator code points, no NFC composition rule.
+    flagEmoji = "🇨🇿"
+
+    async testCodePointSchemeWithoutOwner() {
+        const p1 = new PowerAuthPassword()
+        this.cleanup.push(p1)
+
+        // NFC-composed to a single code point regardless of scheme.
+        expect(await p1.addCharacter(this.decomposedEAcute)).toBe(1)
+        // Legacy scheme keeps only the 1st. of the 5/2 code points.
+        expect(await p1.addCharacter(this.familyEmoji)).toBe(2)
+        expect(await p1.addCharacter(this.flagEmoji)).toBe(3)
+
+        const p2 = new PowerAuthPassword()
+        this.cleanup.push(p2)
+        expect(await p2.insertCharacter(this.familyEmoji, 0)).toBe(1)
+    }
+
+    async testCodePointSchemeForNonActivatedInstance() {
+        // Dummy config, same as testGlobalRelease - configure() is local-only, no server call.
+        const config = new PowerAuthConfiguration('ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==', 'http://localhost/wrong')
+        const powerAuth = new PowerAuth(this.getRandomId())
+        this.cleanup.push(powerAuth)
+        await powerAuth.configure(config)
+
+        expect(await powerAuth.hasValidActivation()).toBe(false)
+
+        const p1 = powerAuth.createPassword()
+        this.cleanup.push(p1)
+
+        expect(await p1.addCharacter(this.decomposedEAcute)).toBe(1)
+        expect(await p1.addCharacter(this.familyEmoji)).toBe(6)  // +5 code points
+        expect(await p1.addCharacter(this.flagEmoji)).toBe(8)    // +2 code points
+
+        const p2 = powerAuth.createPassword()
+        this.cleanup.push(p2)
+        expect(await p2.insertCharacter(this.familyEmoji, 0)).toBe(5)
+    }
 }
