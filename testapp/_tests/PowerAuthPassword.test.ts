@@ -81,6 +81,10 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p2.addCharacter(51)).toBe(4)
 
         await expect(async () => p1.addCharacter(0x110000)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        // 0xD800-0xDFFF (UTF-16 surrogates) are not valid standalone Unicode scalar values - passing one
+        // directly as a code point must be rejected, not crash the app when later NFC-normalized.
+        await expect(async () => p1.addCharacter(0xD800)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // high surrogate
+        await expect(async () => p1.addCharacter(0xDFFF)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // low surrogate
 
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
@@ -133,6 +137,9 @@ export class PowerAuthPasswordTests extends TestSuite {
         await expect(async () => p1.insertCharacter('X', -1)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         await expect(async () => p1.insertCharacter('X', 6)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         await expect(async () => p1.insertCharacter(0x110000, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        // 0xD800-0xDFFF (UTF-16 surrogates) are not valid standalone Unicode scalar values.
+        await expect(async () => p1.insertCharacter(0xD800, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // high surrogate
+        await expect(async () => p1.insertCharacter(0xDFFF, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // low surrogate
 
         expect(await p1.isEqualTo(p2)).toBe(true)
     }

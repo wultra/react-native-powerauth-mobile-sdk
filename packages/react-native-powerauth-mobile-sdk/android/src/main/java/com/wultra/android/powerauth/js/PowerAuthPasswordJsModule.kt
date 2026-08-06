@@ -281,7 +281,9 @@ class PowerAuthPasswordJsModule(
     }
 
     private fun isValidCodePoint(codePoint: Int): Boolean {
-        return codePoint in 0..Constants.CODEPOINT_MAX
+        // 0xD800..0xDFFF (UTF-16 surrogates) aren't valid Unicode scalars - Character.isValidCodePoint()
+        // doesn't exclude them, and letting one through would crash nfcNormalizeCodePoints() later.
+        return codePoint in 0..Constants.CODEPOINT_MAX && codePoint !in 0xD800..0xDFFF
     }
 
     /**

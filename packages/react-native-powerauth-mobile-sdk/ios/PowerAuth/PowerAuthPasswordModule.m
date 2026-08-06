@@ -203,7 +203,15 @@ PAJS_METHOD_END
         return;
     }
     for (id cp in codePoints) {
-        if (![cp isKindOfClass:[NSNumber class]] || [(NSNumber*)cp unsignedIntValue] > CODEPOINT_MAX) {
+        if (![cp isKindOfClass:[NSNumber class]]) {
+            reject(EC_WRONG_PARAMETER, @"CodePoint is invalid or too big", nil);
+            return;
+        }
+        UInt32 value = [(NSNumber*)cp unsignedIntValue];
+        // 0xD800-0xDFFF (UTF-16 surrogates) aren't valid Unicode scalars - letting one through would
+        // silently corrupt the result: PACPS_NFCNormalizeCodePoints would return an empty array instead
+        // of failing (invalid UTF-32 data decodes to nil, and Foundation's message-to-nil swallows it).
+        if (value > CODEPOINT_MAX || (value >= 0xD800 && value <= 0xDFFF)) {
             reject(EC_WRONG_PARAMETER, @"CodePoint is invalid or too big", nil);
             return;
         }
