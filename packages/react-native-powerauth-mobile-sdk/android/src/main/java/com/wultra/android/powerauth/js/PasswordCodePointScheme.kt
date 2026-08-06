@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import io.getlime.security.powerauth.sdk.PowerAuthSDK
 import androidx.core.content.edit
+import java.text.Normalizer
 
 /**
  * Determines how many code points from an `addCharacter`/`insertCharacter` call actually get stored:
@@ -71,4 +72,24 @@ fun shouldUseCorrectedPasswordScheme(context: Context, instanceId: String?, obje
     }
     val activationId = sdk.activationIdentifier ?: return false
     return prefs(context).getBoolean(KEY_PREFIX + activationId, false)
+}
+
+/**
+ * Returns the NFC-normalized form of the given raw Unicode code points (e.g. composing a base letter +
+ * combining mark into one code point where possible; sequences with no NFC rule, like ZWJ emoji, are
+ * unchanged). Only used for the corrected scheme - legacy always stores the raw 1st. code point as-is.
+ */
+fun nfcNormalizeCodePoints(codePoints: List<Int>): List<Int> {
+    val string = String(codePoints.toIntArray(), 0, codePoints.size)
+    val normalized = Normalizer.normalize(string, Normalizer.Form.NFC)
+    // Manual code point iteration (not `.codePoints()`, which needs API 24+) to stay compatible with
+    // this library's minSdkVersion 21.
+    val result = ArrayList<Int>(normalized.length)
+    var i = 0
+    while (i < normalized.length) {
+        val codePoint = normalized.codePointAt(i)
+        result.add(codePoint)
+        i += Character.charCount(codePoint)
+    }
+    return result
 }

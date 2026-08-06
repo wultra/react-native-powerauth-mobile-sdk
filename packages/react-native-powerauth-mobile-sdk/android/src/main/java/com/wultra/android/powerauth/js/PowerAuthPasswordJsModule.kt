@@ -108,9 +108,12 @@ class PowerAuthPasswordJsModule(
             promise,
             codePointsAction { password: Password, points: List<Int> ->
                 val useCorrectedScheme = shouldUseCorrectedPasswordScheme(context, instanceId, objectRegister)
-                val count = if (useCorrectedScheme) points.size else 1
-                for (i in 0 until count) {
-                    password.addCharacter(points[i])
+                if (useCorrectedScheme) {
+                    for (point in nfcNormalizeCodePoints(points)) {
+                        password.addCharacter(point)
+                    }
+                } else {
+                    password.addCharacter(points[0])
                 }
                 promise.resolve(password.length())
             })
@@ -128,9 +131,13 @@ class PowerAuthPasswordJsModule(
                     return@codePointsAction
                 }
                 val useCorrectedScheme = shouldUseCorrectedPasswordScheme(context, instanceId, objectRegister)
-                val count = if (useCorrectedScheme) points.size else 1
-                for (i in 0 until count) {
-                    password.insertCharacter(points[i], position + i)
+                if (useCorrectedScheme) {
+                    val normalized = nfcNormalizeCodePoints(points)
+                    for (i in normalized.indices) {
+                        password.insertCharacter(normalized[i], position + i)
+                    }
+                } else {
+                    password.insertCharacter(points[0], position)
                 }
                 promise.resolve(password.length())
             })
@@ -273,10 +280,15 @@ class PowerAuthPasswordJsModule(
         }
     }
 
+    private fun isValidCodePoint(codePoint: Int): Boolean {
+        return codePoint in 0..Constants.CODEPOINT_MAX
+    }
+
     /**
      * Execute action when Password is found in object register.
      * @param objectId Password object identifier.
-     * @param codePoints Array of Unicode code points, in the order they should be stored.
+     * @param codePoints Array of raw (unnormalized) Unicode code points, in the order they should be
+     * stored.
      * @param promise Promise to reject or resolve.
      * @param action Action to execute.
      */
@@ -297,7 +309,7 @@ class PowerAuthPasswordJsModule(
                 return
             }
             val codePoint = codePoints.getInt(i)
-            if (codePoint < 0 || codePoint > Constants.CODEPOINT_MAX) {
+            if (!isValidCodePoint(codePoint)) {
                 promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
                 return
             }

@@ -115,9 +115,12 @@ PAJS_METHOD_START(addCharacter,
 {
     [self withPassword:objectId codePoints:codePoints rejecter:reject action:^(PowerAuthCoreMutablePassword *password, NSArray<NSNumber*> *codePoints) {
         BOOL useCorrectedScheme = PACPS_ShouldUseCorrectedPasswordScheme(instanceId, self->_objectRegister);
-        NSUInteger count = useCorrectedScheme ? codePoints.count : 1;
-        for (NSUInteger i = 0; i < count; i++) {
-            [password addCharacter:(UInt32)[codePoints[i] unsignedIntValue]];
+        if (useCorrectedScheme) {
+            for (NSNumber * cp in PACPS_NFCNormalizeCodePoints(codePoints)) {
+                [password addCharacter:(UInt32)[cp unsignedIntValue]];
+            }
+        } else {
+            [password addCharacter:(UInt32)[codePoints[0] unsignedIntValue]];
         }
         resolve(@(password.length));
     }];
@@ -137,9 +140,13 @@ PAJS_METHOD_START(insertCharacter,
             return;
         }
         BOOL useCorrectedScheme = PACPS_ShouldUseCorrectedPasswordScheme(instanceId, self->_objectRegister);
-        NSUInteger count = useCorrectedScheme ? codePoints.count : 1;
-        for (NSUInteger i = 0; i < count; i++) {
-            [password insertCharacter:(UInt32)[codePoints[i] unsignedIntValue] atIndex:pos + i];
+        if (useCorrectedScheme) {
+            NSArray<NSNumber*> * normalized = PACPS_NFCNormalizeCodePoints(codePoints);
+            for (NSUInteger i = 0; i < normalized.count; i++) {
+                [password insertCharacter:(UInt32)[normalized[i] unsignedIntValue] atIndex:pos + i];
+            }
+        } else {
+            [password insertCharacter:(UInt32)[codePoints[0] unsignedIntValue] atIndex:pos];
         }
         resolve(@(password.length));
     }];

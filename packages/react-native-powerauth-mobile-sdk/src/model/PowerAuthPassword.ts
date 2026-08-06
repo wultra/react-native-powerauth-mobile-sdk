@@ -142,9 +142,10 @@ export class PowerAuthPassword extends BaseNativeObject {
      * Append character to the end of the password. This method also
      * extends the lifetime of the underlying native password.
      *
-     * A `character` string may expand into more than one code point (e.g. a multi-code-point emoji
-     * or a decomposed diacritic); how many actually get stored is decided natively, per activation -
-     * see `PasswordCodePointScheme` on each platform.
+     * A `character` string may expand into more than one raw (unnormalized) code point (e.g. a
+     * multi-code-point emoji or a decomposed diacritic); how many actually get stored, and whether
+     * they're NFC-normalized first, is decided natively, per activation - see `PasswordCodePointScheme`
+     * on each platform.
      *
      * @param character Character to add at the end of password.
      * @returns Number of characters stored in the password.
@@ -252,13 +253,10 @@ export class PowerAuthPassword extends BaseNativeObject {
     }
 
     /**
-     * Translates a string or number into a list of Unicode code points to send to the native side.
+     * Translates a string or number into a list of raw Unicode code points to send to the native side.
      *
-     * Purely mechanical - never decides how many of the code points actually get stored, that's a
-     * native, per-activation decision (see `PasswordCodePointScheme` on each platform). A string is
-     * first normalized to NFC (composing e.g. a base letter + combining mark into one code point where
-     * possible); any code points left after that - such as ZWJ/flag/skin-tone emoji sequences, which
-     * have no NFC composition - are kept as-is.
+     * Deliberately does NOT apply any normalization - whether to normalize and how many code points to
+     * store is a native, per-activation decision (see `PasswordCodePointScheme`).
      *
      * @param character CharacterType to translate.
      * @returns Array with one or more Unicode code points, in the order they should be stored.
@@ -272,7 +270,7 @@ export class PowerAuthPassword extends BaseNativeObject {
         }
         // `Array.from` with a mapper iterates the string by code point (correctly handling UTF-16
         // surrogate pairs), so `c` here is always exactly one code point and `codePointAt(0)` is safe.
-        const codePoints = Array.from(character.normalize('NFC'), c => c.codePointAt(0) as number)
+        const codePoints = Array.from(character, c => c.codePointAt(0) as number)
         if (codePoints.length === 0) {
             throw new PowerAuthError(undefined, "Failed to extract code points", PowerAuthErrorCode.WRONG_PARAMETER)
         }

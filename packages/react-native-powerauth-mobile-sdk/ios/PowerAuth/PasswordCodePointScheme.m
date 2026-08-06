@@ -63,3 +63,25 @@ BOOL PACPS_ShouldUseCorrectedPasswordScheme(NSString * instanceId, PowerAuthObje
     }
     return [[NSUserDefaults standardUserDefaults] boolForKey:PACPS_SchemeKeyForActivation(activationId)];
 }
+
+NSArray<NSNumber*> * PACPS_NFCNormalizeCodePoints(NSArray<NSNumber*> * codePoints)
+{
+    // Pack the raw code points as UTF-32 and let Foundation decode/re-encode them, instead of manually
+    // handling UTF-16 surrogate pairs - this is exactly what NSString already does internally.
+    NSUInteger count = codePoints.count;
+    NSMutableData * rawData = [NSMutableData dataWithCapacity:count * sizeof(UInt32)];
+    for (NSNumber * cp in codePoints) {
+        UInt32 value = (UInt32)[cp unsignedIntValue];
+        [rawData appendBytes:&value length:sizeof(UInt32)];
+    }
+    NSString * string = [[NSString alloc] initWithData:rawData encoding:NSUTF32LittleEndianStringEncoding];
+    NSString * normalized = [string precomposedStringWithCanonicalMapping]; // NFC
+    NSData * normalizedData = [normalized dataUsingEncoding:NSUTF32LittleEndianStringEncoding];
+    NSUInteger normalizedCount = normalizedData.length / sizeof(UInt32);
+    const UInt32 * normalizedBytes = normalizedData.bytes;
+    NSMutableArray<NSNumber*> * result = [NSMutableArray arrayWithCapacity:normalizedCount];
+    for (NSUInteger i = 0; i < normalizedCount; i++) {
+        [result addObject:@(normalizedBytes[i])];
+    }
+    return result;
+}

@@ -43,3 +43,8 @@ PACPS_EXTERN_C void PACPS_ClearPasswordCodePointScheme(NSString * _Nullable acti
 /// Returns YES if password characters typed for the given PowerAuth instance should use the corrected
 /// scheme, NO for legacy.
 PACPS_EXTERN_C BOOL PACPS_ShouldUseCorrectedPasswordScheme(NSString * _Nullable instanceId, PowerAuthObjectRegister * _Nonnull objectRegister);
+
+/// Returns the NFC-normalized form of the given raw Unicode code points (e.g. composing a base letter +
+/// combining mark into one code point where possible; sequences with no NFC rule, like ZWJ emoji, are
+/// unchanged). Only used for the corrected scheme - legacy always stores the raw 1st. code point as-is.
+PACPS_EXTERN_C NSArray<NSNumber*> * _Nonnull PACPS_NFCNormalizeCodePoints(NSArray<NSNumber*> * _Nonnull codePoints);

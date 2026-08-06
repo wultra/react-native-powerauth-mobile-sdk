@@ -58,13 +58,14 @@ export interface PowerAuthPasswordIfc {
     /**
      * Add code points at the end of password and return the number of stored characters.
      *
-     * `codePoints` has more than one element when a string passed to `addCharacter()` expanded into
-     * multiple code points (e.g. a decomposed diacritic or a multi-code-point emoji). Native code
-     * decides, per activation, whether to store just the 1st. one (legacy) or all of them (corrected
+     * `codePoints` is raw/unnormalized and has more than one element when a string passed to
+     * `addCharacter()` expanded into multiple code points (e.g. a decomposed diacritic or a
+     * multi-code-point emoji). Native code decides, per activation, whether to store just
+     * `codePoints[0]` as-is (legacy) or NFC-normalize the full sequence and store all of it (corrected
      * scheme) - see `PasswordCodePointScheme` on each platform.
      *
      * @param objectId Underlying object identifier.
-     * @param codePoints Unicode code points to add, in order.
+     * @param codePoints Raw (unnormalized) Unicode code points, in order.
      * @param instanceId PowerAuth instance identifier this password is bound to, if any. Used natively
      * to resolve which password code point scheme applies.
      */
@@ -76,8 +77,9 @@ export interface PowerAuthPasswordIfc {
      * See `addCharacter` for why `codePoints` may contain more than one element.
      *
      * @param objectId Underlying object identifier.
-     * @param codePoints Unicode code points to insert, in order, starting at `position`.
-     * @param position Position where code points will be inserted.
+     * @param codePoints Raw (unnormalized) Unicode code points to insert, in order, starting at
+     * `position`.
+     * @param position Position where the code point(s) will be inserted.
      * @param instanceId PowerAuth instance identifier this password is bound to, if any. Used natively
      * to resolve which password code point scheme applies.
      */
