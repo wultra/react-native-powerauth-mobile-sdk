@@ -48,8 +48,12 @@ target 'testapp' do
     installer.pods_project.targets.each do |target|
       next unless target.name.start_with?('PowerAuth')
       target.build_configurations.each do |config|
-        flags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-        config.build_settings['OTHER_CFLAGS'] = "#{flags} -Wno-deprecated-declarations"
+        flags = config.build_settings['OTHER_CFLAGS']
+        if flags.is_a?(Array)
+          config.build_settings['OTHER_CFLAGS'] = flags + ['-Wno-deprecated-declarations']
+        else
+          config.build_settings['OTHER_CFLAGS'] = "#{flags || '$(inherited)'} -Wno-deprecated-declarations"
+        end
       end
     end
   end
