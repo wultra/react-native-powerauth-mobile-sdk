@@ -4,6 +4,7 @@ package com.wultra.android.powerauth.cordova.plugin
 import com.wultra.android.powerauth.bridge.getOptString
 import com.wultra.android.powerauth.js.PowerAuthPasswordJsModule
 import com.wultra.android.powerauth.cdv.util.Promise
+import com.wultra.android.powerauth.cdv.util.ReadableNativeArray
 import org.apache.cordova.CallbackContext
 import org.apache.cordova.CordovaInterface
 import org.apache.cordova.CordovaPlugin
@@ -13,12 +14,12 @@ import org.json.JSONException
 
 class PowerAuthPasswordModule : CordovaPlugin() {
 
-    internal lateinit var powerAuthPasswordJsModule: PowerAuthPasswordJsModule 
+    internal lateinit var powerAuthPasswordJsModule: PowerAuthPasswordJsModule
 
     override fun initialize(cordova: CordovaInterface, webView: CordovaWebView) {
         super.initialize(cordova, webView);
         val powerAuthObjectRegister = webView.pluginManager.getPlugin("PowerAuthObjectRegister") as PowerAuthObjectRegister
-        powerAuthPasswordJsModule = PowerAuthPasswordJsModule(powerAuthObjectRegister.objectRegisterJs)
+        powerAuthPasswordJsModule = PowerAuthPasswordJsModule(cordova.activity, powerAuthObjectRegister.objectRegisterJs)
     }
 
     @Throws(JSONException::class)
@@ -95,15 +96,17 @@ class PowerAuthPasswordModule : CordovaPlugin() {
 
     private fun addCharacter(args: JSONArray, promise: Promise) {
         val objectId = args.getString(0)
-        val character = args.getInt(1)
-        powerAuthPasswordJsModule.addCharacter(objectId, character, promise);
+        val codePoints = ReadableNativeArray(args.getJSONArray(1))
+        val instanceId = args.getOptString(2)
+        powerAuthPasswordJsModule.addCharacter(objectId, codePoints, instanceId, promise);
     }
 
     private fun insertCharacter(args: JSONArray, promise: Promise) {
         val objectId = args.getString(0)
-        val character = args.getInt(1)
+        val codePoints = ReadableNativeArray(args.getJSONArray(1))
         val position = args.getInt(2)
-        powerAuthPasswordJsModule.insertCharacter(objectId, character, position, promise);
+        val instanceId = args.getOptString(3)
+        powerAuthPasswordJsModule.insertCharacter(objectId, codePoints, position, instanceId, promise);
     }
 
     private fun removeCharacter(args: JSONArray, promise: Promise) {
