@@ -287,6 +287,34 @@ class PowerAuthPasswordJsModule(
     }
 
     /**
+     * Validate a raw code points array received from JS, rejecting the promise and returning null on
+     * the first invalid element. Otherwise returns the array converted to a Kotlin list.
+     * @param codePoints Array of raw (unnormalized) Unicode code points, in the order they should be
+     * stored.
+     * @param promise Promise to reject if validation fails.
+     */
+    private fun validateCodePoints(codePoints: ReadableArray, promise: Promise): List<Int>? {
+        if (codePoints.size() == 0) {
+            promise.reject(Errors.EC_WRONG_PARAMETER, "Empty code points array")
+            return null
+        }
+        val points = ArrayList<Int>(codePoints.size())
+        for (i in 0 until codePoints.size()) {
+            if (codePoints.getType(i) != ReadableType.Number) {
+                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
+                return null
+            }
+            val codePoint = codePoints.getInt(i)
+            if (!isValidCodePoint(codePoint)) {
+                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
+                return null
+            }
+            points.add(codePoint)
+        }
+        return points
+    }
+
+    /**
      * Execute action when Password is found in object register.
      * @param objectId Password object identifier.
      * @param codePoints Array of raw (unnormalized) Unicode code points, in the order they should be
@@ -300,23 +328,7 @@ class PowerAuthPasswordJsModule(
         promise: Promise,
         action: CodePointsAction
     ) {
-        if (codePoints.size() == 0) {
-            promise.reject(Errors.EC_WRONG_PARAMETER, "Empty code points array")
-            return
-        }
-        val points = ArrayList<Int>(codePoints.size())
-        for (i in 0 until codePoints.size()) {
-            if (codePoints.getType(i) != ReadableType.Number) {
-                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
-                return
-            }
-            val codePoint = codePoints.getInt(i)
-            if (!isValidCodePoint(codePoint)) {
-                promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
-                return
-            }
-            points.add(codePoint)
-        }
+        val points = validateCodePoints(codePoints, promise) ?: return
         val password = objectRegister.touchObject(objectId, Password::class.java)
         if (password != null) {
             action.action(password, points)
