@@ -16,7 +16,8 @@
 
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
+import { CustomConfig } from "../src/IntegrationUtils";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthKeychainConfiguration, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
 
 /**
  * Verifies that a multi-code-point character (e.g. a ZWJ emoji sequence) typed via `addCharacter` into a
@@ -100,6 +101,56 @@ export class PowerAuthPasswordScheme_ActivationTests extends TestWithActivation 
         const passwordCheck = sdk.createPassword()
         await passwordCheck.addCharacter(this.familyEmoji)
         expect(await passwordCheck.length()).toBe(1)
+
+        await sdk.validatePassword(passwordCheck)
+    }
+}
+
+/**
+ * Smoke test for `PACPS_UserDefaultsForSdk` (iOS) - the marker read/write must still round-trip
+ * correctly when a custom `userDefaultsSuiteName` is configured (as Activation Sharing would set up),
+ * instead of crashing or silently losing the marker.
+ *
+ * This can't prove the marker actually lives in that suite rather than falling back to
+ * `standardUserDefaults` - a same-process round trip can't tell the two apart, since both read and
+ * write go through the same resolution. Proving real cross-process sharing would need a second app/
+ * extension target with real App Group entitlements, which this test suite doesn't have.
+ *
+ * `userDefaultsSuiteName` is iOS-only and has no effect on Android; the test still runs there as a
+ * harmless smoke test.
+ */
+export class PowerAuthPasswordSchemeSharedStorage_ActivationTests extends TestWithActivation {
+
+    shouldCreateActivationBeforeTest(): boolean {
+        return false
+    }
+
+    provideCustomConfig(): CustomConfig {
+        const keychainConfiguration = new PowerAuthKeychainConfiguration()
+        keychainConfiguration.userDefaultsSuiteName = "com.wultra.powerauth.tests.passwordSchemeSharedSuite"
+        return { keychainConfiguration }
+    }
+
+    // Man, ZWJ, woman, ZWJ, girl - 5 code points, no NFC composition rule.
+    familyEmoji = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"
+
+    async testCorrectedSchemeRoundTripsWithCustomUserDefaultsSuite() {
+        const sdk = this.sdk
+        expect(await sdk.hasValidActivation()).toBe(false)
+
+        const originalPassword = sdk.createPassword()
+        await originalPassword.addCharacter(this.familyEmoji)
+        expect(await originalPassword.length()).toBe(5)
+
+        const detail = await this.helper.createActivation()
+        await sdk.createActivation(PowerAuthActivation.createWithActivationCode(detail.activationCode, 'RN'))
+        await sdk.persistActivation(PowerAuthAuthentication.persistWithPassword(originalPassword))
+        await this.helper.commitActivation()
+        expect(await sdk.hasValidActivation()).toBe(true)
+
+        const passwordCheck = sdk.createPassword()
+        await passwordCheck.addCharacter(this.familyEmoji)
+        expect(await passwordCheck.length()).toBe(5)
 
         await sdk.validatePassword(passwordCheck)
     }

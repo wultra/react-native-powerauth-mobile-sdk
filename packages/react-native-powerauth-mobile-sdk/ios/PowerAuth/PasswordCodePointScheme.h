@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import "PowerAuthObjectRegister.h"
 
+@class PowerAuthSDK;
+
 #ifdef __cplusplus
     #define PACPS_EXTERN_C extern "C"
 #else
@@ -38,7 +40,7 @@
 PACPS_EXTERN_C void PACPS_MarkActivationWithCorrectedPasswordScheme(NSString * _Nonnull instanceId, PowerAuthObjectRegister * _Nonnull objectRegister);
 
 /// Clears the scheme marker for the given (already captured) activation identifier. No-op if nil.
-PACPS_EXTERN_C void PACPS_ClearPasswordCodePointScheme(NSString * _Nullable activationId);
+PACPS_EXTERN_C void PACPS_ClearPasswordCodePointScheme(NSString * _Nullable activationId, PowerAuthSDK * _Nonnull sdk);
 
 /// Returns YES if password characters typed for the given PowerAuth instance should use the corrected
 /// scheme, NO for legacy.

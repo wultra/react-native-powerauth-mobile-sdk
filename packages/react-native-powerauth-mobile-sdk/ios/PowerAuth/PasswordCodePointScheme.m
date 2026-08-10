@@ -32,19 +32,34 @@ static PowerAuthSDK * PACPS_FindSdk(NSString * instanceId, PowerAuthObjectRegist
     return [objectRegister findObjectWithId:instanceId expectedClass:[PowerAuthSDK class]];
 }
 
+// Activation Sharing (App Group) redirects PowerAuth's own storage to a suite-scoped NSUserDefaults -
+// the marker has to follow the same suite, or a sharing participant with its own standardUserDefaults
+// sandbox would never see a marker written by another one.
+static NSUserDefaults * PACPS_UserDefaultsForSdk(PowerAuthSDK * sdk)
+{
+    NSString * suiteName = sdk.keychainConfiguration.keychainAttribute_UserDefaultsSuiteName;
+    if (suiteName.length > 0) {
+        NSUserDefaults * suiteDefaults = [[NSUserDefaults alloc] initWithSuiteName:suiteName];
+        if (suiteDefaults) {
+            return suiteDefaults;
+        }
+    }
+    return [NSUserDefaults standardUserDefaults];
+}
+
 void PACPS_MarkActivationWithCorrectedPasswordScheme(NSString * instanceId, PowerAuthObjectRegister * objectRegister)
 {
     PowerAuthSDK * sdk = PACPS_FindSdk(instanceId, objectRegister);
     NSString * activationId = sdk.activationIdentifier;
     if (activationId) {
-        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:PACPS_SchemeKeyForActivation(activationId)];
+        [PACPS_UserDefaultsForSdk(sdk) setBool:YES forKey:PACPS_SchemeKeyForActivation(activationId)];
     }
 }
 
-void PACPS_ClearPasswordCodePointScheme(NSString * activationId)
+void PACPS_ClearPasswordCodePointScheme(NSString * activationId, PowerAuthSDK * sdk)
 {
     if (activationId) {
-        [[NSUserDefaults standardUserDefaults] removeObjectForKey:PACPS_SchemeKeyForActivation(activationId)];
+        [PACPS_UserDefaultsForSdk(sdk) removeObjectForKey:PACPS_SchemeKeyForActivation(activationId)];
     }
 }
 
@@ -61,7 +76,7 @@ BOOL PACPS_ShouldUseCorrectedPasswordScheme(NSString * instanceId, PowerAuthObje
     if (!activationId) {
         return NO;
     }
-    return [[NSUserDefaults standardUserDefaults] boolForKey:PACPS_SchemeKeyForActivation(activationId)];
+    return [PACPS_UserDefaultsForSdk(sdk) boolForKey:PACPS_SchemeKeyForActivation(activationId)];
 }
 
 NSArray<NSNumber*> * PACPS_NFCNormalizeCodePoints(NSArray<NSNumber*> * codePoints)

@@ -370,7 +370,7 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
         if (error) {
             ProcessError(error, reject);
         } else {
-            PACPS_ClearPasswordCodePointScheme(activationId);
+            PACPS_ClearPasswordCodePointScheme(activationId, powerAuth);
             resolve(@YES);
         }
     }];
@@ -384,7 +384,7 @@ PAJS_METHOD_START(removeActivationLocal,
     PA_BLOCK_START
     NSString * activationId = powerAuth.activationIdentifier;
     [powerAuth removeActivationLocal];
-    PACPS_ClearPasswordCodePointScheme(activationId);
+    PACPS_ClearPasswordCodePointScheme(activationId, powerAuth);
     resolve(nil);
     PA_BLOCK_END
 }
