@@ -328,7 +328,9 @@ PAJS_METHOD_START(persistActivation,
     bool success = [powerAuth persistActivationWithAuthentication:auth error:&error];
 
     if (success) {
-        PACPS_MarkActivationWithCorrectedPasswordScheme(instanceId, self->_objectRegister);
+        if ([RCTConvert BOOL:authentication[@"passwordIsSchemeSafe"]]) {
+            PACPS_MarkActivationWithCorrectedPasswordScheme(instanceId, self->_objectRegister);
+        }
         resolve(@YES);
     } else {
         ProcessError(error, reject);

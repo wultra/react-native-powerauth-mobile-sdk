@@ -201,6 +201,14 @@ export class PowerAuthPassword extends BaseNativeObject {
     }
 
     /**
+     * Returns true if this password is bound to the given PowerAuth instance identifier.
+     * @internal
+     */
+    isBoundToInstance(instanceId: string): boolean {
+        return this.powerAuthInstanceId === instanceId
+    }
+
+    /**
      * If object contains numeric digits only, then you can test the streingt of PIN
      * stored in the object.
      * @returns `PinTestResult` object.

@@ -16,7 +16,7 @@
 
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthActivation, PowerAuthAuthentication } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
 
 /**
  * Verifies that a multi-code-point character (e.g. a ZWJ emoji sequence) typed via `addCharacter` into a
@@ -73,5 +73,34 @@ export class PowerAuthPasswordScheme_ActivationTests extends TestWithActivation 
         await newPasswordCheck.addCharacter(this.familyEmoji)
         await newPasswordCheck.addCharacter('!')
         await sdk.validatePassword(newPasswordCheck)
+    }
+
+    // Registering with an unbound `new PowerAuthPassword()` must NOT tag the activation as corrected -
+    // its content was actually stored using the legacy (1st. code point only) scheme, since an unbound
+    // password never has an instanceId to resolve a scheme with in the first place. If the activation
+    // were (incorrectly) marked as corrected anyway, any later bound password check for the same
+    // multi-code-point input would rebuild the full sequence and mismatch what's actually stored.
+    async testOwnerlessPasswordSchemeDoesNotMarkActivationAsCorrected() {
+        const sdk = this.sdk
+        expect(await sdk.hasValidActivation()).toBe(false)
+
+        const originalPassword = new PowerAuthPassword()
+        await originalPassword.addCharacter(this.familyEmoji)
+        expect(await originalPassword.length()).toBe(1) // Legacy scheme keeps only U+1F468 (man).
+
+        const detail = await this.helper.createActivation()
+        await sdk.createActivation(PowerAuthActivation.createWithActivationCode(detail.activationCode, 'RN'))
+        await sdk.persistActivation(PowerAuthAuthentication.persistWithPassword(originalPassword))
+        await this.helper.commitActivation()
+        expect(await sdk.hasValidActivation()).toBe(true)
+
+        // A bound password re-deriving the exact same input must resolve to the SAME legacy scheme
+        // that was actually used at persist time, not corrected - the activation must not have been
+        // marked as corrected by the unbound registration above.
+        const passwordCheck = sdk.createPassword()
+        await passwordCheck.addCharacter(this.familyEmoji)
+        expect(await passwordCheck.length()).toBe(1)
+
+        await sdk.validatePassword(passwordCheck)
     }
 }

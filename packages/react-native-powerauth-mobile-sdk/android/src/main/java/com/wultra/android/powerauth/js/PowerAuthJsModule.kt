@@ -323,6 +323,7 @@ class PowerAuthJsModule(
     @JsApiMethod
     fun persistActivation(instanceId: String, authMap: ReadableMap, promise: Promise) {
         val context: Context = this.context
+        val passwordIsSchemeSafe = authMap.hasKey("passwordIsSchemeSafe") && authMap.getBoolean("passwordIsSchemeSafe")
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, true)
@@ -352,7 +353,9 @@ class PowerAuthJsModule(
                             }
 
                             override fun onBiometricDialogSuccess() {
-                                markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
+                                if (passwordIsSchemeSafe) {
+                                    markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
+                                }
                                 promise.resolve(null)
                             }
 
@@ -367,7 +370,9 @@ class PowerAuthJsModule(
                 val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, false)
                 val result: Int = sdk.persistActivationWithAuthentication(context, auth)
                 if (result == PowerAuthErrorCodes.SUCCEED) {
-                    markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
+                    if (passwordIsSchemeSafe) {
+                        markActivationWithCorrectedPasswordScheme(context, instanceId, objectRegister)
+                    }
                     promise.resolve(null)
                 } else {
                     promise.reject(Errors.getErrorCodeFromError(result), "Persist failed.")
