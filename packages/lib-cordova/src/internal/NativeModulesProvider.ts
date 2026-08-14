@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-//@ts-nocheck
-
-import { NativeModulesProviderIfc } from "./NativeModulesProviderIfc";
-import { NativeObjectRegisterIfc } from "../debug/NativeObjectRegisterIfc";
-import { PowerAuthEncryptorIfc } from "./NativeEncryptor";
-import { NativeObject } from "./NativeObject";
-import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
-import { PowerAuthPasswordIfc } from "./NativePassword";
+import type { NativeModulesProviderIfc } from "../../../lib-shared/src/internal/NativeModulesProviderIfc";
+import type { NativeObjectRegisterIfc } from "../../../lib-shared/src/debug/NativeObjectRegisterIfc";
+import type { EncryptedRequestData, PowerAuthEncryptorIfc } from "../../../lib-shared/src/internal/NativeEncryptor";
+import type { PowerAuthNativeObject } from "../../../lib-shared/src/model/PowerAuthNativeObject";
+import type { PowerAuthPassphraseMeterIfc } from "../../../lib-shared/src/internal/NativePassphraseMeter";
+import type { PowerAuthPasswordIfc } from "../../../lib-shared/src/internal/NativePassword";
+import type { PowerAuthCryptoUtilsIfc } from "../../../lib-shared/src/internal/NativeCryptoUtils";
+import type { PowerAuthStorageUtilsIfc } from "../../../lib-shared/src/internal/NativeStorageUtils";
+import type { PowerAuthCryptogram } from "../../../lib-shared/src/model/PowerAuthEncryptor";
+import type { PowerAuthRawPasswordType } from "../../../lib-shared/src/model/PowerAuthNativeTypes";
+import type { PinTestResult } from "../../../lib-shared/src/PowerAuthPassphraseMeter";
 import { NativeCordovaModule } from "./NativeCordovaModule";
 import { NativePowerAuth } from "./NativePowerAuth";
-import { PowerAuthCryptoUtilsIfc } from "./NativeCryptoUtils";
-import { PowerAuthStorageUtilsIfc } from "./NativeStorageUtils";
 
-class Provider implements NativeModulesProviderIfc {
-    PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
+export class CordovaNativeModulesProvider implements NativeModulesProviderIfc {
+    PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & PowerAuthNativeObject;
     PowerAuthEncryptor = new NativePowerAuthEncryptorImpl() as PowerAuthEncryptorIfc;
     PowerAuthPassphraseMeter = new PowerAuthPassphraseMeterImpl() as PowerAuthPassphraseMeterIfc;
     PowerAuthPassword = new PowerAuthPasswordImpl() as PowerAuthPasswordIfc;
@@ -87,7 +88,7 @@ class PowerAuthPassphraseMeterImpl extends NativeCordovaModule implements PowerA
 
     readonly pluginName = "PowerAuthPassphraseMeterModule";
     
-    async testPin(pin: RawPasswordType): Promise<PinTestResult> {
+    async testPin(pin: PowerAuthRawPasswordType): Promise<PinTestResult> {
         return await this.callNative("testPin", [pin]);
     }
 }
@@ -166,5 +167,3 @@ class PowerAuthStorageUtilsImpl extends NativeCordovaModule implements PowerAuth
         return await this.callNative("remove", [key, storageType]);
     }
 }
-
-export const NativeModulesProvider = new Provider() as NativeModulesProviderIfc;

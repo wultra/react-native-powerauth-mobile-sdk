@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-//@ts-nocheck
+import type { NativePowerAuthIfc } from "../../../lib-shared/src/internal/NativePowerAuthIfc";
+import { Utils } from "../../../lib-shared/src/internal/Utils";
 
-import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
-import { Utils } from "./Utils.ts";
+declare const cordova: {
+    exec(
+        success: (response: any) => void,
+        failure: (error: any) => void,
+        pluginName: string,
+        action: string,
+        args: any[],
+    ): void;
+};
 
 export abstract class NativeCordovaModule implements NativePowerAuthIfc {
 
@@ -29,7 +37,7 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
                 cordova.exec(
                     // success callback
                     (response) => { 
-                        if (Utils.detectPlatform() === "android") {
+                        if (Utils.platformOs === "android") {
                             resolve(response);
                         } else {
                             const parsed = JSON.parse(response);
@@ -38,7 +46,7 @@ export abstract class NativeCordovaModule implements NativePowerAuthIfc {
                     },
                     // error callback
                     (error) => {
-                        if (Utils.detectPlatform() === "android") {
+                        if (Utils.platformOs === "android") {
                             reject(error)
                         } else {
                             reject(JSON.parse(error)) 

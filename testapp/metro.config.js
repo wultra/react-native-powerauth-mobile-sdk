@@ -40,7 +40,7 @@ function exclusionList(additionalExclusions) {
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 const root = path.resolve(__dirname, '..');
-const sdk = path.resolve(root, 'packages', 'react-native-powerauth-mobile-sdk');
+const sdk = path.resolve(root, 'packages', 'lib-rn');
 // TODO remove this watcher when/if the packages are fully separated
 const testInfraPackages = [
   path.resolve(root, 'packages', 'mobile-testbed'),

@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-export class Utils {
-    
-    static platformOs = this.detectPlatform()
+import { NativeModules } from "react-native";
+import type { NativePowerAuthIfc } from "../../../lib-shared/src/internal/NativePowerAuthIfc";
 
-    private static detectPlatform(): string {
-
-        // @ts-expect-error
-        return cordova.platformId
+export class NativePowerAuth implements NativePowerAuthIfc {
+    callNative<T>(name: string, ...args: any[]): Promise<T> {
+        return NativeModules.PowerAuth[name].apply(null, ...args);
     }
 }

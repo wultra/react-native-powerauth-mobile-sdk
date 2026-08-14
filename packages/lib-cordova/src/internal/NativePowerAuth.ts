@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-//@ts-nocheck
-
 import { NativeCordovaModule } from "./NativeCordovaModule";
 
 export class NativePowerAuth extends NativeCordovaModule {

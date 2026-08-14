@@ -1,0 +1,9 @@
+{
+  "extends": "../lib-shared/tsconfig.shared.json",
+  "compilerOptions": {
+    "target": "es2019",
+    "declaration": false
+  },
+  "exclude": ["node_modules", "build"],
+  "include": ["src/**/*.ts", "../lib-shared/src/**/*.ts"]
+}

@@ -8,7 +8,7 @@ module.exports = {
   },
   dependencies: {
     'react-native-powerauth-mobile-sdk': {
-      root: path.join(__dirname, '..', 'packages', 'react-native-powerauth-mobile-sdk'),
+      root: path.join(__dirname, '..', 'packages', 'lib-rn'),
       platforms: {
         // Codegen script incorrectly fails without this
         // So we explicitly specify the platforms with empty object

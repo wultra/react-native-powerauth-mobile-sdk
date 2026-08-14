@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import { NativeModules } from "react-native";
-import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
+import "./internal/PlatformDependencies";
 
-export class NativePowerAuth implements NativePowerAuthIfc {
-    callNative<T>(name: string, ...args: any[]): Promise<T> {
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        return (NativeModules.PowerAuth[name] as Function).apply(null, ...args);
-    }
-}
+export * from "../../lib-shared/src/index";

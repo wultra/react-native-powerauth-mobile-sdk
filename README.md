@@ -16,6 +16,14 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 > [!NOTE]
 > We currently support __REACT NATIVE__ and __APACHE CORDOVA__ development platforms.
 
+## Repository layout
+
+- `packages/lib-shared` contains the platform-independent TypeScript SDK.
+- `packages/lib-rn` contains the React Native adapter and native projects.
+- `packages/lib-cordova` contains the Cordova adapter and native patches.
+
+Both public packages are built from their platform entry point with the root `rollup.config.mjs`. Run `yarn build` to build both, or `yarn build:rn` / `yarn build:cdv` to build one platform.
+
 ## Documentation
 
 The documentation is available at the [Wultra Developer Portal](https://developers.wultra.com/components/react-native-powerauth-mobile-sdk/) or inside the [docs](docs) folder.

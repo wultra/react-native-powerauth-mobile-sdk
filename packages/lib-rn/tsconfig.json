@@ -1,0 +1,10 @@
+{
+  "extends": "../lib-shared/tsconfig.shared.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "declaration": false,
+    "composite": false
+  },
+  "exclude": ["node_modules", "lib"],
+  "include": ["src/**/*.ts", "../lib-shared/src/**/*.ts"]
+}

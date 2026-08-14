@@ -7,20 +7,18 @@
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
-  "react-native": "src/index",
-  "source": "src",
+  "react-native": "lib/module/index.js",
   "scripts": {
-    "build": "yarn generate:sdk-version && bob build && yarn build:types",
+    "build": "yarn generate:sdk-version && node scripts/clean-build.cjs && cd ../.. && rollup -c rollup.config.mjs --configTarget rn",
+    "dev": "yarn generate:sdk-version && node scripts/clean-build.cjs && cd ../.. && rollup -c rollup.config.mjs --configTarget rn --watch",
     "prepare": "yarn build",
-    "build:types": "tsc -p tsconfig.build-types.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint .",
-    "format": "prettier -w .",
+    "lint": "eslint src ../lib-shared/src --config .eslintrc.js",
+    "format": "prettier -w src ../lib-shared/src",
     "generate:sdk-version": "node scripts/generate-sdk-version.cjs"
   },
   "files": [
     "README.md",
-    "src/**/*",
     "android/generated/jni/CMakeLists.txt",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
@@ -67,23 +65,10 @@
     "@typescript-eslint/parser": "^8.59.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^27.9.0",
     "prettier": "^3.8.3",
     "react": "19.0.0",
     "react-native": "^0.78.1",
-    "react-native-builder-bob": "^0.41.0",
     "typescript": "^5.4.0"
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": true
-        }
-      ],
-      "commonjs"
-    ]
   }
 }

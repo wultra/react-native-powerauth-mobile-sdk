@@ -214,7 +214,7 @@ class PowerAuthDecryptorImpl implements PowerAuthDecryptor {
     async canDecryptResponse(): Promise<boolean> {
         try {
             return await this.withObjectId(async objectId => NativeEncryptor.canDecryptResponse(objectId))
-        } catch (error: any) {
+        } catch {
             return false
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Wultra s.r.o.
+ * Copyright 2022 Wultra s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { Platform } from 'react-native';
+import "./internal/PlatformDependencies";
 
-export class Utils {
-    static platformOs = Platform.OS;
-}
+export * from "../../lib-shared/src/index";

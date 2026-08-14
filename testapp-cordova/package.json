@@ -9,7 +9,7 @@
         "ios": "yarn dlx cordova run ios",
         "pods": "(cd \"platforms/ios\" && yarn dlx pod-install --non-interactive)",
         "rebuildPlugin": "(cd .. && yarn workspace cordova-powerauth-mobile-sdk cdv)",
-        "installPlugin": "npm_config_workspaces=false yarn dlx cordova plugin add cordova-powerauth-mobile-sdk --noregistry --searchpath ../packages/cordova-powerauth-mobile-sdk/build/cdv --force",
+        "installPlugin": "npm_config_workspaces=false yarn dlx cordova plugin add cordova-powerauth-mobile-sdk --noregistry --searchpath ../packages/lib-cordova/build/cdv --force",
         "reinstallPlugin": "(npm_config_workspaces=false yarn dlx cordova plugin remove cordova-powerauth-mobile-sdk --no-save --force || true) && yarn rebuildPlugin && yarn installPlugin",
         "prepare": "node node_modules/gulp/bin/gulp.js",
         "buildAndroid": "yarn reinstallPlugin && yarn prepare && yarn dlx cordova build android",

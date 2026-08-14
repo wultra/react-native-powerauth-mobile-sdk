@@ -39,17 +39,11 @@
   "licenseFilename": "LICENSE",
   "readmeFilename": "README.md",
   "scripts": {
-    "cdv": "gulp cdv"
+    "build": "yarn cdv",
+    "cdv": "node ../lib-rn/scripts/generate-sdk-version.cjs && node scripts/build-cordova.mjs prepare && cd ../.. && rollup -c rollup.config.mjs --configTarget cordova && cd packages/lib-cordova && node scripts/build-cordova.mjs finalize",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "esbuild": "^0.25.12",
-    "gulp": "^5.0.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-filter": "^10.0.0",
-    "gulp-replace": "^1.1.4",
-    "gulp-strip-import-export": "^1.0.0",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "rimraf": "^6.1.3",
     "typescript": "^5.4.0"
   }
 }
