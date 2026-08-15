@@ -2960,10 +2960,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native/eslint-plugin@npm:^0.85.3":
-  version: 0.85.3
-  resolution: "@react-native/eslint-plugin@npm:0.85.3"
-  checksum: 10c0/c5dd55b55f2f331b75f686dac03a01c72699f04bfa9502c6b482bdbdfd7b7b7d20d69bd4066f7623d96a2552cac8f3e36a53fe8e4d4abde9c9292b861f84a1ee
+"@react-native/eslint-plugin@npm:^0.87.0":
+  version: 0.87.0
+  resolution: "@react-native/eslint-plugin@npm:0.87.0"
+  checksum: 10c0/080d8d7d6fccc778e9478e3d162df94835f1482781291658650c01fb8de99d356651b88ce6745b1ea1fba98dbd496f2e84529af9efc3be123fa724065162d7cd
   languageName: node
   linkType: hard
 
@@ -10086,7 +10086,7 @@ __metadata:
   resolution: "react-native-powerauth-mobile-sdk@workspace:packages/react-native-powerauth-mobile-sdk"
   dependencies:
     "@react-native/eslint-config": "npm:^0.78.0"
-    "@react-native/eslint-plugin": "npm:^0.85.3"
+    "@react-native/eslint-plugin": "npm:^0.87.0"
     "@react-native/typescript-config": "npm:^0.78.0"
     "@types/react": "npm:^19.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.59.2"
