@@ -6,5 +6,5 @@
     "composite": false
   },
   "exclude": ["node_modules", "lib"],
-  "include": ["src/**/*.ts", "../lib-shared/src/**/*.ts"]
+  "include": ["src/**/*.ts", "../lib-shared/js/**/*.ts"]
 }

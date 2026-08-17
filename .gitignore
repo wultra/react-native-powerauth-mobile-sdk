@@ -66,3 +66,6 @@ yarn/*
 
 # Package build outputs
 packages/*/dist
+
+# Native sources staged from packages/lib-shared for React Native packaging
+packages/lib-rn/native/

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import type { NativeModulesProviderIfc } from "../../../lib-shared/src/internal/NativeModulesProviderIfc";
-import type { NativeObjectRegisterIfc } from "../../../lib-shared/src/debug/NativeObjectRegisterIfc";
-import type { EncryptedRequestData, PowerAuthEncryptorIfc } from "../../../lib-shared/src/internal/NativeEncryptor";
-import type { PowerAuthNativeObject } from "../../../lib-shared/src/model/PowerAuthNativeObject";
-import type { PowerAuthPassphraseMeterIfc } from "../../../lib-shared/src/internal/NativePassphraseMeter";
-import type { PowerAuthPasswordIfc } from "../../../lib-shared/src/internal/NativePassword";
-import type { PowerAuthCryptoUtilsIfc } from "../../../lib-shared/src/internal/NativeCryptoUtils";
-import type { PowerAuthStorageUtilsIfc } from "../../../lib-shared/src/internal/NativeStorageUtils";
-import type { PowerAuthCryptogram } from "../../../lib-shared/src/model/PowerAuthEncryptor";
-import type { PowerAuthRawPasswordType } from "../../../lib-shared/src/model/PowerAuthNativeTypes";
-import type { PinTestResult } from "../../../lib-shared/src/PowerAuthPassphraseMeter";
+import type { NativeModulesProviderIfc } from "../../../lib-shared/js/internal/NativeModulesProviderIfc";
+import type { NativeObjectRegisterIfc } from "../../../lib-shared/js/debug/NativeObjectRegisterIfc";
+import type { EncryptedRequestData, PowerAuthEncryptorIfc } from "../../../lib-shared/js/internal/NativeEncryptor";
+import type { PowerAuthNativeObject } from "../../../lib-shared/js/model/PowerAuthNativeObject";
+import type { PowerAuthPassphraseMeterIfc } from "../../../lib-shared/js/internal/NativePassphraseMeter";
+import type { PowerAuthPasswordIfc } from "../../../lib-shared/js/internal/NativePassword";
+import type { PowerAuthCryptoUtilsIfc } from "../../../lib-shared/js/internal/NativeCryptoUtils";
+import type { PowerAuthStorageUtilsIfc } from "../../../lib-shared/js/internal/NativeStorageUtils";
+import type { PowerAuthCryptogram } from "../../../lib-shared/js/model/PowerAuthEncryptor";
+import type { PowerAuthRawPasswordType } from "../../../lib-shared/js/model/PowerAuthNativeTypes";
+import type { PinTestResult } from "../../../lib-shared/js/PowerAuthPassphraseMeter";
 import { NativeCordovaModule } from "./NativeCordovaModule";
 import { NativePowerAuth } from "./NativePowerAuth";
 

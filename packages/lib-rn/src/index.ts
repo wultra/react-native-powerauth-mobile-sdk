@@ -16,4 +16,4 @@
 
 import "./internal/PlatformDependencies";
 
-export * from "../../lib-shared/src/index";
+export * from "../../lib-shared/js/index";

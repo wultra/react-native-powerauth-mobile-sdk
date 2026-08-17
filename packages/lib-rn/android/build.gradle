@@ -56,6 +56,10 @@ android {
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
+
+  sourceSets {
+    main.java.srcDir("../native/android/src/main/java")
+  }
   buildTypes {
     release {
       minifyEnabled false

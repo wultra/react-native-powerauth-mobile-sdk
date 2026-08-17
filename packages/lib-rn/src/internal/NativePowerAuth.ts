@@ -15,7 +15,7 @@
  */
 
 import { NativeModules } from "react-native";
-import type { NativePowerAuthIfc } from "../../../lib-shared/src/internal/NativePowerAuthIfc";
+import type { NativePowerAuthIfc } from "../../../lib-shared/js/internal/NativePowerAuthIfc";
 
 export class NativePowerAuth implements NativePowerAuthIfc {
     callNative<T>(name: string, ...args: any[]): Promise<T> {

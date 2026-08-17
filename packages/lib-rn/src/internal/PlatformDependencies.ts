@@ -9,8 +9,8 @@
  */
 
 import { Platform } from "react-native";
-import { NativeModulesProvider } from "../../../lib-shared/src/internal/NativeModulesProvider";
-import { Utils } from "../../../lib-shared/src/internal/Utils";
+import { NativeModulesProvider } from "../../../lib-shared/js/internal/NativeModulesProvider";
+import { Utils } from "../../../lib-shared/js/internal/Utils";
 import { ReactNativeModulesProvider } from "./NativeModulesProvider";
 
 NativeModulesProvider.provider = new ReactNativeModulesProvider();

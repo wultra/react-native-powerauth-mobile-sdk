@@ -15,7 +15,7 @@
  */
 
 import { NativeModules } from "react-native";
-import type { NativeModulesProviderIfc } from "../../../lib-shared/src/internal/NativeModulesProviderIfc";
+import type { NativeModulesProviderIfc } from "../../../lib-shared/js/internal/NativeModulesProviderIfc";
 import { NativePowerAuth } from "./NativePowerAuth";
 
 export class ReactNativeModulesProvider implements NativeModulesProviderIfc {

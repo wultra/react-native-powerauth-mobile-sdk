@@ -5,5 +5,5 @@
     "declaration": false
   },
   "exclude": ["node_modules", "build"],
-  "include": ["src/**/*.ts", "../lib-shared/src/**/*.ts"]
+  "include": ["src/**/*.ts", "../lib-shared/js/**/*.ts"]
 }

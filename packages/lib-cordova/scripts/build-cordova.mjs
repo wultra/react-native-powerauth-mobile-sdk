@@ -5,10 +5,18 @@ import { fileURLToPath } from "node:url";
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rnDir = path.resolve(packageDir, "../lib-rn");
+const sharedDir = path.resolve(packageDir, "../lib-shared");
 const outputDir = path.join(packageDir, "build/cdv");
 
 async function copy(source, destination, options = {}) {
     await cp(source, destination, { recursive: true, ...options });
+}
+
+function replaceRequired(content, search, replacement, description) {
+    if (!content.includes(search)) {
+        throw new Error(`Cannot replace ${description}: expected placeholder was not found.`);
+    }
+    return content.replace(search, replacement);
 }
 
 async function prepare() {
@@ -16,17 +24,27 @@ async function prepare() {
     await mkdir(path.join(outputDir, "lib"), { recursive: true });
 
     const rnPackage = JSON.parse(await readFile(path.join(rnDir, "package.json"), "utf8"));
-    const cordovaPackage = (await readFile(path.join(packageDir, "package.json"), "utf8"))
-        .replace("<!-- PLACEHOLDER_VERSION -->", rnPackage.version);
+    const cordovaPackage = replaceRequired(
+        await readFile(path.join(packageDir, "package.json"), "utf8"),
+        "<!-- PLACEHOLDER_VERSION -->",
+        rnPackage.version,
+        "Cordova package version",
+    );
     await writeFile(path.join(outputDir, "package.json"), cordovaPackage);
 
-    await copy(path.join(rnDir, "ios/PowerAuth"), path.join(outputDir, "ios/PowerAuth"), {
-        filter: source => path.basename(source) !== "PAJSPlatform.h",
-    });
+    await copy(path.join(sharedDir, "ios/PowerAuth"), path.join(outputDir, "ios/PowerAuth"));
     await copy(path.join(rnDir, "ios/PowerAuth.xcodeproj"), path.join(outputDir, "ios/PowerAuth.xcodeproj"));
     await copy(path.join(rnDir, "ios/PowerAuth.xcworkspace"), path.join(outputDir, "ios/PowerAuth.xcworkspace"));
+    const projectPath = path.join(outputDir, "ios/PowerAuth.xcodeproj/project.pbxproj");
+    const cordovaProject = replaceRequired(
+        await readFile(projectPath, "utf8"),
+        "path = ../native/ios/PowerAuth;",
+        "path = PowerAuth;",
+        "Cordova Xcode native source path",
+    );
+    await writeFile(projectPath, cordovaProject);
     await copy(
-        path.join(rnDir, "android/src/main/java/com/wultra/android/powerauth/js"),
+        path.join(sharedDir, "android/src/main/java/com/wultra/android/powerauth/js"),
         path.join(outputDir, "android/src/main/java/com/wultra/android/powerauth/js"),
     );
 
@@ -53,9 +71,19 @@ async function finalize() {
         .map(name => `    <js-module src="lib/${name}.js" name="${name}"><clobbers target="${name}" /></js-module>`)
         .join("\n");
     const rnPackage = JSON.parse(await readFile(path.join(rnDir, "package.json"), "utf8"));
-    const pluginXml = (await readFile(path.join(packageDir, "plugin.xml"), "utf8"))
-        .replace("<!-- PLACEHOLDER_VERSION -->", rnPackage.version)
-        .replace("<!-- PLACEHOLDER_MODULES -->", modules);
+    const pluginTemplate = await readFile(path.join(packageDir, "plugin.xml"), "utf8");
+    const versionedPlugin = replaceRequired(
+        pluginTemplate,
+        "<!-- PLACEHOLDER_VERSION -->",
+        rnPackage.version,
+        "Cordova plugin version",
+    );
+    const pluginXml = replaceRequired(
+        versionedPlugin,
+        "<!-- PLACEHOLDER_MODULES -->",
+        modules,
+        "Cordova JavaScript modules",
+    );
     await writeFile(path.join(outputDir, "plugin.xml"), pluginXml);
     await rm(path.join(outputDir, "lib/.exports.json"));
 

@@ -16,4 +16,8 @@
 
 import "./internal/PlatformDependencies";
 
-export * from "../../lib-shared/src/index";
+export * from "../../lib-shared/js/index";
+
+// Keep globals exposed by the previous Cordova declaration-based build.
+export { PowerAuthTimeSynchronizationService } from "../../lib-shared/js/PowerAuthTimeSynchronizationService";
+export { PowerAuthNativeObject } from "../../lib-shared/js/model/PowerAuthNativeObject";

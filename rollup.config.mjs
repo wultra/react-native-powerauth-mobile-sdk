@@ -2,7 +2,7 @@ import typescript from "rollup-plugin-typescript2";
 import { dts } from "rollup-plugin-dts";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 
-const sharedInput = "packages/lib-shared/src/index.ts";
+const sharedInput = "packages/lib-shared/js/index.ts";
 const rnDir = "packages/lib-rn";
 const cordovaDir = "packages/lib-cordova";
 
@@ -10,10 +10,13 @@ const writeExportsManifest = {
     name: "write-cordova-exports-manifest",
     generateBundle(_options, bundle) {
         const chunk = Object.values(bundle).find(output => output.type === "chunk" && output.isEntry);
+        if (!chunk) {
+            this.error("Cordova entry chunk was not generated.");
+        }
         this.emitFile({
             type: "asset",
             fileName: ".exports.json",
-            source: `${JSON.stringify(chunk?.exports ?? [], null, 2)}\n`,
+            source: `${JSON.stringify(chunk.exports, null, 2)}\n`,
         });
     },
 };
@@ -21,7 +24,7 @@ const writeExportsManifest = {
 const replaceCordovaDevFlag = {
     name: "replace-cordova-dev-flag",
     transform(code, id) {
-        if (!id.includes("/lib-shared/src/")) {
+        if (!id.includes("/lib-shared/js/")) {
             return null;
         }
         return { code: code.replace(/\b__DEV__\b/g, "false"), map: null };
@@ -39,7 +42,7 @@ const rn = [
         plugins: [
             typescript({
                 tsconfig: `${rnDir}/tsconfig.json`,
-                include: [`${rnDir}/src/**/*.ts`, "packages/lib-shared/src/**/*.ts"],
+                include: [`${rnDir}/src/**/*.ts`, "packages/lib-shared/js/**/*.ts"],
                 clean: true,
             }),
             nodeResolve({ extensions: [".js", ".ts"] }),
@@ -65,7 +68,7 @@ const cordova = [
             replaceCordovaDevFlag,
             typescript({
                 tsconfig: `${cordovaDir}/tsconfig.json`,
-                include: [`${cordovaDir}/src/**/*.ts`, "packages/lib-shared/src/**/*.ts"],
+                include: [`${cordovaDir}/src/**/*.ts`, "packages/lib-shared/js/**/*.ts"],
                 clean: true,
             }),
             nodeResolve({ extensions: [".js", ".ts"] }),

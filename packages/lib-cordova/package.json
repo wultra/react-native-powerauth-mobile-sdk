@@ -40,7 +40,7 @@
   "readmeFilename": "README.md",
   "scripts": {
     "build": "yarn cdv",
-    "cdv": "node ../lib-rn/scripts/generate-sdk-version.cjs && node scripts/build-cordova.mjs prepare && cd ../.. && rollup -c rollup.config.mjs --configTarget cordova && cd packages/lib-cordova && node scripts/build-cordova.mjs finalize",
+    "cdv": "node ../lib-rn/scripts/generate-sdk-version.cjs && node scripts/build-cordova.mjs prepare && cd ../.. && yarn rollup -c rollup.config.mjs --configTarget cordova && cd packages/lib-cordova && node scripts/build-cordova.mjs finalize",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

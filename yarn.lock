@@ -10498,6 +10498,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.0.0"
     "@typescript-eslint/parser": "npm:^7.0.0"
     eslint: "npm:^8.57.0"
+    eslint-plugin-jest: "npm:^29.0.1"
     mobile-test-reporter: "workspace:*"
     mobile-testbed: "workspace:*"
     prettier: "npm:^3.3.3"

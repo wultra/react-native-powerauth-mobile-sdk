@@ -18,8 +18,9 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 
 ## Repository layout
 
-- `packages/lib-shared` contains the platform-independent TypeScript SDK.
-- `packages/lib-rn` contains the React Native adapter and native projects.
+- `packages/lib-shared/js` contains the shared TypeScript SDK.
+- `packages/lib-shared/android` and `packages/lib-shared/ios` contain the reusable native implementation.
+- `packages/lib-rn` contains the React Native adapters, native projects, and staged shared native sources used for packaging.
 - `packages/lib-cordova` contains the Cordova adapter and native patches.
 
 Both public packages are built from their platform entry point with the root `rollup.config.mjs`. Run `yarn build` to build both, or `yarn build:rn` / `yarn build:cdv` to build one platform.

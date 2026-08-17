@@ -147,7 +147,7 @@
 				DC3E52B02D076E2D002621C1 /* LiftPowerAuthSdk.h */,
 				DCEDF08A249E59EF00918481 /* Info.plist */,
 			);
-			path = PowerAuth;
+			path = ../native/ios/PowerAuth;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

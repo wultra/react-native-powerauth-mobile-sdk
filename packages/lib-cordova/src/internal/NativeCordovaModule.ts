@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { NativePowerAuthIfc } from "../../../lib-shared/src/internal/NativePowerAuthIfc";
-import { Utils } from "../../../lib-shared/src/internal/Utils";
+import type { NativePowerAuthIfc } from "../../../lib-shared/js/internal/NativePowerAuthIfc";
+import { Utils } from "../../../lib-shared/js/internal/Utils";
 
 declare const cordova: {
     exec(

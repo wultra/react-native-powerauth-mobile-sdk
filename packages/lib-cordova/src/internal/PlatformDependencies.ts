@@ -8,8 +8,8 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-import { NativeModulesProvider } from "../../../lib-shared/src/internal/NativeModulesProvider";
-import { Utils } from "../../../lib-shared/src/internal/Utils";
+import { NativeModulesProvider } from "../../../lib-shared/js/internal/NativeModulesProvider";
+import { Utils } from "../../../lib-shared/js/internal/Utils";
 import { CordovaNativeModulesProvider } from "./NativeModulesProvider";
 
 declare const cordova: { platformId: string };
