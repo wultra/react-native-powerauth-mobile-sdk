@@ -147,8 +147,9 @@ jobs:
     timeout-minutes: 90
     env:
       E2E_COLLECTOR_TIMEOUT: "90m"
-      E2E_RUN_START_TIMEOUT_SEC: "5400"
-      E2E_COMPLETE_TIMEOUT_SEC: "5400"
+      E2E_RUN_START_TIMEOUT_SEC: "1800"
+      E2E_COMPLETE_TIMEOUT_SEC: "3600"
+      E2E_POST_LAUNCH_TIMEOUT_SEC: "180"
     steps:
       - name: Checkout
         uses: actions/checkout@v4

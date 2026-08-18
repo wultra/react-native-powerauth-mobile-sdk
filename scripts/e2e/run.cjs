@@ -410,7 +410,7 @@ async function main() {
   const runRnAndroid = async () => {
     const cmd = 'yarn';
     const base = ['workspace', 'testapp', 'android:prepared'];
-    const argv = args.metro || args.ci ? base.concat(['--', '--no-packager']) : base;
+    const argv = args.metro || args.ci ? base.concat(['--no-packager']) : base;
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN Android...`);
@@ -426,10 +426,9 @@ async function main() {
     const base = ['workspace', 'testapp', 'ios:prepared'];
     const extra = [];
 
-    if (args.metro || args.ci) extra.push('--', '--no-packager');
+    if (args.metro || args.ci) extra.push('--no-packager');
 
     if (args.iosSimulator) {
-      if (extra.length === 0) extra.push('--');
       extra.push('--simulator', args.iosSimulator);
     }
 
