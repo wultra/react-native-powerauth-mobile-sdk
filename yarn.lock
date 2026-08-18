@@ -5219,9 +5219,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cordova-powerauth-mobile-sdk@workspace:packages/cordova-powerauth-mobile-sdk":
+"cordova-powerauth-mobile-sdk@workspace:packages/lib-cordova":
   version: 0.0.0-use.local
-  resolution: "cordova-powerauth-mobile-sdk@workspace:packages/cordova-powerauth-mobile-sdk"
+  resolution: "cordova-powerauth-mobile-sdk@workspace:packages/lib-cordova"
   dependencies:
     esbuild: "npm:^0.25.12"
     gulp: "npm:^5.0.0"
@@ -10081,9 +10081,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-powerauth-mobile-sdk@workspace:*, react-native-powerauth-mobile-sdk@workspace:packages/react-native-powerauth-mobile-sdk":
+"react-native-powerauth-mobile-sdk@workspace:*, react-native-powerauth-mobile-sdk@workspace:packages/lib-rn":
   version: 0.0.0-use.local
-  resolution: "react-native-powerauth-mobile-sdk@workspace:packages/react-native-powerauth-mobile-sdk"
+  resolution: "react-native-powerauth-mobile-sdk@workspace:packages/lib-rn"
   dependencies:
     "@react-native/eslint-config": "npm:^0.78.0"
     "@react-native/eslint-plugin": "npm:^0.85.3"

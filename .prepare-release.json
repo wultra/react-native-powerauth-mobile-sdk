@@ -8,15 +8,15 @@
         "name": "digital-onboarding-js",
         "type": "yarn",
         "artifacts": [
-            "packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
-            "packages/react-native-powerauth-mobile-sdk/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
+            "packages/lib-cordova/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
+            "packages/lib-rn/build/rn/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
         ],
         "buildscript": "corepack enable && yarn install && yarn packReactNative && yarn build:cdv"
     },
     "files": [
         {
             "description": "React package definition file.",
-            "path": "packages/react-native-powerauth-mobile-sdk/package.json",
+            "path": "packages/lib-rn/package.json",
             "type": "version_replace",
             "match": "\"version\": \"%VERSION%\",\n",
             "_comment": "Based on this version, all other versions are derived during the build."

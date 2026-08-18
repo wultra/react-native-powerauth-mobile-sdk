@@ -13,11 +13,12 @@ import path from "path"
 const buildDir = "build"
 const tmpDir = ".build"
 
-const RN_sourcesDir = "../react-native-powerauth-mobile-sdk"
+const RN_packageDir = "../lib-rn"
+const sharedSourcesDir = "../lib-shared"
 
 let libVersion = "0.0.1-dev"
 try {
-  const rnPkgPath = path.join(RN_sourcesDir, "package.json")
+  const rnPkgPath = path.join(RN_packageDir, "package.json")
   const rnPkg = JSON.parse(fs.readFileSync(rnPkgPath, "utf8"))
   if (typeof rnPkg.version === "string" && rnPkg.version.length > 0) {
     libVersion = rnPkg.version
@@ -37,19 +38,17 @@ const CDV_outFile = `${CDV_outFileDir}/${CDV_pluginName}.js`
 const clearCDVall = () => rimraf([ CDV_buildDir, CDV_tempDir ])
 const clearCDVtemp = () => rimraf([ CDV_tempDir ])
 
-// Ensure the RN SDK version file exists before copying RN sources
-const ensureRNVersionFile = () => new Promise((resolve, reject) => {
-  exec(`node ${RN_sourcesDir}/scripts/generate-sdk-version.cjs`, (err) => {
-    if (err) return reject(err)
-    resolve()
-  })
-})
-
 const copyCDVSourceFiles = () =>
   gulp
-    .src(`${RN_sourcesDir}/src/**/**.ts`, { base: RN_sourcesDir, allowEmpty: true })
+    .src(`${sharedSourcesDir}/js/**/*.ts`, { base: `${sharedSourcesDir}/js`, allowEmpty: true })
     .pipe(replace("__DEV__", "false"))
-    .pipe(gulp.dest(CDV_tempDir))
+    .pipe(gulp.dest(`${CDV_tempDir}/src`))
+
+const writeCDVVersionFile = async () => {
+  const outDir = `${CDV_tempDir}/src/internal`
+  await fs.promises.mkdir(outDir, { recursive: true })
+  await fs.promises.writeFile(`${outDir}/SDKVersion.ts`, `// AUTO-GENERATED\nexport const SDK_VERSION = '${libVersion}';\n`)
+}
 
 const copyCDVPatchSourceFiles = () =>
   gulp
@@ -126,28 +125,25 @@ const copyCDVPatchIOSFiles = () =>
     .src([`./ios/PowerAuth/**`], { base: "." })
     .pipe(gulp.dest(CDV_buildDir))
 
-// Copy RN iOS native sources required by plugin.xml (Constants.h, *.m, etc.)
-const copyRNiosFiles = () =>
+// Copy shared iOS native sources required by plugin.xml (Constants.h, *.m, etc.)
+const copySharedIosFiles = () =>
   gulp
-    .src([
-      `${RN_sourcesDir}/ios/PowerAuth/**`,
-      `!${RN_sourcesDir}/ios/PowerAuth/PAJSPlatform.h`
-    ], { base: RN_sourcesDir })
+    .src([`${sharedSourcesDir}/ios/PowerAuth/**`], { base: sharedSourcesDir })
     .pipe(gulp.dest(CDV_buildDir))
 
-// Copy RN iOS Xcode project and workspace
-const copyRNiosProject = () =>
+// Copy shared iOS Xcode project and workspace
+const copySharedIosProject = () =>
   gulp
     .src([
-      `${RN_sourcesDir}/ios/PowerAuth.xcodeproj/**`,
-      `${RN_sourcesDir}/ios/PowerAuth.xcworkspace/**`
-    ], { base: RN_sourcesDir, allowEmpty: true })
+      `${sharedSourcesDir}/ios/PowerAuth.xcodeproj/**`,
+      `${sharedSourcesDir}/ios/PowerAuth.xcworkspace/**`
+    ], { base: sharedSourcesDir, allowEmpty: true })
     .pipe(gulp.dest(CDV_buildDir))
 
-// Copy RN Android JS bridge sources
-const copyRNandroidJsFiles = () =>
+// Copy shared Android JS bridge sources
+const copySharedAndroidJsFiles = () =>
   gulp
-    .src([`${RN_sourcesDir}/android/src/main/java/com/wultra/android/powerauth/js/**`], { base: RN_sourcesDir })
+    .src([`${sharedSourcesDir}/android/src/main/java/com/wultra/android/powerauth/js/**`], { base: sharedSourcesDir })
     .pipe(gulp.dest(CDV_buildDir))
 
 const copyCDVPatchAndroidFiles = () =>
@@ -166,17 +162,17 @@ const packCDVPackage = () => exec(`cd ${CDV_buildDir} && npm pack`)
 
 const CDV_buildTask = gulp.series(
   clearCDVall,
-  ensureRNVersionFile,
   copyCDVSourceFiles,
+  writeCDVVersionFile,
   copyCDVPatchSourceFiles,
   compileCDVTask,
   createCDVDtsTask,
   processCDVobjectsToExport,
   exportModules,
   copyCDVFiles,
-  copyRNiosFiles,
-  copyRNiosProject,
-  copyRNandroidJsFiles,
+  copySharedIosFiles,
+  copySharedIosProject,
+  copySharedAndroidJsFiles,
   copyCDVPatchIOSFiles,
   copyCDVPatchAndroidFiles,
   copyCDVStaticFiles,

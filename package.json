@@ -34,7 +34,7 @@
     "startReact": "yarn workspace testapp start",
     "freshReactIos": "yarn workspace testapp freshIos",
     "freshReactAndroid": "yarn workspace testapp freshAndroid",
-    "packReactNative": "yarn build:rn && (cd packages/react-native-powerauth-mobile-sdk && npm pack)",
+    "packReactNative": "yarn workspace react-native-powerauth-mobile-sdk pack:tgz",
     "testapp:ios": "yarn workspace testapp buildIos",
     "testapp:android": "yarn workspace testapp buildAndroid",
     "testapp-cordova:ios": "yarn workspace com.wultra.pwatest buildIos",
