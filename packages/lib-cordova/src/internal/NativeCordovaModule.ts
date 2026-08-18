@@ -17,7 +17,7 @@
 //@ts-nocheck
 
 import { NativePowerAuthIfc } from "./NativePowerAuthIfc";
-import { Utils } from "./Utils.ts";
+import { Utils } from "./Utils";
 
 export abstract class NativeCordovaModule implements NativePowerAuthIfc {
 

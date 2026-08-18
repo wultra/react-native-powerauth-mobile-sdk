@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
+    "lib": ["ES2020", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": false,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2019"
+  },
+  "include": [
+    "packages/lib-rn/build/rn/src/**/*.ts",
+    "packages/lib-cordova/.build/cdv/src/**/*.ts"
+  ]
+}

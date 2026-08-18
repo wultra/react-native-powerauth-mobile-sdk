@@ -10,11 +10,11 @@
   "react-native": "build/rn/src/index",
   "source": "build/rn/src",
   "scripts": {
-    "stage": "node scripts/build-rn.cjs",
-    "build": "node scripts/build-rn.cjs --compile",
+    "stage": "node ../../scripts/build.mjs rn --stage",
+    "build": "node ../../scripts/build.mjs rn",
     "prepare": "yarn build",
-    "pack:tgz": "node scripts/build-rn.cjs --pack",
-    "typecheck": "node scripts/build-rn.cjs --typecheck",
+    "pack:tgz": "node ../../scripts/build.mjs rn --pack",
+    "typecheck": "node ../../scripts/build.mjs rn --typecheck",
     "lint": "eslint ../lib-shared/js",
     "format": "prettier -w ../lib-shared/js"
   },
@@ -70,20 +70,6 @@
     "prettier": "^3.8.3",
     "react": "19.0.0",
     "react-native": "^0.78.1",
-    "react-native-builder-bob": "^0.41.0",
     "typescript": "^5.4.0"
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": true
-        }
-      ],
-      "commonjs"
-    ]
   }
 }
