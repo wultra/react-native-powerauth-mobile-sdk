@@ -270,17 +270,18 @@ fi
 run_count=0
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
+  yarn workspace testapp prepare:powerauth
   install_rn_pods
 
-  yarn workspace testapp start &
+  yarn workspace testapp start:prepared &
   METRO_PID=$!
 
   if [ -n "${SIM_ID}" ]; then
     echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios -- --no-packager --udid "${SIM_ID}" &
+    yarn workspace testapp ios:prepared -- --no-packager --udid "${SIM_ID}" &
   else
     echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios -- --no-packager &
+    yarn workspace testapp ios:prepared -- --no-packager &
   fi
 
   RN_PID=$!

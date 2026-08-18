@@ -145,10 +145,11 @@ abort_with_logs() {
 run_count=0
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
-  yarn workspace testapp start &
+  yarn workspace testapp prepare:powerauth
+  yarn workspace testapp start:prepared &
   METRO_PID=$!
   echo "[e2e] Launching RN Android..."
-  yarn workspace testapp android -- --no-packager &
+  yarn workspace testapp android:prepared -- --no-packager &
   RN_PID=$!
   run_count=$((run_count + 1))
   if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then

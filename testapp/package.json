@@ -5,8 +5,11 @@
   "scripts": {
     "prepare:powerauth": "yarn workspace react-native-powerauth-mobile-sdk stage",
     "android": "yarn prepare:powerauth && yarn dlx react-native run-android",
+    "android:prepared": "yarn dlx react-native run-android",
     "ios": "yarn prepare:powerauth && yarn dlx react-native run-ios",
+    "ios:prepared": "yarn dlx react-native run-ios",
     "start": "yarn prepare:powerauth && yarn dlx react-native start",
+    "start:prepared": "yarn dlx react-native start",
     "pods": "yarn prepare:powerauth && (cd ios && yarn dlx pod-install --non-interactive)",
     "buildAndroid": "yarn prepare:powerauth && (cd android && ./gradlew assemble)",
     "buildIos": "yarn pods && (cd ios && xcodebuild archive -workspace testapp.xcworkspace -scheme testapp -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO)",
