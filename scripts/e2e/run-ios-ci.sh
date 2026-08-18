@@ -290,13 +290,8 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   yarn workspace testapp start:prepared &
   METRO_PID=$!
 
-  if [ -n "${SIM_ID}" ]; then
-    echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios:prepared --no-packager --udid "${SIM_ID}" &
-  else
-    echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios:prepared --no-packager &
-  fi
+  echo "[e2e] Launching RN iOS..."
+  yarn workspace testapp ios:prepared --no-packager &
 
   RN_PID=$!
   run_count=$((run_count + 1))
