@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "prepare:powerauth": "yarn workspace react-native-powerauth-mobile-sdk stage",
+    "prepare:powerauth": "yarn workspace react-native-powerauth-mobile-sdk run stage",
     "android": "yarn prepare:powerauth && react-native run-android",
     "android:prepared": "react-native run-android",
     "ios": "yarn prepare:powerauth && react-native run-ios",

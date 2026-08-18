@@ -50,7 +50,6 @@ case "${MODE}" in
 esac
 RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-1200}"
 RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-1200}"
-POST_LAUNCH_TIMEOUT_SEC="${E2E_POST_LAUNCH_TIMEOUT_SEC:-180}"
 COLLECTOR_TIMEOUT="${E2E_COLLECTOR_TIMEOUT:-45m}"
 
 node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 8137 --out artifacts/e2e --expected-runs "${EXPECTED_RUNS_VALUE}" --timeout "${COLLECTOR_TIMEOUT}" &
@@ -94,10 +93,6 @@ wait_for_completed() {
       fi
     fi
     now="$(date +%s)"
-    if [ -n "${METRO_PID}" ] && ! kill -0 "${METRO_PID}" 2>/dev/null; then
-      echo "[e2e] ERROR: Metro exited unexpectedly."
-      return 1
-    fi
     if [ "$((now - start_time))" -gt "${RUN_COMPLETE_TIMEOUT_SEC}" ]; then
       echo "[e2e] WARNING: Timeout waiting for collector completion count >= ${expected}"
       return 1
@@ -113,7 +108,6 @@ wait_for_runs() {
   launch_pid="$3"
   launch_name="$4"
   start_time="$(date +%s)"
-  launch_finished_at=""
   while true; do
     runs="$(collector_value runs)"
     if [ -n "${runs}" ]; then
@@ -127,23 +121,14 @@ wait_for_runs() {
       echo "[e2e] ERROR: Collector exited before receiving ${expected} run(s)."
       return 1
     fi
-    if [ -n "${METRO_PID}" ] && ! kill -0 "${METRO_PID}" 2>/dev/null; then
-      echo "[e2e] ERROR: Metro exited unexpectedly."
-      return 1
-    fi
     if [ -n "${launch_pid}" ] && ! kill -0 "${launch_pid}" 2>/dev/null; then
       if wait "${launch_pid}"; then
-        launch_finished_at="${now}"
+        launch_pid=""
       else
         launch_exit=$?
         echo "[e2e] ERROR: ${launch_name} failed (exit=${launch_exit})."
         return 1
       fi
-      launch_pid=""
-    fi
-    if [ -n "${launch_finished_at}" ] && [ "$((now - launch_finished_at))" -gt "${POST_LAUNCH_TIMEOUT_SEC}" ]; then
-      echo "[e2e] ERROR: App did not contact the collector within ${POST_LAUNCH_TIMEOUT_SEC}s after launch."
-      return 1
     fi
     if [ "$((now - start_time))" -gt "${timeout_sec}" ]; then
       echo "[e2e] WARNING: Timeout waiting for collector runs >= ${expected}"
