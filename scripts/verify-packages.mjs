@@ -27,6 +27,17 @@ function declarationExports(filePath) {
   return match[1].split(",").map((name) => name.trim()).sort()
 }
 
+function cordovaModuleNames(filePath) {
+  const declaration = fs.readFileSync(filePath, "utf8")
+  const matches = declaration.matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
+  return [...new Set([...matches].map((match) => match.groups?.name).filter(Boolean))]
+}
+
+function xmlModules(pluginXml) {
+  return [...pluginXml.matchAll(/<js-module\b[^>]*\bsrc="([^"]+)"[^>]*\bname="([^"]+)"[^>]*>([\s\S]*?)<\/js-module>/g)]
+    .map((match) => ({ source: match[1], name: match[2], body: match[3] }))
+}
+
 const rnPackage = readJson(rnStageDir, "package.json")
 const cordovaPackage = readJson(cordovaStageDir, "package.json")
 const rootPackage = readJson(rootDir, "package.json")
@@ -55,8 +66,32 @@ assert(
 const pluginPath = requireFile(cordovaStageDir, "plugin.xml")
 const pluginXml = fs.readFileSync(pluginPath, "utf8")
 assert(!pluginXml.includes("PLACEHOLDER"), "Cordova plugin contains an unresolved placeholder")
-assert((pluginXml.match(/<js-module\b/g) ?? []).length === 1, "Cordova plugin must contain one JS module")
-assert(/<merges target="window"\s*\/>/.test(pluginXml), "Cordova module must merge into window")
+assert(!/<merges\b/.test(pluginXml), "Cordova plugin must preserve individual module clobbers")
+
+const expectedCordovaModules = ["PowerAuthPlugin", ...cordovaModuleNames(cordovaDeclaration)]
+const actualCordovaModules = xmlModules(pluginXml)
+assert(
+  actualCordovaModules.length === expectedCordovaModules.length,
+  `Cordova plugin exposes ${actualCordovaModules.length} modules instead of ${expectedCordovaModules.length}`,
+)
+const modulesByName = new Map(actualCordovaModules.map((module) => [module.name, module]))
+for (const moduleName of expectedCordovaModules) {
+  const module = modulesByName.get(moduleName)
+  assert(module, `Cordova plugin is missing module ${moduleName}`)
+  const expectedSource = moduleName === "PowerAuthPlugin" ? cordovaPackage.main : `lib/${moduleName}.js`
+  assert(module.source === expectedSource, `Cordova module ${moduleName} points to ${module.source}`)
+  assert(
+    new RegExp(`<clobbers\\s+target="${moduleName}"\\s*\\/>`).test(module.body),
+    `Cordova module ${moduleName} does not clobber ${moduleName}`,
+  )
+  if (moduleName !== "PowerAuthPlugin") {
+    const shim = fs.readFileSync(requireFile(cordovaStageDir, expectedSource), "utf8")
+    assert(
+      shim === `module.exports = require("cordova-powerauth-mobile-sdk.PowerAuthPlugin").${moduleName};\n`,
+      `Cordova module ${moduleName} has an invalid compatibility shim`,
+    )
+  }
+}
 
 for (const match of pluginXml.matchAll(/<(?:framework|header-file|js-module|source-file)\b[^>]*\bsrc="([^"]+)"/g)) {
   const source = match[1]

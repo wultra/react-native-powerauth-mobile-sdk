@@ -1,3 +1,7 @@
+/**
+ * Stages, builds, and packages the React Native and Cordova libraries.
+ */
+
 import fs from "node:fs"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
@@ -10,6 +14,8 @@ const cordovaDir = path.join(rootDir, "packages", "lib-cordova")
 const rnStageDir = path.join(rnDir, "build", "rn")
 const cordovaStageDir = path.join(cordovaDir, "build", "cdv")
 const cordovaTempDir = path.join(cordovaDir, ".build", "cdv")
+const cordovaPluginName = "PowerAuthPlugin"
+const cordovaModulesPlaceholder = "<!-- PLACEHOLDER_MODULES -->"
 const androidJsPath = path.join(
   "android",
   "src",
@@ -22,6 +28,12 @@ const androidJsPath = path.join(
   "js",
 )
 
+/**
+ * Copies a file or directory into a staged package.
+ * @param {string} source Source path.
+ * @param {string} destination Destination path.
+ * @param {boolean} [optional=false] Skip a missing source when true.
+ */
 function copy(source, destination, optional = false) {
   if (!fs.existsSync(source)) {
     if (optional) return
@@ -31,15 +43,30 @@ function copy(source, destination, optional = false) {
   fs.cpSync(source, destination, { recursive: true, force: true })
 }
 
+/**
+ * Reads a package.json file.
+ * @param {string} packageDir Package directory.
+ * @returns {object} Parsed package data.
+ */
 function readPackage(packageDir) {
   return JSON.parse(fs.readFileSync(path.join(packageDir, "package.json"), "utf8"))
 }
 
+/**
+ * Writes formatted JSON to a file.
+ * @param {string} filePath Output path.
+ * @param {unknown} value Value to write.
+ */
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`)
 }
 
+/**
+ * Generates the TypeScript SDK version file.
+ * @param {string} sourceDir Staged source directory.
+ * @param {string} version SDK version.
+ */
 function writeSdkVersion(sourceDir, version) {
   const versionDir = path.join(sourceDir, "internal")
   fs.mkdirSync(versionDir, { recursive: true })
@@ -49,6 +76,55 @@ function writeSdkVersion(sourceDir, version) {
   )
 }
 
+/**
+ * Reads legacy Cordova module names from a declaration file.
+ * @param {string} declarationPath Declaration file path.
+ * @returns {string[]} Cordova module names.
+ */
+function cordovaModuleNames(declarationPath) {
+  const declaration = fs.readFileSync(declarationPath, "utf8")
+  const matches = declaration.matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
+  return [...new Set([...matches].map((match) => match.groups?.name).filter(Boolean))]
+}
+
+/**
+ * Generates Cordova shims and expands the staged plugin.xml template.
+ */
+function generateCordovaModules() {
+  const packageJson = readPackage(cordovaStageDir)
+  const declarationPath = path.join(cordovaStageDir, packageJson.types)
+  const moduleNames = cordovaModuleNames(declarationPath)
+  const libDir = path.join(cordovaStageDir, "lib")
+
+  // Preserve legacy module IDs by forwarding them to the Rollup bundle.
+  for (const moduleName of moduleNames) {
+    fs.writeFileSync(
+      path.join(libDir, `${moduleName}.js`),
+      `module.exports = require("cordova-powerauth-mobile-sdk.${cordovaPluginName}").${moduleName};\n`,
+    )
+  }
+
+  // Register the bundle and expose each shim under its original global name.
+  const moduleDefinitions = [
+    [packageJson.main, cordovaPluginName],
+    ...moduleNames.map((moduleName) => [`lib/${moduleName}.js`, moduleName]),
+  ].map(([source, name]) =>
+    `    <js-module src="${source}" name="${name}"><clobbers target="${name}" /></js-module>`,
+  ).join("\n")
+
+  // Expand only the staged plugin.xml template.
+  const pluginPath = path.join(cordovaStageDir, "plugin.xml")
+  const pluginXml = fs.readFileSync(pluginPath, "utf8")
+  if (!pluginXml.includes(cordovaModulesPlaceholder)) {
+    throw new Error(`Cordova plugin is missing ${cordovaModulesPlaceholder}`)
+  }
+  fs.writeFileSync(pluginPath, pluginXml.replace(cordovaModulesPlaceholder, moduleDefinitions))
+}
+
+/**
+ * Validates and returns the shared package version.
+ * @returns {string} SDK version.
+ */
 function sdkVersion() {
   const rootVersion = readPackage(rootDir).version
   const rnVersion = readPackage(rnDir).version
@@ -61,6 +137,10 @@ function sdkVersion() {
   return rnVersion
 }
 
+/**
+ * Creates the staged React Native package.
+ * @param {string} version SDK version.
+ */
 function stageReactNative(version) {
   fs.rmSync(rnStageDir, { recursive: true, force: true })
   fs.mkdirSync(rnStageDir, { recursive: true })
@@ -113,6 +193,10 @@ function stageReactNative(version) {
   writeJson(path.join(rnStageDir, "package.json"), packageJson)
 }
 
+/**
+ * Creates the staged Cordova package and temporary TypeScript sources.
+ * @param {string} version SDK version.
+ */
 function stageCordova(version) {
   fs.rmSync(cordovaStageDir, { recursive: true, force: true })
   fs.rmSync(cordovaTempDir, { recursive: true, force: true })
@@ -145,6 +229,12 @@ function stageCordova(version) {
   writeJson(path.join(cordovaStageDir, "package.json"), packageJson)
 }
 
+/**
+ * Runs a command and exits when it fails.
+ * @param {string} command Command name.
+ * @param {string[]} args Command arguments.
+ * @param {object} [options] Spawn options.
+ */
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: rootDir,
@@ -156,16 +246,25 @@ function run(command, args, options = {}) {
   if (result.status !== 0) process.exit(result.status ?? 1)
 }
 
+/**
+ * Builds the selected target with Rollup.
+ * @param {string} target Build target.
+ */
 function runRollup(target) {
   run("yarn", ["rollup", "-c"], {
     env: { ...process.env, BUILD_TARGET: target },
   })
 }
 
+/**
+ * Creates an npm package from a staged directory.
+ * @param {string} stageDir Staged package directory.
+ */
 function pack(stageDir) {
   run("npm", ["pack"], { cwd: stageDir })
 }
 
+// Read the requested target and flags.
 const target = process.argv[2] ?? "all"
 const flags = new Set(process.argv.slice(3))
 if (!["rn", "cordova", "all"].includes(target)) {
@@ -184,6 +283,8 @@ if (flags.has("--typecheck")) {
 }
 
 runRollup(target)
+// Generate Cordova modules after Rollup creates the declaration file.
+if (target === "cordova" || target === "all") generateCordovaModules()
 fs.rmSync(cordovaTempDir, { recursive: true, force: true })
 
 if (flags.has("--pack")) {
