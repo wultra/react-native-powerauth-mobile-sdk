@@ -35,20 +35,31 @@ if [ ! -s testapp/.env ]; then
   exit 1
 fi
 
-for key in POWERAUTH_CLOUD_URL POWERAUTH_CLOUD_USERNAME POWERAUTH_CLOUD_PASSWORD \
-  POWERAUTH_CLOUD_APP_ID ENROLLMENT_SERVER_URL TEST_COLLECTOR_URL; do
-  require_env_key "${key}"
-done
+require_env_key "POWERAUTH_CLOUD_URL"
+require_env_key "POWERAUTH_CLOUD_USERNAME"
+require_env_key "POWERAUTH_CLOUD_PASSWORD"
+require_env_key "POWERAUTH_CLOUD_APP_ID"
+require_env_key "ENROLLMENT_SERVER_URL"
+require_env_key "TEST_COLLECTOR_URL"
 
 MODE="${E2E_MODE:-full}"
 case "${MODE}" in
-  rn|cordova) EXPECTED_RUNS_VALUE=1 ;;
-  full) EXPECTED_RUNS_VALUE=2 ;;
+  rn|cordova|full)
+    ;;
   *)
     echo "[e2e] Invalid E2E_MODE '${MODE}'."
     exit 1
     ;;
 esac
+if [ "${MODE}" = "full" ]; then
+  derived_expected=2
+else
+  derived_expected=1
+fi
+EXPECTED_RUNS_VALUE="${EXPECTED_RUNS:-$derived_expected}"
+if [ -n "${EXPECTED_RUNS:-}" ] && [ "${EXPECTED_RUNS_VALUE}" -ne "${derived_expected}" ] 2>/dev/null; then
+  EXPECTED_RUNS_VALUE="${derived_expected}"
+fi
 RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-3600}"
 RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
 SIM_BOOT_TIMEOUT_SEC="${E2E_SIM_BOOT_TIMEOUT_SEC:-900}"
@@ -61,23 +72,12 @@ METRO_PID=""
 RN_PID=""
 CDV_PID=""
 
-collector_value() {
-  node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j[process.argv[1]] ?? ''))).catch(()=>{})" "$1" 2>/dev/null || true
-}
-
-stop_process() {
-  pid="$1"
-  if [ -n "${pid}" ] && kill -0 "${pid}" 2>/dev/null; then
-    kill "${pid}" || true
-  fi
-}
-
 wait_for_completed() {
   expected="$1"
   start_time="$(date +%s)"
   while true; do
     # This is kinda a hacky way to check if the collector has completed all runs and exit early.
-    completed="$(collector_value completed)"
+    completed="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.completed ?? ''))).catch(()=>{})" 2>/dev/null || true)"
     if [ -n "${completed}" ]; then
       if [ "${completed}" -ge "${expected}" ] 2>/dev/null; then
         echo "[e2e] collector completed runs=${completed}"
@@ -108,11 +108,9 @@ wait_for_completed() {
 wait_for_runs() {
   expected="$1"
   timeout_sec="$2"
-  launch_pid="$3"
-  launch_name="$4"
   start_time="$(date +%s)"
   while true; do
-    runs="$(collector_value runs)"
+    runs="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.runs ?? ''))).catch(()=>{})" 2>/dev/null || true)"
     if [ -n "${runs}" ]; then
       if [ "${runs}" -ge "${expected}" ] 2>/dev/null; then
         echo "[e2e] collector runs=${runs}"
@@ -120,19 +118,6 @@ wait_for_runs() {
       fi
     fi
     now="$(date +%s)"
-    if ! kill -0 "${COLLECTOR_PID}" 2>/dev/null; then
-      echo "[e2e] ERROR: Collector exited before receiving ${expected} run(s)."
-      return 1
-    fi
-    if [ -n "${launch_pid}" ] && ! kill -0 "${launch_pid}" 2>/dev/null; then
-      if wait "${launch_pid}"; then
-        launch_pid=""
-      else
-        launch_exit=$?
-        echo "[e2e] ERROR: ${launch_name} failed (exit=${launch_exit})."
-        return 1
-      fi
-    fi
     if [ "$((now - start_time))" -gt "${timeout_sec}" ]; then
       echo "[e2e] WARNING: Timeout waiting for collector runs >= ${expected}"
       return 1
@@ -158,18 +143,19 @@ wait_for_simulator_boot() {
 }
 
 abort_with_logs() {
-  echo "[e2e] Aborting E2E run."
-  if [ -n "${SIM_ID:-}" ]; then
-    echo "[e2e] Capturing iOS simulator logs..."
-    xcrun simctl spawn "${SIM_ID}" log show --style compact --last 10m --predicate 'process == "testapp"' > artifacts/e2e/ios-simulator.log 2>&1 || true
+  echo "[e2e] Aborting due to missing collector completion."
+  if [ -n "${RN_PID:-}" ]; then
+    kill "${RN_PID}" || true
   fi
-  stop_process "${RN_PID:-}"
-  stop_process "${CDV_PID:-}"
-  stop_process "${COLLECTOR_PID}"
+  if [ -n "${CDV_PID:-}" ]; then
+    kill "${CDV_PID}" || true
+  fi
+  kill "${COLLECTOR_PID}" || true
   if [ -n "${METRO_PID:-}" ]; then
     echo "[e2e] Stopping Metro..."
-    stop_process "${METRO_PID}"
+    kill "${METRO_PID}" || true
   fi
+  # xcrun simctl spawn booted log show --style syslog --last 10m > artifacts/e2e/ios-simulator.log || true
   exit 1
 }
 
@@ -290,20 +276,25 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   yarn workspace testapp start:prepared &
   METRO_PID=$!
 
-  echo "[e2e] Launching RN iOS..."
-  yarn workspace testapp ios:prepared --no-packager &
+  if [ -n "${SIM_ID}" ]; then
+    echo "[e2e] Launching RN iOS..."
+    yarn workspace testapp ios:prepared --no-packager --udid "${SIM_ID}" &
+  else
+    echo "[e2e] Launching RN iOS..."
+    yarn workspace testapp ios:prepared --no-packager &
+  fi
 
   RN_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}" "${RN_PID}" "RN iOS"; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
     abort_with_logs
   fi
 
-  stop_process "${RN_PID}"
+  kill "${RN_PID}" || true
 fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
@@ -312,14 +303,14 @@ if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
   CDV_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}" "${CDV_PID}" "Cordova iOS"; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
     abort_with_logs
   fi
 
-  stop_process "${CDV_PID}"
+  kill "${CDV_PID}" || true
 fi
 
 set +e
@@ -328,7 +319,10 @@ COLLECTOR_EXIT=$?
 set -e
 
 if [ -n "${METRO_PID:-}" ]; then
-  stop_process "${METRO_PID}"
+  kill "${METRO_PID}" || true
 fi
+
+echo "[e2e] iOS simulator log capture disabled (logs can be very large)."
+# xcrun simctl spawn booted log show --style syslog --last 10m > artifacts/e2e/ios-simulator.log || true
 
 exit "${COLLECTOR_EXIT}"
