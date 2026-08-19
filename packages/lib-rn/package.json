@@ -14,9 +14,7 @@
     "build": "node ../../scripts/build.mjs rn",
     "prepare": "yarn build",
     "pack:tgz": "node ../../scripts/build.mjs rn --pack",
-    "typecheck": "node ../../scripts/build.mjs rn --typecheck",
-    "lint": "eslint ../lib-shared/js",
-    "format": "prettier -w ../lib-shared/js"
+    "typecheck": "node ../../scripts/build.mjs rn --typecheck"
   },
   "files": [
     "README.md",
@@ -59,15 +57,8 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@react-native/eslint-config": "^0.78.0",
-    "@react-native/eslint-plugin": "^0.85.3",
     "@react-native/typescript-config": "^0.78.0",
     "@types/react": "^19.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.2",
-    "@typescript-eslint/parser": "^8.59.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.8.3",
     "react": "19.0.0",
     "react-native": "^0.78.1",
     "typescript": "^5.4.0"
