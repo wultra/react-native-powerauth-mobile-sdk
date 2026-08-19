@@ -108,6 +108,8 @@ wait_for_completed() {
 wait_for_runs() {
   expected="$1"
   timeout_sec="$2"
+  launch_pid="$3"
+  launch_name="$4"
   start_time="$(date +%s)"
   while true; do
     runs="$(node -e "fetch('http://127.0.0.1:8137/health').then(r=>r.json()).then(j=>process.stdout.write(String(j.runs ?? ''))).catch(()=>{})" 2>/dev/null || true)"
@@ -115,6 +117,15 @@ wait_for_runs() {
       if [ "${runs}" -ge "${expected}" ] 2>/dev/null; then
         echo "[e2e] collector runs=${runs}"
         break
+      fi
+    fi
+    if [ -n "${launch_pid}" ] && ! kill -0 "${launch_pid}" 2>/dev/null; then
+      if wait "${launch_pid}"; then
+        launch_pid=""
+      else
+        launch_status=$?
+        echo "[e2e] ERROR: ${launch_name} exited with status ${launch_status} before starting a test run."
+        return 1
       fi
     fi
     now="$(date +%s)"
@@ -276,18 +287,13 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   yarn workspace testapp start:prepared &
   METRO_PID=$!
 
-  if [ -n "${SIM_ID}" ]; then
-    echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios:prepared --no-packager --udid "${SIM_ID}" &
-  else
-    echo "[e2e] Launching RN iOS..."
-    yarn workspace testapp ios:prepared --no-packager &
-  fi
+  echo "[e2e] Launching RN iOS..."
+  yarn workspace testapp ios:prepared --no-packager &
 
   RN_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}" "${RN_PID}" "React Native iOS launcher"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
@@ -303,7 +309,7 @@ if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
   CDV_PID=$!
   run_count=$((run_count + 1))
 
-  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}"; then
+  if ! wait_for_runs "${run_count}" "${RUN_START_TIMEOUT_SEC}" "${CDV_PID}" "Cordova iOS launcher"; then
     abort_with_logs
   fi
   if ! wait_for_completed "${run_count}"; then
