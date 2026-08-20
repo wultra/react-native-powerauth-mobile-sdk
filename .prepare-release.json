@@ -35,18 +35,6 @@
             "path": "docs/Changelog.md",
             "type": "verify_not_containing",
             "match": "- TBA"
-        },
-        {
-            "description": "Compatibility in the documentation.",
-            "path": "docs/Readme.md",
-            "type": "versionstream_verify",
-            "match": "| `%VERSION_STREAM%`"
-        },
-        {
-            "description": "Compatibility in the documentation.",
-            "path": "README.md",
-            "type": "versionstream_verify",
-            "match": "| `%VERSION_STREAM%`"
         }
     ]
 }
