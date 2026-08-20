@@ -12,7 +12,7 @@ runs:
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.13.0
       - name: Enable Yarn 
         shell: bash
         run: corepack enable

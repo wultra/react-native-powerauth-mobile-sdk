@@ -75,12 +75,12 @@
     "packages/*"
   ],
   "resolutions": {
-    "react": "19.1.1",
-    "react-native": "0.82.1"
+    "react": "19.2.3",
+    "react-native": "0.87.0"
   },
   "devDependencies": {
-    "@react-native/eslint-config": "^0.78.0",
-    "@react-native/eslint-plugin": "^0.78.0",
+    "@react-native/eslint-config": "0.87.0",
+    "@react-native/eslint-plugin": "0.87.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -92,7 +92,7 @@
     "rollup": "^4.59.0",
     "rollup-plugin-dts": "^6.2.3",
     "rollup-plugin-typescript2": "^0.36.0",
-    "typescript": "^5.4.0"
+    "typescript": "^6.0.3"
   },
   "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774"
 }

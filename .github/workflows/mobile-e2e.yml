@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.13.0"
 
       - name: Enable KVM
         run: |
@@ -92,7 +92,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.13.0"
 
       - name: Enable KVM
         run: |
@@ -156,7 +156,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.13.0"
 
       - name: Detect Xcode version
         run: |
@@ -221,7 +221,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.13.0"
 
       - name: Detect Xcode version
         run: |
