@@ -13,6 +13,10 @@ PowerAuth Mobile JS SDK in version `4.0.0` provides the following improvements:
   - Time synchronized with the server.
 - We have replaced the term 'commit activation' with 'persist activation' in our terminology. This change clearly distinguishes between the commit activation process on the server and the activation completion process on the mobile device.
 
+### Compatibility with PowerAuth Server
+
+- This release is fully compatible with PowerAuth Server version `1.9.0` and newer.
+
 ### API changes
 
 - The basic `configure` method in the `PowerAuth` class now requires `configuration` parameter instead of `appKey`, `appSecret` and `masterServerPublicKey`.
@@ -22,10 +26,6 @@ PowerAuth Mobile JS SDK in version `4.0.0` provides the following improvements:
   - The `commitWithPassword()` was renamed to `persistWithPassword()`
   - The `commitWithPasswordAndBiometry()` was renamed to `persistWithPasswordAndBiometry()`
 - The `signDataWithDevicePrivateKey()` now requires `dataFormat` parameter to hint if the signed data is plain string (`UTF8`) or Base64 encoded data (`BASE64`).
-
-### Compatibility with PowerAuth Server
-
-- This release is fully compatible with PowerAuth Server version `1.9.0` and newer.
 
 ### Other changes
 
