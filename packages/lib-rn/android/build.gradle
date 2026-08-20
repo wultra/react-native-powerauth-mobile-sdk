@@ -2,12 +2,12 @@ ext {
   //
   // Defaults for the standalone build
   
-  PowerAuthSdkRN_kotlinVersion = "1.9.22"
-  PowerAuthSdkRN_minSdkVersion = 21
-  PowerAuthSdkRN_targetSdkVersion = 33
-  PowerAuthSdkRN_compileSdkVersion = 33
-  PowerAuthSdkRN_ndkversion = "21.4.7075529"
-  PowerAuthSdkRN_reactNativeVersion = "0.78.1"
+  PowerAuthSdkRN_kotlinVersion = "2.2.0"
+  PowerAuthSdkRN_minSdkVersion = 24
+  PowerAuthSdkRN_targetSdkVersion = 36
+  PowerAuthSdkRN_compileSdkVersion = 37
+  PowerAuthSdkRN_ndkVersion = "27.1.12297006"
+  PowerAuthSdkRN_reactNativeVersion = "0.87.0"
 }
 
 apply plugin: "com.android.library"
@@ -62,7 +62,7 @@ android {
     }
   }
 
-  lintOptions {
+  lint {
     disable "GradleCompatible"
   }
 
@@ -79,7 +79,7 @@ repositories {
 
 dependencies {
   implementation("com.facebook.react:react-android")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:${getExtOrDefault("kotlinVersion")}")
   api "com.wultra.android.powerauth:powerauth-sdk:1.9.5"
 }
 
