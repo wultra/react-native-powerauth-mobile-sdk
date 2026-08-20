@@ -56,6 +56,7 @@ const rn = [
       format: "cjs",
       exports: "named",
       sourcemap: true,
+      sourcemapExcludeSources: true,
     },
     plugins: [
       nodeResolve({ extensions: [".js", ".ts"] }),
@@ -69,6 +70,7 @@ const rn = [
       file: "packages/lib-rn/build/rn/lib/module/index.js",
       format: "es",
       sourcemap: true,
+      sourcemapExcludeSources: true,
     },
     plugins: [
       nodeResolve({ extensions: [".js", ".ts"] }),
@@ -93,7 +95,7 @@ const cordova = [
       file: "packages/lib-cordova/build/cdv/lib/index.js",
       format: "cjs",
       exports: "named",
-      sourcemap: true,
+      sourcemap: false,
     },
     plugins: [
       replaceDevConstant,
