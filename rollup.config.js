@@ -1,3 +1,4 @@
+import fs from "node:fs"
 import typescript from "rollup-plugin-typescript2"
 import { dts } from "rollup-plugin-dts"
 import { nodeResolve } from "@rollup/plugin-node-resolve"
@@ -7,6 +8,7 @@ const buildTarget = process.env.BUILD_TARGET ?? "all"
 
 const rnInput = "packages/lib-rn/build/rn/src/index.ts"
 const cordovaInput = "packages/lib-cordova/.build/cdv/src/index.ts"
+const cordovaExportsFile = "packages/lib-cordova/.build/cdv/runtime-exports.json"
 const rollupTsconfig = "tsconfig.rollup.json"
 
 const typescriptPlugin = (tsconfig, target, include) => typescript({
@@ -33,6 +35,15 @@ const replaceDevConstant = {
     return code.includes("__DEV__")
       ? { code: code.replaceAll("__DEV__", "false"), map: null }
       : null
+  },
+}
+
+const writeCordovaExports = {
+  name: "write-cordova-exports",
+  writeBundle(_, bundle) {
+    const entries = Object.values(bundle).filter((output) => output.type === "chunk" && output.isEntry)
+    if (entries.length !== 1) throw new Error(`Expected one Cordova entry chunk, found ${entries.length}`)
+    fs.writeFileSync(cordovaExportsFile, `${JSON.stringify(entries[0].exports.sort(), null, 2)}\n`)
   },
 }
 
@@ -93,6 +104,7 @@ const cordova = [
         ["packages/lib-cordova/.build/cdv/src/**/*.ts"],
       ),
       terser(),
+      writeCordovaExports,
     ],
   },
   {

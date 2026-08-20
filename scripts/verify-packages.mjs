@@ -1,99 +1,234 @@
-import fs from "node:fs"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
+/**
+ * Smoke-tests the packages produced by npm pack.
+ */
 
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
+import { spawnSync } from "node:child_process"
+import { createRequire } from "node:module"
+import { fileURLToPath } from "node:url"
+import ts from "typescript"
+
+const require = createRequire(import.meta.url)
+const Module = require("node:module")
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const rnStageDir = path.join(rootDir, "packages", "lib-rn", "build", "rn")
-const cordovaStageDir = path.join(rootDir, "packages", "lib-cordova", "build", "cdv")
+const rootPackage = readJson(rootDir, "package.json")
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)
 }
 
 function requireFile(packageDir, relativePath) {
-  const filePath = path.join(packageDir, relativePath)
+  assert(typeof relativePath === "string" && relativePath.length > 0, "Invalid file path")
+  const packageRoot = path.resolve(packageDir)
+  const filePath = path.resolve(packageRoot, relativePath)
+  assert(filePath.startsWith(`${packageRoot}${path.sep}`), `Path escapes package: ${relativePath}`)
   assert(fs.statSync(filePath, { throwIfNoEntry: false })?.isFile(), `Missing ${relativePath}`)
   return filePath
+}
+
+function requireEntry(packageDir, entry) {
+  for (const suffix of ["", ".js", ".ts"]) {
+    const relativePath = `${entry}${suffix}`
+    const filePath = path.resolve(packageDir, relativePath)
+    if (filePath.startsWith(`${path.resolve(packageDir)}${path.sep}`)
+      && fs.statSync(filePath, { throwIfNoEntry: false })?.isFile()) return filePath
+  }
+  throw new Error(`Missing entry point ${entry}`)
 }
 
 function readJson(packageDir, relativePath) {
   return JSON.parse(fs.readFileSync(requireFile(packageDir, relativePath), "utf8"))
 }
 
-function cordovaModuleNames(filePath) {
-  const declaration = fs.readFileSync(filePath, "utf8")
-  assert(
-    !/^(?:import|export)\s/m.test(declaration),
-    `${path.relative(rootDir, filePath)} must contain ambient Cordova declarations`,
-  )
-  const matches = declaration.matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
-  return [...new Set([...matches].map((match) => match.groups?.name).filter(Boolean))]
+function run(command, args) {
+  const result = spawnSync(command, args, { encoding: "utf8" })
+  if (result.error) throw result.error
+  if (result.status !== 0) {
+    throw new Error(`${command} ${args.join(" ")} failed:\n${result.stderr || result.stdout}`)
+  }
+  return result.stdout
 }
 
-function xmlModules(pluginXml) {
-  return [...pluginXml.matchAll(/<js-module\b[^>]*\bsrc="([^"]+)"[^>]*\bname="([^"]+)"[^>]*>([\s\S]*?)<\/js-module>/g)]
-    .map((match) => ({ source: match[1], name: match[2], body: match[3] }))
-}
-
-const rnPackage = readJson(rnStageDir, "package.json")
-const cordovaPackage = readJson(cordovaStageDir, "package.json")
-const rootPackage = readJson(rootDir, "package.json")
-assert(
-  rootPackage.version === rnPackage.version && rnPackage.version === cordovaPackage.version,
-  "Root and staged package versions differ",
-)
-
-requireFile(rnStageDir, rnPackage.types)
-requireFile(rnStageDir, rnPackage.main)
-requireFile(rnStageDir, rnPackage.module)
-requireFile(rnStageDir, "src/index.ts")
-requireFile(rnStageDir, "react-native-powerauth-mobile-sdk.podspec")
-requireFile(rnStageDir, "android/build.gradle")
-
-const cordovaDeclaration = requireFile(cordovaStageDir, cordovaPackage.types)
-requireFile(cordovaStageDir, cordovaPackage.main)
-requireFile(cordovaStageDir, `${cordovaPackage.main}.map`)
-requireFile(cordovaStageDir, "android/build.gradle")
-
-const pluginPath = requireFile(cordovaStageDir, "plugin.xml")
-const pluginXml = fs.readFileSync(pluginPath, "utf8")
-assert(!pluginXml.includes("PLACEHOLDER"), "Cordova plugin contains an unresolved placeholder")
-assert(!/<merges\b/.test(pluginXml), "Cordova plugin must preserve individual module clobbers")
-
-const expectedCordovaModules = ["PowerAuthPlugin", ...cordovaModuleNames(cordovaDeclaration)]
-const actualCordovaModules = xmlModules(pluginXml)
-assert(
-  actualCordovaModules.length === expectedCordovaModules.length,
-  `Cordova plugin exposes ${actualCordovaModules.length} modules instead of ${expectedCordovaModules.length}`,
-)
-const modulesByName = new Map(actualCordovaModules.map((module) => [module.name, module]))
-for (const moduleName of expectedCordovaModules) {
-  const module = modulesByName.get(moduleName)
-  assert(module, `Cordova plugin is missing module ${moduleName}`)
-  const expectedSource = moduleName === "PowerAuthPlugin" ? cordovaPackage.main : `lib/${moduleName}.js`
-  assert(module.source === expectedSource, `Cordova module ${moduleName} points to ${module.source}`)
-  assert(
-    new RegExp(`<clobbers\\s+target="${moduleName}"\\s*\\/>`).test(module.body),
-    `Cordova module ${moduleName} does not clobber ${moduleName}`,
-  )
-  if (moduleName !== "PowerAuthPlugin") {
-    const shim = fs.readFileSync(requireFile(cordovaStageDir, expectedSource), "utf8")
+function extractPackage(archivePath, destination) {
+  const entries = run("tar", ["-tzf", archivePath]).trim().split("\n").filter(Boolean)
+  assert(entries.length > 0, `${archivePath} is empty`)
+  for (const entry of entries) {
+    const normalized = path.posix.normalize(entry)
     assert(
-      shim === `module.exports = require("cordova-powerauth-mobile-sdk.PowerAuthPlugin").${moduleName};\n`,
-      `Cordova module ${moduleName} has an invalid compatibility shim`,
+      normalized === "package" || normalized.startsWith("package/"),
+      `${archivePath} contains an unsafe path: ${entry}`,
     )
+  }
+  fs.mkdirSync(destination, { recursive: true })
+  run("tar", ["-xzf", archivePath, "-C", destination])
+  const packageDir = path.join(destination, "package")
+  assert(fs.statSync(packageDir, { throwIfNoEntry: false })?.isDirectory(), "Missing package root")
+  return { packageDir, entries }
+}
+
+function verifyDeclaration(filePath) {
+  const source = ts.createSourceFile(
+    filePath,
+    fs.readFileSync(filePath, "utf8"),
+    ts.ScriptTarget.Latest,
+  )
+  assert(source.parseDiagnostics.length === 0, `Invalid declaration file ${filePath}`)
+}
+
+function verifyModuleSyntax(filePath) {
+  const result = spawnSync(process.execPath, ["--input-type=module", "--check"], {
+    encoding: "utf8",
+    input: fs.readFileSync(filePath, "utf8"),
+  })
+  assert(result.status === 0, `Invalid ES module ${filePath}:\n${result.stderr}`)
+}
+
+function runtimeExports(entryPath, platform) {
+  const previousLoad = Module._load
+  const previousCordova = global.cordova
+  const previousDev = global.__DEV__
+  const reactNativeMock = new Proxy(function () {}, {
+    get: (_, property) => property === "OS" ? "android" : reactNativeMock,
+    apply: () => reactNativeMock,
+    construct: () => reactNativeMock,
+  })
+  const resolvedPath = require.resolve(entryPath)
+
+  Module._load = function (request) {
+    if (request === "react-native") return reactNativeMock
+    return previousLoad.apply(this, arguments)
+  }
+  global.__DEV__ = false
+
+  const load = (platformId) => {
+    if (platformId) global.cordova = { platformId, exec() {} }
+    delete require.cache[resolvedPath]
+    return Object.keys(require(resolvedPath)).sort()
+  }
+
+  try {
+    const exports = load(platform === "cordova" ? "android" : undefined)
+    assert(exports.length > 0, `${entryPath} has no runtime exports`)
+    if (platform === "cordova") {
+      assert(
+        JSON.stringify(load("ios")) === JSON.stringify(exports),
+        "Cordova runtime exports differ between Android and iOS",
+      )
+    }
+    return exports
+  } finally {
+    delete require.cache[resolvedPath]
+    Module._load = previousLoad
+    if (previousCordova === undefined) delete global.cordova
+    else global.cordova = previousCordova
+    if (previousDev === undefined) delete global.__DEV__
+    else global.__DEV__ = previousDev
   }
 }
 
-for (const match of pluginXml.matchAll(/<(?:framework|header-file|js-module|source-file)\b[^>]*\bsrc="([^"]+)"/g)) {
-  const source = match[1]
-  if (!source.includes("://")) requireFile(cordovaStageDir, source)
+function verifyManifest(packageDir, expectedPackage) {
+  const packageJson = readJson(packageDir, "package.json")
+  assert(packageJson.name === expectedPackage.name, `Expected ${expectedPackage.name}`)
+  assert(packageJson.version === rootPackage.version, `${packageJson.name} has version ${packageJson.version}`)
+  assert(Object.keys(packageJson.scripts ?? {}).length === 0, `${packageJson.name} publishes scripts`)
+  return packageJson
 }
 
-assert(!fs.existsSync(path.join(cordovaStageDir, "node_modules")), "Cordova package contains node_modules")
-assert(
-  !fs.existsSync(path.join(rootDir, "packages", "lib-cordova", ".build", "cdv")),
-  "Cordova temporary build directory was not cleaned",
-)
+function verifyReactNative(packageDir, expectedPackage) {
+  const packageJson = verifyManifest(packageDir, expectedPackage)
+  const mainPath = requireEntry(packageDir, packageJson.main)
+  const modulePath = requireEntry(packageDir, packageJson.module)
+  const declarationPath = requireEntry(packageDir, packageJson.types)
+  requireEntry(packageDir, packageJson["react-native"])
+  requireFile(packageDir, "react-native.config.js")
+  requireFile(packageDir, "react-native-powerauth-mobile-sdk.podspec")
+  requireFile(packageDir, "android/build.gradle")
+  verifyModuleSyntax(modulePath)
+  verifyDeclaration(declarationPath)
+  return runtimeExports(mainPath, "react-native")
+}
 
-console.log(`Verified React Native and Cordova ${rnPackage.version} packages.`)
+function xmlModules(pluginXml) {
+  return [...pluginXml.matchAll(
+    /<js-module\b[^>]*\bsrc="([^"]+)"[^>]*\bname="([^"]+)"[^>]*>([\s\S]*?)<\/js-module>/g,
+  )].map((match) => ({ source: match[1], name: match[2], body: match[3] }))
+}
+
+function verifyCordova(packageDir, expectedPackage) {
+  const packageJson = verifyManifest(packageDir, expectedPackage)
+  const mainPath = requireEntry(packageDir, packageJson.main)
+  verifyDeclaration(requireEntry(packageDir, packageJson.types))
+  const exports = runtimeExports(mainPath, "cordova")
+
+  const pluginXml = fs.readFileSync(requireFile(packageDir, "plugin.xml"), "utf8")
+  assert(!pluginXml.includes("PLACEHOLDER"), "Cordova plugin contains an unresolved placeholder")
+  const pluginTag = pluginXml.match(/<plugin\b[^>]*>/)?.[0] ?? ""
+  assert(pluginTag.includes(`id="${packageJson.name}"`), "Cordova plugin id differs from package name")
+  assert(pluginTag.includes(`version="${packageJson.version}"`), "Cordova plugin version differs")
+
+  const modules = xmlModules(pluginXml)
+  const expectedNames = ["PowerAuthPlugin", ...exports]
+  assert(modules.length === expectedNames.length, "Cordova plugin module count is incorrect")
+  const modulesByName = new Map(modules.map((module) => [module.name, module]))
+  assert(modulesByName.size === modules.length, "Cordova plugin contains duplicate modules")
+
+  for (const name of expectedNames) {
+    const module = modulesByName.get(name)
+    assert(module, `Cordova plugin is missing runtime export ${name}`)
+    const expectedSource = name === "PowerAuthPlugin" ? packageJson.main : `lib/${name}.js`
+    assert(module.source === expectedSource, `Cordova module ${name} points to ${module.source}`)
+    assert(new RegExp(`<clobbers\\s+target="${name}"\\s*/>`).test(module.body), `${name} is not clobbered`)
+    if (name !== "PowerAuthPlugin") {
+      const shim = fs.readFileSync(requireFile(packageDir, expectedSource), "utf8")
+      assert(
+        shim === `module.exports = require("${packageJson.name}.PowerAuthPlugin").${name};\n`,
+        `Cordova module ${name} has an invalid shim`,
+      )
+    }
+  }
+
+  for (const match of pluginXml.matchAll(
+    /<(?:framework|header-file|js-module|source-file)\b[^>]*\bsrc="([^"]+)"/g,
+  )) {
+    if (!match[1].includes("://")) requireFile(packageDir, match[1])
+  }
+  return exports
+}
+
+const packages = [
+  {
+    target: "rn",
+    sourceDir: path.join(rootDir, "packages", "lib-rn"),
+    stageDir: path.join(rootDir, "packages", "lib-rn", "build", "rn"),
+    verify: verifyReactNative,
+  },
+  {
+    target: "cordova",
+    sourceDir: path.join(rootDir, "packages", "lib-cordova"),
+    stageDir: path.join(rootDir, "packages", "lib-cordova", "build", "cdv"),
+    verify: verifyCordova,
+  },
+]
+
+const target = process.argv[2] ?? "all"
+assert(["rn", "cordova", "all"].includes(target), `Unknown package target: ${target}`)
+const selectedPackages = target === "all" ? packages : packages.filter((item) => item.target === target)
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "powerauth-packages-"))
+
+try {
+  for (const item of selectedPackages) {
+    const expectedPackage = readJson(item.sourceDir, "package.json")
+    assert(expectedPackage.version === rootPackage.version, `${item.target} source version differs`)
+    const archiveName = `${expectedPackage.name.replace(/^@/, "").replaceAll("/", "-")}-${expectedPackage.version}.tgz`
+    const archivePath = requireFile(item.stageDir, archiveName)
+    const { packageDir, entries } = extractPackage(archivePath, path.join(tempDir, item.target))
+    assert(!entries.some((entry) => entry.includes("/node_modules/")), `${item.target} contains node_modules`)
+    assert(!entries.some((entry) => entry.includes("/.build/")), `${item.target} contains temporary files`)
+    const exports = item.verify(packageDir, expectedPackage)
+    console.log(`Verified ${expectedPackage.name}: ${exports.length} runtime exports.`)
+  }
+} finally {
+  fs.rmSync(tempDir, { recursive: true, force: true })
+}

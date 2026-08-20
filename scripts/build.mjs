@@ -14,6 +14,7 @@ const cordovaDir = path.join(rootDir, "packages", "lib-cordova")
 const rnStageDir = path.join(rnDir, "build", "rn")
 const cordovaStageDir = path.join(cordovaDir, "build", "cdv")
 const cordovaTempDir = path.join(cordovaDir, ".build", "cdv")
+const cordovaExportsFile = path.join(cordovaTempDir, "runtime-exports.json")
 const cordovaPluginName = "PowerAuthPlugin"
 const cordovaModulesPlaceholder = "<!-- PLACEHOLDER_MODULES -->"
 const androidJsPath = path.join(
@@ -77,17 +78,6 @@ function writeSdkVersion(sourceDir, version) {
 }
 
 /**
- * Reads legacy Cordova module names from a declaration file.
- * @param {string} declarationPath Declaration file path.
- * @returns {string[]} Cordova module names.
- */
-function cordovaModuleNames(declarationPath) {
-  const declaration = fs.readFileSync(declarationPath, "utf8")
-  const matches = declaration.matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
-  return [...new Set([...matches].map((match) => match.groups?.name).filter(Boolean))]
-}
-
-/**
  * Converts bundled module declarations to Cordova-compatible ambient declarations.
  * @param {string} declarationPath Declaration file path.
  */
@@ -103,20 +93,32 @@ function makeCordovaDeclarationsAmbient(declarationPath) {
 }
 
 /**
+ * Reads the runtime exports reported by Rollup for the Cordova entry chunk.
+ * @returns {string[]} Exported names.
+ */
+function cordovaExports() {
+  const names = JSON.parse(fs.readFileSync(cordovaExportsFile, "utf8"))
+  if (!Array.isArray(names) || names.length === 0 || names.some((name) => typeof name !== "string")) {
+    throw new Error("Rollup reported invalid Cordova runtime exports")
+  }
+  return names
+}
+
+/**
  * Generates Cordova shims and expands the staged plugin.xml template.
  */
 function generateCordovaModules() {
   const packageJson = readPackage(cordovaStageDir)
   const declarationPath = path.join(cordovaStageDir, packageJson.types)
-  const moduleNames = cordovaModuleNames(declarationPath)
   makeCordovaDeclarationsAmbient(declarationPath)
+  const moduleNames = cordovaExports()
   const libDir = path.join(cordovaStageDir, "lib")
 
   // Preserve legacy module IDs by forwarding them to the Rollup bundle.
   for (const moduleName of moduleNames) {
     fs.writeFileSync(
       path.join(libDir, `${moduleName}.js`),
-      `module.exports = require("cordova-powerauth-mobile-sdk.${cordovaPluginName}").${moduleName};\n`,
+      `module.exports = require("${packageJson.name}.${cordovaPluginName}").${moduleName};\n`,
     )
   }
 
