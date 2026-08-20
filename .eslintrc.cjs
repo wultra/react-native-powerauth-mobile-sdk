@@ -36,6 +36,7 @@ module.exports = {
         '.eslintrc.cjs',
         'rollup.config.js',
         'packages/lib-rn/react-native.config.js',
+        'scripts/**/*.cjs',
         'scripts/**/*.mjs',
       ],
       env: {

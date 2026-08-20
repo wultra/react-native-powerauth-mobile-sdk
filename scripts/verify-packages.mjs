@@ -7,12 +7,12 @@ import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
 import { createRequire } from "node:module"
-import { fileURLToPath } from "node:url"
 import ts from "typescript"
+import layout from "./build-layout.cjs"
 
 const require = createRequire(import.meta.url)
 const Module = require("node:module")
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+const rootDir = layout.rootDir
 const rootPackage = readJson(rootDir, "package.json")
 
 function assert(condition, message) {
@@ -138,6 +138,11 @@ function verifyManifest(packageDir, expectedPackage) {
 
 function verifyReactNative(packageDir, expectedPackage) {
   const packageJson = verifyManifest(packageDir, expectedPackage)
+  assert(packageJson.main === "lib/commonjs/index.js", "Unexpected React Native CommonJS entry")
+  assert(packageJson.module === "lib/module/index.js", "Unexpected React Native module entry")
+  assert(packageJson.types === "lib/typescript/index.d.ts", "Unexpected React Native types entry")
+  assert(packageJson["react-native"] === "src/index", "Unexpected React Native source entry")
+  assert(packageJson.source === "src", "Unexpected React Native source directory")
   const mainPath = requireEntry(packageDir, packageJson.main)
   const modulePath = requireEntry(packageDir, packageJson.module)
   const declarationPath = requireEntry(packageDir, packageJson.types)
@@ -158,6 +163,9 @@ function xmlModules(pluginXml) {
 
 function verifyCordova(packageDir, expectedPackage) {
   const packageJson = verifyManifest(packageDir, expectedPackage)
+  assert(packageJson.main === "lib/index.js", "Unexpected Cordova CommonJS entry")
+  assert(packageJson.types === "lib/index.d.ts", "Unexpected Cordova types entry")
+  assert(packageJson.type === "commonjs", "Unexpected Cordova module type")
   const mainPath = requireEntry(packageDir, packageJson.main)
   verifyDeclaration(requireEntry(packageDir, packageJson.types))
   const exports = runtimeExports(mainPath, "cordova")
@@ -200,14 +208,14 @@ function verifyCordova(packageDir, expectedPackage) {
 const packages = [
   {
     target: "rn",
-    sourceDir: path.join(rootDir, "packages", "lib-rn"),
-    stageDir: path.join(rootDir, "packages", "lib-rn", "build", "rn"),
+    sourceDir: layout.rn.packageDir,
+    stageDir: layout.rn.stageDir,
     verify: verifyReactNative,
   },
   {
     target: "cordova",
-    sourceDir: path.join(rootDir, "packages", "lib-cordova"),
-    stageDir: path.join(rootDir, "packages", "lib-cordova", "build", "cdv"),
+    sourceDir: layout.cordova.packageDir,
+    stageDir: layout.cordova.stageDir,
     verify: verifyCordova,
   },
 ]

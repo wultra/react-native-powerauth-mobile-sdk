@@ -10,9 +10,5 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2019"
-  },
-  "include": [
-    "packages/lib-rn/build/rn/src/**/*.ts",
-    "packages/lib-cordova/.build/cdv/src/**/*.ts"
-  ]
+  }
 }

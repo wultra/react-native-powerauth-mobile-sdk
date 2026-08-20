@@ -1,4 +1,4 @@
-const path = require('path');
+const layout = require('../scripts/build-layout.cjs');
 
 module.exports = {
   project: {
@@ -8,7 +8,7 @@ module.exports = {
   },
   dependencies: {
     'react-native-powerauth-mobile-sdk': {
-      root: path.join(__dirname, '..', 'packages', 'lib-rn', 'build', 'rn'),
+      root: layout.rn.stageDir,
       platforms: {
         // Codegen incorrectly fails without explicit platform entries.
         ios: {},

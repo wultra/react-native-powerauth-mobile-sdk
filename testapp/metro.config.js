@@ -1,5 +1,6 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
+const layout = require('../scripts/build-layout.cjs');
 
 // Metro 0.83+ enforces package "exports" in `metro-config`, which means our hack import failed. We're filtering manually now.
 function escapeForMetroExclusionList(pattern) {
@@ -40,11 +41,11 @@ function exclusionList(additionalExclusions) {
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 const root = path.resolve(__dirname, '..');
-const sdk = path.resolve(root, 'packages', 'lib-rn');
-const sharedSdkSource = path.resolve(root, 'packages', 'lib-shared', 'js');
+const sdk = layout.rn.packageDir;
+const sharedSdkSource = layout.shared.jsDir;
 const sharedSdkEntry = path.join(sharedSdkSource, 'index.ts');
 const sharedSdkVersionImporter = path.join(sharedSdkSource, 'PowerAuthUtils.ts');
-const stagedSdkVersion = path.join(sdk, 'build', 'rn', 'src', 'internal', 'SDKVersion.ts');
+const stagedSdkVersion = path.join(layout.rn.stageDir, 'src', 'internal', 'SDKVersion.ts');
 // TODO remove this watcher when/if the packages are fully separated
 const testInfraPackages = [
   path.resolve(root, 'packages', 'mobile-testbed'),

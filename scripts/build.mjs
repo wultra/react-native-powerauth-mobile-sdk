@@ -5,16 +5,16 @@
 import fs from "node:fs"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
-import { fileURLToPath } from "node:url"
+import layout from "./build-layout.cjs"
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const sharedDir = path.join(rootDir, "packages", "lib-shared")
-const rnDir = path.join(rootDir, "packages", "lib-rn")
-const cordovaDir = path.join(rootDir, "packages", "lib-cordova")
-const rnStageDir = path.join(rnDir, "build", "rn")
-const cordovaStageDir = path.join(cordovaDir, "build", "cdv")
-const cordovaTempDir = path.join(cordovaDir, ".build", "cdv")
-const cordovaExportsFile = path.join(cordovaTempDir, "runtime-exports.json")
+const rootDir = layout.rootDir
+const sharedDir = layout.shared.dir
+const rnDir = layout.rn.packageDir
+const cordovaDir = layout.cordova.packageDir
+const rnStageDir = layout.rn.stageDir
+const cordovaStageDir = layout.cordova.stageDir
+const cordovaTempDir = layout.cordova.tempDir
+const cordovaExportsFile = layout.cordova.exportsFile
 const cordovaPluginName = "PowerAuthPlugin"
 const cordovaModulesPlaceholder = "<!-- PLACEHOLDER_MODULES -->"
 const androidJsPath = path.join(

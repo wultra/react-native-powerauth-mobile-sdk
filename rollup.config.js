@@ -3,17 +3,13 @@ import typescript from "rollup-plugin-typescript2"
 import { dts } from "rollup-plugin-dts"
 import { nodeResolve } from "@rollup/plugin-node-resolve"
 import terser from "@rollup/plugin-terser"
+import layout from "./scripts/build-layout.cjs"
 
 const buildTarget = process.env.BUILD_TARGET ?? "all"
 
-const rnInput = "packages/lib-rn/build/rn/src/index.ts"
-const cordovaInput = "packages/lib-cordova/.build/cdv/src/index.ts"
-const cordovaExportsFile = "packages/lib-cordova/.build/cdv/runtime-exports.json"
-const rollupTsconfig = "tsconfig.rollup.json"
-
-const typescriptPlugin = (tsconfig, target, include) => typescript({
-  include,
-  tsconfig,
+const typescriptPlugin = (target, sourceIncludes) => typescript({
+  include: sourceIncludes,
+  tsconfig: layout.rollupTsconfig,
   tsconfigOverride: {
     compilerOptions: {
       allowImportingTsExtensions: false,
@@ -25,6 +21,7 @@ const typescriptPlugin = (tsconfig, target, include) => typescript({
       sourceMap: true,
       target,
     },
+    include: sourceIncludes,
   },
   useTsconfigDeclarationDir: false,
 })
@@ -43,16 +40,16 @@ const writeCordovaExports = {
   writeBundle(_, bundle) {
     const entries = Object.values(bundle).filter((output) => output.type === "chunk" && output.isEntry)
     if (entries.length !== 1) throw new Error(`Expected one Cordova entry chunk, found ${entries.length}`)
-    fs.writeFileSync(cordovaExportsFile, `${JSON.stringify(entries[0].exports.sort(), null, 2)}\n`)
+    fs.writeFileSync(layout.cordova.exportsFile, `${JSON.stringify(entries[0].exports.sort(), null, 2)}\n`)
   },
 }
 
 const rn = [
   {
-    input: rnInput,
+    input: layout.rn.input,
     external: ["react-native"],
     output: {
-      file: "packages/lib-rn/build/rn/lib/commonjs/index.js",
+      file: layout.rn.outputs.commonjs,
       format: "cjs",
       exports: "named",
       sourcemap: true,
@@ -60,28 +57,28 @@ const rn = [
     },
     plugins: [
       nodeResolve({ extensions: [".js", ".ts"] }),
-      typescriptPlugin(rollupTsconfig, "ES2019", ["packages/lib-rn/build/rn/src/**/*.ts"]),
+      typescriptPlugin("ES2019", [layout.rn.sourceGlob]),
     ],
   },
   {
-    input: rnInput,
+    input: layout.rn.input,
     external: ["react-native"],
     output: {
-      file: "packages/lib-rn/build/rn/lib/module/index.js",
+      file: layout.rn.outputs.module,
       format: "es",
       sourcemap: true,
       sourcemapExcludeSources: true,
     },
     plugins: [
       nodeResolve({ extensions: [".js", ".ts"] }),
-      typescriptPlugin(rollupTsconfig, "ES2019", ["packages/lib-rn/build/rn/src/**/*.ts"]),
+      typescriptPlugin("ES2019", [layout.rn.sourceGlob]),
     ],
   },
   {
-    input: rnInput,
+    input: layout.rn.input,
     external: ["react-native"],
     output: {
-      file: "packages/lib-rn/build/rn/lib/typescript/index.d.ts",
+      file: layout.rn.outputs.types,
       format: "es",
     },
     plugins: [dts({ compilerOptions: { stripInternal: true } })],
@@ -90,9 +87,9 @@ const rn = [
 
 const cordova = [
   {
-    input: cordovaInput,
+    input: layout.cordova.input,
     output: {
-      file: "packages/lib-cordova/build/cdv/lib/index.js",
+      file: layout.cordova.outputs.bundle,
       format: "cjs",
       exports: "named",
       sourcemap: false,
@@ -100,19 +97,15 @@ const cordova = [
     plugins: [
       replaceDevConstant,
       nodeResolve({ extensions: [".js", ".ts"] }),
-      typescriptPlugin(
-        rollupTsconfig,
-        "ES2019",
-        ["packages/lib-cordova/.build/cdv/src/**/*.ts"],
-      ),
+      typescriptPlugin("ES2019", [layout.cordova.sourceGlob]),
       terser(),
       writeCordovaExports,
     ],
   },
   {
-    input: cordovaInput,
+    input: layout.cordova.input,
     output: {
-      file: "packages/lib-cordova/build/cdv/lib/index.d.ts",
+      file: layout.cordova.outputs.types,
       format: "es",
     },
     plugins: [dts({ compilerOptions: { stripInternal: true } })],
