@@ -1,7 +1,16 @@
-#require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
-require_relative '../node_modules/react-native/scripts/react_native_pods'
+# Keep React Native Core source-built when combined with the PowerAuth2 source
+# pod. RN 0.87's prebuilt-Core module-map flags are not compatible with it.
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
 
-platform :ios, '18.0'
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
 
 project 'PowerAuth'
 
@@ -14,4 +23,12 @@ target 'PowerAuth' do
   pod 'PowerAuth2', '~> 1.9.5'
   # Uncomment to use not-published SDK in project. This is effective only if you manually open 'ios/PowerAuth.xcworkspace'
   #pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'develop', :submodules => true
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false
+    )
+  end
 end

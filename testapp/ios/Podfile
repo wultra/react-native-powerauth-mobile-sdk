@@ -1,9 +1,9 @@
 # Uncomment, if you want to build the app with the old architecture
 # ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
-# New thingies since 0.80 - downloads precompiled RN Core & RN dependencies instead of building from source
-ENV['RCT_USE_RN_DEP'] = '1'
-ENV['RCT_USE_PREBUILT_RNCORE'] = '1'
+# PowerAuth2 is a source pod. RN 0.87's prebuilt Core currently propagates a
+# private module-map flag to source pods, so keep Core source-built.
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
 
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
