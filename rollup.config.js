@@ -1,6 +1,7 @@
 import typescript from "rollup-plugin-typescript2"
 import { dts } from "rollup-plugin-dts"
 import { nodeResolve } from "@rollup/plugin-node-resolve"
+import terser from "@rollup/plugin-terser"
 
 const buildTarget = process.env.BUILD_TARGET ?? "all"
 
@@ -91,6 +92,7 @@ const cordova = [
         "ES2019",
         ["packages/lib-cordova/.build/cdv/src/**/*.ts"],
       ),
+      terser(),
     ],
   },
   {
