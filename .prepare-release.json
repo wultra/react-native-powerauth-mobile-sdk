@@ -13,31 +13,28 @@
         ],
         "buildscript": "corepack enable && yarn install && yarn packReactNative && yarn build:cdv"
     },
+    "scriptVersion": 2,
+    "devVersion": "0.0.1-dev",
     "files": [
         {
-            "description": "React package definition file.",
-            "path": "packages/react-native-powerauth-mobile-sdk/package.json",
+            "description": "Package definition files.",
+            "paths": ["packages/react-native-powerauth-mobile-sdk/package.json", "package.json"],
             "type": "version_replace",
             "match": "\"version\": \"%VERSION%\",\n",
-            "_comment": "Based on this version, all other versions are derived during the build."
+            "devChange": true
         },
         {
-            "description": "Changelog",
+            "description": "Changelog for the Wultra documentation.",
             "path": "docs/Changelog.md",
-            "type": "version_verify",
-            "match": "## %VERSION%"
+            "type": "tba_replace",
+            "match": "## TBA",
+            "devChangelog": true
         },
         {
-            "description": "Compatibility in the documentation.",
-            "path": "docs/Readme.md",
-            "type": "versionstream_verify",
-            "match": "| `%VERSION_STREAM%`"
-        },
-        {
-            "description": "Compatibility in the documentation.",
-            "path": "README.md",
-            "type": "versionstream_verify",
-            "match": "| `%VERSION_STREAM%`"
+            "description": "Verify that the changelog does not contain a TBA placeholder.",
+            "path": "docs/Changelog.md",
+            "type": "verify_not_containing",
+            "match": "- TBA"
         }
     ]
 }
