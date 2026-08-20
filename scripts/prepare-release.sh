@@ -6,38 +6,42 @@ set -u # stop when undefined variable is used
 
 ######### USAGE #########
 #
-# To prepare or verify release metadata of the library (settings proper version, updating changelog, etc.)
+# To prepare or verify release metadata of the library (setting the proper version, updating changelog, etc.)
 # - this script runs the JavaScript script from Wultra infrastructure repository
 # - it uses data defined in `.prepare-release.json` file in the root of the repository
 # - it passes all parameters to the JavaScript script
 #
-#
-# It can be run in 3 modes:
+# Usage: sh scripts/prepare-release.sh [-v X.Y.Z] [options]
 #
 # 1. With a version (-v X.Y.Z) argument:
-#  - it will prepare the release with the current version
+#  - it will prepare the release with the specified version
 #  - use it when you're preparing a new release pull-request
 #  - Example: sh scripts/prepare-release.sh -v 1.0.0
 #
-# 2. With a version argument and --verify:
+# 2. With --verify:
 #  - it will verify that the given release version is prepared.
 #  - use it to make sure that the release pull-request is properly prepared (also used on CI)
 #  - Example: sh scripts/prepare-release.sh -v 1.0.0 --verify
 #
-# 3. Without arguments:
-#  - it will run the script in the root directory of the repository and verify that all files are prepared.
-#  - use it to make sure that the current state of the repository is ready for release
-#  - Example: sh scripts/prepare-release.sh
+# 3. With --prepare-dev:
+#  - it will verify the current release and prepare files for development.
+#  - Example: sh scripts/prepare-release.sh --prepare-dev
 #
-# Note: you can add --ignore-git-clean to ignore "git clean" errors (useful when testing things locally)
+# Without -v, the current version is read and only verified.
+#
+# Options:
+# - --ignore-git-clean: skip the initial and final Git cleanliness checks
+# - --enforce-git-clean: fail instead of asking when the repository is initially dirty
+# - -h, --help: show help
 #
 #########################
 
 # path to the script folder
 SCRIPT_FOLDER=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PROJECT_ROOT="${SCRIPT_FOLDER}/.."
 
 # URL of the JavaScript prepare-release script in Wultra infrastructure repository
-URL="https://raw.githubusercontent.com/wultra/wultra-infrastructure/refs/heads/mobile/mobile/release/prepare/v1/prepare-release.js"
+URL="https://raw.githubusercontent.com/wultra/wultra-infrastructure/refs/heads/mobile/mobile/release/prepare/prepare-release.js"
 
-# execute the remote node and pass all parameters to it + add path parameter to the root of the repository
-curl -fsSL "${URL}" | node - -p "${SCRIPT_FOLDER}/.." "${@}"
+# Execute the remote node and pass all parameters to it + add path parameter to the root of the repository.
+curl -fsSL "${URL}" -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' | node - -p "${PROJECT_ROOT}" "${@}"
