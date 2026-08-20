@@ -2,6 +2,7 @@
 
 set -e # stop script when error occurs
 set -u # stop when undefined variable is used
+set -o pipefail # stop when a command in a pipeline fails
 #set -x # print all execution (good for debugging)
 
 ######### USAGE #########
@@ -18,7 +19,7 @@ set -u # stop when undefined variable is used
 #  - use it when you're preparing a new release pull-request
 #  - Example: sh scripts/prepare-release.sh -v 1.0.0
 #
-# 2. With --verify:
+# 2. With a version and --verify:
 #  - it will verify that the given release version is prepared.
 #  - use it to make sure that the release pull-request is properly prepared (also used on CI)
 #  - Example: sh scripts/prepare-release.sh -v 1.0.0 --verify
