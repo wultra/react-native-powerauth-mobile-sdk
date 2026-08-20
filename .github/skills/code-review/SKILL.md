@@ -5,15 +5,20 @@ description: Review pull requests in the PowerAuth JavaScript Mobile SDK reposit
 
 # PowerAuth JavaScript Mobile SDK review
 
+Review only PR and repository content already available. Do not run or suggest
+commands, scripts, builds, tests, linters, formatters, validation tasks, or Git
+operations.
+
 ## Review contract
 
-Review the PR target, head, and current checkout before examining the diff. This
-repository's normal target is `develop`; release targets are `release/a.b.x`.
-Default to approval. Report only a concrete, reproducible defect introduced by
-the PR, with its file and line, user/security impact, and a specific correction.
-Do not make style, formatting, workflow/CI, speculative, or “consider adding
-tests” comments. Do not post review content to GitHub without the user's
-approval; any content that could be posted must start with `🤖`.
+Use available PR metadata for the target and head, then examine the available
+diff. This repository's normal target is `develop`; release targets are
+`release/a.b.x`. Default to approval. Report only a concrete, reproducible
+defect introduced by the PR, with its file and line, user/security impact, and
+a specific correction. Do not make style, formatting, workflow/CI, speculative,
+or “consider adding tests” comments. Do not post review content to GitHub
+without the user's approval; any content that could be posted must start with
+`🤖`.
 
 Check grammar only in public documentation/JSDoc, and only when the PR base is
 not a `release/*` branch. Public API, behavior, or release changes need matching
@@ -32,7 +37,8 @@ This Yarn 4.3.1 monorepo publishes the React Native and Cordova wrappers:
   `packages/mobile-test-reporter` implement the end-to-end protocol; do not
   confuse generated `dist/` and `build/` output with source.
 * `testapp/` and `testapp-cordova/` are integration hosts; `scripts/e2e/` and
-  `.github/workflows/mobile-e2e.yml` exercise Android and iOS.
+  `.github/workflows/mobile-e2e.yml` contain tracked Android and iOS automation
+  that may be read for context only.
 
 The package version substituted at deployment is
 `%DEPLOY_VERSION%` in the package manifests. A release-to-`develop` change must
@@ -40,12 +46,6 @@ declare `0.0.1-dev` wherever it declares a package version; do not accept a
 release number leaking back to development. Treat `packages/*/build`,
 `packages/*/dist`, `node_modules`, platform-generated files, and app build
 directories as generated unless the PR intentionally changes their generator.
-
-Relevant validation commands are `yarn build`, `yarn lint`, targeted workspace
-commands (`yarn workspace react-native-powerauth-mobile-sdk build`), and the
-appropriate `yarn buildReactIos`, `yarn buildReactAndroid`,
-`yarn buildCordovaIos`, or `yarn buildCordovaAndroid`. E2E entry points are
-`yarn e2e:local:rn`, `yarn e2e:local:cordova`, and `yarn e2e:local:full`.
 
 ## API and native-boundary checks
 
@@ -83,8 +83,8 @@ protocol changes for explicit local binding, bounded request parsing, correct
 content/error handling, and no sensitive payload retention. Validate data at
 the TypeScript/native boundary rather than trusting a cast from JS maps.
 
-For a behavior change in either wrapper, require focused coverage in the
-appropriate package or host/E2E scenario when an existing test seam covers it.
-For test-protocol changes, keep `mobile-testbed`, runner, reporter, and both
-hosts compatible. Public API additions/removals require the package README,
-`docs/`, and changelog/release material where applicable.
+Tests in the appropriate package or host/E2E scenario may be inspected as
+evidence for a behavior change, but never suggest running them. For
+test-protocol changes, keep `mobile-testbed`, runner, reporter, and both hosts
+compatible. Public API additions/removals require the package README, `docs/`,
+and changelog/release material where applicable.
