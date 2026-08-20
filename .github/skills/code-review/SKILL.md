@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Review pull requests in the PowerAuth JavaScript Mobile SDK repository. Use when reviewing React Native, Cordova, native bridge, public API, security, or release changes.
+---
+
 # PowerAuth JavaScript Mobile SDK review
 
 ## Review contract
