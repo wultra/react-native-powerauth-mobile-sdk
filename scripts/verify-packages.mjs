@@ -20,15 +20,12 @@ function readJson(packageDir, relativePath) {
   return JSON.parse(fs.readFileSync(requireFile(packageDir, relativePath), "utf8"))
 }
 
-function declarationExports(filePath) {
-  const declaration = fs.readFileSync(filePath, "utf8")
-  const match = declaration.match(/^export \{ ([^}]+) \};$/m)
-  assert(match, `Missing declaration export list in ${path.relative(rootDir, filePath)}`)
-  return match[1].split(",").map((name) => name.trim()).sort()
-}
-
 function cordovaModuleNames(filePath) {
   const declaration = fs.readFileSync(filePath, "utf8")
+  assert(
+    !/^(?:import|export)\s/m.test(declaration),
+    `${path.relative(rootDir, filePath)} must contain ambient Cordova declarations`,
+  )
   const matches = declaration.matchAll(/declare(\sabstract)? [a-z]* (?<name>[A-Za-z0-9_]*)/g)
   return [...new Set([...matches].map((match) => match.groups?.name).filter(Boolean))]
 }
@@ -46,7 +43,7 @@ assert(
   "Root and staged package versions differ",
 )
 
-const rnDeclaration = requireFile(rnStageDir, rnPackage.types)
+requireFile(rnStageDir, rnPackage.types)
 requireFile(rnStageDir, rnPackage.main)
 requireFile(rnStageDir, rnPackage.module)
 requireFile(rnStageDir, "src/index.ts")
@@ -57,11 +54,6 @@ const cordovaDeclaration = requireFile(cordovaStageDir, cordovaPackage.types)
 requireFile(cordovaStageDir, cordovaPackage.main)
 requireFile(cordovaStageDir, `${cordovaPackage.main}.map`)
 requireFile(cordovaStageDir, "android/build.gradle")
-
-assert(
-  JSON.stringify(declarationExports(rnDeclaration)) === JSON.stringify(declarationExports(cordovaDeclaration)),
-  "React Native and Cordova public exports differ",
-)
 
 const pluginPath = requireFile(cordovaStageDir, "plugin.xml")
 const pluginXml = fs.readFileSync(pluginPath, "utf8")

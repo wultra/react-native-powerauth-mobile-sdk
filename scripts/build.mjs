@@ -88,12 +88,28 @@ function cordovaModuleNames(declarationPath) {
 }
 
 /**
+ * Converts bundled module declarations to Cordova-compatible ambient declarations.
+ * @param {string} declarationPath Declaration file path.
+ */
+function makeCordovaDeclarationsAmbient(declarationPath) {
+  const declaration = fs.readFileSync(declarationPath, "utf8")
+  const ambientDeclaration = declaration.replace(/^export(?: type)? \{ [^}]+ \};\n?/gm, "")
+  if (ambientDeclaration === declaration || /^(?:import|export)\s/m.test(ambientDeclaration)) {
+    throw new Error(
+      `Failed to create ambient declarations in ${path.relative(rootDir, declarationPath)}`,
+    )
+  }
+  fs.writeFileSync(declarationPath, ambientDeclaration)
+}
+
+/**
  * Generates Cordova shims and expands the staged plugin.xml template.
  */
 function generateCordovaModules() {
   const packageJson = readPackage(cordovaStageDir)
   const declarationPath = path.join(cordovaStageDir, packageJson.types)
   const moduleNames = cordovaModuleNames(declarationPath)
+  makeCordovaDeclarationsAmbient(declarationPath)
   const libDir = path.join(cordovaStageDir, "lib")
 
   // Preserve legacy module IDs by forwarding them to the Rollup bundle.
