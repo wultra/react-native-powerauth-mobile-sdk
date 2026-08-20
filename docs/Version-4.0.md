@@ -23,6 +23,10 @@ PowerAuth Mobile JS SDK in version `4.0.0` provides the following improvements:
   - The `commitWithPasswordAndBiometry()` was renamed to `persistWithPasswordAndBiometry()`
 - The `signDataWithDevicePrivateKey()` now requires `dataFormat` parameter to hint if the signed data is plain string (`UTF8`) or Base64 encoded data (`BASE64`).
 
+### Compatibility with PowerAuth Server
+
+- This release is fully compatible with PowerAuth Server version `1.9.0` and newer.
+
 ### Other changes
 
 #### New Error Code
