@@ -18,7 +18,7 @@
     "files": [
         {
             "description": "Package definition files.",
-            "paths": ["packages/react-native-powerauth-mobile-sdk/package.json", "package.json"],
+            "paths": ["packages/lib-rn/package.json", "package.json"],
             "type": "version_replace",
             "match": "\"version\": \"%VERSION%\",\n",
             "devChange": true
