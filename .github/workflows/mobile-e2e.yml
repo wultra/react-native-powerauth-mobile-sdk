@@ -171,17 +171,16 @@ jobs:
         run: |
           yarn install --immutable
 
-      - name: Cache CocoaPods (RN)
+      - name: Cache CocoaPods downloads (RN)
         uses: actions/cache@v4
         with:
           path: |
-            testapp/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-e2e-ios-rn-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-e2e-ios-rn-
-            ${{ runner.os }}-e2e-ios-
+            ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-
+            ${{ runner.os }}-e2e-ios-cocoapods-v1-
 
       - name: Build test infra packages
         run: |
