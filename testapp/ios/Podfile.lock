@@ -1821,7 +1821,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-config (from `../node_modules/react-native-config`)
-  - react-native-powerauth-mobile-sdk (from `../../packages/lib-rn/build/rn`)
+  - react-native-powerauth-mobile-sdk (from `../../packages/lib-rn/build`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -1938,7 +1938,7 @@ EXTERNAL SOURCES:
   react-native-config:
     :path: "../node_modules/react-native-config"
   react-native-powerauth-mobile-sdk:
-    :path: "../../packages/lib-rn/build/rn"
+    :path: "../../packages/lib-rn/build"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-NativeModulesApple:

@@ -1,5 +1,7 @@
 /**
- * Smoke-tests the packages produced by npm pack.
+ * Checks the npm packages built for React Native and Cordova.
+ * It extracts each package and verifies its metadata, required files, entry points,
+ * type definitions, and runtime exports.
  */
 
 import fs from "node:fs"

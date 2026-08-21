@@ -8,8 +8,8 @@
         "name": "react-native-powerauth-mobile-sdk",
         "type": "yarn",
         "artifacts": [
-            "packages/lib-cordova/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
-            "packages/lib-rn/build/rn/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
+            "packages/lib-cordova/build/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
+            "packages/lib-rn/build/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
         ],
         "buildscript": "corepack enable && yarn install && yarn packAll"
     },
