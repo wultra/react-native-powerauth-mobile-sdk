@@ -169,7 +169,7 @@ export class IntegrationHelper {
         if (!this.applicationDetail?.mobileSdkConfig) {
             throw new Error("Application detail is missing mobileSdkConfig")
         }
-        return this.applicationDetail!!
+        return this.applicationDetail
     }
 
     async createActivation(userId?: string, autoCommit: boolean = true): Promise<CreatedActivation> {
