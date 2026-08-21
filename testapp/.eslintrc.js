@@ -13,7 +13,7 @@ module.exports = {
       env: { node: true },
       parserOptions: { sourceType: 'script' },
       rules: {
-        '@typescript-eslint/no-var-requires': 'off'
+        '@typescript-eslint/no-require-imports': 'off'
       }
     }
   ]
