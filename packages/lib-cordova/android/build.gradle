@@ -5,7 +5,7 @@ buildscript {
   }
 
   dependencies {
-    classpath("com.android.tools.build:gradle:8.7.2")
+    classpath("com.android.tools.build:gradle:8.9.1")
   }
 }
 
@@ -27,6 +27,6 @@ repositories {
 }
 
 dependencies {
-  implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.22"))
+  implementation(platform("org.jetbrains.kotlin:kotlin-bom:2.1.20"))
   api "com.wultra.android.powerauth:powerauth-sdk:2.0.0"
 }
