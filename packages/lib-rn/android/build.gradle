@@ -4,7 +4,6 @@ ext {
   
   PowerAuthSdkRN_kotlinVersion = "2.2.0"
   PowerAuthSdkRN_minSdkVersion = 24
-  PowerAuthSdkRN_targetSdkVersion = 36
   PowerAuthSdkRN_compileSdkVersion = 37
   PowerAuthSdkRN_ndkVersion = "27.1.12297006"
   PowerAuthSdkRN_reactNativeVersion = "0.87.0"
@@ -53,7 +52,6 @@ android {
 
   defaultConfig {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
   buildTypes {
