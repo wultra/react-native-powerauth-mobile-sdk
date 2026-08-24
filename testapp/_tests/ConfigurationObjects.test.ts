@@ -58,7 +58,7 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(config).toEqual(defaultConfig)
         expect(Object.isFrozen(config)).toBe(false)
 
-        let frozen = buildClientConfiguration(config)
+        const frozen = buildClientConfiguration(config)
         expect(frozen).toEqual(config)
         expect(Object.isFrozen(frozen)).toBe(true)
         expect(Object.isFrozen(config)).toBe(false)
@@ -93,7 +93,7 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(config).toEqual(defaultConfig)
         expect(Object.isFrozen(config)).toBe(false)
 
-        let frozen = buildBiometryConfiguration(config)
+        const frozen = buildBiometryConfiguration(config)
         expect(frozen).toEqual(config)
         expect(Object.isFrozen(frozen)).toBe(true)
         expect(Object.isFrozen(config)).toBe(false)
@@ -149,7 +149,7 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(config).toEqual(defaultConfig)
         expect(Object.isFrozen(config)).toBe(false)
         
-        let frozen = buildKeychainConfiguration(config)
+        const frozen = buildKeychainConfiguration(config)
         expect(frozen).toEqual(config)
         expect(Object.isFrozen(frozen)).toBe(true)
         expect(Object.isFrozen(config)).toBe(false)

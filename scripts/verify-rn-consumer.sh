@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Local development check for validating the packed SDK in a clean RN app.
 set -euo pipefail
 
 export LANG=en_US.UTF-8

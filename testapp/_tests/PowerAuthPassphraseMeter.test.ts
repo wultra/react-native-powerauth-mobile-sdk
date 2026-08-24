@@ -67,7 +67,7 @@ export class PowerAuthPassphraseMeterTests extends TestSuite {
             let result = await PowerAuthPassphraseMeter.testPin(td.pin)
             expect(result.issues).toContain(td.issues)
             expect(result.shouldWarnUserAboutWeakPin).toBe(td.shouldWarn)
-            let pin = await this.importPassword(td.pin)
+            const pin = await this.importPassword(td.pin)
             result = await PowerAuthPassphraseMeter.testPin(pin)
             expect(result.issues).toContain(td.issues)
             expect(result.shouldWarnUserAboutWeakPin).toBe(td.shouldWarn)

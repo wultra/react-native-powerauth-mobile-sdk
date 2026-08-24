@@ -99,16 +99,12 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
 
         // Validate status
 
-        let doCommitActivation = false
-        
         if (state !== PowerAuthActivationState.PENDING_COMMIT) {
             if (state === PowerAuthActivationState.ACTIVE) {
                 this.reportWarning(`State should be PENDING_COMMIT but is ACTIVE`)
             } else {
                 this.reportFailure(`State should be PENDING_COMMIT but is ${state}`)
             }
-        } else {
-            doCommitActivation = true
         }
         // [ 4 ] Commit activation on the server, if required
         

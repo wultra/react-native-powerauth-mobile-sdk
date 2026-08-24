@@ -113,7 +113,6 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
     async testDeviceSignedDataBase64() {
         const dataToSign = 'This is a very sensitive information and must be signed.'
         const dataToSignBase64 = btoa(dataToSign)
-        const activationId = await this.sdk.getActivationIdentifier()
         expect(await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSignBase64, 'BASE64')).toSucceed()
         // Now verify signature on the server.
         // We provide plain data, as the test server library will encode it to Base64 internally.
@@ -178,13 +177,13 @@ class SignatureHelper {
         const components = new Map<string, string>()
         header.substring(SignatureHelper.signatureMagic.length)
             .split(', ')
-            .forEach((keyValue, index) => {
+            .forEach(keyValue => {
                 const equalIdx = keyValue.indexOf('=')
                 if (equalIdx == -1) {
                     throw new Error(`Unknown component in header: ${keyValue}`)
                 }
                 const key = keyValue.substring(0, equalIdx)
-                let value = keyValue.substring(equalIdx + 1)
+                const value = keyValue.substring(equalIdx + 1)
                 if (!value.startsWith('\"') || !value.endsWith('\"')) {
                     throw new Error(`Value is not closed in parenthesis:: ${keyValue}`)
                 }
