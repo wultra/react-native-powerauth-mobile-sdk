@@ -1,0 +1,204 @@
+name: PR CI Command
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  actions: read
+  contents: write
+  issues: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: pr-ci-command-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: >-
+      github.event.issue.pull_request &&
+      (contains(github.event.comment.body, '/ci-build') ||
+      contains(github.event.comment.body, '/ci-test'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate command and dispatch workflows
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.comment.body;
+            const buildRequested = /(^|\s)\/ci-build\b/.test(body);
+            const testRequested = /(^|\s)\/ci-test\b/.test(body);
+
+            if (!buildRequested && !testRequested) {
+              core.info('No supported CI command found.');
+              return;
+            }
+
+            let permission;
+            try {
+              const response = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              permission = response.data.permission;
+            } catch (error) {
+              if (error.status === 404) {
+                core.notice(`@${context.actor} is not a repository collaborator.`);
+                return;
+              }
+              throw error;
+            }
+
+            if (!['admin', 'write'].includes(permission)) {
+              core.notice(`@${context.actor} does not have write permission.`);
+              return;
+            }
+
+            const pullNumber = context.payload.issue.number;
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            if (pull.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              core.setFailed('CI commands are disabled for pull requests from forks.');
+              return;
+            }
+
+            const commitSha = pull.head.sha;
+            const statuses = await github.paginate(
+              github.rest.repos.listCommitStatusesForRef,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: commitSha,
+                per_page: 100,
+              },
+            );
+
+            const requestedWorkflows = [
+              {
+                requested: buildRequested,
+                context: 'ci/build-cordova',
+                eventType: 'ci-build-cordova',
+                name: 'Build Cordova Integration',
+              },
+              {
+                requested: buildRequested,
+                context: 'ci/build-react-native',
+                eventType: 'ci-build-react-native',
+                name: 'Build RN Integration',
+              },
+              {
+                requested: testRequested,
+                context: 'ci/mobile-e2e',
+                eventType: 'ci-mobile-e2e',
+                name: 'Mobile E2E',
+              },
+            ];
+
+            const errors = [];
+
+            for (const workflow of requestedWorkflows) {
+              if (!workflow.requested) {
+                continue;
+              }
+
+              const latestStatus = statuses.find(
+                (status) => status.context === workflow.context,
+              );
+
+              if (latestStatus?.state === 'success') {
+                core.info(`${workflow.name} already succeeded for ${commitSha}.`);
+                continue;
+              }
+
+              if (latestStatus?.state === 'pending') {
+                const runId = latestStatus.target_url?.match(
+                  /\/actions\/runs\/(\d+)$/,
+                )?.[1];
+
+                if (!runId) {
+                  const queuedAt = Date.parse(latestStatus.created_at);
+                  const queueTimeoutMs = 10 * 60 * 1000;
+
+                  if (Date.now() - queuedAt < queueTimeoutMs) {
+                    core.info(`${workflow.name} is already queued for ${commitSha}.`);
+                    continue;
+                  }
+
+                  core.warning(
+                    `${workflow.name} has been queued for more than 10 minutes; dispatching it again.`,
+                  );
+                }
+
+                if (runId) {
+                  const { data: run } = await github.rest.actions.getWorkflowRun({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    run_id: Number(runId),
+                  });
+
+                  if (run.status !== 'completed') {
+                    core.info(`${workflow.name} is already running for ${commitSha}.`);
+                    continue;
+                  }
+
+                  if (run.conclusion === 'success') {
+                    await github.rest.repos.createCommitStatus({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      sha: commitSha,
+                      state: 'success',
+                      context: workflow.context,
+                      description: `${workflow.name} succeeded`,
+                      target_url: latestStatus.target_url,
+                    });
+                    core.info(`${workflow.name} already succeeded for ${commitSha}.`);
+                    continue;
+                  }
+                }
+              }
+
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: commitSha,
+                state: 'pending',
+                context: workflow.context,
+                description: `Queued by @${context.actor}`,
+              });
+
+              try {
+                await github.rest.repos.createDispatchEvent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  event_type: workflow.eventType,
+                  client_payload: {
+                    commit_sha: commitSha,
+                    pr_number: pullNumber,
+                    requested_by: context.actor,
+                  },
+                });
+                core.info(`Dispatched ${workflow.name} for ${commitSha}.`);
+              } catch (error) {
+                await github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: commitSha,
+                  state: 'error',
+                  context: workflow.context,
+                  description: 'Failed to dispatch workflow',
+                });
+                errors.push(`${workflow.name}: ${error.message}`);
+              }
+            }
+
+            if (errors.length > 0) {
+              core.setFailed(errors.join('\n'));
+            }
