@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   rn-android:
-    name: Android RN (API ${{ matrix.api-level }})
+    name: Android RN (API 36)
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -46,14 +46,6 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        api-level: [24, 34]
-    strategy:
-      fail-fast: false
-      matrix:
-        api-level: [24, 34]
     steps:
       # A PR synchronize event often becomes stale as soon as another commit is pushed.
       # Cancel its first attempt before running the emulator or E2E tests.
@@ -104,7 +96,7 @@ jobs:
         env:
           E2E_MODE: rn
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: Nexus 6
@@ -117,7 +109,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-artifacts-android-rn-api-${{ matrix.api-level }}
+          name: mobile-e2e-artifacts-android-rn-api-36
           path: artifacts/e2e
 
   cordova-android:
