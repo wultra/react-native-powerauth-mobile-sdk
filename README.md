@@ -22,7 +22,7 @@ The documentation is available at the [Wultra Developer Portal](https://develope
 
 ## License
 
-All sources are licensed using Apache 2.0 license, you can use them with no restriction. If you are using PowerAuth 2.0, please let us know. We will be happy to share and promote your project.
+All sources are licensed using Apache 2.0 license, you can use them with no restriction. If you are using PowerAuth, please let us know. We will be happy to share and promote your project.
 
 ## Contact
 
