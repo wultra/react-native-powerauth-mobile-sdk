@@ -7,10 +7,10 @@
 
 ### Supported Platforms
 
-The library is available for the following __React Native (0.64.1+)__ platforms:
+The library is available for the following __React Native (0.87+)__ platforms:
 
-- __Android 5.0 (API 21)__ and newer
-- __iOS 13.4__ and newer
+- __Android 7.0 (API 24)__ and newer
+- __iOS 15.1__ and newer
 
 ### How To Install
 
