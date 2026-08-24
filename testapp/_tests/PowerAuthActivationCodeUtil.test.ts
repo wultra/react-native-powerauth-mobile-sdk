@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivationCode, PowerAuthActivationCodeUtil } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivationCodeUtil } from "react-native-powerauth-mobile-sdk";
 import { TestSuite, expect } from "mobile-testbed";
 
 export class PowerAuthActivationCodeUtilTests extends TestSuite {

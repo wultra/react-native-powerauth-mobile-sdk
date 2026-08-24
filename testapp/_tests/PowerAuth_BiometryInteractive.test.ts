@@ -55,7 +55,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
-        let biometryInfo = await this.sdk.getBiometryInfo()
+        const biometryInfo = await this.sdk.getBiometryInfo()
         if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
             this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
         }
@@ -224,8 +224,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         
         const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use wrong biometry to fail"})
         // At biometry fail, the fake key is generated and the signature will be invalid
-        let uriId = '/some/failed/uriId'
-        let body = '{ failedApi: true }'
+        const uriId = '/some/failed/uriId'
+        const body = '{ failedApi: true }'
         const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
         const result = await this.helper.verifySignature('POST', uriId, body, header.value)
         expect(result.signatureValid).toBe(false)
@@ -236,8 +236,8 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         await this.showPrompt('Please FAIL authentication and use device passcode')
         const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode"})
         // At biometry passcode fallback, everything should work properly
-        let uriId = '/some/fallback/uriId'
-        let body = '{ fallbackApi: true }'
+        const uriId = '/some/fallback/uriId'
+        const body = '{ fallbackApi: true }'
         const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
         const result = await this.helper.verifySignature('POST', uriId, body, header.value)
         expect(result.signatureValid).toBe(true)
