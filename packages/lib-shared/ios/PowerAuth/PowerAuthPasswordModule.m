@@ -20,7 +20,7 @@
 #import "Constants.h"
 #import "PAJS.h"
 
-@import PowerAuthCore;
+@import PowerAuth2;
 
 @implementation PowerAuthPasswordModule
 {

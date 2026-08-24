@@ -17,17 +17,19 @@
 #import "PAJS.h"
 #import "Errors.h"
 
-@class PowerAuthCoreEciesEncryptor;
+@class PowerAuthEncryptor;
 
 /// Object containing all encryptor's data required for the request encryption.
 @interface PowerAuthJsEncryptor: NSObject
 
-- (nonnull instancetype) initWithEncryptor:(nonnull PowerAuthCoreEciesEncryptor*)encryptor
+- (nonnull instancetype) initWithEncryptor:(nonnull PowerAuthEncryptor*)encryptor
                        powerAuthInstanceId:(nonnull NSString*)powerAuthInstanceId
                           activationScoped:(BOOL)activationScoped;
 
+- (nonnull PowerAuthEncryptor*) takeCoreEncryptor;
+
 @property (nonatomic, readonly) BOOL activationScoped;
-@property (nonatomic, readonly, strong, nonnull) PowerAuthCoreEciesEncryptor * coreEncryptor;
+@property (nonatomic, readonly, strong, nullable) PowerAuthEncryptor * coreEncryptor;
 @property (nonatomic, readonly, strong, nonnull) NSString * powerAuthInstanceId;
 
 @end

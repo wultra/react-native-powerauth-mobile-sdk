@@ -30,7 +30,7 @@
 #import <PowerAuth2/PowerAuthCustomHeaderRequestInterceptor.h>
 #import <PowerAuth2/PowerAuthBasicHttpAuthenticationRequestInterceptor.h>
 
-@import PowerAuthCore;
+@import PowerAuth2;
 
 @implementation PowerAuthModule
 {
@@ -237,8 +237,6 @@ PAJS_METHOD_START(createActivation,
     
     NSString* name = activation[@"activationName"];
     NSString* activationCode = activation[@"activationCode"];
-    NSString* recoveryCode = activation[@"recoveryCode"];
-    NSString* recoveryPuk = activation[@"recoveryPuk"];
     NSDictionary* identityAttributes = activation[@"identityAttributes"];
     NSString* extras = activation[@"extras"];
     NSDictionary* customAttributes = activation[@"customAttributes"];
@@ -247,8 +245,6 @@ PAJS_METHOD_START(createActivation,
     
     if (activationCode) {
         paActivation = [PowerAuthActivation activationWithActivationCode:activationCode name:name error:nil];
-    } else if (recoveryCode && recoveryPuk) {
-        paActivation = [PowerAuthActivation activationWithRecoveryCode:recoveryCode recoveryPuk:recoveryPuk name:name error:nil];
     } else if (identityAttributes) {
         paActivation = [PowerAuthActivation activationWithIdentityAttributes:identityAttributes name:name error:nil];
     } else if (oidcParameters) {
@@ -296,10 +292,6 @@ PAJS_METHOD_START(createActivation,
         if (error == nil) {
             resolve(PatchNull(@{
                 @"activationFingerprint": result.activationFingerprint,
-                @"activationRecovery": result.activationRecovery ? @{
-                    @"recoveryCode": result.activationRecovery.recoveryCode,
-                    @"puk": result.activationRecovery.puk
-                } : [NSNull null],
                 @"customAttributes": result.customAttributes ? result.customAttributes : [NSNull null],
                 @"userInfo": result.userInfo
                     ? @{ @"allClaims": result.userInfo.allClaims ?: [NSNull null] }
@@ -630,9 +622,9 @@ PAJS_METHOD_START(fetchEncryptionKey,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
     if (!auth) return;
     
-    [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(NSData * encryptionKey, NSError * error) {
+    [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(PowerAuthSecureData * encryptionKey, NSError * error) {
         if (encryptionKey) {
-            resolve([encryptionKey base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
+            resolve([encryptionKey.sensitiveData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
             ProcessError(error, reject);
         }
@@ -685,58 +677,6 @@ PAJS_METHOD_START(validatePassword,
             ProcessError(error, reject);
         } else {
             resolve(nil);
-        }
-    }];
-    PA_BLOCK_END
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(hasActivationRecoveryData,
-                  PAJS_ARGUMENT(instanceId, NSString*))
-{
-    PA_BLOCK_START
-    resolve(@([powerAuth hasActivationRecoveryData]));
-    PA_BLOCK_END
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(activationRecoveryData,
-                  PAJS_ARGUMENT(instanceId, NSString*)
-                  PAJS_ARGUMENT(authDict, NSDictionary*))
-{
-    PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
-    if (!auth) return;
-    
-    [powerAuth activationRecoveryData:auth callback:^(PowerAuthActivationRecoveryData * data, NSError * error) {
-        if (error) {
-            ProcessError(error, reject);
-        } else {
-            NSDictionary *response = @{
-                @"recoveryCode": data.recoveryCode,
-                @"puk": data.puk
-            };
-            resolve(response);
-        }
-    }];
-    PA_BLOCK_END
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(confirmRecoveryCode,
-                  PAJS_ARGUMENT(instanceId, NSString*)
-                  PAJS_ARGUMENT(recoveryCode, NSString*)
-                  PAJS_ARGUMENT(authDict, NSDictionary*))
-{
-    PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
-    if (!auth) return;
-    
-    [powerAuth confirmRecoveryCode:recoveryCode authentication:auth callback:^(BOOL alreadyConfirmed, NSError * error) {
-        if (error) {
-            ProcessError(error, reject);
-        } else {
-            resolve(alreadyConfirmed ? @YES : @NO);
         }
     }];
     PA_BLOCK_END
@@ -805,7 +745,7 @@ PAJS_METHOD_START(authenticateWithBiometry,
     [powerAuth authenticateUsingBiometryWithContext:context callback:^(PowerAuthAuthentication * authentication, NSError * error) {
         if (authentication) {
             // Allocate native object
-            PowerAuthData * managedData = [[PowerAuthData alloc] initWithData:authentication.overridenBiometryKey cleanup:YES];
+            PowerAuthData * managedData = [[PowerAuthData alloc] initWithSecureData:authentication.customBiometryKey];
             // If reusable authentication is going to be created, then "keep alive" release policy is applied.
             // Basically, the data will be available up to 10 seconds from the last access.
             // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
@@ -843,35 +783,6 @@ PAJS_METHOD_START(validateActivationCode,
                   PAJS_ARGUMENT(activationCode, NSString*))
 {
     resolve([PowerAuthActivationCodeUtil validateActivationCode:activationCode] ? @YES : @NO);
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(parseRecoveryCode,
-                  PAJS_ARGUMENT(recoveryCode, NSString*))
-{
-    PowerAuthActivationCode *ac = [PowerAuthActivationCodeUtil parseFromRecoveryCode:recoveryCode];
-    if (ac) {
-        resolve(PatchNull(@{
-            @"activationCode": ac.activationCode,
-            @"activationSignature": ac.activationSignature ? ac.activationSignature : [NSNull null]
-        }));
-    } else {
-        reject(EC_INVALID_RECOVERY_CODE, @"Invalid recovery code.", nil);
-    }
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(validateRecoveryCode,
-                  PAJS_ARGUMENT(recoveryCode, NSString*))
-{
-    resolve([PowerAuthActivationCodeUtil validateRecoveryCode:recoveryCode] ? @YES : @NO);
-}
-PAJS_METHOD_END
-
-PAJS_METHOD_START(validateRecoveryPuk,
-                  PAJS_ARGUMENT(recoveryPuk, NSString*))
-{
-    resolve([PowerAuthActivationCodeUtil validateRecoveryPuk:recoveryPuk] ? @YES : @NO);
 }
 PAJS_METHOD_END
 
@@ -1185,7 +1096,7 @@ PAJS_METHOD_END
             if (biometryKeyId) {
                 PowerAuthData * biometryKeyData = [_objectRegister useObjectWithId:biometryKeyId expectedClass:[PowerAuthData class]];
                 if (biometryKeyData) {
-                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKeyData.data customPossessionKey:nil];
+                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKeyData.secureData customPossessionKey:nil];
                 } else {
                     reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
                     return nil;
@@ -1212,7 +1123,6 @@ PAJS_METHOD_END
 - (NSString*) getStatusCode:(PowerAuthActivationState)status
 {
     switch (status) {
-        case PowerAuthActivationState_Created: return @"CREATED";
         case PowerAuthActivationState_PendingCommit: return @"PENDING_COMMIT";
         case PowerAuthActivationState_Active: return @"ACTIVE";
         case PowerAuthActivationState_Blocked: return @"BLOCKED";

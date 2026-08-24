@@ -26,8 +26,6 @@ export class PowerAuthActivation {
 
     activationName: string
     activationCode?: string
-    recoveryCode?: string
-    recoveryPuk?: string
     identityAttributes: any
     
     /** Extra attributes of the activation, used for application specific purposes (for example, info about the clientdevice or system). This extras string will be associated with the activation record on PowerAuth Server. */
@@ -65,25 +63,6 @@ export class PowerAuthActivation {
         const a = new PowerAuthActivation(name);
         a.activationName = name;
         a.activationCode = activationCode;
-        return a;
-    }
-
-    /**
-     * Creates an instance of `PowerAuthActivation` with a recovery activation code and PUK.
-     * 
-     * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
-     * an activation record on PowerAuth Server.
-     * 
-     * @param recoveryCode Recovery code, obtained either via QR code scanning or by manual entry.
-     * @param recoveryPuk PUK obtained by manual entry.
-     * @param name Activation name to be used for the activation.
-     * @returns New instance of `PowerAuthActivation`.
-     */
-    static createWithRecoveryCode(recoveryCode: string, recoveryPuk: string, name: string): PowerAuthActivation {
-        const a = new PowerAuthActivation(name);
-        a.activationName = name;
-        a.recoveryCode = recoveryCode;
-        a.recoveryPuk = recoveryPuk;
         return a;
     }
 

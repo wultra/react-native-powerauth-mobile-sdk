@@ -143,18 +143,6 @@ class PowerAuthModule : CordovaPlugin() {
                 validatePassword(args, promise)
                 return true
             }
-            "hasActivationRecoveryData" -> {
-                hasActivationRecoveryData(args, promise)
-                return true
-            }
-            "activationRecoveryData" -> {
-                activationRecoveryData(args, promise)
-                return true
-            }
-            "confirmRecoveryCode" -> {
-                confirmRecoveryCode(args, promise)
-                return true
-            }
             "authenticateWithBiometry" -> {
                 authenticateWithBiometry(args, promise)
                 return true
@@ -195,18 +183,6 @@ class PowerAuthModule : CordovaPlugin() {
             }
             "validateActivationCode" -> {
                 validateActivationCode(args, promise)
-                return true
-            }
-            "parseRecoveryCode" -> {
-                parseRecoveryCode(args, promise)
-                return true
-            }
-            "validateRecoveryCode" -> {
-                validateRecoveryCode(args, promise)
-                return true
-            }
-            "validateRecoveryPuk" -> {
-                validateRecoveryPuk(args, promise)
                 return true
             }
             "validateTypedCharacter" -> {
@@ -441,24 +417,6 @@ class PowerAuthModule : CordovaPlugin() {
         powerAuthJsModule.validatePassword(instanceId, password, promise)
     }
 
-    private fun hasActivationRecoveryData(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        powerAuthJsModule.hasActivationRecoveryData(instanceId, promise)
-    }
-
-    private fun activationRecoveryData(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        val authMap = args.getReadableMap(1)
-        powerAuthJsModule.activationRecoveryData(instanceId, authMap, promise)
-    }
-
-    private fun confirmRecoveryCode(args: JSONArray, promise: Promise) {
-        val instanceId = args.getString(0)
-        val recoveryCode = args.getString(1)
-        val authMap = args.getReadableMap(2)
-        powerAuthJsModule.confirmRecoveryCode(instanceId, recoveryCode, authMap, promise)
-    }
-
     private fun authenticateWithBiometry(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val prompt = args.getOptReadableMap(1)
@@ -522,21 +480,6 @@ class PowerAuthModule : CordovaPlugin() {
     private fun validateActivationCode(args: JSONArray, promise: Promise) {
         val activationCode = args.getString(0)
         powerAuthJsModule.validateActivationCode(activationCode, promise)
-    }
-
-    private fun parseRecoveryCode(args: JSONArray, promise: Promise) {
-        val recoveryCode = args.getString(0)
-        powerAuthJsModule.parseRecoveryCode(recoveryCode, promise)
-    }
-
-    private fun validateRecoveryCode(args: JSONArray, promise: Promise) {
-        val recoveryCode = args.getString(0)
-        powerAuthJsModule.validateRecoveryCode(recoveryCode, promise)
-    }
-
-    private fun validateRecoveryPuk(args: JSONArray, promise: Promise) {
-        val puk = args.getString(0)
-        powerAuthJsModule.validateRecoveryPuk(puk, promise)
     }
 
     private fun validateTypedCharacter(args: JSONArray, promise: Promise) {

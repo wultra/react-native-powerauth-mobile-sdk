@@ -167,7 +167,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
                 sdk.fetchActivationStatusWithCallback(context, object : IActivationStatusListener {
-                    override fun onActivationStatusSucceed(status: ActivationStatus) {
+                    override fun onActivationStatusSucceed(status: PowerAuthActivationStatus) {
                         val map: WritableMap = Arguments.createMap()
                         map.putString("state", getStatusCode(status.state))
                         map.putInt("failCount", status.failCount)
@@ -197,10 +197,6 @@ class PowerAuthJsModule(
                 val name: String? = activation.getString("activationName")
                 val activationCode: String? =
                     if (activation.hasKey("activationCode")) activation.getString("activationCode") else null
-                val recoveryCode: String? =
-                    if (activation.hasKey("recoveryCode")) activation.getString("recoveryCode") else null
-                val recoveryPuk: String? =
-                    if (activation.hasKey("recoveryPuk")) activation.getString("recoveryPuk") else null
                 val identityAttributes: ReadableMap? =
                     if (activation.hasKey("identityAttributes")) activation.getMap("identityAttributes") else null
                 val extras: String? =
@@ -215,12 +211,6 @@ class PowerAuthJsModule(
                 try {
                     if (activationCode != null) {
                         paActivation = PowerAuthActivation.Builder.activation(activationCode, name)
-                    } else if (recoveryCode != null && recoveryPuk != null) {
-                        paActivation = PowerAuthActivation.Builder.recoveryActivation(
-                            recoveryCode,
-                            recoveryPuk,
-                            name
-                        )
                     } else if (identityAttributes != null) {
                         paActivation = PowerAuthActivation.Builder.customActivation(
                             getStringMap(identityAttributes), name
@@ -282,16 +272,6 @@ class PowerAuthJsModule(
                                 "activationFingerprint",
                                 result.activationFingerprint
                             )
-                            // recovery data
-                            val rData: RecoveryData? = result.recoveryData
-                            if (rData != null) {
-                                val recoveryMap: WritableMap = Arguments.createMap()
-                                recoveryMap.putString("recoveryCode", rData.recoveryCode)
-                                recoveryMap.putString("puk", rData.puk)
-                                map.putMap("activationRecovery", recoveryMap)
-                            } else {
-                                map.putMap("activationRecovery", null)
-                            }
                             // custom attrs
                             val customAttr: Map<String, Any>? = result.customActivationAttributes
                             map.putMap(
@@ -599,6 +579,10 @@ class PowerAuthJsModule(
     ) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            if (!sdk.hasValidActivation()) {
+                Errors.rejectPromise(promise, PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION))
+                return@powerAuthBlock
+            }
             val corePassword: Password = passwordModule.usePassword(password)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 try {
@@ -616,7 +600,7 @@ class PowerAuthJsModule(
                                 promise.resolve(null)
                             }
 
-                            override fun onAddBiometryFactorFailed(error: PowerAuthErrorException) {
+                            override fun onAddBiometryFactorFailed(error: Throwable) {
                                 Errors.rejectPromise(promise, error)
                             }
                         })
@@ -718,13 +702,17 @@ class PowerAuthJsModule(
                     auth,
                     index.toLong(),
                     object : IFetchEncryptionKeyListener {
-                        override fun onFetchEncryptionKeySucceed(encryptedEncryptionKey: ByteArray) {
-                            promise.resolve(
-                                Base64.encodeToString(
-                                    encryptedEncryptionKey,
-                                    Base64.NO_WRAP
+                        override fun onFetchEncryptionKeySucceed(encryptedEncryptionKey: SecureData) {
+                            try {
+                                promise.resolve(
+                                    Base64.encodeToString(
+                                        encryptedEncryptionKey.sensitiveData,
+                                        Base64.NO_WRAP
+                                    )
                                 )
-                            )
+                            } finally {
+                                encryptedEncryptionKey.destroy()
+                            }
                         }
 
                         override fun onFetchEncryptionKeyFailed(t: Throwable) {
@@ -788,67 +776,6 @@ class PowerAuthJsModule(
                     Errors.rejectPromise(promise, t)
                 }
             })
-        })
-    }
-
-    @JsApiMethod
-    fun hasActivationRecoveryData(instanceId: String, promise: Promise) {
-        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
-            override fun run(sdk: PowerAuthSDK) {
-                promise.resolve(sdk.hasActivationRecoveryData())
-            }
-        })
-    }
-
-    @JsApiMethod
-    fun activationRecoveryData(instanceId: String, authMap: ReadableMap, promise: Promise) {
-        val context: Context = this.context
-        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
-            @Throws(Exception::class)
-            override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
-                sdk.getActivationRecoveryData(context, auth, object : IGetRecoveryDataListener {
-                    override fun onGetRecoveryDataSucceeded(recoveryData: RecoveryData) {
-                        val map: WritableMap = Arguments.createMap()
-                        map.putString("recoveryCode", recoveryData.recoveryCode)
-                        map.putString("puk", recoveryData.puk)
-                        promise.resolve(map)
-                    }
-
-                    override fun onGetRecoveryDataFailed(t: Throwable) {
-                        Errors.rejectPromise(promise, t)
-                    }
-                })
-            }
-        })
-    }
-
-    @JsApiMethod
-    fun confirmRecoveryCode(
-        instanceId: String,
-        recoveryCode: String,
-        authMap: ReadableMap,
-        promise: Promise
-    ) {
-        val context: Context = this.context
-        this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
-            @Throws(Exception::class)
-            override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
-                sdk.confirmRecoveryCode(
-                    context,
-                    auth,
-                    recoveryCode,
-                    object : IConfirmRecoveryCodeListener {
-                        override fun onRecoveryCodeConfirmed(alreadyConfirmed: Boolean) {
-                            promise.resolve(alreadyConfirmed)
-                        }
-
-                        override fun onRecoveryCodeConfirmFailed(t: Throwable) {
-                            Errors.rejectPromise(promise, t)
-                        }
-                    })
-            }
         })
     }
 
@@ -922,7 +849,10 @@ class PowerAuthJsModule(
 
                             override fun onBiometricDialogSuccess(authentication: PowerAuthAuthentication) {
                                 // Allocate native managed object object
-                                val managedBytes = ManagedAny.wrap(authentication.biometryFactorRelatedKey!!)
+                                val managedBytes = ManagedAny.wrap(
+                                    authentication.biometryFactorRelatedKey!!,
+                                    cleanup { data: SecureData -> data.destroy() }
+                                )
                                 // If reusable authentication is going to be created, then "keep alive" release policy is applied.
                                 // Basically, the data will be available up to 10 seconds from the last access.
                                 // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
@@ -1067,9 +997,12 @@ class PowerAuthJsModule(
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
-                sdk.tokenStore.generateAuthorizationHeader(context, tokenName, object: IGenerateTokenHeaderListener {
-                    override fun onGenerateTokenHeaderSucceeded(header: PowerAuthAuthorizationHttpHeader) {
-                        promise.resolve(getHttpHeaderObject(header))
+                sdk.tokenStore.generateAuthenticationHeader(context, tokenName, object: IGenerateTokenHeaderListener {
+                    override fun onGenerateTokenHeaderSucceeded(header: PowerAuthHttpHeader) {
+                        val map: WritableMap = Arguments.createMap()
+                        map.putString("key", header.key)
+                        map.putString("value", header.value)
+                        promise.resolve(map)
                     }
 
                     override fun onGenerateTokenHeaderFailed(t: Throwable) {
@@ -1103,31 +1036,6 @@ class PowerAuthJsModule(
     @JsApiMethod
     fun validateActivationCode(activationCode: String, promise: Promise) {
         promise.resolve(ActivationCodeUtil.validateActivationCode(activationCode))
-    }
-
-    @JsApiMethod
-    fun parseRecoveryCode(recoveryCode: String, promise: Promise) {
-        val ac: ActivationCode? = ActivationCodeUtil.parseFromRecoveryCode(recoveryCode)
-        if (ac != null) {
-            val response: WritableMap = Arguments.createMap()
-            response.putString("activationCode", ac.activationCode)
-            if (ac.activationSignature != null) {
-                response.putString("activationSignature", ac.activationSignature)
-            }
-            promise.resolve(response)
-        } else {
-            promise.reject(Errors.EC_INVALID_RECOVERY_CODE, "Invalid recovery code.")
-        }
-    }
-
-    @JsApiMethod
-    fun validateRecoveryCode(recoveryCode: String, promise: Promise) {
-        promise.resolve(ActivationCodeUtil.validateRecoveryCode(recoveryCode))
-    }
-
-    @JsApiMethod
-    fun validateRecoveryPuk(puk: String, promise: Promise) {
-        promise.resolve(ActivationCodeUtil.validateRecoveryPuk(puk))
     }
 
     @JsApiMethod
@@ -1290,9 +1198,9 @@ class PowerAuthJsModule(
         copyPassword: Boolean
     ): PowerAuthAuthentication {
         val biometryKeyId: String? = map.getString("biometryKeyId")
-        val biometryKey: ByteArray?
+        val biometryKey: SecureData?
         if (biometryKeyId != null) {
-            biometryKey = objectRegister.useObject(biometryKeyId, ByteArray::class.java)
+            biometryKey = objectRegister.useObject(biometryKeyId, SecureData::class.java)
             if (biometryKey == null) {
                 throw WrapperException(
                     Errors.EC_INVALID_NATIVE_OBJECT,
@@ -1643,12 +1551,11 @@ class PowerAuthJsModule(
         @SuppressLint("DefaultLocale")
         private fun getStatusCode(state: Int): String {
             return when (state) {
-                ActivationStatus.State_Created -> "CREATED"
-                ActivationStatus.State_Pending_Commit -> "PENDING_COMMIT"
-                ActivationStatus.State_Active -> "ACTIVE"
-                ActivationStatus.State_Blocked -> "BLOCKED"
-                ActivationStatus.State_Removed -> "REMOVED"
-                ActivationStatus.State_Deadlock -> "DEADLOCK"
+                PowerAuthActivationState.PENDING_COMMIT -> "PENDING_COMMIT"
+                PowerAuthActivationState.ACTIVE -> "ACTIVE"
+                PowerAuthActivationState.BLOCKED -> "BLOCKED"
+                PowerAuthActivationState.REMOVED -> "REMOVED"
+                PowerAuthActivationState.DEADLOCK -> "DEADLOCK"
                 else -> String.format("STATE_UNKNOWN_%d", state)
             }
         }

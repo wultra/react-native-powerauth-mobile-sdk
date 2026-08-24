@@ -24,9 +24,7 @@ import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/Power
 import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivationResult';
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
-import { PowerAuthRecoveryActivationData } from './model/PowerAuthRecoveryActivationData';
 import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
-import { PowerAuthConfirmRecoveryCodeDataResult} from './model/PowerAuthConfirmRecoveryCodeDataResult';
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
 import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
@@ -444,44 +442,6 @@ export class PowerAuth {
      */
     async validatePassword(password: PasswordType): Promise<void> {
         return NativeWrapper.thisCall("validatePassword", this.instanceId, await toPowerAuthRawPassword(password));
-    }
-
-    /**
-     * Returns YES if underlying session contains an activation recovery data.
-     */
-    hasActivationRecoveryData(): Promise<boolean> {
-        return NativeWrapper.thisCallBool("hasActivationRecoveryData", this.instanceId);
-    }
-
-    /**
-     * Get an activation recovery data.
-     *
-     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used for private recovery data decryption.
-     *
-     * @param authentication Authentication used for vault unlocking call.
-     */
-    async activationRecoveryData(authentication: PowerAuthAuthentication): Promise<PowerAuthRecoveryActivationData> {
-        return NativeWrapper.thisCall("activationRecoveryData", this.instanceId, await this.authenticate(authentication));
-    }
-
-    /**
-     * Confirm given recovery code on the server by calling a PowerAuth Standard RESTful API endpoint `/pa/recovery/confirm`.
-     *
-     * The method is useful for situations when user receives a recovery information via OOB channel (for example via postcard).
-     * Such recovery codes cannot be used without a proper confirmation on the server. To confirm codes, user has to authenticate himself
-     * with a knowledge factor.
-     *
-     * Note that the provided recovery code can contain a `"R:"` prefix, if it's scanned from QR code.
-     *
-     * @param recoveryCode Recovery code to confirm
-     * @param authentication Authentication used for recovery code confirmation
-     *
-     * @returns Result of the confirmation
-     */
-    async confirmRecoveryCode(recoveryCode: string, authentication: PowerAuthAuthentication): Promise<PowerAuthConfirmRecoveryCodeDataResult> {
-        return {
-            alreadyConfirmed: await NativeWrapper.thisCall("confirmRecoveryCode", this.instanceId, recoveryCode, await this.authenticate(authentication))
-        }
     }
 
     /**
