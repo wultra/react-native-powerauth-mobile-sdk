@@ -33,7 +33,6 @@ object Errors {
     const val EC_RESPONSE_ERROR: String = "RESPONSE_ERROR"
     const val EC_INSTANCE_NOT_CONFIGURED: String = "INSTANCE_NOT_CONFIGURED"
     const val EC_INVALID_CHARACTER: String = "INVALID_CHARACTER"
-    const val EC_INVALID_RECOVERY_CODE: String = "INVALID_RECOVERY_CODE"
     const val EC_CANNOT_GENERATE_TOKEN: String = "CANNOT_GENERATE_TOKEN"
     const val EC_LOCAL_TOKEN_NOT_AVAILABLE: String = "LOCAL_TOKEN_NOT_AVAILABLE"
     const val EC_BIOMETRY_FAILED: String = "BIOMETRY_FAILED"
@@ -135,11 +134,6 @@ object Errors {
                 // ErrorResponseApiException is more specialized version of FailedApiException, containing
                 // an additional data.
                 val errorResponseApiException: ErrorResponseApiException = t
-                val currentRecoveryPukIndex: Int =
-                    errorResponseApiException.getCurrentRecoveryPukIndex()
-                if (currentRecoveryPukIndex > 0) {
-                    userInfo.putInt("currentRecoveryPukIndex", currentRecoveryPukIndex)
-                }
                 userInfo.putString(
                     "serverResponseCode",
                     errorResponseApiException.errorResponse.code

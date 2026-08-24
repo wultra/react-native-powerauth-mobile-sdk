@@ -201,21 +201,6 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void hasActivationRecoveryData(String instanceId, final Promise promise) {
-        powerAuthJsModule.hasActivationRecoveryData(instanceId, promise);
-    }
-
-    @ReactMethod
-    public void activationRecoveryData(String instanceId, final ReadableMap authMap, final Promise promise) {
-        powerAuthJsModule.activationRecoveryData(instanceId, authMap, promise);
-    }
-
-    @ReactMethod
-    public void confirmRecoveryCode(String instanceId, final String recoveryCode, final ReadableMap authMap, final Promise promise) {
-        powerAuthJsModule.confirmRecoveryCode(instanceId, recoveryCode, authMap, promise);
-    }
-
-    @ReactMethod
     public void authenticateWithBiometry(String instanceId, final ReadableMap prompt, final boolean makeReusable, final Promise promise) {
         powerAuthJsModule.authenticateWithBiometry(instanceId, prompt, makeReusable, promise);
     }
@@ -267,21 +252,6 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void validateActivationCode(String activationCode, final Promise promise) {
         powerAuthJsModule.validateActivationCode(activationCode, promise);
-    }
-
-    @ReactMethod
-    public void parseRecoveryCode(String recoveryCode, final Promise promise) {
-        powerAuthJsModule.parseRecoveryCode(recoveryCode, promise);
-    }
-
-    @ReactMethod
-    public void validateRecoveryCode(String recoveryCode, final Promise promise) {
-        powerAuthJsModule.validateRecoveryCode(recoveryCode, promise);
-    }
-
-    @ReactMethod
-    public void validateRecoveryPuk(String puk, final Promise promise) {
-        powerAuthJsModule.validateRecoveryPuk(puk, promise);
     }
 
     @ReactMethod
