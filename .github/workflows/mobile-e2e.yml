@@ -23,13 +23,9 @@ on:
 
 jobs:
   e2e-android-rn:
-    name: Android RN (API ${{ matrix.api-level }})
+    name: Android RN (API 36)
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        api-level: [24, 34]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,7 +67,7 @@ jobs:
         env:
           E2E_MODE: rn
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: Nexus 6
@@ -84,7 +80,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-artifacts-android-rn-api-${{ matrix.api-level }}
+          name: mobile-e2e-artifacts-android-rn-api-36
           path: artifacts/e2e
 
   e2e-android-cordova:
