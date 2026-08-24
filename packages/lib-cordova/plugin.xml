@@ -11,7 +11,7 @@
         <engine name="cordova-android" version=">=12.0.0" />
         <engine name="cordova-ios" version=">=7.0.0" />
     </engines>
-    <platform name="android" kotlin="1.9.22">
+    <platform name="android" kotlin="2.1.20">
         <!-- Base Configuration -->
         <config-file target="res/xml/config.xml" parent="/*" >
             <preference name="GradlePluginKotlinEnabled" value="true" />
@@ -109,7 +109,7 @@
             <feature name="PowerAuthStorageUtilsModule">
                 <param name="ios-package" value="PowerAuthStorageUtilsModule"/>
             </feature>
-            <preference name="deployment-target" value="12.0" />
+            <preference name="deployment-target" value="13.0" />
             <preference name="UseSwiftLanguageVersion" value="5" />
         </config-file>
 
