@@ -53,7 +53,7 @@ jobs:
               throw error;
             }
 
-            if (!['admin', 'maintain', 'push'].includes(permission)) {
+            if (!['admin', 'write'].includes(permission)) {
               core.notice(`@${context.actor} does not have write permission.`);
               return;
             }
