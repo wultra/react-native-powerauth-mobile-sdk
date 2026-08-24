@@ -20,7 +20,7 @@ target 'PowerAuth' do
     :path => config[:reactNativePath],
     :hermes_enabled => false
   )
-  pod 'PowerAuth2', '~> 1.9.5'
+  pod 'PowerAuth2', '~> 2.0.0'
   # Uncomment to use not-published SDK in project. This is effective only if you manually open 'ios/PowerAuth.xcworkspace'
   #pod 'PowerAuth2', :git => 'https://github.com/wultra/powerauth-mobile-sdk.git', :branch => 'develop', :submodules => true
 
