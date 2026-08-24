@@ -1,6 +1,7 @@
 # Changelog
 
 ## TBA
+- Updated React Native support to 0.87+, raising the minimum supported versions to Android 7.0 (API 24) and iOS 15.1 (issue[#440](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/440))
 - Added support for OIDC Activation (issue[#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed issue, when entered correct password was reported as invalid in some rare cases (issue[#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 

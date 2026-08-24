@@ -228,15 +228,6 @@ function stageCordova(version) {
   copy(path.join(cordovaDir, "android"), path.join(cordovaStageDir, "android"))
 
   copy(path.join(sharedDir, "ios", "PowerAuth"), path.join(cordovaStageDir, "ios", "PowerAuth"))
-  copy(
-    path.join(sharedDir, "ios", "PowerAuth.xcodeproj"),
-    path.join(cordovaStageDir, "ios", "PowerAuth.xcodeproj"),
-  )
-  copy(
-    path.join(sharedDir, "ios", "PowerAuth.xcworkspace"),
-    path.join(cordovaStageDir, "ios", "PowerAuth.xcworkspace"),
-    true,
-  )
   copy(path.join(cordovaDir, "ios", "PowerAuth"), path.join(cordovaStageDir, "ios", "PowerAuth"))
 
   for (const fileName of ["README.md", "LICENSE", "plugin.xml"]) {
