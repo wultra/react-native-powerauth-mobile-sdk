@@ -449,7 +449,7 @@ class PowerAuthJsModule(
                         uriId,
                         decodedBody
                     )
-                if (header.powerAuthErrorCode == PowerAuthErrorCodes.SUCCEED) {
+                if (header.isValid) {
                     val returnMap: WritableMap = Arguments.createMap()
                     returnMap.putString("key", header.key)
                     returnMap.putString("value", header.value)
@@ -848,9 +848,11 @@ class PowerAuthJsModule(
                             }
 
                             override fun onBiometricDialogSuccess(authentication: PowerAuthAuthentication) {
+                                val biometryKey = authentication.biometryFactorRelatedKey!!.copy()
+                                authentication.destroy()
                                 // Allocate native managed object object
                                 val managedBytes = ManagedAny.wrap(
-                                    authentication.biometryFactorRelatedKey!!,
+                                    biometryKey,
                                     cleanup { data: SecureData -> data.destroy() }
                                 )
                                 // If reusable authentication is going to be created, then "keep alive" release policy is applied.
@@ -1234,12 +1236,12 @@ class PowerAuthJsModule(
                 //
                 // We can still use this option in tests, to simulate biometry-related operations
                 // with no user's interaction.
-                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometryKey)
+                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometryKey.copy())
             }
         } else {
             // Authentication for data signing
             return if (biometryKey != null) {
-                PowerAuthAuthentication.possessionWithBiometry(biometryKey)
+                PowerAuthAuthentication.possessionWithBiometry(biometryKey.copy())
             } else if (password != null) {
                 PowerAuthAuthentication.possessionWithPassword(password)
             } else {
@@ -1424,11 +1426,12 @@ class PowerAuthJsModule(
             if (baseEndpointUrl == null || configuration == null) {
                 return null
             }
+            // Preserve the PowerAuth 1.9 protocol until algorithm selection is exposed publicly.
             return PowerAuthConfiguration.Builder(
                 instanceId,
                 baseEndpointUrl,
                 configuration
-            ).build()
+            ).algorithm(PowerAuthAlgorithm.LEGACY_P256).build()
         }
 
         /**
@@ -1533,7 +1536,7 @@ class PowerAuthJsModule(
          * @return Readable map with header values.
          */
         private fun getHttpHeaderObject(header: PowerAuthAuthorizationHttpHeader): ReadableMap? {
-            if (header.powerAuthErrorCode == PowerAuthErrorCodes.SUCCEED) {
+            if (header.isValid) {
                 val map: WritableMap = Arguments.createMap()
                 map.putString("key", header.key)
                 map.putString("value", header.value)
