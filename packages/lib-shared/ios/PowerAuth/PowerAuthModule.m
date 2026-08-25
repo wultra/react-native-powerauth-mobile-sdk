@@ -78,9 +78,11 @@ PAJS_METHOD_START(configure,
     }
     
     // Instance config
+    // Preserve the PowerAuth 1.9 protocol until algorithm selection is exposed publicly.
     PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] initWithInstanceId:instanceId
                                                                         baseEndpointUrl:CAST_TO(configuration[@"baseEndpointUrl"], NSString)
-                                                                          configuration:CAST_TO(configuration[@"configuration"], NSString)];
+                                                                          configuration:CAST_TO(configuration[@"configuration"], NSString)
+                                                                              algorithm:PowerAuthAlgorithm_LEGACY_P256];
     // Prepare sharing configuration
     if (CAST_TO(sharingConfiguration[@"isProvided"], NSNumber).boolValue) {
         PowerAuthSharingConfiguration * sharingConfig = [[PowerAuthSharingConfiguration alloc] initWithAppGroup:CAST_TO(sharingConfiguration[@"appGroup"], NSString)
