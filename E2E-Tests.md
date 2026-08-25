@@ -84,7 +84,7 @@ yarn runReactAndroid
 yarn runReactIos
 ```
 
-Alternatively, you can run it as "automation" with the following commands:
+Alternatively you can run it as "automation" with the following commands:
 
 ```bash
 yarn e2e:local:rn
