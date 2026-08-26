@@ -37,13 +37,9 @@ if (await powerAuth.hasValidActivation()) {
                 // user about this situation and remove activation locally
                 // via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is technically blocked");
-            case PowerAuthActivationState.CREATED:
-                // Activation is just created. This is the internal
-                // state on the server and therefore can be ignored
-                // on the mobile application.
-                console.log("Activation was created");
-            default:
-                console.log("Unknown state");
+            case PowerAuthActivationState.UNKNOWN:
+                // The server returned a state unknown to this SDK version.
+                console.log("Unknown activation state");
         }
 
         // Failed login attempts, remaining = max - current

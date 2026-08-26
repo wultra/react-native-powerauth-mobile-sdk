@@ -317,14 +317,15 @@ PAJS_METHOD_START(persistActivation,
         return;
     }
     
-    NSError* error = nil;
-    bool success = [powerAuth persistActivationWithAuthentication:auth error:&error];
-    
-    if (success) {
-        resolve(@YES);
-    } else {
-        ProcessError(error, reject);
-    }
+    [powerAuth persistActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
+        // Referencing auth keeps its sensitive data alive until the asynchronous operation finishes.
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else {
+            resolve(nil);
+        }
+    }];
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -1075,7 +1076,7 @@ PAJS_METHOD_END
     id userPassword = dict[@"password"];
     if (persist) {
         // Activation commit
-        PowerAuthCorePassword * password = UsePassword(userPassword, _objectRegister, reject);
+        PowerAuthCorePassword * password = [UsePassword(userPassword, _objectRegister, reject) copyToImmutable];
         if (!password) {
             return nil;
         }
@@ -1130,7 +1131,7 @@ PAJS_METHOD_END
         case PowerAuthActivationState_Blocked: return @"BLOCKED";
         case PowerAuthActivationState_Removed: return @"REMOVED";
         case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
-        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+        default: return @"UNKNOWN";
     }
 }
 
