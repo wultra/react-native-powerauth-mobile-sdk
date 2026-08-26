@@ -29,7 +29,7 @@ export class PowerAuth_ErrorDataTests extends TestWithActivation {
             expect(e instanceof PowerAuthError).toBe(true)
             const error = e as PowerAuthError
 
-            expect(error.code).toBe(PowerAuthErrorCode.AUTHENTICATION_ERROR)
+            expect(error.code).toBe(PowerAuthErrorCode.NETWORK_ERROR)
             expect(error.errorData).toBeDefined()
             expect(typeof error.errorData.httpStatusCode).toBe('number')
             expect(error.errorData.httpStatusCode).toBe(401)

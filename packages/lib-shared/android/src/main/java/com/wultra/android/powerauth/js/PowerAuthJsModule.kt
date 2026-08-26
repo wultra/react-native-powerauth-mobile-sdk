@@ -304,52 +304,66 @@ class PowerAuthJsModule(
     fun persistActivation(instanceId: String, authMap: ReadableMap, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && authMap.getBoolean("isBiometry")) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, true)
-                val promptMap: ReadableMap? =
-                    if (authMap.hasKey("biometricPrompt")) authMap.getMap("biometricPrompt") else null
-                val titleDesc = extractPromptStrings(promptMap)
-                try {
+            var auth: PowerAuthAuthentication? = null
+            try {
+                val biometricPrompt = if (
+                    authMap.getBoolean("isBiometry") &&
+                    authMap.getString("biometryKeyId") == null
+                ) {
+                    val promptMap: ReadableMap? =
+                        if (authMap.hasKey("biometricPrompt")) authMap.getMap("biometricPrompt") else null
                     val fragmentActivity = getCurrentActivity() as FragmentActivity?
                         ?: throw WrapperException(
                             Errors.EC_REACT_NATIVE_ERROR,
                             "Current fragment activity is not available"
                         )
-                    // This is handled in "constructAuthentication", so should never happen.
-                    checkNotNull(auth.password)
-                    sdk.persistActivation(
-                        context,
-                        fragmentActivity,
-                        titleDesc.first,
-                        titleDesc.second,
-                        auth.password!!, // FIXME
-                        object : IPersistActivationWithBiometricsListener {
-                            override fun onBiometricDialogCancelled() {
-                                promise.reject(
-                                    Errors.EC_BIOMETRY_CANCEL,
-                                    "Biometry dialog was canceled"
-                                )
-                            }
-
-                            override fun onBiometricDialogSuccess() {
-                                promise.resolve(null)
-                            }
-
-                            override fun onBiometricDialogFailed(error: PowerAuthErrorException) {
-                                promise.reject(Errors.EC_BIOMETRY_FAILED, "Biometry dialog failed")
-                            }
-                        })
-                } catch (t: Throwable) {
-                    Errors.rejectPromise(promise, t)
-                }
-            } else {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, true, false)
-                val result: Int = sdk.persistActivationWithAuthentication(context, auth)
-                if (result == PowerAuthErrorCodes.SUCCEED) {
-                    promise.resolve(null)
+                    if (sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup) {
+                        if (promptMap == null) {
+                            throw WrapperException(
+                                Errors.EC_WRONG_PARAMETER,
+                                "Biometric prompt is required when authenticateOnBiometricKeySetup is enabled."
+                            )
+                        }
+                        val titleDesc = extractPromptStrings(promptMap)
+                        PowerAuthBiometricPrompt.prompt(
+                            fragmentActivity,
+                            titleDesc.first,
+                            titleDesc.second
+                        )
+                    } else {
+                        PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(fragmentActivity)
+                    }
                 } else {
-                    promise.reject(Errors.getErrorCodeFromError(result), "Persist failed.")
+                    null
                 }
+                val authentication = constructAuthentication(authMap, true, true, biometricPrompt)
+                auth = authentication
+                sdk.persistActivationWithAuthentication(
+                    context,
+                    authentication,
+                    object : IPersistActivationListener {
+                        override fun onPersistActivationSucceeded() {
+                            authentication.destroy()
+                            promise.resolve(null)
+                        }
+
+                        override fun onPersistActivationFailed(t: Throwable) {
+                            authentication.destroy()
+                            Errors.rejectPromise(promise, t)
+                        }
+
+                        override fun onPersistActivationCancelled(userCancel: Boolean) {
+                            authentication.destroy()
+                            Errors.rejectPromise(
+                                promise,
+                                PowerAuthErrorException(PowerAuthErrorCodes.OPERATION_CANCELED)
+                            )
+                        }
+                    }
+                )
+            } catch (t: Throwable) {
+                auth?.destroy()
+                Errors.rejectPromise(promise, t)
             }
         })
     }
@@ -1197,7 +1211,8 @@ class PowerAuthJsModule(
     private fun constructAuthentication(
         map: ReadableMap,
         forPersist: Boolean,
-        copyPassword: Boolean
+        copyPassword: Boolean,
+        biometricPrompt: PowerAuthBiometricPrompt? = null
     ): PowerAuthAuthentication {
         val biometryKeyId: String? = map.getString("biometryKeyId")
         val biometryKey: SecureData?
@@ -1227,7 +1242,9 @@ class PowerAuthJsModule(
                     "PowerAuthPassword or string is required"
                 )
             }
-            return if (biometryKey == null) {
+            return if (biometricPrompt != null) {
+                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometricPrompt)
+            } else if (biometryKey == null) {
                 PowerAuthAuthentication.persistWithPassword(password)
             } else {
                 // This is currently not supported in RN wrapper. Application has no way to create
@@ -1559,7 +1576,7 @@ class PowerAuthJsModule(
                 PowerAuthActivationState.BLOCKED -> "BLOCKED"
                 PowerAuthActivationState.REMOVED -> "REMOVED"
                 PowerAuthActivationState.DEADLOCK -> "DEADLOCK"
-                else -> String.format("STATE_UNKNOWN_%d", state)
+                else -> "UNKNOWN"
             }
         }
     }

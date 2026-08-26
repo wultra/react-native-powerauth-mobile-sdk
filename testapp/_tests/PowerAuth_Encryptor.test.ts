@@ -15,7 +15,6 @@
 //
 
 import { expect } from "mobile-testbed";
-import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { PowerAuthCryptogram, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Buffer } from 'buffer'
@@ -207,8 +206,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
 
         // Reconfigure the owner and re-check the invalidated objects
         await this.sdk.configure(configuration!)
-        // Android PowerAuth 2.0 invalidates the activation-scoped encryptor across deconfiguration.
-        expect(await encryptor.canEncryptRequest()).toBe(Platform.OS === 'ios')
+        expect(await encryptor.canEncryptRequest()).toBe(true)
         expect(await decryptor.canDecryptResponse()).toBe(false)
    }
 }

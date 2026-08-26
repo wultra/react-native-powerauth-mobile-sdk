@@ -20,7 +20,7 @@ import { NativeWrapper } from "./internal/NativeWrapper";
  * The `PowerAuthActivationCodeUtil` provides various set of methods for parsing and validating
  * activation codes.
  *
- * Current format:
+ * Activation code format with an optional legacy signature suffix:
  * ```
  * code without signature:    CCCCC-CCCCC-CCCCC-CCCCC
  * code with signature:       CCCCC-CCCCC-CCCCC-CCCCC#BASE64_STRING_WITH_SIGNATURE
@@ -35,8 +35,11 @@ import { NativeWrapper } from "./internal/NativeWrapper";
 export class PowerAuthActivationCodeUtil {
 
     /**
-     * Parses an input |activationCode| (which may or may not contain an optional signature) and returns PowerAuthOtp 
-     * object filled with valid data. The method doesn't perform an auto-correction, so the provided code must be valid.
+     * Parses an activation code which may contain a legacy signature suffix. The returned
+     * `activationCode` has the suffix stripped. PowerAuth SDK 2.0 does not verify the suffix
+     * and the activation process ignores it.
+     *
+     * The method doesn't perform an auto-correction, so the provided code must be valid.
      * 
      * @returns Activation code object
      * @throws error when not valid 
@@ -86,8 +89,9 @@ export interface PowerAuthActivationCode {
      */
     activationCode: string;
     /**
-     * Signature calculated from activationCode. The value is typically optional for cases,
-     * when the user re-typed activation code manually.
+     * Legacy signature suffix parsed from the input, if present.
+     *
+     * PowerAuth SDK 2.0 does not verify this value and the activation process ignores it.
      */
-    activationSignature: string;
+    activationSignature?: string;
 }

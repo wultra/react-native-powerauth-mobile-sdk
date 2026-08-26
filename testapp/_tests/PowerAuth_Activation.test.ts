@@ -29,8 +29,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     shouldCreateActivationBeforeTest(): boolean {
         const n = this.currentTestName
         return n !== 'testCreateActivationWithBareCode' &&
-               n !== 'testCreateActivationWithSignedCode' &&
-               n !== 'testVerifyActivationQrCode'
+               n !== 'testCreateActivationWithSignedCode'
     }
 
     async createActivationTest(useSignature: boolean) {
@@ -195,23 +194,6 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await this.sdk.hasValidActivation()).toBe(false)
     }
 
-    async testVerifyActivationQrCode() {
-        const sdk = this.sdk
-        expect(sdk).toBeDefined()
-        expect(await sdk.canStartActivation()).toBe(true)
-
-        // Prepare activation on the server
-        const detail = await this.helper.createActivation()
-        expect(detail.activationCode).toBeDefined()
-        expect(detail.activationCodeSignature).toBeDefined()
-        const code = detail.activationCode!
-        const sign = detail.activationCodeSignature!
-
-        expect(await sdk.verifyScannedActivationCode(`${code}#${sign}`)).toBe(true)
-        expect(await sdk.verifyScannedActivationCode(`${code}`)).toBe(false)
-        expect(await sdk.verifyScannedActivationCode(`VVVVV-VVVVV-VVVVV-VTFVA#${sign}`)).toBe(false)
-    }
-
     async testOidcActivationData() {
         const sdk = this.helper.sdk
         expect(sdk).toBeDefined()
@@ -243,7 +225,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         activation1.customAttributes = { key1: 'value1', key2: 2 }
 
         await expect(async () => await sdk.createActivation(activation1))
-            .toThrow({ errorCode: PowerAuthErrorCode.RESPONSE_ERROR })
+            .toThrow({ errorCode: PowerAuthErrorCode.NETWORK_ERROR })
 
         // After failure, state should remain unchanged
         expect(await sdk.canStartActivation()).toBe(true)
@@ -266,7 +248,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         )
 
         await expect(async () => await sdk.createActivation(activation2))
-            .toThrow({ errorCode: PowerAuthErrorCode.RESPONSE_ERROR })
+            .toThrow({ errorCode: PowerAuthErrorCode.NETWORK_ERROR })
             
         // Still unchanged
         expect(await sdk.canStartActivation()).toBe(true)

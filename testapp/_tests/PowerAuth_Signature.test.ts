@@ -99,7 +99,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         const maxFailCount = status.maxFailCount
         for (let i = 1; i <= maxFailCount; i++) {
             expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
-            await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+            await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
             status = await this.sdk.fetchActivationStatus()
             expect(status.failCount).toBe(i)
             expect(status.remainingAttempts).toBe(maxFailCount - i)

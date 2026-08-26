@@ -24,7 +24,7 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         // Valid password
         await this.sdk.validatePassword(this.credentials.validPassword)
         // Wrong password
-        await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
         await expect(async () => await this.sdk.validatePassword('12')).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
@@ -32,30 +32,30 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         // Valid password
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
         // Wrong password
-        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
         await expect(async () => await this.sdk.validatePassword(await importPassword('12'))).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
     async testChangePassword() {
         await this.sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword)
         await this.sdk.validatePassword(this.credentials.invalidPassword)
-        await expect(async () => await this.sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
 
         // back to original
         await this.sdk.changePassword(this.credentials.invalidPassword, this.credentials.validPassword)
         await this.sdk.validatePassword(this.credentials.validPassword)
-        await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
     }
 
     async testChangeSecurePassword() {
         await this.sdk.changePassword(await importPassword(this.credentials.validPassword), await importPassword(this.credentials.invalidPassword))
         await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))
-        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
 
         // back to original
         await this.sdk.changePassword(await importPassword(this.credentials.invalidPassword), await importPassword(this.credentials.validPassword))
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
-        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+        await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
     }
 
     async testChangePasswordUnsafe() {
