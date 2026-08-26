@@ -185,6 +185,13 @@ install_rn_pods() {
     (cd testapp && bundle install)
   fi
 
+  # repository_dispatch currently restores Pods from the default branch cache,
+  # which can contain local podspecs generated for a different checkout.
+  if [ -d "testapp/ios/Pods" ]; then
+    echo "[e2e] Removing potentially stale cached RN iOS Pods..."
+    rm -rf -- "testapp/ios/Pods"
+  fi
+
   echo "[e2e] Installing RN iOS CocoaPods..."
   (
     cd testapp/ios
