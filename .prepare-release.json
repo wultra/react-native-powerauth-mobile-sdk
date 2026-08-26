@@ -27,13 +27,15 @@
             "description": "Cordova package definition file.",
             "path": "packages/lib-cordova/package.json",
             "type": "version_replace",
-            "match": "\"version\": \"%VERSION%\",\n"
+            "match": "\"version\": \"%VERSION%\",\n",
+            "devChange": true
         },
         {
             "description": "Cordova plugin definition file.",
             "path": "packages/lib-cordova/plugin.xml",
             "type": "version_replace",
-            "match": "id=\"cordova-powerauth-mobile-sdk\" version=\"%VERSION%\""
+            "match": "id=\"cordova-powerauth-mobile-sdk\" version=\"%VERSION%\"",
+            "devChange": true
         },
         {
             "description": "Changelog for the Wultra documentation.",
