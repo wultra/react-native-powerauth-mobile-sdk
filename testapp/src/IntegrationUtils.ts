@@ -19,6 +19,8 @@ import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
     PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
 } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
+import { Buffer } from "buffer"
+import { Platform } from "react-native"
 
 export class AppConfig {
     static cloudServerUrl = EnvConfig.POWERAUTH_CLOUD_URL || ""
@@ -292,14 +294,22 @@ export class IntegrationHelper {
             })
     }
 
-    /** Calls an SDK endpoint and returns the raw UTF-8 response body. */
-    async callRawSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<string> {
+    /** Calls an SDK endpoint and returns the response body as Base64. */
+    async callRawSDKEndpoint(endpoint: string, bodyBase64: string, headers?: Headers, method: string = "POST"): Promise<string> {
         const url = this.sdkEndpointUrl(endpoint)
-        return await fetch(url, {
-            body: body,
+        const bodyBytes = Buffer.from(bodyBase64, 'base64')
+        // RN should accept Uint8Array and forward it as a native base64 body, but Android
+        // fetch fails with "Network request failed" for typed-array bodies in e2e. A binary
+        // string uses the string body path where UTF-8 encoding preserves each byte 0x00-0xFF.
+        const body = Platform.OS === 'android'
+            ? bodyBytes.toString('latin1')
+            : bodyBytes
+        const response = await fetch(url, {
+            body,
             headers: headers,
             method: method
-        }).then(response => response.text())
+        })
+        return Buffer.from(await response.arrayBuffer()).toString('base64')
     }
 
     private sdkEndpointUrl(endpoint: string): string {

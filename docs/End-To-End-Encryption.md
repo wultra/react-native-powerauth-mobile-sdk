@@ -9,10 +9,10 @@ Use one `PowerAuthEncryptor` for one request and response exchange. The same obj
 
 ```typescript
 // Use getEncryptorForApplicationScope() when the endpoint does not require an activation.
-const encryptor = await powerAuth.getEncryptorForActivationScope()
+const encryptor = await powerAuth.getEncryptorForApplicationScope()
 
 try {
-    // Clear request bytes cross the JavaScript bridge as Base64 strings.
+    // Serialize the request payload to Base64-encoded bytes.
     const requestBodyBase64 = btoa(JSON.stringify({
         message: "Hello World!",
         code: "HELLO"
@@ -28,21 +28,24 @@ try {
     const response = await fetch(endpoint, {
         method: "POST",
         headers,
-        // The encrypted body is already serialized as a UTF-8 string.
-        body: encryptedRequest.requestBody
+        body: Uint8Array.from(atob(encryptedRequest.requestBody), c => c.charCodeAt(0))
     })
 
-    // Pass the raw encrypted UTF-8 response body to the same encryptor.
-    const clearResponseBase64 = await encryptor.decryptResponse(await response.text())
+    const responseBytes = new Uint8Array(await response.arrayBuffer())
+    let responseBinary = ""
+    for (let i = 0; i < responseBytes.length; i++) {
+        responseBinary += String.fromCharCode(responseBytes[i])
+    }
+    const clearResponseBase64 = await encryptor.decryptResponse(btoa(responseBinary))
     const responseObject = JSON.parse(atob(clearResponseBase64))
 } finally {
     await encryptor.release()
 }
 ```
 
-Acquire a new encryptor for each exchange. After `encryptRequest()`, the object cannot encrypt another request. After a `decryptResponse()` attempt, the object is consumed and cannot be used again.
+Acquire a new encryptor for each exchange. After `encryptRequest()`, the object cannot encrypt another request. After `decryptResponse()`, the object is no longer valid.
 
-The JavaScript bridge represents clear request and response bytes as Base64 strings. The encrypted HTTP request and response bodies are serialized UTF-8 strings and must be sent to and read from the network without additional JSON encoding.
+The JavaScript bridge represents request and response bytes as Base64 strings. Decode `encryptedRequest.requestBody` before sending it on the network, and pass the raw response bytes back as Base64. Do not JSON-encode the encrypted HTTP body.
 
 If the server returns a non-success HTTP status, process the PowerAuth REST error response. Do not pass an unencrypted error response to `decryptResponse()`.
 
@@ -50,7 +53,7 @@ Implementing application-specific end-to-end encryption is a non-trivial task. C
 
 ## Sign an Encrypted Request
 
-To use encrypt-then-sign mode, encrypt the request first and calculate the PowerAuth signature over `encryptedRequest.requestBody`.
+To use encrypt-then-sign mode, encrypt the request first and calculate the PowerAuth signature over the encrypted request body bytes.
 
 For an activation-scoped encryptor, the authentication header contains the information that the server needs to decrypt the request. In this case, do not also add `encryptedRequest.requestHeaders`.
 

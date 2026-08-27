@@ -79,8 +79,8 @@ class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerA
         return await this.callNative("canDecryptResponse", [encryptorId]);
     }
 
-    async decryptResponse(encryptorId: string, responseBody: string): Promise<string> {
-        return await this.callNative("decryptResponse", [encryptorId, responseBody]);
+    async decryptResponse(encryptorId: string, responseBodyBase64: string): Promise<string> {
+        return await this.callNative("decryptResponse", [encryptorId, responseBodyBase64]);
     }
 }
 

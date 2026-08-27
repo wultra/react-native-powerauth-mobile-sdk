@@ -23,7 +23,6 @@ import io.getlime.security.powerauth.core.CoreEncryptedResponse
 import io.getlime.security.powerauth.core.CoreEncryptor
 import io.getlime.security.powerauth.networking.response.IGetEncryptorListener
 import io.getlime.security.powerauth.sdk.PowerAuthSDK
-import java.nio.charset.StandardCharsets
 
 @Suppress("unused", "UNUSED_PARAMETER")
 class PowerAuthEncryptorJsModule(
@@ -112,7 +111,6 @@ class PowerAuthEncryptorJsModule(
             Errors.rejectPromise(promise, t)
             return
         }
-        var succeeded = false
         try {
             val result = objectRegister.withObjectAndTransform(
                 encryptorId,
@@ -130,24 +128,25 @@ class PowerAuthEncryptorJsModule(
                 val serializedRequest = Arguments.createMap()
                 serializedRequest.putString(
                     "requestBody",
-                    String(encryptedRequest.requestBody, StandardCharsets.UTF_8)
+                    DataFormat.BASE64.encodeBytes(encryptedRequest.requestBody)
                 )
                 serializedRequest.putArray("requestHeaders", headers)
                 serializedRequest
             } ?: throw invalidEncryptor(encryptorId)
-            succeeded = true
             promise.resolve(result)
         } catch (t: Throwable) {
             Errors.rejectPromise(promise, t)
-        } finally {
-            if (!succeeded) {
-                objectRegister.releaseObject(encryptorId, CoreEncryptor::class.java)
-            }
         }
     }
 
     @JsApiMethod
-    fun decryptResponse(encryptorId: String, responseBody: String, promise: Promise) {
+    fun decryptResponse(encryptorId: String, responseBodyBase64: String, promise: Promise) {
+        val bodyData = try {
+            DataFormat.BASE64.decodeBytes(responseBodyBase64) ?: ByteArray(0)
+        } catch (t: Throwable) {
+            Errors.rejectPromise(promise, t)
+            return
+        }
         try {
             val result = try {
                 objectRegister.withObjectAndTransform(
@@ -155,10 +154,9 @@ class PowerAuthEncryptorJsModule(
                     CoreEncryptor::class.java,
                     true
                 ) { encryptor ->
-                    val encryptedResponse = CoreEncryptedResponse(
-                        responseBody.toByteArray(StandardCharsets.UTF_8)
+                    DataFormat.BASE64.encodeBytes(
+                        encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
                     )
-                    DataFormat.BASE64.encodeBytes(encryptor.decryptResponse(encryptedResponse))
                 } ?: throw invalidEncryptor(encryptorId)
             } catch (t: Throwable) {
                 if (t is WrapperException) throw t
