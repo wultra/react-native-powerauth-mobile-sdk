@@ -32,6 +32,7 @@ import android.util.Base64
 import com.wultra.android.powerauth.js.ObjectRegisterJs.RemoveFilter
 import com.wultra.android.powerauth.js.ObjectRegisterJs.ThreadSafeAction
 import io.getlime.security.powerauth.core.Password
+import io.getlime.security.powerauth.core.CoreEncryptor
 import java.nio.charset.StandardCharsets
 import java.util.Random
 import java.util.Timer
@@ -108,6 +109,38 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
             scheduleCleanup()
             identifier
         }
+    }
+
+    /**
+     * Register a child object only if the expected owner is still registered under [ownerId].
+     * The identity check and insertion are atomic so an asynchronous callback cannot attach a
+     * child to a newly configured SDK instance that reused the same identifier.
+     */
+    internal fun registerObjectIfOwnerMatches(
+        ownerId: String,
+        expectedOwner: Any,
+        `object`: IManagedObject<out Any>,
+        releasePolicies: List<ReleasePolicy>
+    ): String? {
+        return synchronize(ThreadSafeAction {
+            val owner = register[ownerId]
+            if (owner == null ||
+                !owner.isStillValid ||
+                owner.`object`.managedInstance() !== expectedOwner
+            ) {
+                null
+            } else {
+                val identifier = generateIdentifier()
+                register[identifier] = RegisterEntry(
+                    `object`,
+                    identifier,
+                    ownerId,
+                    releasePolicies
+                )
+                scheduleCleanup()
+                identifier
+            }
+        })
     }
 
     /**
@@ -219,6 +252,35 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     }
 
     /**
+     * Transform an object while holding the register lock.
+     *
+     * This prevents release or automatic cleanup from destroying a native object while a
+     * synchronous operation is using it.
+     */
+    @Throws(Throwable::class)
+    internal fun <T, R : Any> withObjectAndTransform(
+        objectId: String?,
+        expectedClass: Class<T>,
+        touch: Boolean,
+        action: (T) -> R
+    ): R? {
+        return synchronizeThrow {
+            val registrationId = translateObjectId(objectId) ?: return@synchronizeThrow null
+            val managedObject = register[registrationId] ?: return@synchronizeThrow null
+            val instance = managedObject.`object`.managedInstance()
+            if (!managedObject.isStillValid || !expectedClass.isInstance(instance)) {
+                return@synchronizeThrow null
+            }
+            @Suppress("UNCHECKED_CAST")
+            val result = action(instance as T)
+            if (touch) {
+                managedObject.touch()
+            }
+            result
+        }
+    }
+
+    /**
      * Find object with given identifier.
      * @param objectId Object identifier.
      * @return true if register contains such object.
@@ -257,6 +319,27 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 expectedClass,
                 OPT_REMOVE
             )
+        })
+    }
+
+    /**
+     * Immediately release an object of the expected type, regardless of expiration policy.
+     * Returns null for an unknown identifier or a handle registered for another native type.
+     */
+    internal fun <T> releaseObject(objectId: String?, expectedClass: Class<T>): T? {
+        return synchronize(ThreadSafeAction {
+            val registrationId = translateObjectId(objectId)
+            val managedObject = registrationId?.let { register[it] }
+            val instance = managedObject?.`object`?.managedInstance()
+            if (registrationId == null || managedObject == null || !expectedClass.isInstance(instance)) {
+                null
+            } else {
+                register.remove(registrationId)
+                managedObject.`object`.cleanup()
+                scheduleCleanup()
+                @Suppress("UNCHECKED_CAST")
+                instance as T
+            }
         })
     }
 
@@ -723,7 +806,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                     objectClass = Password::class.java
                 }
                 "encryptor" -> {
-                    objectClass = PowerAuthEncryptorJsModule.InstanceData::class.java
+                    objectClass = CoreEncryptor::class.java
                 }
             }
             if ("create" == command) {
@@ -780,8 +863,8 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 }
             } else if ("release" == command) {
                 // The "release" command release object with given identifier and returns true / false whether object was removed.
-                if (objectId != null) {
-                    promise.resolve(removeObject(objectId, objectClass) != null)
+                if (objectClass != null && objectId != null) {
+                    promise.resolve(releaseObject(objectId, objectClass) != null)
                     return
                 }
             } else if ("releaseAll" == command) {

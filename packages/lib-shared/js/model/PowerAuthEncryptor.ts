@@ -15,232 +15,93 @@
  */
 
 import { NativeEncryptor } from "../internal/NativeEncryptor"
-import { BaseNativeObject, BaseReleasableObject } from "./BaseNativeObject"
-import { PowerAuthEncryptionHttpHeader } from "../index"
-import { NativeWrapper } from "../internal/NativeWrapper"
-import { PowerAuthDataFormat } from "./PowerAuthDataFormat"
+import { NativeObjectHandle } from "../internal/NativeObjectHandle"
+import { BaseReleasableObject } from "./BaseNativeObject"
+import { PowerAuthHttpHeader } from "./PowerAuthClientConfiguration"
 
-/**
- * Scope of encryptor.
- */
+/** Scope of an end-to-end encryptor. */
 export type PowerAuthEncryptorScope = 'APPLICATION' | 'ACTIVATION'
 
-/**
- * Interface representing encrypted data in request or response.
- */
-export interface PowerAuthCryptogram {
-    /**
-     * Temporary key identifier.
-     */
-    readonly temporaryKeyId: string
-    /**
-     * Ephemeral public key, valid only for encrypted request.
-     */
-    readonly ephemeralPublicKey?: string
-    /**
-     * Encrypted data, valid for request and response.
-     */
-    readonly encryptedData: string
-    /**
-     * Message authenticated code, valid for request and response.
-     */
-    readonly mac: string
-    /**
-     * Nonce, valid for encrypted request.
-     */
-    readonly nonce?: string
-
-    /**
-     * Timestamp of request or response in milliseconds since 1.1.1970.
-     */
-    readonly timestmap: number
+/** Encrypted HTTP request produced by `PowerAuthEncryptor`. */
+export interface PowerAuthEncryptedRequest {
+    /** Serialized encrypted HTTP request body encoded as a UTF-8 string. */
+    readonly requestBody: string
+    /** HTTP headers that must accompany `requestBody`. */
+    readonly requestHeaders: ReadonlyArray<PowerAuthHttpHeader>
 }
 
 /**
- * Object returned from the `encryptRequest()` function.
- */
-export interface PowerAuthEncryptedRequestData {
-    /**
-     * Cryptogram with encrypted request data.
-     */
-    readonly cryptogram: PowerAuthCryptogram
-    /**
-     * HTTP request header. You must include this header to your HTTP request 
-     * to properly decrypt the request data on the server.
-     * 
-     * If you plan to combine encryption with PowerAuth Symmetric Signature, then 
-     * the header can be ommitted.
-     */
-    readonly header: PowerAuthEncryptionHttpHeader
-    /**
-     * Object that can decrypt encrypted response received from the server.
-     */
-    readonly decryptor: PowerAuthDecryptor
-}
-
-/**
- * Interface that implements End-To-End encryption. Use `PowerAuth` class to get instnace 
- * of encryptor.
+ * A stateful, single-use end-to-end encryptor.
+ *
+ * The same instance encrypts one request and decrypts its response. Acquire a fresh encryptor
+ * for every additional HTTP exchange and call `release()` in a `finally` block.
  */
 export interface PowerAuthEncryptor extends BaseReleasableObject {
-    /**
-     * Scope of this encryptor.
-     */
-    readonly encryptorScope: PowerAuthEncryptorScope
-    /**
-     * Determine whether encryptor can encrypt the request. 
-     * 
-     * The encryptor is reusable, so this method typically returns `true`, unless the parent
-     * `PowerAuth` instance is deconfigured or has no longer valid activation (if activation scoped).
-     */
+    /** Scope used to acquire this encryptor. */
+    readonly scope: PowerAuthEncryptorScope
+
+    /** Returns whether this instance can encrypt a request. */
     canEncryptRequest(): Promise<boolean>
-    /**
-     * Encrypt the request data.
-     * @param body UTF8 encoded string to encrypt.
-     * @returns Object containing encrypted data, HTTP header and decryptor for the response decryption.
-     */
-    encryptRequest(body: string): Promise<PowerAuthEncryptedRequestData>
-    /**
-     * Encrypt the request data.
-     * @param body Data to encrypt. By default plain string is expected, but you can use `bodyFormat` parameter to specify Base64 encoded string at input.
-     * @param bodyFormat Specify encoding of `body` parameter. The default value is `UTF8`, so plain string is expected in `body` parameter.
-     * @returns Object containing encrypted data, HTTP header and decryptor for the response decryption.
-     */
-    encryptRequest(body: string, bodyFormat: PowerAuthDataFormat): Promise<PowerAuthEncryptedRequestData>
-}
 
-/**
- * Interface defining decryptor that is capable to decrypt encrypted response received from the server.
- * 
- * Be aware that the native underlying object has a limited lifetime set to 5 minutes. If you don't decrypt
- * the resposne within this time interval, then the information required for the request decryption is lost.
- */
-export interface PowerAuthDecryptor extends BaseReleasableObject {
-    /**
-     * Scope of this decryptor.
-     */
-    readonly decryptorScope: PowerAuthEncryptorScope
-    /**
-     * Determine whether object is able to decrypt the response.
-     */
+    /** Returns whether this instance can decrypt a response. */
     canDecryptResponse(): Promise<boolean>
-    /**
-     * Decrypt the response received from the server. The underlying native object is automatically released
-     * after this call.
-     * 
-     * @param cryptogram Cryptogram containing encrypted response from the server.
-     * @param outputDataFormat Data format expected at the output. If not used, then 'UTF8' is applied.
-     * @returns Decrypted data in specified format.
-     */
-    decryptResponse(cryptogram: PowerAuthCryptogram, outputDataFormat: PowerAuthDataFormat): Promise<string>
 
     /**
-     * Decrypt response received from the server into plain string. The underlying native object is automatically 
-     * released after this call.
-     * @param cryptogram Cryptogram containing encrypted response from the server.
-     * @returns Decrypted string.
+     * Encrypts an optional request body.
+     * @param requestBodyBase64 Clear request body encoded as a Base64 string, or `undefined` for an empty body.
      */
-    decryptResponse(cryptogram: PowerAuthCryptogram): Promise<string>
+    encryptRequest(requestBodyBase64?: string): Promise<PowerAuthEncryptedRequest>
+
+    /**
+     * Decrypts the serialized encrypted HTTP response body.
+     *
+     * The encryptor is consumed after this attempt, whether decryption succeeds or fails.
+     * @param responseBody Encrypted HTTP response body encoded as a UTF-8 string.
+     * @returns Clear response body encoded as a Base64 string.
+     */
+    decryptResponse(responseBody: string): Promise<string>
 }
 
-/**
- * Class that implements End-To-End encryption. Use `PowerAuth` class to get instnace 
- * of properly scoped encryptor.
- */
-export class PowerAuthEncryptorImpl extends BaseNativeObject implements PowerAuthEncryptor {
+/** Internal platform-backed implementation of `PowerAuthEncryptor`. */
+export class PowerAuthEncryptorImpl implements PowerAuthEncryptor {
+    private readonly handle: NativeObjectHandle
 
-    async canEncryptRequest(): Promise<boolean> {
+    private constructor(
+        public readonly scope: PowerAuthEncryptorScope,
+        objectId: string
+    ) {
+        this.handle = new NativeObjectHandle(objectId)
+    }
+
+    static async acquire(
+        scope: PowerAuthEncryptorScope,
+        powerAuthInstanceId: string
+    ): Promise<PowerAuthEncryptor> {
+        const objectId = await NativeEncryptor.initialize(scope, powerAuthInstanceId)
+        return new PowerAuthEncryptorImpl(scope, objectId)
+    }
+
+    canEncryptRequest(): Promise<boolean> {
+        return this.handle.withObjectId(objectId => NativeEncryptor.canEncryptRequest(objectId))
+    }
+
+    canDecryptResponse(): Promise<boolean> {
+        return this.handle.withObjectId(objectId => NativeEncryptor.canDecryptResponse(objectId))
+    }
+
+    encryptRequest(requestBodyBase64?: string): Promise<PowerAuthEncryptedRequest> {
+        return this.handle.withObjectId(objectId => NativeEncryptor.encryptRequest(objectId, requestBodyBase64))
+    }
+
+    async decryptResponse(responseBody: string): Promise<string> {
         try {
-            return await this.withObjectId(objjectId => NativeEncryptor.canEncryptRequest(objjectId))
-        } catch {
-            return false
+            return await this.handle.withObjectId(objectId => NativeEncryptor.decryptResponse(objectId, responseBody))
+        } finally {
+            await this.release()
         }
-    }
-
-    encryptRequest(body: string, bodyFormat: PowerAuthDataFormat = 'UTF8'): Promise<PowerAuthEncryptedRequestData> {
-        return this.withObjectId(async (objectId) => {
-            const result = await NativeEncryptor.encryptRequest(objectId, body, bodyFormat)
-            return {
-                cryptogram: result.cryptogram,
-                header: result.header,
-                decryptor: new PowerAuthDecryptorImpl(this.encryptorScope, result.decryptorId)
-            }
-        })
-    }
-
-    /**
-     * Scope of this encryptor.
-     */
-    readonly encryptorScope: PowerAuthEncryptorScope
-    /**
-     * Instance identifier of PowerAuth instance owning this encryptor.
-     */
-    private readonly powerAuthInstanceId: string
-    /**
-     * Autorelease time in ms.
-     */
-    private readonly autoreleaseTime: number
-
-    /**
-     * Construct encryptor object and specify its scope.
-     * @param scope Scope of the encryptor.
-     * @param powerAuthInstanceId Instance identifier of PowerAuth class owning this encryptor.
-     * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
-     */
-    constructor(
-        scope: PowerAuthEncryptorScope, 
-        powerAuthInstanceId: string, 
-        autoreleaseTime: number = 0) {
-        super()
-        this.encryptorScope = scope
-        this.powerAuthInstanceId = powerAuthInstanceId
-        this.autoreleaseTime = autoreleaseTime
-    }
-
-    protected override onCreate(): Promise<string> {
-        return NativeEncryptor.initialize(this.encryptorScope, this.powerAuthInstanceId, this.autoreleaseTime)
-    }
-
-    protected override onRelease(objectId: string): Promise<void> {
-        return NativeEncryptor.release(objectId)
-    }
-}
-
-/**
- * Internal implementation of `PowerAuthDecryptor`
- */
-class PowerAuthDecryptorImpl implements PowerAuthDecryptor {
-
-    async canDecryptResponse(): Promise<boolean> {
-        try {
-            return await this.withObjectId(async objectId => NativeEncryptor.canDecryptResponse(objectId))
-        } catch {
-            return false
-        }
-    }
-
-    decryptResponse(cryptogram: PowerAuthCryptogram): Promise<string>;
-    decryptResponse(cryptogram: PowerAuthCryptogram, outputDataFormat: PowerAuthDataFormat): Promise<string>;
-    decryptResponse(cryptogram: any, outputDataFormat?: any): Promise<string> {
-        return this.withObjectId(objectId => NativeEncryptor.decryptResponse(objectId, cryptogram, outputDataFormat))
     }
 
     release(): Promise<void> {
-        return NativeEncryptor.release(this.objectId)
-    }
-
-    /**
-     * Construct decryptor with original scope and existing native object identifier.
-     * @param decryptorScope Original scope used in the encryptor.
-     * @param objectId Native object identifier.
-     */
-    constructor(public readonly decryptorScope: PowerAuthEncryptorScope, private objectId: string) {}
-
-    private async withObjectId<T>(action: (objectId: string) => Promise<T>): Promise<T> {
-        try {
-            return await action(this.objectId)
-        } catch (error: any) {
-            throw NativeWrapper.processException(error)
-        }
+        return this.handle.release(objectId => NativeEncryptor.release(objectId))
     }
 }

@@ -86,9 +86,6 @@ export enum PowerAuthErrorCode {
     /** Error code for accessing an unknown token. */
     INVALID_TOKEN = "INVALID_TOKEN",
 
-    /** Encryptor is not constructed for encryption or decryption. */
-    INVALID_ENCRYPTOR = "INVALID_ENCRYPTOR",
-
     /** Error code for errors related to end-to-end encryption. */
     ENCRYPTION_ERROR = "ENCRYPTION_ERROR",
 
