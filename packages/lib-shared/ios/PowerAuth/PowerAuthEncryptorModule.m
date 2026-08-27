@@ -148,7 +148,7 @@ PAJS_METHOD_START(encryptRequest,
                                              action:^(PowerAuthEncryptor * encryptor) {
         PowerAuthEncryptedRequest * encryptedRequest = [encryptor encryptRequest:clearBody error:&encryptionError];
         NSString * serializedBody = encryptedRequest
-            ? [[NSString alloc] initWithData:encryptedRequest.requestBody encoding:NSUTF8StringEncoding]
+            ? [encryptedRequest.requestBody base64EncodedStringWithOptions:0]
             : nil;
         if (!serializedBody) {
             return;
@@ -162,7 +162,6 @@ PAJS_METHOD_START(encryptRequest,
     if (!found) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
     } else if (!result) {
-        [_objectRegister releaseObjectWithId:encryptorId expectedClass:[PowerAuthEncryptor class]];
         reject(EC_ENCRYPTION_ERROR, @"Failed to encrypt request", encryptionError);
     } else {
         resolve(result);
@@ -172,18 +171,20 @@ PAJS_METHOD_END
 
 PAJS_METHOD_START(decryptResponse,
                   PAJS_ARGUMENT(encryptorId, NSString*)
-                  PAJS_ARGUMENT(responseBody, NSString*))
+                  PAJS_ARGUMENT(responseBodyBase64, NSString*))
 {
+    NSData * bodyData = [[NSData alloc] initWithBase64EncodedString:responseBodyBase64 options:0];
+    if (!bodyData) {
+        reject(EC_WRONG_PARAMETER, @"Response body is not valid Base64", nil);
+        return;
+    }
     __block NSString * result = nil;
     __block NSError * decryptionError = nil;
     BOOL found = [_objectRegister processObjectWithId:encryptorId
                                        expectedClass:[PowerAuthEncryptor class]
                                                touch:YES
                                               action:^(PowerAuthEncryptor * encryptor) {
-        NSData * bodyData = [responseBody dataUsingEncoding:NSUTF8StringEncoding];
-        PowerAuthEncryptedResponse * encryptedResponse = bodyData
-            ? [[PowerAuthEncryptedResponse alloc] initWithResponseBody:bodyData error:&decryptionError]
-            : nil;
+        PowerAuthEncryptedResponse * encryptedResponse = [[PowerAuthEncryptedResponse alloc] initWithResponseBody:bodyData error:&decryptionError];
         NSData * clearResponse = encryptedResponse
             ? [encryptor decryptResponse:encryptedResponse error:&decryptionError]
             : nil;

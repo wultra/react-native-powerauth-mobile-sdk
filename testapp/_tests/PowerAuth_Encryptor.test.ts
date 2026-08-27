@@ -27,9 +27,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
     async testApplicationScopeWithoutActivation() {
         expect(await this.sdk.hasValidActivation()).toBe(false)
         await expect(async () => await this.sdk.getEncryptorForActivationScope())
-            .toThrow({
-                errorMessage: 'powerAuth::PowerAuthException: Activation is required for activation scoped temporary key'
-            })
+            .toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
 
         const encryptor = await this.sdk.getEncryptorForApplicationScope()
         try {
