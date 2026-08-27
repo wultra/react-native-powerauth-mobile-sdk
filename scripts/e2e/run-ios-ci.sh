@@ -64,6 +64,8 @@ RUN_START_TIMEOUT_SEC="${E2E_RUN_START_TIMEOUT_SEC:-3600}"
 RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
 LAUNCH_GRACE_TIMEOUT_SEC="${E2E_LAUNCH_GRACE_TIMEOUT_SEC:-120}"
 SIM_BOOT_TIMEOUT_SEC="${E2E_SIM_BOOT_TIMEOUT_SEC:-900}"
+SIM_BOOTSTATUS_GRACE_SEC="${E2E_SIM_BOOTSTATUS_GRACE_SEC:-30}"
+SIMCTL_COMMAND_TIMEOUT_SEC="${E2E_SIMCTL_COMMAND_TIMEOUT_SEC:-30}"
 RN_LAUNCH_ATTEMPTS="${E2E_RN_LAUNCH_ATTEMPTS:-3}"
 COLLECTOR_TIMEOUT="${E2E_COLLECTOR_TIMEOUT:-90m}"
 
@@ -145,19 +147,64 @@ wait_for_runs() {
   return 0
 }
 
-wait_for_simulator_boot() {
-  timeout_sec="$1"
+run_with_timeout() {
+  local timeout_sec="$1"
+  local command_pid kill_deadline start_time now status
+  shift
+
+  "$@" &
+  command_pid=$!
   start_time="$(date +%s)"
-  while true; do
-    if xcrun simctl list devices booted | grep -q "${SIM_ID}"; then
-      return 0
-    fi
+  while kill -0 "${command_pid}" 2>/dev/null; do
     now="$(date +%s)"
-    if [ "$((now - start_time))" -gt "${timeout_sec}" ]; then
-      return 1
+    if [ "$((now - start_time))" -ge "${timeout_sec}" ]; then
+      echo "[e2e] ERROR: Command timed out after ${timeout_sec}s: $*" >&2
+      kill "${command_pid}" 2>/dev/null || true
+      kill_deadline="$((now + 5))"
+      while kill -0 "${command_pid}" 2>/dev/null; do
+        now="$(date +%s)"
+        if [ "${now}" -ge "${kill_deadline}" ]; then
+          kill -9 "${command_pid}" 2>/dev/null || true
+          break
+        fi
+        sleep 1
+      done
+      wait "${command_pid}" 2>/dev/null || true
+      return 124
     fi
-    sleep 5
+    sleep 1
   done
+
+  if wait "${command_pid}"; then
+    return 0
+  else
+    status=$?
+    return "${status}"
+  fi
+}
+
+wait_for_simulator_ready() {
+  local deadline="$1"
+  local now remaining
+
+  now="$(date +%s)"
+  remaining="$((deadline - now))"
+  if [ "${remaining}" -lt "${SIM_BOOTSTATUS_GRACE_SEC}" ]; then
+    remaining="${SIM_BOOTSTATUS_GRACE_SEC}"
+  fi
+  run_with_timeout "${remaining}" xcrun simctl bootstatus "${SIM_ID}" -b
+}
+
+configure_simulator_biometrics() {
+  if xcrun simctl help 2>&1 | grep -q "biometric"; then
+    xcrun simctl biometric enroll "${SIM_ID}" face || true
+    xcrun simctl biometric enroll "${SIM_ID}" finger || true
+  else
+    echo "[e2e] simctl biometric is not available on this runner."
+    # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
+    xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
+    xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
+  fi
 }
 
 abort_with_logs() {
@@ -206,6 +253,7 @@ install_and_launch_rn_app() {
   app_path="$1"
   bundle_id="$2"
   attempt=1
+  local retry_boot_deadline
 
   while [ "${attempt}" -le "${RN_LAUNCH_ATTEMPTS}" ]; do
     echo "[e2e] Installing and launching RN iOS app (attempt ${attempt}/${RN_LAUNCH_ATTEMPTS})..."
@@ -219,10 +267,17 @@ install_and_launch_rn_app() {
 
     if [ "${attempt}" -lt "${RN_LAUNCH_ATTEMPTS}" ]; then
       echo "[e2e] WARNING: RN iOS launch failed; rebooting simulator before retry."
-      xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
+      run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
       open -a Simulator --args -CurrentDeviceUDID "${SIM_ID}" || true
-      xcrun simctl boot "${SIM_ID}" || true
-      xcrun simctl bootstatus "${SIM_ID}" -b || true
+      if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
+        echo "[e2e] ERROR: Failed to start simulator ${SIM_ID} during launch retry."
+        return 1
+      fi
+      retry_boot_deadline="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
+      if ! wait_for_simulator_ready "${retry_boot_deadline}"; then
+        echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish rebooting."
+        return 1
+      fi
     fi
 
     attempt=$((attempt + 1))
@@ -235,6 +290,8 @@ install_and_launch_rn_app() {
 SIM_ID=""
 SIM_LINE=""
 CORDOVA_SIM_TARGET=""
+SIMULATOR_NEEDS_BIOMETRIC_SETUP=false
+SIMULATOR_BOOT_DEADLINE=""
 
 pick_simulator_from_list() {
   local list="$1"
@@ -257,12 +314,17 @@ resolve_cordova_sim_target() {
     return 0
   fi
 
-  local sdk_version runtime_id
+  local available_json sdk_version runtime_id
   sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
   runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
 
+  if ! available_json="$(run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl list devices available --json)"; then
+    echo "[e2e] ERROR: Failed to list available iOS simulators."
+    return 1
+  fi
+
   if ! CORDOVA_SIM_TARGET="$(
-    xcrun simctl list devices available --json |
+    printf '%s\n' "${available_json}" |
       RUNTIME_ID="${runtime_id}" node -e '
         const devices = JSON.parse(require("node:fs").readFileSync(0)).devices[process.env.RUNTIME_ID] || [];
         const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
@@ -277,28 +339,27 @@ resolve_cordova_sim_target() {
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
-  booted_list="$(xcrun simctl list devices booted)"
+  if ! booted_list="$(run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl list devices booted)"; then
+    echo "[e2e] ERROR: Failed to list booted iOS simulators."
+    exit 1
+  fi
   if pick_simulator_from_list "${booted_list}"; then
     echo "[e2e] Using booted simulator: ${SIM_LINE}"
+    SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
   else
-    available_list="$(xcrun simctl list devices available)"
+    if ! available_list="$(run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl list devices available)"; then
+      echo "[e2e] ERROR: Failed to list available iOS simulators."
+      exit 1
+    fi
     if pick_simulator_from_list "${available_list}"; then
-      echo "[e2e] Booting iOS simulator: ${SIM_LINE}"
+      echo "[e2e] Booting iOS simulator asynchronously: ${SIM_LINE}"
       open -a Simulator || true
-      xcrun simctl boot "${SIM_ID}" || true
-      if wait_for_simulator_boot "${SIM_BOOT_TIMEOUT_SEC}"; then
-        if xcrun simctl help 2>&1 | grep -q "biometric"; then
-          xcrun simctl biometric enroll "${SIM_ID}" face || true
-          xcrun simctl biometric enroll "${SIM_ID}" finger || true
-        else
-          echo "[e2e] simctl biometric is not available on this runner."
-          # Fallback for older Xcode: toggle enrollment via notifyutil inside the simulator runtime.
-          xcrun simctl spawn "${SIM_ID}" notifyutil -s com.apple.BiometricKit.enrollmentChanged "1" || true
-          xcrun simctl spawn "${SIM_ID}" notifyutil -p com.apple.BiometricKit.enrollmentChanged || true
-        fi
-      else
-        echo "[e2e] WARNING: Timeout waiting for simulator boot."
+      SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
+      if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
+        echo "[e2e] ERROR: Failed to start simulator ${SIM_ID}."
+        exit 1
       fi
+      SIMULATOR_NEEDS_BIOMETRIC_SETUP=true
     else
       echo "[e2e] WARNING: No available iOS simulator found."
     fi
@@ -309,7 +370,10 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   fi
 else
   echo "[e2e] Skipping simulator boot for Cordova"
-  xcrun simctl shutdown booted || true
+  if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown booted; then
+    echo "[e2e] ERROR: Failed to shut down the booted iOS simulator."
+    exit 1
+  fi
 fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
@@ -327,12 +391,6 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
 
   yarn workspace testapp start:prepared &
   METRO_PID=$!
-
-  open -a Simulator --args -CurrentDeviceUDID "${SIM_ID}" || true
-  if ! xcrun simctl bootstatus "${SIM_ID}" -b; then
-    echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting."
-    abort_with_logs
-  fi
 
   RN_DERIVED_DATA_PATH="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios.XXXXXX")"
   echo "[e2e] Building RN iOS app for simulator ${SIM_ID}..."
@@ -356,6 +414,16 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   if ! RN_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${RN_APP_PATH}/Info.plist")"; then
     echo "[e2e] ERROR: Failed to read the RN iOS bundle identifier."
     abort_with_logs
+  fi
+
+  open -a Simulator --args -CurrentDeviceUDID "${SIM_ID}" || true
+  echo "[e2e] Waiting for iOS simulator ${SIM_ID} to finish booting..."
+  if ! wait_for_simulator_ready "${SIMULATOR_BOOT_DEADLINE}"; then
+    echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting."
+    abort_with_logs
+  fi
+  if [ "${SIMULATOR_NEEDS_BIOMETRIC_SETUP}" = true ]; then
+    configure_simulator_biometrics
   fi
 
   if ! install_and_launch_rn_app "${RN_APP_PATH}" "${RN_BUNDLE_ID}"; then
