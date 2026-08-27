@@ -16,6 +16,7 @@
 
 import { NativeEncryptor } from "../internal/NativeEncryptor"
 import { NativeObjectHandle } from "../internal/NativeObjectHandle"
+import { NativeWrapper } from "../internal/NativeWrapper"
 import { BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthHttpHeader } from "./PowerAuthClientConfiguration"
 
@@ -24,7 +25,7 @@ export type PowerAuthEncryptorScope = 'APPLICATION' | 'ACTIVATION'
 
 /** Encrypted HTTP request produced by `PowerAuthEncryptor`. */
 export interface PowerAuthEncryptedRequest {
-    /** Serialized encrypted HTTP request body encoded as a UTF-8 string. */
+    /** Encrypted HTTP request body encoded as a Base64 string. */
     readonly requestBody: string
     /** HTTP headers that must accompany `requestBody`. */
     readonly requestHeaders: ReadonlyArray<PowerAuthHttpHeader>
@@ -53,13 +54,11 @@ export interface PowerAuthEncryptor extends BaseReleasableObject {
     encryptRequest(requestBodyBase64?: string): Promise<PowerAuthEncryptedRequest>
 
     /**
-     * Decrypts the serialized encrypted HTTP response body.
-     *
-     * The encryptor is consumed after this attempt, whether decryption succeeds or fails.
-     * @param responseBody Encrypted HTTP response body encoded as a UTF-8 string.
+     * Decrypts the encrypted HTTP response body.
+     * @param responseBodyBase64 Encrypted HTTP response body encoded as a Base64 string.
      * @returns Clear response body encoded as a Base64 string.
      */
-    decryptResponse(responseBody: string): Promise<string>
+    decryptResponse(responseBodyBase64: string): Promise<string>
 }
 
 /** Internal platform-backed implementation of `PowerAuthEncryptor`. */
@@ -77,8 +76,12 @@ export class PowerAuthEncryptorImpl implements PowerAuthEncryptor {
         scope: PowerAuthEncryptorScope,
         powerAuthInstanceId: string
     ): Promise<PowerAuthEncryptor> {
-        const objectId = await NativeEncryptor.initialize(scope, powerAuthInstanceId)
-        return new PowerAuthEncryptorImpl(scope, objectId)
+        try {
+            const objectId = await NativeEncryptor.initialize(scope, powerAuthInstanceId)
+            return new PowerAuthEncryptorImpl(scope, objectId)
+        } catch (error: any) {
+            throw NativeWrapper.processException(error)
+        }
     }
 
     canEncryptRequest(): Promise<boolean> {
@@ -93,12 +96,8 @@ export class PowerAuthEncryptorImpl implements PowerAuthEncryptor {
         return this.handle.withObjectId(objectId => NativeEncryptor.encryptRequest(objectId, requestBodyBase64))
     }
 
-    async decryptResponse(responseBody: string): Promise<string> {
-        try {
-            return await this.handle.withObjectId(objectId => NativeEncryptor.decryptResponse(objectId, responseBody))
-        } finally {
-            await this.release()
-        }
+    decryptResponse(responseBodyBase64: string): Promise<string> {
+        return this.handle.withObjectId(objectId => NativeEncryptor.decryptResponse(objectId, responseBodyBase64))
     }
 
     release(): Promise<void> {

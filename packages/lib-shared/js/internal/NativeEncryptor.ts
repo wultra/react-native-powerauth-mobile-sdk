@@ -34,8 +34,8 @@ export interface PowerAuthEncryptorIfc {
     /** Returns whether the native encryptor can decrypt a response. */
     canDecryptResponse(encryptorId: string): Promise<boolean>
 
-    /** Decrypts a serialized UTF-8 encrypted response body to Base64-encoded bytes. */
-    decryptResponse(encryptorId: string, responseBody: string): Promise<string>
+    /** Decrypts a Base64-encoded encrypted response body to Base64-encoded bytes. */
+    decryptResponse(encryptorId: string, responseBodyBase64: string): Promise<string>
 }
 
 export const NativeEncryptor = NativeModulesProvider.PowerAuthEncryptor;
