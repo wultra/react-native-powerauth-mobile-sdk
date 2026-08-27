@@ -53,8 +53,6 @@ object Errors {
     const val EC_OPERATION_CANCELED: String = "OPERATION_CANCELED"
     const val EC_INVALID_ACTIVATION_CODE: String = "INVALID_ACTIVATION_CODE"
     const val EC_INVALID_TOKEN: String = "INVALID_TOKEN"
-    // Retained internally until the legacy E2EE surface is replaced in pqa/encryptor.
-    const val EC_INVALID_ENCRYPTOR: String = "INVALID_ENCRYPTOR"
     const val EC_ENCRYPTION_ERROR: String = "ENCRYPTION_ERROR"
     const val EC_WRONG_PARAMETER: String = "WRONG_PARAMETER"
     const val EC_PROTOCOL_UPGRADE: String = "PROTOCOL_UPGRADE"

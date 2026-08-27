@@ -171,6 +171,24 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     }];
 }
 
+- (NSString*) registerObject:(id)object
+              ifOwnerMatches:(id)expectedOwner
+                     ownerId:(NSString*)ownerId
+                    policies:(NSArray<NSNumber*>*)policies
+{
+    return [self synchronized:^id{
+        PowerAuthManagedObject * owner = _register[ownerId];
+        if (!owner || ![owner isStillValid] || owner.object != expectedOwner) {
+            return nil;
+        }
+        NSString * identifier = [self generateIdentifier];
+        PowerAuthManagedObject * managedObject = [[PowerAuthManagedObject alloc] initWithObject:object key:identifier tag:ownerId policies:policies];
+        _register[identifier] = managedObject;
+        [self scheduleClenaup];
+        return identifier;
+    }];
+}
+
 - (BOOL) registerObject:(id)object withId:(NSString*)objectId tag:(NSString*)tag policies:(NSArray<NSNumber*>*)policies
 {
     return [self registerObjectWithId:objectId tag:tag policies:policies objectFactory:^id{
@@ -204,6 +222,27 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     return [self synchronized:^id{
         return [self findManagedObject:objectId expectedClass:expectedClass options:OPT_SET_USE];
     }];
+}
+
+- (BOOL) processObjectWithId:(NSString*)objectId
+               expectedClass:(Class)expectedClass
+                       touch:(BOOL)touch
+                      action:(NS_NOESCAPE void(^)(id object))action
+{
+    return [[self synchronized:^id{
+        NSString * registeredId = [self translateObjectId:objectId];
+        PowerAuthManagedObject * managedObject = registeredId ? _register[registeredId] : nil;
+        if (!managedObject ||
+            ![managedObject isStillValid] ||
+            ![managedObject.object isKindOfClass:expectedClass]) {
+            return @NO;
+        }
+        action(managedObject.object);
+        if (touch) {
+            [managedObject touch];
+        }
+        return @YES;
+    }] boolValue];
 }
 
 - (id) findObjectWithId:(NSString *)objectId expectedClass:(Class)expectedClass
@@ -240,6 +279,20 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
 {
     return [self synchronized:^{
         return [self findManagedObject:objectId expectedClass:expectedClass options:OPT_REMOVE];
+    }];
+}
+
+- (id) releaseObjectWithId:(NSString*)objectId expectedClass:(Class)expectedClass
+{
+    return [self synchronized:^id{
+        NSString * registeredId = [self translateObjectId:objectId];
+        PowerAuthManagedObject * managedObject = registeredId ? _register[registeredId] : nil;
+        if (!managedObject || ![managedObject.object isKindOfClass:expectedClass]) {
+            return nil;
+        }
+        [_register removeObjectForKey:registeredId];
+        [self scheduleClenaup];
+        return managedObject.object;
     }];
 }
 

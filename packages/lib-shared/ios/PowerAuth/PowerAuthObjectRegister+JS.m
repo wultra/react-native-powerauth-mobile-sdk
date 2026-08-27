@@ -77,7 +77,7 @@ PAJS_METHOD_START(debugCommand,
     } else if ([@"password" isEqual:objectType]) {
         objectClass = [PowerAuthCoreMutablePassword class];
     } else if ([@"encryptor" isEqual:objectType]) {
-        objectClass = [PowerAuthJsEncryptor class];
+        objectClass = [PowerAuthEncryptor class];
     }
     if ([@"create" isEqual:command]) {
         // The "create" command creates a new instance of managed object
@@ -120,9 +120,8 @@ PAJS_METHOD_START(debugCommand,
         }
     } else if ([@"release" isEqual:command]) {
         // The "release" command release object with given identifier and returns true / false whether object was removed.
-        if (objectId) {
-            // release allows to release any object
-            resolve([self removeObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
+        if (objectClass && objectId) {
+            resolve([self releaseObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
             return;
         }
     } else if ([@"releaseAll" isEqual:command]) {

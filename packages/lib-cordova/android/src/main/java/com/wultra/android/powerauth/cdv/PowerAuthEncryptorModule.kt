@@ -2,7 +2,6 @@
 package com.wultra.android.powerauth.cordova.plugin
 
 import com.wultra.android.powerauth.bridge.getOptString
-import com.wultra.android.powerauth.bridge.getReadableMap
 import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule
 import com.wultra.android.powerauth.cdv.util.Promise
 import org.apache.cordova.CallbackContext
@@ -59,14 +58,12 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
     private fun initialize(args: JSONArray, promise: Promise) {
         val scope = args.getString(0)
         val ownerId = args.getString(1)
-        val autoreleaseTime = args.getInt(2)
-        powerAuthEncryptorJsModule.initialize(scope, ownerId, autoreleaseTime, promise)
+        powerAuthEncryptorJsModule.initialize(scope, ownerId, promise)
     }
 
     private fun release(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
-        powerAuthEncryptorJsModule.release(encryptorId)
-        promise.resolve(null)
+        powerAuthEncryptorJsModule.release(encryptorId, promise)
     }
 
     // Encryption
@@ -78,22 +75,20 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
 
     private fun encryptRequest(args: JSONArray, promise: Promise) {
         val encryptorId = args.getString(0)
-        val body = args.getOptString(1)
-        val bodyFormat = args.getOptString(2)
-        powerAuthEncryptorJsModule.encryptRequest(encryptorId, body, bodyFormat, promise)
+        val requestBodyBase64 = args.getOptString(1)
+        powerAuthEncryptorJsModule.encryptRequest(encryptorId, requestBodyBase64, promise)
     }
 
     // Decryption
 
     private fun canDecryptResponse(args: JSONArray, promise: Promise) {
-        val encryptorId = args.getOptString(0)
+        val encryptorId = args.getString(0)
         powerAuthEncryptorJsModule.canDecryptResponse(encryptorId, promise)
     }
 
     private fun decryptResponse(args: JSONArray, promise: Promise) {
-        val encryptorId = args.getOptString(0)
-        val cryptogram = args.getReadableMap(1)
-        val outputFormat = args.getOptString(2)
-        powerAuthEncryptorJsModule.decryptResponse(encryptorId, cryptogram, outputFormat, promise)
+        val encryptorId = args.getString(0)
+        val responseBody = args.getString(1)
+        powerAuthEncryptorJsModule.decryptResponse(encryptorId, responseBody, promise)
     }
 }

@@ -279,7 +279,7 @@ export class IntegrationHelper {
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
-        const url = `${AppConfig.enrollmentUrl}/${endpoint}`
+        const url = this.sdkEndpointUrl(endpoint)
         const request: RequestInit = {
             body: body,
             headers: headers,
@@ -290,6 +290,20 @@ export class IntegrationHelper {
             .then(stringResp => {
                 return JSON.parse(stringResp)
             })
+    }
+
+    /** Calls an SDK endpoint and returns the raw UTF-8 response body. */
+    async callRawSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<string> {
+        const url = this.sdkEndpointUrl(endpoint)
+        return await fetch(url, {
+            body: body,
+            headers: headers,
+            method: method
+        }).then(response => response.text())
+    }
+
+    private sdkEndpointUrl(endpoint: string): string {
+        return `${AppConfig.enrollmentUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`
     }
 
     private async makeCall(payload: string | undefined, url: string, method: string = "POST"): Promise<any> {
