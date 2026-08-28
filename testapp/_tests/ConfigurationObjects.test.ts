@@ -136,6 +136,13 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(config.invalidateBiometricFactorAfterChange).toBe(!DEFAULT_LINK_ITEMS)
         expect(config.linkItemsToCurrentSet).toBe(!DEFAULT_LINK_ITEMS)
 
+        config = buildBiometryConfiguration({
+            invalidateBiometricFactorAfterChange: DEFAULT_LINK_ITEMS,
+            linkItemsToCurrentSet: !DEFAULT_LINK_ITEMS
+        })
+        expect(config.invalidateBiometricFactorAfterChange).toBe(DEFAULT_LINK_ITEMS)
+        expect(config.linkItemsToCurrentSet).toBe(DEFAULT_LINK_ITEMS)
+
         config = buildBiometryConfiguration({confirmBiometricAuthentication: true})
         expect(config).toEqual({
             authenticateOnBiometricKeySetup: defaultConfig.authenticateOnBiometricKeySetup,

@@ -15,12 +15,10 @@ PowerAuth SDK provides code for the first two of these checks.
 To check if you can use biometry on the system, use the following code:
 
 ```javascript
-const biometryStatus = await powerAuth.getBiometryInfo();
+const biometryStatus = await powerAuth.getBiometricStatus();
 
-// Is biometric authentication is supported on the system?
-// Note that the property contains "false" on iOS if biometry is not enrolled or if it has been locked down. 
-// To distinguish between availability and lockdown you can use `biometryType` and `canAuthenticate`.
-const isAvailable = biometryStatus.isAvailable;
+// Is biometric authentication available for this activation?
+const isAvailable = biometryStatus.isAuthenticationWithBiometricsAvailable;
 
 // Type of biometry supported on the system.
 // For example "FINGERPRINT" if Fingerprint scanner/TouchID is present on the device
@@ -28,7 +26,13 @@ const biometryType = biometryStatus.biometryType;
 
 // Status of biometric authentication availability.
 // For example "NOT_ENROLLED". 
-const authenticateStatus = biometryStatus.canAuthenticate;
+const authenticateStatus = biometryStatus.systemStatus;
+
+// Does the current activation have a biometric factor configured?
+const hasBiometricFactor = biometryStatus.isBiometricFactorConfigured;
+
+// A convenience method returns the combined availability directly.
+const canAuthenticate = await powerAuth.isAuthenticationWithBiometricsAvailable();
 ```
 
 To check if a given activation has biometry factor-related data available, use the following code:
@@ -104,7 +108,7 @@ try {
 
 ## Biometry Factor-Related Key Lifetime
 
-By default, the biometry factor-related key is **NOT invalidated on Android** and **invalidated on iOS** after the biometry enrolled in the system is changed. For example, if the user adds or removes the finger or enrolls with a new face, then the biometry factor-related key is still available for the signing operation on Android but not on iOS. To change this behavior, see `linkItemsToCurrentSet` [in the advanced configuration](Configuration.md#advanced-configuration). 
+By default, the biometry factor-related key is **invalidated on Android** and **not invalidated on iOS** after the biometry enrolled in the system is changed. For example, if the user adds or removes a finger or enrolls a new face, this determines whether the existing key remains available for signing. To change this behavior, see `invalidateBiometricFactorAfterChange` [in the advanced configuration](Configuration.md#advanced-configuration).
 
 Be aware that the change in the configuration is effective only for the new keys. So, if your application is already using the biometry factor-related key with a different configuration, then the configuration change doesn't change the existing key. You have to [disable](#disable-biometry) and [enable](#enable-biometry) biometry to apply the change.
 

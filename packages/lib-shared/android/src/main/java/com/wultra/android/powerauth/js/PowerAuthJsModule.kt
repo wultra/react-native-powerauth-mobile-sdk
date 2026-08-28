@@ -1580,7 +1580,6 @@ class PowerAuthJsModule(
         /**
          * Convert ReadableMaps to [PowerAuthKeychainConfiguration] object.
          * @param keychainMap Map with keychain configuration.
-         * @param biometryMap Map with biometry configuration.
          * @return [PowerAuthKeychainConfiguration] created from given maps.
          */
         private fun getPowerAuthKeychainConfigurationFromMap(
