@@ -37,6 +37,7 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         await expect(async () => await tokenStore.generateAuthenticationHeader(T1)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
         await expect(async () => await tokenStore.generateAuthenticationHeader(T2)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
+        await expect(async () => await tokenStore.generateHeaderForToken(T1)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
         await expect(async () => await tokenStore.getLocalToken(T1)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
         await expect(async () => await tokenStore.getLocalToken(T2)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
 
