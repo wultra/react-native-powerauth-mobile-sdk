@@ -36,8 +36,8 @@ export interface PowerAuthBiometryConfigurationType {
      * ### iOS specific
      * 
      * If set to `true`, then the key protected with the biometry can be accessed also with a device passcode.
-     * If set, then `linkItemsToCurrentSet` option has no effect. The default is `false`, so fallback
-     * to device's passcode is not enabled.
+     * If set, then `invalidateBiometricFactorAfterChange` has no effect. The default is `false`,
+     * so fallback to device's passcode is not enabled.
      */
     readonly fallbackToDevicePasscode?: boolean
     /**
@@ -49,19 +49,11 @@ export interface PowerAuthBiometryConfigurationType {
     /**
      * ### Android specific
      * 
-     * Set, whether biometric key setup always require a biometric authentication.
-     * 
-     * ### Discussion
-     * 
-     * Setting parameter to `true` leads to use symmetric AES cipher on the background,
-     * so both configuration and usage of biometric key require the biometric authentication.
-     * 
-     * If set to `false`, then RSA cipher is used and only the usage of biometric key
-     * require the biometric authentication. This is due to fact, that RSA cipher can encrypt
-     * data with using it's public key available immediate after the key-pair is created in
-     * Android KeyStore.
-     * 
-     * The default value is `false`.
+     * Set whether biometric key setup requires biometric authentication. If `true`, callers must
+     * provide a biometric prompt when persisting an activation or adding a biometric factor.
+     *
+     * The default value is `true`. Key protection algorithm compatibility is configured
+     * independently with `useLegacySymmetricKey`.
      */
     readonly authenticateOnBiometricKeySetup?: boolean
 

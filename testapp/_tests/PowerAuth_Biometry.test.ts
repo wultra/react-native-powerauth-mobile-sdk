@@ -16,7 +16,10 @@
 
 import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
+import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
+import { importPassword } from "./helpers/PasswordHelper";
+import { CustomConfig } from "../src/IntegrationUtils";
 
 export class PowerAuth_BiometryTests extends TestWithActivation {
 
@@ -29,8 +32,16 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     shouldCreateActivationBeforeTest(): boolean {
-        const n = this.context.testName
-        return n !== 'androidTestCreateActivationWithRSABiometryKey'
+        return !this.context.testName.startsWith('androidTestCreateActivation')
+    }
+
+    provideCustomConfig(): CustomConfig {
+        if (this.context.testName.startsWith('androidTestCreateActivation')) {
+            const biometryConfiguration = new PowerAuthBiometryConfiguration()
+            biometryConfiguration.authenticateOnBiometricKeySetup = false
+            return { biometryConfiguration }
+        }
+        return {}
     }
 
     async beforeEach(): Promise<void> {
@@ -41,16 +52,30 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         }
     }
 
-    async androidTestCreateActivationWithRSABiometryKey() {
-        const bioConfig = new PowerAuthBiometryConfiguration()
-        bioConfig.authenticateOnBiometricKeySetup = false
-        this.helper.configure({ biometryConfiguration: bioConfig })
+    async androidTestCreateActivationWithoutSetupPrompt() {
         const sdk = await this.helper.sdk
         const activatioData = await this.helper.createActivation()
         const activation = PowerAuthActivation.createWithActivationCode(activatioData.activationCode!, "Test");
         await sdk.createActivation(activation)
         // Now persist activation with a legacy authentication
         const persistAuth = PowerAuthAuthentication.persistWithPasswordAndBiometry(this.credentials.validPassword)
+        await sdk.persistActivation(persistAuth)
+    }
+
+    async androidTestCreateActivationWithOptionalSetupPrompt() {
+        const sdk = await this.helper.sdk
+        const activationData = await this.helper.createActivation()
+        const activation = PowerAuthActivation.createWithActivationCode(activationData.activationCode!, "Test");
+        await sdk.createActivation(activation)
+        await this.showPrompt('Authenticate to persist activation')
+        const persistAuth = PowerAuthAuthentication.persistWithPasswordAndBiometry(
+            this.credentials.validPassword,
+            {
+                promptTitle: 'Persist activation',
+                promptSubtitle: 'Optional setup authentication',
+                promptMessage: 'Authenticate to persist activation'
+            }
+        )
         await sdk.persistActivation(persistAuth)
     }
 
@@ -62,14 +87,29 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         expect(await this.sdk.isAuthenticationWithBiometricsAvailable()).toBe(false)
 
         await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
-        await this.sdk.addBiometryFactor(this.credentials.validPassword)
+        if (Platform.OS === 'android') {
+            await expect(async () => this.sdk.addBiometryFactor(this.credentials.validPassword)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+            await this.showPrompt('Authenticate to add biometric factor')
+        }
+        const prompt = {
+            promptTitle: 'Add biometry',
+            promptSubtitle: 'PowerAuth biometric factor',
+            promptMessage: 'Authenticate to add biometric factor'
+        }
+        const password = await importPassword(this.credentials.validPassword, false)
+        const addFactor = this.sdk.addBiometryFactor(password, prompt)
+        await password.release()
+        await addFactor
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         status = await this.sdk.getBiometricStatus()
         expect(status.isBiometricFactorConfigured).toBe(true)
         expect(status.isAuthenticationWithBiometricsAvailable).toBe(true)
         expect(await this.sdk.isAuthenticationWithBiometricsAvailable()).toBe(true)
 
-        await this.sdk.addBiometryFactor(this.credentials.validPassword)
+        if (Platform.OS === 'android') {
+            await this.showPrompt('Authenticate to replace biometric factor')
+        }
+        await this.sdk.addBiometryFactor(this.credentials.validPassword, prompt)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         
         // Now remove factor and try to calculate signature

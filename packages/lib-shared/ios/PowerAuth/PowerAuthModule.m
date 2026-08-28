@@ -374,6 +374,8 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
     if (!auth) return;
     
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -705,6 +707,8 @@ PAJS_METHOD_START(fetchEncryptionKey,
     if (!auth) return;
     
     [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(PowerAuthSecureData * encryptionKey, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (encryptionKey) {
             resolve([encryptionKey.sensitiveData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
@@ -735,6 +739,8 @@ PAJS_METHOD_START(signDataWithDevicePrivateKey,
     }
     
     [powerAuth signDataWithDevicePrivateKey:auth data:decodedData callback:^(NSData * signature, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (signature) {
             resolve([RCTConvert NSString:[signature base64EncodedStringWithOptions:0]]);
         } else {
@@ -878,6 +884,8 @@ PAJS_METHOD_START(requestAccessToken,
     if (!auth) return;
     
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (error || token == nil) {
             ProcessError(error, reject);
         } else {
