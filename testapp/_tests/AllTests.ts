@@ -38,12 +38,14 @@ import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test";
 import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test";
 import { PowerAuth_ErrorDataTests } from "./PowerAuth_ErrorData.test";
+import { PowerAuth_ProtocolUpgradeTests } from "./PowerAuth_ProtocolUpgrade.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
         new PowerAuth_TimeSyncTests(),
         new ConfigurationObjectsTests(),
         new PowerAuth_ConfigureTests(),
+        new PowerAuth_ProtocolUpgradeTests(),
         new PowerAuth_ActivationTests(),
         new PowerAuth_PasswordTests(),
         new PowerAuth_SignatureTests(),
