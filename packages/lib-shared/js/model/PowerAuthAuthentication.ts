@@ -34,13 +34,27 @@ export interface PowerAuthBiometricPrompt {
      */
     readonly promptTitle?: string
     /**
+     * Android specific subtitle, displayed to the user.
+     */
+    readonly promptSubtitle?: string
+    /**
      * iOS specific title for a cancel button, displayed to the user.
      */
-     readonly cancelButton?: string
+    readonly cancelButtonTitle?: string
     /**
      * iOS specific title for a fallback button, displayed to the user.
      */
-     readonly fallbackButton?: string
+    readonly fallbackButtonTitle?: string
+    /**
+     * iOS specific title for a cancel button, displayed to the user.
+     * @deprecated Use `cancelButtonTitle`.
+     */
+    readonly cancelButton?: string
+    /**
+     * iOS specific title for a fallback button, displayed to the user.
+     * @deprecated Use `fallbackButtonTitle`.
+     */
+    readonly fallbackButton?: string
 }
 
 /**

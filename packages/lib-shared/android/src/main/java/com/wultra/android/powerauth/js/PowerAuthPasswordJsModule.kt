@@ -199,6 +199,21 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     }
 
     /**
+     * Return an immutable password owned by an asynchronous native operation.
+     */
+    @Throws(WrapperException::class)
+    fun usePasswordCopy(anyPassword: Dynamic?): Password {
+        val password = findPassword(anyPassword, true)
+        return try {
+            password.copyToImmutable()
+        } finally {
+            if (anyPassword?.type === ReadableType.String) {
+                password.destroy()
+            }
+        }
+    }
+
+    /**
      * Function translate dynamic object type into core Password object. The password object is
      * marked as touched in the object register if exists.
      * @param anyPassword Dynamic object representing a password.

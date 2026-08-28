@@ -16,6 +16,7 @@
 
 /**
  * Object contains complex information about type and state of biometry on the device.
+ * @deprecated Use the instance-aware `PowerAuthBiometricStatus` returned by `PowerAuth.getBiometricStatus()`.
  */
 export interface PowerAuthBiometryInfo {
     /** 

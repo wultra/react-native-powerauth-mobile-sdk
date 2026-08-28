@@ -33,6 +33,7 @@ export * from './model/PowerAuthAuthentication';
 export * from './model/PowerAuthAuthorizationHttpHeader';
 export * from './model/PowerAuthBiometryConfiguration';
 export * from './model/PowerAuthBiometryInfo';
+export * from './model/PowerAuthBiometricStatus';
 export * from './model/PowerAuthClientConfiguration';
 export * from './model/PowerAuthConfiguration';
 export * from './model/PowerAuthCreateActivationResult';
