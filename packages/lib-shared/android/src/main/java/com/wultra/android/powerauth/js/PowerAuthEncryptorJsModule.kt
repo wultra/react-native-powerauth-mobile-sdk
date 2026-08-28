@@ -148,20 +148,15 @@ class PowerAuthEncryptorJsModule(
             return
         }
         try {
-            val result = try {
-                objectRegister.withObjectAndTransform(
-                    encryptorId,
-                    CoreEncryptor::class.java,
-                    true
-                ) { encryptor ->
-                    DataFormat.BASE64.encodeBytes(
-                        encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
-                    )
-                } ?: throw invalidEncryptor(encryptorId)
-            } catch (t: Throwable) {
-                if (t is WrapperException) throw t
-                throw WrapperException(Errors.EC_ENCRYPTION_ERROR, "Failed to decrypt response", t)
-            }
+            val result = objectRegister.withObjectAndTransform(
+                encryptorId,
+                CoreEncryptor::class.java,
+                true
+            ) { encryptor ->
+                DataFormat.BASE64.encodeBytes(
+                    encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
+                )
+            } ?: throw invalidEncryptor(encryptorId)
             promise.resolve(result)
         } catch (t: Throwable) {
             Errors.rejectPromise(promise, t)

@@ -107,4 +107,36 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         await encryptor.release()
     }
+
+    async testFailurePaths() {
+        let encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await expect(async () => await encryptor.encryptRequest('not base64'))
+                .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+            await expect(async () => await encryptor.decryptResponse(btoa('x')))
+                .toThrow()
+        } finally {
+            await encryptor.release()
+        }
+
+        encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await encryptor.encryptRequest(btoa('{}'))
+            await expect(async () => await encryptor.decryptResponse('**??=='))
+                .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        } finally {
+            await encryptor.release()
+        }
+
+        encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await encryptor.encryptRequest(btoa('{}'))
+            await expect(async () => await encryptor.decryptResponse(btoa('not encrypted')))
+                .toThrow()
+            await expect(async () => await encryptor.canEncryptRequest())
+                .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        } finally {
+            await encryptor.release()
+        }
+    }
 }
