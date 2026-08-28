@@ -68,13 +68,8 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(await sdk2.clientConfiguration).toBeDefined()
         expect(await sdk1.biometryConfiguration).toBeDefined()
         expect(await sdk2.biometryConfiguration).toBeDefined()
-        if (Platform.OS === 'android') {
-            expect(await sdk1.keychainConfiguration).toBeDefined()
-            expect(await sdk2.keychainConfiguration).toBeDefined()
-        } else {
-            expect(await sdk1.keychainConfiguration).toBeUndefined()
-            expect(await sdk2.keychainConfiguration).toBeUndefined()
-        }
+        expect(await sdk1.keychainConfiguration).toBeDefined()
+        expect(await sdk2.keychainConfiguration).toBeDefined()
         expect(await sdk1.sharingConfiguration).toBeUndefined()
         expect(await sdk2.sharingConfiguration).toBeUndefined()
 
@@ -89,13 +84,8 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(await pa2.clientConfiguration).toBeDefined()
         expect(await pa1.biometryConfiguration).toBeDefined()
         expect(await pa2.biometryConfiguration).toBeDefined()
-        if (Platform.OS === 'android') {
-            expect(await pa1.keychainConfiguration).toBeDefined()
-            expect(await pa2.keychainConfiguration).toBeDefined()
-        } else {
-            expect(await pa1.keychainConfiguration).toBeUndefined()
-            expect(await pa2.keychainConfiguration).toBeUndefined()
-        }
+        expect(await pa1.keychainConfiguration).toBeDefined()
+        expect(await pa2.keychainConfiguration).toBeDefined()
         expect(await pa1.sharingConfiguration).toBeUndefined()
         expect(await pa2.sharingConfiguration).toBeUndefined()
     }
@@ -135,13 +125,8 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(config2).toBeDefined()
         expect(clientConfig1).toBeDefined()
         expect(clientConfig2).toBeDefined()
-        if (Platform.OS === 'android') {
-            expect(keychainConfig1).toBeDefined()
-            expect(keychainConfig2).toBeDefined()
-        } else {
-            expect(keychainConfig1).toBeUndefined()
-            expect(keychainConfig2).toBeUndefined()
-        }
+        expect(keychainConfig1).toBeDefined()
+        expect(keychainConfig2).toBeDefined()
         expect(biometryConfig1).toBeDefined()
         expect(biometryConfig2).toBeDefined()
         expect(sharingConfig1).toBeUndefined()
