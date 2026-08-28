@@ -305,7 +305,7 @@ class PowerAuthJsModule(
                     )
                     result.activationFingerprint?.let {
                         map.putString("activationFingerprint", it)
-                    } ?: map.putNull("activationFingerprint")
+                    }
                     map.putBoolean("biometryFactorRemoved", result.isBiometryFactorRemoved)
                     promise.resolve(map)
                 }
