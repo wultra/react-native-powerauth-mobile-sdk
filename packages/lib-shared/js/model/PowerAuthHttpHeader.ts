@@ -17,7 +17,7 @@
 /** HTTP header produced or consumed by PowerAuth SDK. */
 export interface PowerAuthHttpHeader {
     /** Name of the HTTP header. */
-    readonly name: string
+    name: string
     /** Value of the HTTP header. */
-    readonly value: string
+    value: string
 }

@@ -113,6 +113,17 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(paramsHeader.value).toBeDefined()
     }
 
+    async testAuthenticationPurpose() {
+        const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
+
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.offlineAuthenticationCode(persistAuth, '/wrong-purpose', 'MDEyMzQ1Njc=', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+    }
+
     async testWrongPassword() {
         let status = await this.sdk.fetchActivationStatus()
         const maxFailCount = status.maxFailCount
