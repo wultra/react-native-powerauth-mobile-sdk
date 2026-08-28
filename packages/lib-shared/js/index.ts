@@ -40,6 +40,7 @@ export * from './model/PowerAuthError';
 export * from './model/PowerAuthKeychainConfiguration';
 export * from './model/PowerAuthSharingConfiguration';
 export * from './model/PowerAuthExternalPendingOperation';
+export * from './model/PowerAuthHttpHeader';
 export * from './model/PowerAuthPassword';
 export * from './model/PowerAuthEncryptor';
 export * from './model/PowerAuthDataFormat';

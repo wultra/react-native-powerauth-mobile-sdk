@@ -377,9 +377,10 @@ PAJS_METHOD_START(removeActivationLocal,
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(requestGetSignature,
+PAJS_METHOD_START(authenticationHeaderForRequestWithParams,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(authDict, NSDictionary*)
+                  PAJS_ARGUMENT(method, NSString*)
                   PAJS_ARGUMENT(uriId, NSString*)
                   PAJS_ARGUMENT(params, NSDictionary*))
 {
@@ -388,22 +389,28 @@ PAJS_METHOD_START(requestGetSignature,
     if (!auth) return;
     
     NSError* error = nil;
-    PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestGetSignatureWithAuthentication:auth uriId:uriId params:params error: &error];
+    PowerAuthHttpHeader* header = [powerAuth authenticationHeaderForRequestWithParamsWithAuthentication:auth
+                                                                                                method:method
+                                                                                                 uriId:uriId
+                                                                                                params:params
+                                                                                                 error:&error];
     
     if (error) {
         ProcessError(error, reject);
-    } else {
+    } else if (header) {
         NSDictionary *response = @{
-            @"key": signature.key,
-            @"value": signature.value
+            @"name": header.key,
+            @"value": header.value
         };
         resolve(response);
+    } else {
+        reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither an authentication header nor an error.", nil);
     }
     PA_BLOCK_END
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(requestSignature,
+PAJS_METHOD_START(authenticationHeaderForRequestWithBody,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(authDict, NSDictionary*)
                   PAJS_ARGUMENT(method, NSString*)
@@ -415,22 +422,29 @@ PAJS_METHOD_START(requestSignature,
     if (!auth) return;
     
     NSError* error = nil;
-    PowerAuthAuthorizationHttpHeader* signature = [powerAuth requestSignatureWithAuthentication:auth method:method uriId:uriId body:[RCTConvert NSData:body] error:&error];
+    NSData * requestBody = body ? [body dataUsingEncoding:NSUTF8StringEncoding] : nil;
+    PowerAuthHttpHeader* header = [powerAuth authenticationHeaderForRequestWithBodyWithAuthentication:auth
+                                                                                              method:method
+                                                                                               uriId:uriId
+                                                                                                body:requestBody
+                                                                                               error:&error];
     
     if (error) {
         ProcessError(error, reject);
-    } else {
+    } else if (header) {
         NSDictionary *response = @{
-            @"key": signature.key,
-            @"value": signature.value
+            @"name": header.key,
+            @"value": header.value
         };
         resolve(response);
+    } else {
+        reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither an authentication header nor an error.", nil);
     }
     PA_BLOCK_END
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(offlineSignature,
+PAJS_METHOD_START(offlineAuthenticationCode,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(authDict, NSDictionary*)
                   PAJS_ARGUMENT(uriId, NSString*)
@@ -441,14 +455,22 @@ PAJS_METHOD_START(offlineSignature,
     PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
-    NSError* error = nil;
-    NSString* signature = [powerAuth offlineSignatureWithAuthentication:auth uriId:uriId body:[RCTConvert NSData:body] nonce:nonce error:&error];
-    
-    if (error) {
-        ProcessError(error, reject);
-    } else {
-        resolve(signature);
-    }
+    NSData * requestBody = body ? [body dataUsingEncoding:NSUTF8StringEncoding] : nil;
+    [powerAuth offlineAuthenticationCodeWithAuthentication:auth
+                                                     uriId:uriId
+                                                      body:requestBody
+                                                     nonce:nonce
+                                                  callback:^(NSString * authenticationCode, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else if (authenticationCode) {
+            resolve(authenticationCode);
+        } else {
+            reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither an offline authentication code nor an error.", nil);
+        }
+    }];
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -896,19 +918,19 @@ PAJS_METHOD_START(removeAllLocalTokens,
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(generateHeaderForToken,
+PAJS_METHOD_START(generateAuthenticationHeaderForToken,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(tokenName, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    [[powerAuth tokenStore] generateAuthorizationHeaderWithName:tokenName completion:^(PowerAuthAuthorizationHttpHeader * header, NSError * error) {
+    [[powerAuth tokenStore] generateAuthenticationHeaderWithName:tokenName completion:^(PowerAuthHttpHeader * header, NSError * error) {
         if (header) {
             resolve(@{
-                @"key": header.key,
+                @"name": header.key,
                 @"value": header.value
             });
         } else {
-            reject(EC_CANNOT_GENERATE_TOKEN, @"Failed to generate header for this token.", error);
+            ProcessError(error, reject);
         }
     }];
     PA_BLOCK_END

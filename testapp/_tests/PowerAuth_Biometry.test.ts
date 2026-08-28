@@ -58,7 +58,7 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
 
-        await expect(async () => this.sdk.requestSignature(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
+        await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
         await this.sdk.addBiometryFactor(this.credentials.validPassword)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
 
