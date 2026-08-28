@@ -44,6 +44,10 @@ class AppMyApplication {
 
 In case that you need an advanced configuration, then you can import and use the following configuration classes or interfaces:
 - `PowerAuthConfiguration` class or `PowerAuthConfigurationType` interface － to configure instance of `PowerAuth` class. This configuration object contains almost the same parameters you provide to basic configuration.
+  - `algorithm` - optional algorithm selected for communication with the server. The available values are `PowerAuthAlgorithm.LEGACY`, `P384`, `P384_L3`, and `P384_L5`. If omitted, the native SDK default (`P384_L3`) is used.
+  - `offlineAuthenticationCodeComponentLength` - length of one offline authentication-code component, from `4` through `8`. The default is `8`.
+
+> Upgrading applications that previously relied on the implicit legacy protocol must explicitly set `PowerAuthAlgorithm.LEGACY`. Omitting `algorithm` now enables the native protocol-4 default and requires a compatible PowerAuth Server.
 
 - `PowerAuthClientConfiguration` class or `PowerAuthClientConfigurationType` interface － to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
@@ -62,9 +66,8 @@ In case that you need an advanced configuration, then you can import and use the
   - `fallbackToSharedBiometryKey` - Android specific, defines whether fallback to a shared, legacy biometry key is enabled. By default, this is enabled for compatibility reasons.
   - `useLegacySymmetricKey` - Android specific, if set to `true`, newly configured factors use the legacy AES-KDF protection. The default is `false`.
 
-- `PowerAuthKeychainConfiguration` class or `PowerAuthKeychainConfigurationType` interface － to configure an internal secure data storage. You can alter the following parameters:
-  - `accessGroupName` - iOS specific, defines access group name used by the `PowerAuth` keychain instances. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
-  - `userDefaultsSuiteName` - iOS specific, defines suite name used by the `UserDefaults` that check for Keychain data presence. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
+- `PowerAuthKeychainConfiguration` class or `PowerAuthKeychainConfigurationType` interface － to configure secure data storage on Android. You can alter the following parameters:
+  - `accessGroupName` and `userDefaultsSuiteName` remain as deprecated compatibility properties for existing Apple applications. Configure new activation sharing with `PowerAuthSharingConfiguration`.
   - `minimalRequiredKeychainProtection` - Android specific, defines minimal required keychain protection level that must be supported on the current device. The default value is `PowerAuthKeychainProtection.NONE`. See note<sup>3</sup> below.
 
 - `PowerAuthSharingConfiguration` class or `PowerAuthSharingConfigurationType` interface - to configure an activation data sharing on iOS platform. You can alter the following parameters:
@@ -77,7 +80,7 @@ In case that you need an advanced configuration, then you can import and use the
 
 > Note 1: Setting `authenticateOnBiometricKeySetup` to `true` requires a biometric prompt while persisting an activation or adding a biometric factor. If set to `false`, key setup can proceed without user interaction. The default key protection uses HMAC-KDF; set `useLegacySymmetricKey` only when compatibility with the legacy AES-KDF protection is required.
 
-> Note 2: You're responsible to migrate the keychain and `UserDefaults` data from non-shared storage to the shared one, before you configure the first `PowerAuth` instance. This is quite difficult to do in JavaScript, so it's recommended to do not alter `PowerAuthKeychainConfiguration` once your application is already shipped in AppStore.
+> Note 2: You're responsible for migrating keychain and `UserDefaults` data from non-shared storage before configuring activation sharing in a shipped application.
 
 > Note 3: If you enforce the protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target at least Android 6.0. Your application should also properly handle `"INSUFFICIENT_KEYCHAIN_PROTECTION"` error code reported when the device has insufficient capabilities to run your application. You should properly inform user about this situation.
 
@@ -100,7 +103,12 @@ class AppMyApplication {
             console.log("PowerAuth was already configured.");
         } else {
             try {
-              const configuration = new PowerAuthConfiguration("CONFIGURATION_STRING", "https://your-powerauth-server.com/enrollment-server")
+              const configuration = new PowerAuthConfiguration(
+                    "CONFIGURATION_STRING",
+                    "https://your-powerauth-server.com/enrollment-server",
+                    PowerAuthAlgorithm.P384_L3,
+                    8
+              )
               const clientConfiguration = { enableUnsecureTraffic: false };
               const biometryConfiguration = { invalidateBiometricFactorAfterChange: true };
               const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
@@ -120,6 +128,32 @@ class AppMyApplication {
         }
     }
 }
+```
+
+### Effective configuration
+
+Configuration properties are asynchronous and return values from the configured native SDK:
+
+```javascript
+const configuration = await powerAuth.configuration;
+const currentAlgorithm = await powerAuth.currentAlgorithm;
+const clientConfiguration = await powerAuth.clientConfiguration;
+const biometryConfiguration = await powerAuth.biometryConfiguration;
+const keychainConfiguration = await powerAuth.keychainConfiguration; // Android only
+const sharingConfiguration = await powerAuth.sharingConfiguration;   // iOS only
+```
+
+The effective client configuration does not contain `customHttpHeaders` or `basicHttpAuthentication`. Native SDKs store those input-only values as request interceptors and cannot safely reconstruct them. Keep the original values if you need to configure another instance.
+
+If configuration fails because stored instance data has an incompatible format, remove that data with the same configuration values before retrying:
+
+```javascript
+await PowerAuth.cleanupInstanceData(
+    instanceId,
+    configuration,
+    keychainConfiguration,
+    sharingConfiguration
+);
 ```
 
 ## Read Next

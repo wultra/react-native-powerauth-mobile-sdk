@@ -42,6 +42,8 @@ class PowerAuthJsModule(
     private val passwordModule: PowerAuthPasswordJsModule
 ) : BaseJavaJsModule, ActivityAwareModule {
 
+    private val configurationLock = Any()
+
     // React integration
     override fun getName(): String {
         return "PowerAuth"
@@ -60,6 +62,75 @@ class PowerAuthJsModule(
         }
     }
 
+    @JsApiMethod
+    fun cleanupInstanceData(
+        instanceId: String,
+        configuration: ReadableMap,
+        keychainConfiguration: ReadableMap,
+        @Suppress("UNUSED_PARAMETER") sharingConfiguration: ReadableMap,
+        promise: Promise
+    ) {
+        synchronized(configurationLock) {
+            try {
+                if (getPowerAuthInstance(instanceId) != null) {
+                    throw PowerAuthErrorException(
+                        PowerAuthErrorCodes.WRONG_PARAMETER,
+                        "Cannot clean up data for a configured PowerAuth instance"
+                    )
+                }
+                val paConfig = getPowerAuthConfigurationFromMap(instanceId, configuration)
+                    ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
+                val paKeychainConfig = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration)
+                PowerAuthSDK.cleanupInstanceData(context, paConfig, paKeychainConfig)
+                promise.resolve(null)
+            } catch (e: Throwable) {
+                Errors.rejectPromise(promise, e)
+            }
+        }
+    }
+
+    @JsApiMethod
+    fun getConfiguration(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            promise.resolve(powerAuthConfigurationToMap(sdk.configuration))
+        })
+    }
+
+    @JsApiMethod
+    fun getCurrentAlgorithm(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            promise.resolve(powerAuthAlgorithmToString(sdk.currentAlgorithm))
+        })
+    }
+
+    @JsApiMethod
+    fun getClientConfiguration(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            promise.resolve(powerAuthClientConfigurationToMap(sdk.clientConfiguration))
+        })
+    }
+
+    @JsApiMethod
+    fun getBiometryConfiguration(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            promise.resolve(powerAuthBiometricConfigurationToMap(sdk.biometricConfiguration))
+        })
+    }
+
+    @JsApiMethod
+    fun getKeychainConfiguration(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            promise.resolve(powerAuthKeychainConfigurationToMap(sdk.keychainConfiguration))
+        })
+    }
+
+    @JsApiMethod
+    fun getSharingConfiguration(instanceId: String, promise: Promise) {
+        usePowerAuth(instanceId, promise, powerAuthBlock {
+            promise.resolve(null)
+        })
+    }
+
     @Suppress("UNUSED_PARAMETER")
     @JsApiMethod
     fun configure(
@@ -71,42 +142,46 @@ class PowerAuthJsModule(
         sharingConfiguration: ReadableMap,
         promise: Promise
     ) {
-        try {
-            val result = registerPowerAuthInstance(instanceId, ObjectRegisterJs.objectFactory {
-                // Create configurations from maps
-                val paConfig: PowerAuthConfiguration = getPowerAuthConfigurationFromMap(instanceId, configuration)
-                    ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
-                val paClientConfig: PowerAuthClientConfiguration = getPowerAuthClientConfigurationFromMap(clientConfiguration)
-                val paBiometricConfig = getPowerAuthBiometricConfigurationFromMap(biometryConfiguration)
-                val paKeychainConfig: PowerAuthKeychainConfiguration = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration)
-                // Configure the instance
-                val instance: PowerAuthSDK = PowerAuthSDK.Builder(paConfig)
-                    .clientConfiguration(paClientConfig)
-                    .biometricConfiguration(paBiometricConfig)
-                    .keychainConfiguration(paKeychainConfig)
-                    .build(this.context)
-                ManagedAny.wrap(instance)
-            })
-            if (result) {
-                promise.resolve(true)
-            } else {
-                promise.reject(
-                    Errors.EC_REACT_NATIVE_ERROR,
-                    "PowerAuth object with this instanceId is already configured."
-                )
+        synchronized(configurationLock) {
+            try {
+                val result = registerPowerAuthInstance(instanceId, ObjectRegisterJs.objectFactory {
+                    // Create configurations from maps
+                    val paConfig: PowerAuthConfiguration = getPowerAuthConfigurationFromMap(instanceId, configuration)
+                        ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
+                    val paClientConfig: PowerAuthClientConfiguration = getPowerAuthClientConfigurationFromMap(clientConfiguration)
+                    val paBiometricConfig = getPowerAuthBiometricConfigurationFromMap(biometryConfiguration)
+                    val paKeychainConfig: PowerAuthKeychainConfiguration = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration)
+                    // Configure the instance
+                    val instance: PowerAuthSDK = PowerAuthSDK.Builder(paConfig)
+                        .clientConfiguration(paClientConfig)
+                        .biometricConfiguration(paBiometricConfig)
+                        .keychainConfiguration(paKeychainConfig)
+                        .build(this.context)
+                    ManagedAny.wrap(instance)
+                })
+                if (result) {
+                    promise.resolve(true)
+                } else {
+                    promise.reject(
+                        Errors.EC_REACT_NATIVE_ERROR,
+                        "PowerAuth object with this instanceId is already configured."
+                    )
+                }
+            } catch (e: Throwable) {
+                Errors.rejectPromise(promise, e)
             }
-        } catch (e: Throwable) {
-            Errors.rejectPromise(promise, e)
         }
     }
 
     @JsApiMethod
     fun deconfigure(instanceId: String, promise: Promise) {
-        try {
-            unregisterPowerAuthInstance(instanceId)
-            promise.resolve(null)
-        } catch (e: PowerAuthErrorException) {
-            Errors.rejectPromise(promise, e)
+        synchronized(configurationLock) {
+            try {
+                unregisterPowerAuthInstance(instanceId)
+                promise.resolve(null)
+            } catch (e: PowerAuthErrorException) {
+                Errors.rejectPromise(promise, e)
+            }
         }
     }
 
@@ -1497,12 +1572,106 @@ class PowerAuthJsModule(
             if (baseEndpointUrl == null || configuration == null) {
                 return null
             }
-            // Preserve the PowerAuth 1.9 protocol until algorithm selection is exposed publicly.
-            return PowerAuthConfiguration.Builder(
+            val builder = PowerAuthConfiguration.Builder(
                 instanceId,
                 baseEndpointUrl,
                 configuration
-            ).algorithm(PowerAuthAlgorithm.LEGACY_P256).build()
+            )
+            if (map.hasKey("algorithm")) {
+                map.getString("algorithm")?.let { builder.algorithm(powerAuthAlgorithmFromString(it)) }
+            }
+            if (map.hasKey("offlineAuthenticationCodeComponentLength")) {
+                builder.offlineAuthenticationCodeComponentLength(
+                    map.getInt("offlineAuthenticationCodeComponentLength")
+                )
+            }
+            return builder.build()
+        }
+
+        @PowerAuthAlgorithm
+        private fun powerAuthAlgorithmFromString(value: String): Int {
+            return when (value) {
+                "legacy" -> PowerAuthAlgorithm.LEGACY_P256
+                "p384" -> PowerAuthAlgorithm.EC_P384
+                "p384l3" -> PowerAuthAlgorithm.EC_P384_ML_L3
+                "p384l5" -> PowerAuthAlgorithm.EC_P384_ML_L5
+                else -> throw PowerAuthErrorException(
+                    PowerAuthErrorCodes.WRONG_PARAMETER,
+                    "Unknown PowerAuth algorithm: $value"
+                )
+            }
+        }
+
+        private fun powerAuthAlgorithmToString(@PowerAuthAlgorithm value: Int): String {
+            return when (value) {
+                PowerAuthAlgorithm.LEGACY_P256 -> "legacy"
+                PowerAuthAlgorithm.EC_P384 -> "p384"
+                PowerAuthAlgorithm.EC_P384_ML_L3 -> "p384l3"
+                PowerAuthAlgorithm.EC_P384_ML_L5 -> "p384l5"
+                else -> throw PowerAuthErrorException(
+                    PowerAuthErrorCodes.WRONG_PARAMETER,
+                    "Unknown native PowerAuth algorithm: $value"
+                )
+            }
+        }
+
+        private fun powerAuthConfigurationToMap(configuration: PowerAuthConfiguration): WritableMap {
+            return Arguments.createMap().apply {
+                putString("configuration", configuration.configuration)
+                putString("baseEndpointUrl", configuration.baseEndpointUrl)
+                putString("algorithm", powerAuthAlgorithmToString(configuration.algorithm))
+                putInt(
+                    "offlineAuthenticationCodeComponentLength",
+                    configuration.offlineAuthenticationCodeComponentLength
+                )
+            }
+        }
+
+        private fun powerAuthClientConfigurationToMap(configuration: PowerAuthClientConfiguration): WritableMap {
+            return Arguments.createMap().apply {
+                putBoolean("enableUnsecureTraffic", configuration.isUnsecuredConnectionAllowed)
+                putDouble("connectionTimeout", configuration.connectionTimeout / 1000.0)
+                putDouble("readTimeout", configuration.readTimeout / 1000.0)
+            }
+        }
+
+        private fun powerAuthBiometricConfigurationToMap(configuration: PowerAuthBiometricConfiguration): WritableMap {
+            return Arguments.createMap().apply {
+                putBoolean(
+                    "invalidateBiometricFactorAfterChange",
+                    configuration.isInvalidateBiometricFactorAfterChange
+                )
+                putBoolean("fallbackToDevicePasscode", false)
+                putBoolean(
+                    "confirmBiometricAuthentication",
+                    configuration.isConfirmBiometricAuthentication
+                )
+                putBoolean(
+                    "authenticateOnBiometricKeySetup",
+                    configuration.isAuthenticateOnBiometricKeySetup
+                )
+                putBoolean(
+                    "fallbackToSharedBiometryKey",
+                    configuration.isFallbackToSharedBiometryKeyEnabled
+                )
+                putBoolean("useLegacySymmetricKey", configuration.isUseLegacySymmetricKeyType)
+            }
+        }
+
+        private fun powerAuthKeychainConfigurationToMap(configuration: PowerAuthKeychainConfiguration): WritableMap {
+            val protection = when (configuration.minimalRequiredKeychainProtection) {
+                KeychainProtection.NONE -> "NONE"
+                KeychainProtection.SOFTWARE -> "SOFTWARE"
+                KeychainProtection.HARDWARE -> "HARDWARE"
+                KeychainProtection.STRONGBOX -> "STRONGBOX"
+                else -> throw PowerAuthErrorException(
+                    PowerAuthErrorCodes.WRONG_PARAMETER,
+                    "Unknown native keychain protection: ${configuration.minimalRequiredKeychainProtection}"
+                )
+            }
+            return Arguments.createMap().apply {
+                putString("minimalRequiredKeychainProtection", protection)
+            }
         }
 
         /**

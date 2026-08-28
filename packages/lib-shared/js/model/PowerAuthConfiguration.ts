@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { PowerAuthAlgorithm } from "./PowerAuthAlgorithm"
+
 /**
  * Interface that contains configuration data for a single `PowerAuth` instance.
  */
@@ -26,6 +28,16 @@ export interface PowerAuthConfigurationType {
      * Base URL to the PowerAuth enrollment server. Usualky ends with `/enrollment-server`.
      */
     readonly baseEndpointUrl: string
+    /**
+     * Algorithm used for communication with the PowerAuth Server.
+     * If not specified, the native PowerAuth SDK default is used.
+     */
+    readonly algorithm?: PowerAuthAlgorithm
+    /**
+     * Length of one component in an offline authentication code.
+     * Supported values are from 4 to 8. The default value is 8.
+     */
+    readonly offlineAuthenticationCodeComponentLength?: number
 }
 
 /**
@@ -35,16 +47,29 @@ export interface PowerAuthConfigurationType {
 export class PowerAuthConfiguration implements PowerAuthConfigurationType {
     configuration: string
     baseEndpointUrl: string
+    algorithm?: PowerAuthAlgorithm
+    offlineAuthenticationCodeComponentLength: number
      
     /**
      * Construct configuration with required parameters.
      * 
      * @param configuration String with the cryptographic configuration.
      * @param baseEndpointUrl Base URL to the PowerAuth enrollment server. Usually ends with `/enrollment-server`.
+     * @param algorithm Algorithm used for communication with the PowerAuth Server.
+     * @param offlineAuthenticationCodeComponentLength Length of one component in an offline authentication code.
      */
-    public constructor(configuration: string, baseEndpointUrl: string) {
+    public constructor(
+        configuration: string,
+        baseEndpointUrl: string,
+        algorithm?: PowerAuthAlgorithm,
+        offlineAuthenticationCodeComponentLength: number = 8
+    ) {
         this.configuration = configuration
         this.baseEndpointUrl = baseEndpointUrl
+        if (algorithm !== undefined) {
+            this.algorithm = algorithm
+        }
+        this.offlineAuthenticationCodeComponentLength = offlineAuthenticationCodeComponentLength
     }
 }
 
@@ -56,6 +81,8 @@ export class PowerAuthConfiguration implements PowerAuthConfigurationType {
 export function buildConfiguration(input: PowerAuthConfigurationType): PowerAuthConfigurationType {
     return Object.freeze({
         configuration: input.configuration,
-        baseEndpointUrl: input.baseEndpointUrl
+        baseEndpointUrl: input.baseEndpointUrl,
+        ...(input.algorithm !== undefined ? { algorithm: input.algorithm } : {}),
+        offlineAuthenticationCodeComponentLength: input.offlineAuthenticationCodeComponentLength ?? 8
     })
 }
