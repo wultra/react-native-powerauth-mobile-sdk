@@ -20,6 +20,7 @@ import {
     buildClientConfiguration,
     buildConfiguration,
     buildKeychainConfiguration,
+    PowerAuthAlgorithm,
     PowerAuthBiometryConfiguration,
     PowerAuthClientConfiguration,
     PowerAuthConfiguration, 
@@ -38,6 +39,7 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(config).toEqual({
             configuration: SDK_CONFIG,
             baseEndpointUrl: BASE_URL,
+            offlineAuthenticationCodeComponentLength: 8
         })
         expect(Object.isFrozen(config)).toBe(false)
         // Config builder
@@ -45,6 +47,19 @@ export class ConfigurationObjectsTests extends TestSuite {
         expect(frozen).toEqual(config)
         expect(Object.isFrozen(frozen)).toBe(true)
         expect(Object.isFrozen(config)).toBe(false)
+
+        const algorithmConfig = new PowerAuthConfiguration(
+            SDK_CONFIG,
+            BASE_URL,
+            PowerAuthAlgorithm.P384_L5,
+            6
+        )
+        expect(buildConfiguration(algorithmConfig)).toEqual({
+            configuration: SDK_CONFIG,
+            baseEndpointUrl: BASE_URL,
+            algorithm: PowerAuthAlgorithm.P384_L5,
+            offlineAuthenticationCodeComponentLength: 6
+        })
     }
     
     testClientConfiguration() {

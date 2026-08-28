@@ -14,7 +14,8 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { Platform } from "react-native"
+import { PowerAuth, PowerAuthActivation, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
 import { IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
@@ -61,32 +62,42 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(biometricStatus.isAuthenticationWithBiometricsAvailable).toBe(false)
         expect(await sdk1.isAuthenticationWithBiometricsAvailable()).toBe(false)
         // Instances created from helper also should have configuration objects set
-        expect(sdk1.configuration).toBeDefined()
-        expect(sdk2.configuration).toBeDefined()
-        expect(sdk1.keychainConfiguration).toBeDefined()
-        expect(sdk2.keychainConfiguration).toBeDefined()
-        expect(sdk1.clientConfiguration).toBeDefined()
-        expect(sdk2.clientConfiguration).toBeDefined()
-        expect(sdk1.biometryConfiguration).toBeDefined()
-        expect(sdk2.biometryConfiguration).toBeDefined()
-        expect(sdk1.sharingConfiguration).toBeDefined()
-        expect(sdk2.sharingConfiguration).toBeDefined()
+        expect(await sdk1.configuration).toBeDefined()
+        expect(await sdk2.configuration).toBeDefined()
+        expect(await sdk1.clientConfiguration).toBeDefined()
+        expect(await sdk2.clientConfiguration).toBeDefined()
+        expect(await sdk1.biometryConfiguration).toBeDefined()
+        expect(await sdk2.biometryConfiguration).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(await sdk1.keychainConfiguration).toBeDefined()
+            expect(await sdk2.keychainConfiguration).toBeDefined()
+        } else {
+            expect(await sdk1.keychainConfiguration).toBeUndefined()
+            expect(await sdk2.keychainConfiguration).toBeUndefined()
+        }
+        expect(await sdk1.sharingConfiguration).toBeUndefined()
+        expect(await sdk2.sharingConfiguration).toBeUndefined()
 
         // pa1 & pa2 should be configured now, because PowerAuth is just a thin envelope
         // keeping only essential values
         expect(await pa1.isConfigured()).toBe(true)
         expect(await pa2.isConfigured()).toBe(true)
         // Online instances created in helper, pa1 & pa2
-        expect(pa1.configuration).toBeDefined()
-        expect(pa2.configuration).toBeDefined()
-        expect(pa1.keychainConfiguration).toBeDefined()
-        expect(pa2.keychainConfiguration).toBeDefined()
-        expect(pa1.clientConfiguration).toBeDefined()
-        expect(pa2.clientConfiguration).toBeDefined()
-        expect(pa1.biometryConfiguration).toBeDefined()
-        expect(pa2.biometryConfiguration).toBeDefined()
-        expect(pa1.sharingConfiguration).toBeDefined()
-        expect(pa2.sharingConfiguration).toBeDefined()
+        expect(await pa1.configuration).toBeDefined()
+        expect(await pa2.configuration).toBeDefined()
+        expect(await pa1.clientConfiguration).toBeDefined()
+        expect(await pa2.clientConfiguration).toBeDefined()
+        expect(await pa1.biometryConfiguration).toBeDefined()
+        expect(await pa2.biometryConfiguration).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(await pa1.keychainConfiguration).toBeDefined()
+            expect(await pa2.keychainConfiguration).toBeDefined()
+        } else {
+            expect(await pa1.keychainConfiguration).toBeUndefined()
+            expect(await pa2.keychainConfiguration).toBeUndefined()
+        }
+        expect(await pa1.sharingConfiguration).toBeUndefined()
+        expect(await pa2.sharingConfiguration).toBeUndefined()
     }
 
     async testGroupedBiometricAuthenticationRejectsNonBiometricAuthentication() {
@@ -109,27 +120,32 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
 
-        const config1 = sdk1.configuration
-        const config2 = sdk2.configuration
-        const clientConfig1 = sdk1.clientConfiguration
-        const clientConfig2 = sdk2.clientConfiguration
-        const keychainConfig1 = sdk1.keychainConfiguration
-        const keychainConfig2 = sdk2.keychainConfiguration
-        const biometryConfig1 = sdk1.biometryConfiguration
-        const biometryConfig2 = sdk2.biometryConfiguration
-        const sharingConfig1 = sdk1.sharingConfiguration
-        const sharingConfig2 = sdk2.sharingConfiguration
+        const config1 = await sdk1.configuration
+        const config2 = await sdk2.configuration
+        const clientConfig1 = await sdk1.clientConfiguration
+        const clientConfig2 = await sdk2.clientConfiguration
+        const keychainConfig1 = await sdk1.keychainConfiguration
+        const keychainConfig2 = await sdk2.keychainConfiguration
+        const biometryConfig1 = await sdk1.biometryConfiguration
+        const biometryConfig2 = await sdk2.biometryConfiguration
+        const sharingConfig1 = await sdk1.sharingConfiguration
+        const sharingConfig2 = await sdk2.sharingConfiguration
 
         expect(config1).toBeDefined()
         expect(config2).toBeDefined()
         expect(clientConfig1).toBeDefined()
         expect(clientConfig2).toBeDefined()
-        expect(keychainConfig1).toBeDefined()
-        expect(keychainConfig2).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(keychainConfig1).toBeDefined()
+            expect(keychainConfig2).toBeDefined()
+        } else {
+            expect(keychainConfig1).toBeUndefined()
+            expect(keychainConfig2).toBeUndefined()
+        }
         expect(biometryConfig1).toBeDefined()
         expect(biometryConfig2).toBeDefined()
-        expect(sharingConfig1).toBeDefined()
-        expect(sharingConfig2).toBeDefined()
+        expect(sharingConfig1).toBeUndefined()
+        expect(sharingConfig2).toBeUndefined()
 
         await helper1.prepareActiveActivation(this.password1)
         await helper2.prepareActiveActivation(this.password2)
@@ -165,10 +181,84 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         const helper1 = await this.getHelper1()
         const sdk1 = helper1.sdk
         expect(await sdk1.isConfigured()).toBe(true)
-        expect(sdk1.sharingConfiguration?.appGroup).toBe("group.com.wultra.testGroup")
-        expect(sdk1.sharingConfiguration?.appIdentifier).toBe("SharedInstanceTests")
-        expect(sdk1.sharingConfiguration?.keychainAccessGroup).toBe("fake.accessGroup")
-        expect(sdk1.sharingConfiguration?.sharedMemoryIdentifier).toBe("tst1")
+        const sharingConfiguration = await sdk1.sharingConfiguration
+        expect(sharingConfiguration?.appGroup).toBe("group.com.wultra.testGroup")
+        expect(sharingConfiguration?.appIdentifier).toBe("SharedInstanceTests")
+        expect(sharingConfiguration?.keychainAccessGroup).toBe("fake.accessGroup")
+        expect(sharingConfiguration?.sharedMemoryIdentifier).toBe("tst1")
+    }
+
+    async testConfigurationAlgorithms() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const defaultConfiguration = await sdk.configuration
+
+        expect(defaultConfiguration.algorithm).toBe(PowerAuthAlgorithm.P384_L3)
+        expect(defaultConfiguration.offlineAuthenticationCodeComponentLength).toBe(8)
+        expect(await sdk.currentAlgorithm).toBe(PowerAuthAlgorithm.P384_L3)
+
+        for (const algorithm of [
+            PowerAuthAlgorithm.LEGACY,
+            PowerAuthAlgorithm.P384,
+            PowerAuthAlgorithm.P384_L3,
+            PowerAuthAlgorithm.P384_L5
+        ]) {
+            await sdk.deconfigure()
+            await sdk.configure(new PowerAuthConfiguration(
+                defaultConfiguration.configuration,
+                defaultConfiguration.baseEndpointUrl,
+                algorithm,
+                6
+            ))
+            expect(await sdk.currentAlgorithm).toBe(algorithm)
+            const effectiveConfiguration = await sdk.configuration
+            expect(effectiveConfiguration.algorithm).toBe(algorithm)
+            expect(effectiveConfiguration.offlineAuthenticationCodeComponentLength).toBe(6)
+        }
+    }
+
+    async testEffectiveClientConfiguration() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const configuration = await sdk.configuration
+        await sdk.deconfigure()
+
+        const clientConfiguration = new PowerAuthClientConfiguration()
+        clientConfiguration.connectionTimeout = 12
+        clientConfiguration.readTimeout = 14
+        clientConfiguration.customHttpHeaders = [{ name: "X-Test", value: "secret" }]
+        clientConfiguration.basicHttpAuthentication = { username: "user", password: "secret" }
+        await sdk.configure(configuration, clientConfiguration)
+
+        const effective = await sdk.clientConfiguration
+        expect(effective.connectionTimeout).toBe(12)
+        expect(effective.readTimeout).toBe(Platform.OS === 'ios' ? 12 : 14)
+        expect(effective.customHttpHeaders).toBeUndefined()
+        expect(effective.basicHttpAuthentication).toBeUndefined()
+    }
+
+    async testCleanupInstanceData() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const configuration = await sdk.configuration
+        const keychainConfiguration = await sdk.keychainConfiguration
+        const sharingConfiguration = await sdk.sharingConfiguration
+        await expect(async () => await PowerAuth.cleanupInstanceData(
+            sdk.instanceId,
+            configuration,
+            keychainConfiguration,
+            sharingConfiguration
+        )).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await sdk.deconfigure()
+
+        await PowerAuth.cleanupInstanceData(
+            sdk.instanceId,
+            configuration,
+            keychainConfiguration,
+            sharingConfiguration
+        )
+        await sdk.configure(configuration, undefined, undefined, keychainConfiguration, sharingConfiguration)
+        expect(await sdk.isConfigured()).toBe(true)
     }
 
     async runMethodsThatMustFail(sdk: PowerAuth) {
@@ -201,6 +291,12 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.signDataWithDevicePrivateKey(signAuth, '', 'UTF8')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.validatePassword('')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async _auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.configuration).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.currentAlgorithm).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.clientConfiguration).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.biometryConfiguration).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.keychainConfiguration).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.sharingConfiguration).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
     }
 
     async testConfigurationWithBiometry() {

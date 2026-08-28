@@ -39,6 +39,34 @@ class PowerAuthModule : CordovaPlugin() {
                 isConfigured(args, promise)
                 return true
             }
+            "cleanupInstanceData" -> {
+                cleanupInstanceData(args, promise)
+                return true
+            }
+            "getConfiguration" -> {
+                getConfiguration(args, promise)
+                return true
+            }
+            "getCurrentAlgorithm" -> {
+                getCurrentAlgorithm(args, promise)
+                return true
+            }
+            "getClientConfiguration" -> {
+                getClientConfiguration(args, promise)
+                return true
+            }
+            "getBiometryConfiguration" -> {
+                getBiometryConfiguration(args, promise)
+                return true
+            }
+            "getKeychainConfiguration" -> {
+                getKeychainConfiguration(args, promise)
+                return true
+            }
+            "getSharingConfiguration" -> {
+                getSharingConfiguration(args, promise)
+                return true
+            }
             "configure" -> {
                 configure(args, promise)
                 return true
@@ -247,8 +275,48 @@ class PowerAuthModule : CordovaPlugin() {
         powerAuthJsModule.isConfigured(instanceId, promise)
     }
 
+    private fun cleanupInstanceData(args: JSONArray, promise: Promise) {
+        cordova.threadPool.execute {
+            val instanceId = args.getString(0)
+            val configuration = args.getReadableMap(1)
+            val keychainConfiguration = args.getReadableMap(2)
+            val sharingConfiguration = args.getReadableMap(3)
+            powerAuthJsModule.cleanupInstanceData(
+                instanceId,
+                configuration,
+                keychainConfiguration,
+                sharingConfiguration,
+                promise
+            )
+        }
+    }
+
+    private fun getConfiguration(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getConfiguration(args.getString(0), promise)
+    }
+
+    private fun getCurrentAlgorithm(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getCurrentAlgorithm(args.getString(0), promise)
+    }
+
+    private fun getClientConfiguration(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getClientConfiguration(args.getString(0), promise)
+    }
+
+    private fun getBiometryConfiguration(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getBiometryConfiguration(args.getString(0), promise)
+    }
+
+    private fun getKeychainConfiguration(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getKeychainConfiguration(args.getString(0), promise)
+    }
+
+    private fun getSharingConfiguration(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.getSharingConfiguration(args.getString(0), promise)
+    }
+
     private fun configure(args: JSONArray, promise: Promise) {
-        cordova.threadPool.execute(Runnable {
+        cordova.threadPool.execute {
             val instanceId = args.getString(0)
             val configuration = args.getReadableMap(1)
             val clientConfiguration = args.getReadableMap(2)
@@ -256,7 +324,7 @@ class PowerAuthModule : CordovaPlugin() {
             val keychainConfiguration = args.getReadableMap(4)
             val sharingConfiguration = args.getReadableMap(5)
             powerAuthJsModule.configure(instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration, promise)
-        })
+        }
     }
 
     private fun deconfigure(args: JSONArray, promise: Promise) {
