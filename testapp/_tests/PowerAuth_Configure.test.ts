@@ -113,6 +113,27 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(callbackInvoked).toBe(false)
     }
 
+    async testProtocolUpgradePasswordIsRedactedFromDebugTrace() {
+        const sdk = new PowerAuth(this.instance1)
+        const password = "ProtocolUpgradeSecret"
+        const messages: string[] = []
+        const originalConsoleLog = console.log
+        const originalDebugEnabled = PowerAuthDebug.isEnabled
+        PowerAuthDebug.isEnabled = true
+        console.log = (...args: unknown[]) => messages.push(args.join(" "))
+        PowerAuthDebug.traceNativeCodeCalls(false, true)
+        try {
+            await expect(async () => await sdk.startProtocolUpgrade(password))
+                .toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        } finally {
+            PowerAuthDebug.traceNativeCodeCalls(false, false)
+            PowerAuthDebug.isEnabled = originalDebugEnabled
+            console.log = originalConsoleLog
+        }
+        expect(messages.some(message => message.includes(password))).toBe(false)
+        expect(messages.some(message => message.includes("PowerAuth.startProtocolUpgrade") && message.includes("***"))).toBe(true)
+    }
+
     async testReconfigureWhileActive() {
         const helper1 = await this.getHelper1()
         const sdk1 = helper1.sdk
