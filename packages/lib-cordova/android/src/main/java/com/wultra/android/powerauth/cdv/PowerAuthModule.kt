@@ -131,6 +131,14 @@ class PowerAuthModule : CordovaPlugin() {
                 getBiometryInfo(args, promise)
                 return true
             }
+            "getBiometricStatus" -> {
+                getBiometricStatus(args, promise)
+                return true
+            }
+            "isAuthenticationWithBiometricsAvailable" -> {
+                isAuthenticationWithBiometricsAvailable(args, promise)
+                return true
+            }
             "fetchEncryptionKey" -> {
                 fetchEncryptionKey(args, promise)
                 return true
@@ -395,6 +403,16 @@ class PowerAuthModule : CordovaPlugin() {
     private fun getBiometryInfo(args: JSONArray, promise: Promise) {
         val instanceId = args.getOptString(0)
         powerAuthJsModule.getBiometryInfo(instanceId, promise)
+    }
+
+    private fun getBiometricStatus(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.getBiometricStatus(instanceId, promise)
+    }
+
+    private fun isAuthenticationWithBiometricsAvailable(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.isAuthenticationWithBiometricsAvailable(instanceId, promise)
     }
 
     private fun fetchEncryptionKey(args: JSONArray, promise: Promise) {

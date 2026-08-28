@@ -35,9 +35,9 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
-        const biometryInfo = await this.sdk.getBiometryInfo()
-        if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
-            this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
+        const biometricStatus = await this.sdk.getBiometricStatus()
+        if (biometricStatus.systemStatus !== PowerAuthBiometryStatus.OK) {
+            this.reportSkip(`Biometric status is ${biometricStatus.systemStatus}`)
         }
     }
 
@@ -55,12 +55,19 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     async testAddRemoveBiometryFactor() {
-        
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
+        let status = await this.sdk.getBiometricStatus()
+        expect(status.isBiometricFactorConfigured).toBe(false)
+        expect(status.isAuthenticationWithBiometricsAvailable).toBe(false)
+        expect(await this.sdk.isAuthenticationWithBiometricsAvailable()).toBe(false)
 
         await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(this.credentials.biometry, 'POST', '/some/biometry', '{}')).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED})
         await this.sdk.addBiometryFactor(this.credentials.validPassword)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        status = await this.sdk.getBiometricStatus()
+        expect(status.isBiometricFactorConfigured).toBe(true)
+        expect(status.isAuthenticationWithBiometricsAvailable).toBe(true)
+        expect(await this.sdk.isAuthenticationWithBiometricsAvailable()).toBe(true)
 
         await this.sdk.addBiometryFactor(this.credentials.validPassword)
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
@@ -68,5 +75,9 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
         // Now remove factor and try to calculate signature
         await this.sdk.removeBiometryFactor()
         expect(await this.sdk.hasBiometryFactor()).toBe(false)
+        status = await this.sdk.getBiometricStatus()
+        expect(status.isBiometricFactorConfigured).toBe(false)
+        expect(status.isAuthenticationWithBiometricsAvailable).toBe(false)
+        expect(await this.sdk.isAuthenticationWithBiometricsAvailable()).toBe(false)
     }
 }
