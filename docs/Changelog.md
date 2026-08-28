@@ -9,6 +9,7 @@
 - Added instance-aware biometric status and availability APIs, final biometric configuration and prompt options, asynchronous factor management, and reusable biometric authentication compatible with the native PowerAuth 2.0 SDKs.
 - Changed `groupedBiometricAuthentication()` to report all callback exceptions as `PowerAuthErrorCode.UNKNOWN_ERROR`, including `PowerAuthError` exceptions whose codes were previously preserved (PR[#468](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/468))
 - Added PowerAuth algorithm selection, offline authentication-code component length, native-backed asynchronous configuration getters, current algorithm reporting, and instance-data cleanup. Omitting the algorithm now uses the native protocol-4 `P384_L3` default; applications that must remain on protocol 3.3 need to select `PowerAuthAlgorithm.LEGACY` explicitly.
+- Added protocol-upgrade availability and pending-state checks, password-authorized upgrade execution, result data, optional Android biometric-factor migration, and automatic biometric-factor preservation on iOS.
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
