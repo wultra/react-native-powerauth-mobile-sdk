@@ -39,7 +39,7 @@ Once you have a `PowerAuthToken` object, use the following code to generate an a
 
 ```javascript
 try {
-    const header = await powerAuth.tokenStore.generateHeaderForToken(token.tokenName);
+    const header = await powerAuth.tokenStore.generateAuthenticationHeader(token.tokenName);
     // now you can attach that header to your HTTP request
 } catch (e) {
     // token is no longer valid

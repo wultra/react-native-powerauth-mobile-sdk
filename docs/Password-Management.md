@@ -85,7 +85,7 @@ If a user enters a wrong PIN should be handled in the calculation call itself an
 
 Example where validation is **not needed**:
 
-1. Call `requestSignature` with a wrong password
+1. Call `authenticationHeaderForRequestWithBody` with a wrong password
 2. The call will fail with the `NETWORK_ERROR` error. For a server response, `errorData` includes `httpStatusCode` and may include `serverResponseCode`, `serverResponseMessage`, and `responseBody`.
 3. This means most likely the user entered the wrong password
 4. Call `fetchActivationStatus` to verify how many attempts are left or if the activation is blocked.

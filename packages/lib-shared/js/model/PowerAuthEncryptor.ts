@@ -18,7 +18,7 @@ import { NativeEncryptor } from "../internal/NativeEncryptor"
 import { NativeObjectHandle } from "../internal/NativeObjectHandle"
 import { NativeWrapper } from "../internal/NativeWrapper"
 import { BaseReleasableObject } from "./BaseNativeObject"
-import { PowerAuthHttpHeader } from "./PowerAuthClientConfiguration"
+import { PowerAuthHttpHeader } from "./PowerAuthHttpHeader"
 
 /** Scope of an end-to-end encryptor. */
 export type PowerAuthEncryptorScope = 'APPLICATION' | 'ACTIVATION'

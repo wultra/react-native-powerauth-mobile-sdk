@@ -24,9 +24,9 @@ const auth = PowerAuthAuthentication.password("1234");
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
 try {
-    const signature = await powerAuth.requestSignature(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
-    const httpHeaderKey = signature.key;
-    const httpHeaderValue = signature.value;
+    const header = await powerAuth.authenticationHeaderForRequestWithBody(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
+    const httpHeaderName = header.name;
+    const httpHeaderValue = header.value;
 } catch(e) {
     // In case of invalid configuration, invalid activation state or corrupted state data
 }
@@ -45,9 +45,9 @@ const params = {
 };
 
 try {
-    const signature = await powerAuth.requestGetSignature(auth, "/payment/create", params);
-    const httpHeaderKey = signature.key;
-    const httpHeaderValue = signature.value;
+    const header = await powerAuth.authenticationHeaderForRequestWithParams(auth, "GET", "/payment/create", params);
+    const httpHeaderName = header.name;
+    const httpHeaderValue = header.value;
 } catch(e) {
     // In case of invalid configuration, invalid activation state or corrupted state data
 }
@@ -65,9 +65,9 @@ const auth = PowerAuthAuthentication.biometry({
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
 try {
-    const signature = await powerAuth.requestSignature(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
-    const httpHeaderKey = signature.key;
-    const httpHeaderValue = signature.value;
+    const header = await powerAuth.authenticationHeaderForRequestWithBody(auth, "POST", "/payment/create", "{jsonbody: \"yes\"}");
+    const httpHeaderName = header.name;
+    const httpHeaderValue = header.value;
 } catch(e) {
     if (e.code === PowerAuthErrorCode.BIOMETRY_CANCEL) {
         // User did cancel the dialog
@@ -114,8 +114,8 @@ This type of signature is very similar to [Symmetric Multi-Factor Signature](#sy
 // 2FA signature, uses device related key and user PIN code
 const auth = PowerAuthAuthentication.password("1234");
 try {
-    const signature = await powerAuth.offlineSignature(auth, "/confirm/offline/operation", data, nonce);
-    console.log("Signature is " + signature)
+    const authenticationCode = await powerAuth.offlineAuthenticationCode(auth, "/confirm/offline/operation", nonce, data);
+    console.log("Authentication code is " + authenticationCode)
 } catch (e) {
     // In case of invalid configuration, invalid activation state or other error
 }
