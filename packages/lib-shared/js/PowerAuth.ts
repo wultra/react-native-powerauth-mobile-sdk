@@ -40,6 +40,7 @@ import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
 import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizationService';
 import { PowerAuthUtils } from "./PowerAuthUtils";
 import { PowerAuthAlgorithm } from "./model/PowerAuthAlgorithm";
+import { PowerAuthProtocolUpgradeResult } from "./model/PowerAuthProtocolUpgradeResult";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -231,6 +232,48 @@ export class PowerAuth {
      */
     fetchActivationStatus(): Promise<PowerAuthActivationStatus> {
         return NativeWrapper.thisCall("fetchActivationStatus", this.instanceId);
+    }
+
+    /**
+     * Returns `true` if a protocol upgrade is available for the current activation.
+     *
+     * The result reflects locally stored activation status. Call
+     * `fetchActivationStatus()` first to obtain the latest information from the server.
+     */
+    hasProtocolUpgradeAvailable(): Promise<boolean> {
+        return NativeWrapper.thisCallBool("hasProtocolUpgradeAvailable", this.instanceId);
+    }
+
+    /**
+     * Returns `true` if a protocol upgrade has started but has not yet finished.
+     */
+    hasPendingProtocolUpgrade(): Promise<boolean> {
+        return NativeWrapper.thisCallBool("hasPendingProtocolUpgrade", this.instanceId);
+    }
+
+    /**
+     * Starts a protocol upgrade for the current activation.
+     *
+     * On Android, set `upgradeBiometry` to `true` to migrate an existing local
+     * biometry factor. This is supported only when `authenticateOnBiometricKeySetup`
+     * is disabled. On iOS, the native SDK preserves the factor automatically.
+     *
+     * If the result requires an activation status fetch, call
+     * `fetchActivationStatus()` to finish the upgrade.
+     *
+     * @param password Password authorizing the protocol upgrade.
+     * @param upgradeBiometry Whether Android should migrate the local biometry factor.
+     */
+    async startProtocolUpgrade(
+        password: PasswordType,
+        upgradeBiometry: boolean = false
+    ): Promise<PowerAuthProtocolUpgradeResult> {
+        return NativeWrapper.thisCall(
+            "startProtocolUpgrade",
+            this.instanceId,
+            await toPowerAuthRawPassword(password),
+            upgradeBiometry
+        );
     }
 
     /**

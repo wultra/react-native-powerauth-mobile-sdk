@@ -61,6 +61,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.getActivationIdentifier()).toBeUndefined()
         expect(await sdk.getActivationFingerprint()).toBeUndefined()
         expect(await sdk.getExternalPendingOperation()).toBeUndefined()
+        expect(await sdk.hasProtocolUpgradeAvailable()).toBe(false)
+        expect(await sdk.hasPendingProtocolUpgrade()).toBe(false)
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
         await expect(async () => await sdk.persistActivation(invalidPersistence)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
@@ -112,6 +114,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.canStartActivation()).toBe(false)
         expect(await sdk.hasPendingActivation()).toBe(false)
         expect(await sdk.hasValidActivation()).toBe(true)
+        expect(await sdk.hasProtocolUpgradeAvailable()).toBe(false)
+        expect(await sdk.hasPendingProtocolUpgrade()).toBe(false)
 
         activationDetail = await this.helper.getRegistrationDetail()
         expect(activationId).toBe(activationDetail.registrationId)
