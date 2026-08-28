@@ -35,10 +35,16 @@ export interface PowerAuthClientConfigurationType {
     readonly readTimeout?: number
     /**
      * Custom HTTP headers that will be added to each HTTP request produced by this library.
+     *
+     * This setting is input-only. Effective configurations returned from `PowerAuth.clientConfiguration`
+     * do not contain the original headers because native SDKs store them as request interceptors.
      */
     readonly customHttpHeaders?: PowerAuthHttpHeader[] | null;
     /**
      * Basic HTTP Authentication that will be added to each HTTP request produced by this library.
+     *
+     * This setting is input-only. Effective configurations returned from `PowerAuth.clientConfiguration`
+     * do not contain the original credentials because native SDKs store them as request interceptors.
      */
     readonly basicHttpAuthentication?: PowerAuthBasicHttpAuthentication | null;
 }
