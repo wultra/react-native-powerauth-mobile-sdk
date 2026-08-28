@@ -203,14 +203,37 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
      */
     @Throws(WrapperException::class)
     fun usePasswordCopy(anyPassword: Dynamic?): Password {
-        val password = findPassword(anyPassword, true)
-        return try {
-            password.copyToImmutable()
-        } finally {
-            if (anyPassword?.type === ReadableType.String) {
-                password.destroy()
+        if (anyPassword != null) {
+            if (anyPassword.type === ReadableType.String) {
+                val password = Password(anyPassword.asString())
+                return try {
+                    password.copyToImmutable()
+                } finally {
+                    password.destroy()
+                }
+            }
+            if (anyPassword.type === ReadableType.Map) {
+                val map = anyPassword.asMap()
+                    ?: throw WrapperException(
+                        Errors.EC_WRONG_PARAMETER,
+                        "PowerAuthPassword map is required"
+                    )
+                val passwordObjectId = map.getString("objectId")
+                    ?: throw WrapperException(
+                        Errors.EC_INVALID_NATIVE_OBJECT,
+                        "PowerAuthPassword is not initialized"
+                    )
+                return objectRegister.useObjectAndTransform(
+                    passwordObjectId,
+                    Password::class.java
+                ) { it.copyToImmutable() }
+                    ?: throw WrapperException(
+                        Errors.EC_INVALID_NATIVE_OBJECT,
+                        "PowerAuthPassword object is no longer valid"
+                    )
             }
         }
+        throw WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required")
     }
 
     /**

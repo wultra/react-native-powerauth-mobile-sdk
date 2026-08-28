@@ -56,6 +56,10 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
+        const biometricStatus = await sdk1.getBiometricStatus()
+        expect(biometricStatus.isBiometricFactorConfigured).toBe(false)
+        expect(biometricStatus.isAuthenticationWithBiometricsAvailable).toBe(false)
+        expect(await sdk1.isAuthenticationWithBiometricsAvailable()).toBe(false)
         // Instances created from helper also should have configuration objects set
         expect(sdk1.configuration).toBeDefined()
         expect(sdk2.configuration).toBeDefined()
@@ -186,9 +190,6 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.signDataWithDevicePrivateKey(signAuth, '', 'UTF8')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.validatePassword('')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async _auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        
-        // TODO: getBiometryInfo() doesn't depend on configuration. We should move this to separate class
-        // await expect(async () => await sdk.getBiometryInfo()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
     }
 
     async testConfigurationWithBiometry() {
@@ -199,9 +200,9 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
 
         // TODO This is because of Android on CI.
         // We can revisit this once we settle on a reliable emulator on CI with enrollable biometry
-        const biometryInfo = await sdk1.getBiometryInfo()
-        if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
-            this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
+        const biometricStatus = await sdk1.getBiometricStatus()
+        if (biometricStatus.systemStatus !== PowerAuthBiometryStatus.OK) {
+            this.reportSkip(`Biometric status is ${biometricStatus.systemStatus}`)
             return
         }
 
