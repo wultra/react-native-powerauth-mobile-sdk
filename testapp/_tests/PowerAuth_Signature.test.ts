@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode, PowerAuthHttpHeader } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -67,19 +67,19 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             } else {
                 auth = this.credentials.biometry
             }
-            let header: PowerAuthAuthorizationHttpHeader
+            let header: PowerAuthHttpHeader
             if (td.method === 'POST') {
                 const body = td.body
                 if (!(typeof body === 'string' || body === undefined)) {
                     throw new Error(`Unsuported body type for test with uriId = ${td.uriId}`)
                 }
-                header = await sdk.requestSignature(auth, td.method, td.uriId, body)
+                header = await sdk.authenticationHeaderForRequestWithBody(auth, td.method, td.uriId, body)
             } else if (td.method === 'GET') {
                 const body = td.body
                 if (typeof body === 'string') {
                     throw new Error(`Unsuported body type for test with uriId = ${td.uriId}`)
                 }
-                header = await sdk.requestGetSignature(auth, td.uriId, body)
+                header = await sdk.authenticationHeaderForRequestWithParams(auth, td.method, td.uriId, body)
             } else {
                 throw new Error(`Unsupported HTTP method ${td.method}`)
             }
@@ -101,6 +101,16 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+    }
+
+    async testLegacyRequestSignatureCompatibility() {
+        const bodyHeader = await this.sdk.requestSignature(this.credentials.possession, 'POST', '/legacy/body', '{}')
+        expect(bodyHeader.key).toBe('X-PowerAuth-Authorization')
+        expect(bodyHeader.value).toBeDefined()
+
+        const paramsHeader = await this.sdk.requestGetSignature(this.credentials.possession, '/legacy/params', { value: '1' })
+        expect(paramsHeader.key).toBe('X-PowerAuth-Authorization')
+        expect(paramsHeader.value).toBeDefined()
     }
 
     async testWrongPassword() {

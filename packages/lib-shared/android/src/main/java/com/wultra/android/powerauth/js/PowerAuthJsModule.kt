@@ -385,79 +385,61 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
-    fun requestGetSignature(
+    fun authenticationHeaderForRequestWithParams(
         instanceId: String,
         authMap: ReadableMap,
-        uriId: String?,
+        method: String,
+        uriId: String,
         params: ReadableMap?,
         promise: Promise
     ) {
-        val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
                 val paramMap = if (params == null) null else getStringMap(params)
-                val header: PowerAuthAuthorizationHttpHeader =
+                val header =
                     withOwnedAuthentication(authMap) { authentication ->
-                        sdk.requestGetSignatureWithAuthentication(
-                            context,
+                        sdk.authenticationHeaderForRequestWithParams(
                             authentication,
+                            method,
                             uriId,
                             paramMap
                         )
                     }
-                val headerObject: ReadableMap? = getHttpHeaderObject(header)
-
-                if (headerObject != null) {
-                    promise.resolve(headerObject)
-                } else {
-                    promise.reject(
-                        Errors.getErrorCodeFromError(header.powerAuthErrorCode),
-                        "Signature calculation failed."
-                    )
-                }
+                promise.resolve(getHttpHeaderObject(header))
             }
         })
     }
 
     @JsApiMethod
-    fun requestSignature(
+    fun authenticationHeaderForRequestWithBody(
         instanceId: String,
         authMap: ReadableMap,
-        method: String?,
-        uriId: String?,
+        method: String,
+        uriId: String,
         body: String?,
         promise: Promise
     ) {
-        val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
-                val header: PowerAuthAuthorizationHttpHeader =
+                val header =
                     withOwnedAuthentication(authMap) { authentication ->
-                        sdk.requestSignatureWithAuthentication(
-                            context,
+                        sdk.authenticationHeaderForRequestWithBody(
                             authentication,
                             method,
                             uriId,
                             decodedBody
                         )
                     }
-                if (header.isValid) {
-                    promise.resolve(getHttpHeaderObject(header.key, header.value))
-                } else {
-                    promise.reject(
-                        Errors.getErrorCodeFromError(header.powerAuthErrorCode),
-                        "Signature calculation failed."
-                    )
-                }
+                promise.resolve(getHttpHeaderObject(header))
             }
         })
     }
 
     @JsApiMethod
-    fun offlineSignature(
+    fun offlineAuthenticationCode(
         instanceId: String,
         authMap: ReadableMap,
         uriId: String,
@@ -469,20 +451,30 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
+                val auth = constructAuthentication(authMap, false, true)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
-                val signature: String? = withOwnedAuthentication(authMap) { authentication ->
-                    sdk.offlineSignatureWithAuthentication(
+                try {
+                    sdk.offlineAuthenticationCode(
                         context,
-                        authentication,
+                        auth,
                         uriId,
                         decodedBody,
-                        nonce
+                        nonce,
+                        object : IOfflineAuthenticationCodeListener {
+                            override fun onOfflineAuthenticationCodeSucceed(authenticationCode: String) {
+                                auth.destroy()
+                                promise.resolve(authenticationCode)
+                            }
+
+                            override fun onOfflineAuthenticationCodeFailed(t: Throwable) {
+                                auth.destroy()
+                                Errors.rejectPromise(promise, t)
+                            }
+                        }
                     )
-                }
-                if (signature != null) {
-                    promise.resolve(signature)
-                } else {
-                    promise.reject(Errors.EC_SIGNATURE_ERROR, "Signature calculation failed")
+                } catch (t: Throwable) {
+                    auth.destroy()
+                    throw t
                 }
             }
         })
@@ -1000,21 +992,17 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
-    fun generateHeaderForToken(instanceId: String, tokenName: String, promise: Promise) {
+    fun generateAuthenticationHeaderForToken(instanceId: String, tokenName: String, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
                 sdk.tokenStore.generateAuthenticationHeader(context, tokenName, object: IGenerateTokenHeaderListener {
                     override fun onGenerateTokenHeaderSucceeded(header: PowerAuthHttpHeader) {
-                        promise.resolve(getHttpHeaderObject(header.key, header.value))
+                        promise.resolve(getHttpHeaderObject(header))
                     }
 
                     override fun onGenerateTokenHeaderFailed(t: Throwable) {
-                        promise.reject(
-                            Errors.EC_CANNOT_GENERATE_TOKEN,
-                            "Cannot generate header for this token.",
-                            t
-                        )
+                        Errors.rejectPromise(promise, t)
                     }
                 })
             }
@@ -1605,23 +1593,11 @@ class PowerAuthJsModule(
             return map
         }
 
-        /**
-         * Translate [PowerAuthAuthorizationHttpHeader] into readable map.
-         * @param header Header to convert.
-         * @return Readable map with header values.
-         */
-        private fun getHttpHeaderObject(header: PowerAuthAuthorizationHttpHeader): ReadableMap? {
-            if (header.isValid) {
-                return getHttpHeaderObject(header.key, header.value)
-            } else {
-                return null
-            }
-        }
-
-        private fun getHttpHeaderObject(key: String, value: String): ReadableMap {
+        /** Translate [PowerAuthHttpHeader] into a JavaScript object. */
+        private fun getHttpHeaderObject(header: PowerAuthHttpHeader): ReadableMap {
             val map: WritableMap = Arguments.createMap()
-            map.putString("key", key)
-            map.putString("value", value)
+            map.putString("name", header.key)
+            map.putString("value", header.value)
             return map
         }
 

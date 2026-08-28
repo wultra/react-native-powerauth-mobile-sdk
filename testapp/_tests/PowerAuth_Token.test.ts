@@ -35,8 +35,8 @@ export class PowerAuth_TokenTests extends TestWithActivation {
         expect(await tokenStore.hasLocalToken(T1)).toBe(false)
         expect(await tokenStore.hasLocalToken(T2)).toBe(false)
 
-        await expect(async () => await tokenStore.generateHeaderForToken(T1)).toThrow({errorCode: PowerAuthErrorCode.CANNOT_GENERATE_TOKEN})
-        await expect(async () => await tokenStore.generateHeaderForToken(T2)).toThrow({errorCode: PowerAuthErrorCode.CANNOT_GENERATE_TOKEN})
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T1)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T2)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
         await expect(async () => await tokenStore.getLocalToken(T1)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
         await expect(async () => await tokenStore.getLocalToken(T2)).toThrow({errorCode: PowerAuthErrorCode.LOCAL_TOKEN_NOT_AVAILABLE})
 
@@ -72,18 +72,22 @@ export class PowerAuth_TokenTests extends TestWithActivation {
         await expect(async () => await tokenStore.requestAccessToken(T2, T2_invCred)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
 
         // Try calculate tokens
-        await expect(async () => await tokenStore.generateHeaderForToken(T1)).toSucceed()
-        await expect(async () => await tokenStore.generateHeaderForToken(T2)).toSucceed()
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T1)).toSucceed()
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T2)).toSucceed()
+
+        const legacyHeader = await tokenStore.generateHeaderForToken(T1)
+        expect(legacyHeader.key).toBe('X-PowerAuth-Token')
+        expect(legacyHeader.value).toBeDefined()
 
         // remove locally
         await expect(async () => await tokenStore.removeLocalToken(T1)).toSucceed()
         expect(await tokenStore.hasLocalToken(T1)).toBe(false)
-        await expect(async () => await tokenStore.generateHeaderForToken(T1)).toThrow({errorCode: PowerAuthErrorCode.CANNOT_GENERATE_TOKEN})
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T1)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
         
         // remove on the server
         await expect(async () => await tokenStore.removeAccessToken(T2)).toSucceed()
         expect(await tokenStore.hasLocalToken(T2)).toBe(false)
-        await expect(async () => await tokenStore.generateHeaderForToken(T2)).toThrow({errorCode: PowerAuthErrorCode.CANNOT_GENERATE_TOKEN})
+        await expect(async () => await tokenStore.generateAuthenticationHeader(T2)).toThrow({errorCode: PowerAuthErrorCode.INVALID_TOKEN})
     }
 
     async testTokenCalculation() {
@@ -107,14 +111,16 @@ export class PowerAuth_TokenTests extends TestWithActivation {
 
         await this.sdk.timeSynchronizationService.resetTimeSynchronization() // force time sync
 
-        const header1 = await tokenStore.generateHeaderForToken(T1)
+        const header1 = await tokenStore.generateAuthenticationHeader(T1)
+        expect(header1.name).toBe('X-PowerAuth-Token')
         expect(header1.value).toBeDefined()
         const result1 = await this.helper.verifyToken(header1.value)
         expect(result1.tokenValid).toBe(true)
         expect(result1.registrationId).toBe(activationId)
         expect(result1.signatureType).toBe('POSSESSION')
 
-        const header2 = await tokenStore.generateHeaderForToken(T2)
+        const header2 = await tokenStore.generateAuthenticationHeader(T2)
+        expect(header2.name).toBe('X-PowerAuth-Token')
         expect(header2.value).toBeDefined()
         const result2 = await this.helper.verifyToken(header2.value)
         expect(result2.tokenValid).toBe(true)

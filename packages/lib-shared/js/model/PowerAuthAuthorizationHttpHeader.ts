@@ -16,6 +16,7 @@
 
 /**
  * Object representing authorization HTTP header with the PowerAuth-Authorization or PowerAuth-Token signature.
+ * @deprecated Use `PowerAuthHttpHeader`, which exposes the header name in the `name` property.
  */
 export interface PowerAuthAuthorizationHttpHeader {
     /**
