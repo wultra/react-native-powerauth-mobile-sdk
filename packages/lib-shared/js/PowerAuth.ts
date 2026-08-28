@@ -69,9 +69,9 @@ export class PowerAuth {
         return NativeWrapper.thisCall("getBiometryConfiguration", this.instanceId)
     }
 
-    /** Android keychain configuration, or `undefined` on Apple platforms. */
-    get keychainConfiguration(): Promise<PowerAuthKeychainConfigurationType | undefined> {
-        return NativeWrapper.thisCallNull("getKeychainConfiguration", this.instanceId)
+    /** Effective native keychain configuration used to configure this instance. */
+    get keychainConfiguration(): Promise<PowerAuthKeychainConfigurationType> {
+        return NativeWrapper.thisCall("getKeychainConfiguration", this.instanceId)
     }
 
     /** Apple sharing configuration, or `undefined` when sharing is not configured or on Android. */
