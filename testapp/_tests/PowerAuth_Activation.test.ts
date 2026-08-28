@@ -19,6 +19,22 @@ import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
+function withTimeout<T>(operation: Promise<T>, timeoutMs: number = 10_000): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error(`Operation did not complete within ${timeoutMs} ms`)), timeoutMs)
+        operation.then(
+            value => {
+                clearTimeout(timeout)
+                resolve(value)
+            },
+            error => {
+                clearTimeout(timeout)
+                reject(error)
+            }
+        )
+    })
+}
+
 export class PowerAuth_ActivationTests extends TestWithActivation {
 
     async beforeAll(): Promise<void> {
@@ -142,7 +158,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         // Native SDKs use different error codes for invalid transitional activation states.
         await expect(async () => await sdk.authenticationHeaderForRequestWithParams(this.credentials.knowledge, 'GET', '/some/uriid')).toThrow()
         await expect(async () => await sdk.authenticationHeaderForRequestWithBody(this.credentials.knowledge, 'POST', '/some/uriid', undefined)).toThrow()
-        await expect(async () => await sdk.offlineAuthenticationCode(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc=', undefined)).toThrow()
+        await expect(async () => await withTimeout(
+            sdk.offlineAuthenticationCode(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc4OWFiY2RlZg==', undefined)
+        )).toThrow()
         await expect(async () => await sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.addBiometryFactor(this.credentials.validPassword, 'Auth title', 'Auth desc')).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.fetchEncryptionKey(this.credentials.knowledge, 99)).toThrow({errorCode: expectedError})
