@@ -162,7 +162,7 @@ PAJS_METHOD_START(encryptRequest,
     if (!found) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
     } else if (!result) {
-        reject(EC_ENCRYPTION_ERROR, @"Failed to encrypt request", encryptionError);
+        ProcessError(encryptionError, reject);
     } else {
         resolve(result);
     }
@@ -197,7 +197,7 @@ PAJS_METHOD_START(decryptResponse,
     if (!found) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
     } else if (!result) {
-        reject(EC_ENCRYPTION_ERROR, @"Failed to decrypt response", decryptionError);
+        ProcessError(decryptionError, reject);
     } else {
         resolve(result);
     }
