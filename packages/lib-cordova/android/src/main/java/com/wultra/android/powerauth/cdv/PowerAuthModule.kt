@@ -103,6 +103,18 @@ class PowerAuthModule : CordovaPlugin() {
                 fetchActivationStatus(args, promise)
                 return true
             }
+            "hasProtocolUpgradeAvailable" -> {
+                hasProtocolUpgradeAvailable(args, promise)
+                return true
+            }
+            "hasPendingProtocolUpgrade" -> {
+                hasPendingProtocolUpgrade(args, promise)
+                return true
+            }
+            "startProtocolUpgrade" -> {
+                startProtocolUpgrade(args, promise)
+                return true
+            }
             "createActivation" -> {
                 createActivation(args, promise)
                 return true
@@ -365,6 +377,23 @@ class PowerAuthModule : CordovaPlugin() {
     private fun fetchActivationStatus(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         powerAuthJsModule.fetchActivationStatus(instanceId, promise)
+    }
+
+    private fun hasProtocolUpgradeAvailable(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.hasProtocolUpgradeAvailable(instanceId, promise)
+    }
+
+    private fun hasPendingProtocolUpgrade(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        powerAuthJsModule.hasPendingProtocolUpgrade(instanceId, promise)
+    }
+
+    private fun startProtocolUpgrade(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        val password = args.getDynamic(1)
+        val upgradeBiometry = args.getBoolean(2)
+        powerAuthJsModule.startProtocolUpgrade(instanceId, password, upgradeBiometry, promise)
     }
 
     private fun createActivation(args: JSONArray, promise: Promise) {
