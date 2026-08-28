@@ -1115,7 +1115,7 @@ PAJS_METHOD_END
     } else {
         // Data signing
         if (userPassword) {
-            PowerAuthCorePassword * password = UsePassword(userPassword, _objectRegister, reject);
+            PowerAuthCorePassword * password = [UsePassword(userPassword, _objectRegister, reject) copyToImmutable];
             if (!password) {
                 return nil;
             }
@@ -1125,7 +1125,8 @@ PAJS_METHOD_END
             if (biometryKeyId) {
                 PowerAuthData * biometryKeyData = [_objectRegister useObjectWithId:biometryKeyId expectedClass:[PowerAuthData class]];
                 if (biometryKeyData) {
-                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKeyData.secureData customPossessionKey:nil];
+                    PowerAuthSecureData * ownedBiometryKey = [[PowerAuthSecureData alloc] initWithData:biometryKeyData.secureData.sensitiveData];
+                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:ownedBiometryKey customPossessionKey:nil];
                 } else {
                     reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
                     return nil;

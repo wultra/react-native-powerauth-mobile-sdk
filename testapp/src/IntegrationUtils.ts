@@ -209,15 +209,14 @@ export class IntegrationHelper {
         await this.makeCall(`{"change":"${change}"}`, `${AppConfig.cloudServerUrl}/v2/registrations/${registrationId ?? this._createdActivation?.registrationId}`, "PUT")
     }
 
-    async verifySignature(method: string, uriId: string, body: string, authHeader: string): Promise<SignatureResponse> {
-        const payload = `
-            {
-                "method": "${method}",
-                "uriId": "${uriId}",
-                "authHeader": "${authHeader.replace(/\"/g, '\\\"')}",
-                "requestBody": "${btoa(body)}"
-            }
-        `;
+    async verifySignature(method: string, uriId: string, body: string, authHeader: string, queryParams?: Record<string, string>, requestUsesParams: boolean = queryParams !== undefined): Promise<SignatureResponse> {
+        const payload = JSON.stringify({
+            method,
+            uriId,
+            authHeader,
+            requestBody: requestUsesParams ? null : btoa(body),
+            queryParams: requestUsesParams ? queryParams ?? null : null
+        })
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/signature/verify`)
     }
 
