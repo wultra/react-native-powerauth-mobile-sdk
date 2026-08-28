@@ -139,11 +139,13 @@ const configuration = await powerAuth.configuration;
 const currentAlgorithm = await powerAuth.currentAlgorithm;
 const clientConfiguration = await powerAuth.clientConfiguration;
 const biometryConfiguration = await powerAuth.biometryConfiguration;
-const keychainConfiguration = await powerAuth.keychainConfiguration; // Android only
+const keychainConfiguration = await powerAuth.keychainConfiguration;
 const sharingConfiguration = await powerAuth.sharingConfiguration;   // iOS only
 ```
 
 The effective client configuration does not contain `customHttpHeaders` or `basicHttpAuthentication`. Native SDKs store those input-only values as request interceptors and cannot safely reconstruct them. Keep the original values if you need to configure another instance.
+
+On iOS, the effective keychain configuration contains only the deprecated `accessGroupName` and `userDefaultsSuiteName` values. Android-specific keychain protection is returned only on Android.
 
 If configuration fails because stored instance data has an incompatible format, remove that data with the same configuration values before retrying:
 
