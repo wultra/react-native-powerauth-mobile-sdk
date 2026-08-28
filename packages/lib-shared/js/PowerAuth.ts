@@ -25,6 +25,7 @@ import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/Power
 import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivationResult';
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
+import { PowerAuthBiometricStatus } from './model/PowerAuthBiometricStatus';
 import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
@@ -431,9 +432,24 @@ export class PowerAuth {
      * Returns biometry info data.
      *
      * @returns object with information data about biometry
+     * @deprecated Use the instance-aware `getBiometricStatus()` method.
      */
     getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
         return NativeWrapper.thisCall("getBiometryInfo", this.instanceId);
+    }
+
+    /**
+     * Returns the biometric authentication status for this configured `PowerAuth` instance.
+     */
+    getBiometricStatus(): Promise<PowerAuthBiometricStatus> {
+        return NativeWrapper.thisCall("getBiometricStatus", this.instanceId);
+    }
+
+    /**
+     * Returns whether biometric authentication is available for the current activation.
+     */
+    isAuthenticationWithBiometricsAvailable(): Promise<boolean> {
+        return NativeWrapper.thisCallBool("isAuthenticationWithBiometricsAvailable", this.instanceId);
     }
 
     /**

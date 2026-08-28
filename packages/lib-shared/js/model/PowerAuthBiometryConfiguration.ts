@@ -22,9 +22,14 @@ import { Utils } from "../internal/Utils"
 export interface PowerAuthBiometryConfigurationType {
     /**
      * Set whether the key protected with the biometry is invalidated if fingers are added or
-     * removed, or if the user re-enrolls for face. The default value depends on plafrom:
+     * removed, or if the user re-enrolls for face. The default value depends on platform:
      * - On Android is set to `true`
      * - On iOS  is set to `false`
+     */
+    readonly invalidateBiometricFactorAfterChange?: boolean
+    /**
+     * Set whether the key protected with the biometry is invalidated after enrolled biometry changes.
+     * @deprecated Use `invalidateBiometricFactorAfterChange`.
      */
     readonly linkItemsToCurrentSet?: boolean
     /**
@@ -76,28 +81,45 @@ export interface PowerAuthBiometryConfigurationType {
      * The default value is `true`, so the fallback is enabled.
      */
     readonly fallbackToSharedBiometryKey?: boolean
+    /**
+     * ### Android specific
+     *
+     * If `true`, newly configured biometric factors use the legacy AES-KDF protection from
+     * PowerAuth Mobile SDK 1.x instead of the default HMAC-KDF protection. Existing factors are
+     * unaffected. Keep the default value of `false` unless legacy compatibility is required.
+     */
+    readonly useLegacySymmetricKey?: boolean
 }
 
 /**
  * Class that is used to provide biomety configuration for `PowerAuth` class.
  */
 export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigurationType {
-    linkItemsToCurrentSet: boolean
+    invalidateBiometricFactorAfterChange: boolean
+    linkItemsToCurrentSet!: boolean
     fallbackToDevicePasscode: boolean
     confirmBiometricAuthentication: boolean
     authenticateOnBiometricKeySetup: boolean
     fallbackToSharedBiometryKey: boolean
+    useLegacySymmetricKey: boolean
 
     /**
      * The default class constructor, respecting a platform specific differences.
      */
     public constructor() {
         const d = buildBiometryConfiguration()
-        this.linkItemsToCurrentSet = d.linkItemsToCurrentSet
+        this.invalidateBiometricFactorAfterChange = d.invalidateBiometricFactorAfterChange
+        Object.defineProperty(this, 'linkItemsToCurrentSet', {
+            enumerable: true,
+            configurable: false,
+            get: () => this.invalidateBiometricFactorAfterChange,
+            set: (value: boolean) => { this.invalidateBiometricFactorAfterChange = value }
+        })
         this.fallbackToDevicePasscode = d.fallbackToDevicePasscode
         this.confirmBiometricAuthentication = d.confirmBiometricAuthentication
         this.authenticateOnBiometricKeySetup = d.authenticateOnBiometricKeySetup
         this.fallbackToSharedBiometryKey = d.fallbackToSharedBiometryKey
+        this.useLegacySymmetricKey = d.useLegacySymmetricKey
     }
 
     /**
@@ -114,15 +136,20 @@ export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigur
  * @returns Frozen `BiometryConfigurationType` interface with all properties set.
  */
 export function buildBiometryConfiguration(input: PowerAuthBiometryConfigurationType | undefined = undefined): Required<PowerAuthBiometryConfigurationType> {
+    const invalidateBiometricFactorAfterChange = input?.invalidateBiometricFactorAfterChange
+        ?? input?.linkItemsToCurrentSet
+        ?? Utils.platformOs === 'android'
     return Object.freeze({
         // The following platform switch is required due to fact that the native SDK has by default a different
         // configuration for this attribute. This was not configurable in the previous version of RN wrapper, 
         // so the old behavior must be emulated. If we enforce true or false, then app developers may encounter 
         // a weird behavior after the library update.
-        linkItemsToCurrentSet: input?.linkItemsToCurrentSet ?? Utils.platformOs === 'android',
+        invalidateBiometricFactorAfterChange,
+        linkItemsToCurrentSet: invalidateBiometricFactorAfterChange,
         fallbackToDevicePasscode: input?.fallbackToDevicePasscode ?? false,
         confirmBiometricAuthentication: input?.confirmBiometricAuthentication ?? false,
         authenticateOnBiometricKeySetup: input?.authenticateOnBiometricKeySetup ?? true,
-        fallbackToSharedBiometryKey: input?.fallbackToSharedBiometryKey ?? true
+        fallbackToSharedBiometryKey: input?.fallbackToSharedBiometryKey ?? true,
+        useLegacySymmetricKey: input?.useLegacySymmetricKey ?? false
     })
 }

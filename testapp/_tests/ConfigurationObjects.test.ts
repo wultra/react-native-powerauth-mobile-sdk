@@ -83,15 +83,24 @@ export class ConfigurationObjectsTests extends TestSuite {
         const defaultConfig = PowerAuthBiometryConfiguration.default()
         expect(defaultConfig).toEqual({
             authenticateOnBiometricKeySetup: true,
+            invalidateBiometricFactorAfterChange: DEFAULT_LINK_ITEMS,
             linkItemsToCurrentSet: DEFAULT_LINK_ITEMS,
             confirmBiometricAuthentication: false,
-            fallbackToDevicePasscode: false
+            fallbackToDevicePasscode: false,
+            fallbackToSharedBiometryKey: true,
+            useLegacySymmetricKey: false
         })
         expect(Object.isFrozen(defaultConfig)).toBe(true)
         // Config class
         let config = new PowerAuthBiometryConfiguration()
         expect(config).toEqual(defaultConfig)
         expect(Object.isFrozen(config)).toBe(false)
+
+        // Deprecated invalidation name remains a synchronized compatibility alias.
+        config.linkItemsToCurrentSet = !DEFAULT_LINK_ITEMS
+        expect(config.invalidateBiometricFactorAfterChange).toBe(!DEFAULT_LINK_ITEMS)
+        config.invalidateBiometricFactorAfterChange = DEFAULT_LINK_ITEMS
+        expect(config.linkItemsToCurrentSet).toBe(DEFAULT_LINK_ITEMS)
 
         const frozen = buildBiometryConfiguration(config)
         expect(frozen).toEqual(config)
@@ -102,38 +111,58 @@ export class ConfigurationObjectsTests extends TestSuite {
         config = buildBiometryConfiguration({authenticateOnBiometricKeySetup: false})
         expect(config).toEqual({
             authenticateOnBiometricKeySetup: false,
+            invalidateBiometricFactorAfterChange: defaultConfig.invalidateBiometricFactorAfterChange,
             linkItemsToCurrentSet: defaultConfig.linkItemsToCurrentSet,
             confirmBiometricAuthentication: defaultConfig.confirmBiometricAuthentication,
-            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode
+            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode,
+            fallbackToSharedBiometryKey: defaultConfig.fallbackToSharedBiometryKey,
+            useLegacySymmetricKey: defaultConfig.useLegacySymmetricKey
         })
         expect(Object.isFrozen(config)).toBe(true)
 
         config = buildBiometryConfiguration({linkItemsToCurrentSet: !DEFAULT_LINK_ITEMS})
         expect(config).toEqual({
             authenticateOnBiometricKeySetup: defaultConfig.authenticateOnBiometricKeySetup,
+            invalidateBiometricFactorAfterChange: !DEFAULT_LINK_ITEMS,
             linkItemsToCurrentSet: !DEFAULT_LINK_ITEMS,
             confirmBiometricAuthentication: defaultConfig.confirmBiometricAuthentication,
-            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode
+            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode,
+            fallbackToSharedBiometryKey: defaultConfig.fallbackToSharedBiometryKey,
+            useLegacySymmetricKey: defaultConfig.useLegacySymmetricKey
         })
         expect(Object.isFrozen(config)).toBe(true)
+
+        config = buildBiometryConfiguration({invalidateBiometricFactorAfterChange: !DEFAULT_LINK_ITEMS})
+        expect(config.invalidateBiometricFactorAfterChange).toBe(!DEFAULT_LINK_ITEMS)
+        expect(config.linkItemsToCurrentSet).toBe(!DEFAULT_LINK_ITEMS)
 
         config = buildBiometryConfiguration({confirmBiometricAuthentication: true})
         expect(config).toEqual({
             authenticateOnBiometricKeySetup: defaultConfig.authenticateOnBiometricKeySetup,
+            invalidateBiometricFactorAfterChange: defaultConfig.invalidateBiometricFactorAfterChange,
             linkItemsToCurrentSet: defaultConfig.linkItemsToCurrentSet,
             confirmBiometricAuthentication: true,
-            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode
+            fallbackToDevicePasscode: defaultConfig.fallbackToDevicePasscode,
+            fallbackToSharedBiometryKey: defaultConfig.fallbackToSharedBiometryKey,
+            useLegacySymmetricKey: defaultConfig.useLegacySymmetricKey
         })
         expect(Object.isFrozen(config)).toBe(true)
 
         config = buildBiometryConfiguration({fallbackToDevicePasscode: true})
         expect(config).toEqual({
             authenticateOnBiometricKeySetup: defaultConfig.authenticateOnBiometricKeySetup,
+            invalidateBiometricFactorAfterChange: defaultConfig.invalidateBiometricFactorAfterChange,
             linkItemsToCurrentSet: defaultConfig.linkItemsToCurrentSet,
             confirmBiometricAuthentication: defaultConfig.confirmBiometricAuthentication,
-            fallbackToDevicePasscode: true
+            fallbackToDevicePasscode: true,
+            fallbackToSharedBiometryKey: defaultConfig.fallbackToSharedBiometryKey,
+            useLegacySymmetricKey: defaultConfig.useLegacySymmetricKey
         })
         expect(Object.isFrozen(config)).toBe(true)
+
+        config = buildBiometryConfiguration({fallbackToSharedBiometryKey: false, useLegacySymmetricKey: true})
+        expect(config.fallbackToSharedBiometryKey).toBe(false)
+        expect(config.useLegacySymmetricKey).toBe(true)
     }
 
     testKeychainConfiguration() {
