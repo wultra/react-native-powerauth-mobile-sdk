@@ -324,7 +324,7 @@ export class IntegrationHelper {
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
-        const url = this.sdkEndpointUrl(endpoint)
+        const url = await this.sdkEndpointUrl(endpoint)
         const request: RequestInit = {
             body: body,
             headers: headers,
@@ -339,7 +339,7 @@ export class IntegrationHelper {
 
     /** Calls an SDK endpoint and returns the response body as Base64. */
     async callRawSDKEndpoint(endpoint: string, bodyBase64: string, headers?: Headers, method: string = "POST"): Promise<string> {
-        const url = this.sdkEndpointUrl(endpoint)
+        const url = await this.sdkEndpointUrl(endpoint)
         const bodyBytes = Buffer.from(bodyBase64, 'base64')
         // RN should accept Uint8Array and forward it as a native base64 body, but Android
         // fetch fails with "Network request failed" for typed-array bodies in e2e. A binary
@@ -355,8 +355,10 @@ export class IntegrationHelper {
         return Buffer.from(await response.arrayBuffer()).toString('base64')
     }
 
-    private sdkEndpointUrl(endpoint: string): string {
-        return `${AppConfig.enrollmentUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`
+    private async sdkEndpointUrl(endpoint: string): Promise<string> {
+        const configuration = await this._sdk.configuration
+        const apiVersion = await this._sdk.currentAlgorithm === PowerAuthAlgorithm.LEGACY ? 'pa/v3' : 'pa/v4'
+        return `${configuration.baseEndpointUrl.replace(/\/+$/, '')}/${apiVersion}/${endpoint.replace(/^\/+/, '')}`
     }
 
     private async makeCall(payload: string | undefined, url: string, method: string = "POST"): Promise<any> {
