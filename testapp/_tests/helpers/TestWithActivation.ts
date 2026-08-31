@@ -35,6 +35,14 @@ export interface ActivationCredentials {
      */
     invalidKnowledge: PowerAuthAuthentication
     /**
+     * Authentication for persisting activation with a valid password.
+     */
+    persistence: PowerAuthAuthentication
+    /**
+     * Authentication for persisting activation with an invalid password.
+     */
+    invalidPersistence: PowerAuthAuthentication
+    /**
      * Authenticatio for posession & biometry factors.
      */
     biometry: PowerAuthAuthentication
@@ -91,6 +99,8 @@ export class TestWithActivation extends TestSuite {
             possession: PowerAuthAuthentication.possession(),
             knowledge: PowerAuthAuthentication.password(validPassword),
             invalidKnowledge: PowerAuthAuthentication.password(invalidPassword),
+            persistence: PowerAuthAuthentication.persistWithPassword(validPassword),
+            invalidPersistence: PowerAuthAuthentication.persistWithPassword(invalidPassword),
             biometry: PowerAuthAuthentication.biometry({
                 promptTitle: 'Authenticate',
                 promptMessage: 'Please authenticate with biometry'
