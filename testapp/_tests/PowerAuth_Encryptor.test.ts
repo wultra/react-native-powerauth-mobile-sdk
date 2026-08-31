@@ -15,10 +15,54 @@
 //
 
 import { expect } from "mobile-testbed";
-import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthAlgorithm, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { CustomConfig } from "../src/IntegrationUtils";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
-export class PowerAuth_EncryptorTests extends TestWithActivation {
+class PowerAuth_EncryptorTestBase extends TestWithActivation {
+    protected async verifyActivationScopedExchange() {
+        const userId = this.helper.userId
+        expect(userId).toBeDefined()
+        const expectedUserInfo = this.helper.userInfo(userId!)
+        const storeResult = await this.helper.fillUserInfo(expectedUserInfo)
+        expect(storeResult.status).toBe('OK')
+
+        for (let exchange = 0; exchange < 2; exchange++) {
+            const encryptor = await this.sdk.getEncryptorForActivationScope()
+            try {
+                expect(encryptor.scope).toBe('ACTIVATION')
+                expect(await encryptor.canEncryptRequest()).toBe(true)
+                expect(await encryptor.canDecryptResponse()).toBe(false)
+
+                const encrypted = await encryptor.encryptRequest(btoa('{}'))
+                expect(encrypted.requestBody.length > 0).toBe(true)
+                expect(encrypted.requestHeaders.length > 0).toBe(true)
+                expect(await encryptor.canEncryptRequest()).toBe(false)
+                expect(await encryptor.canDecryptResponse()).toBe(true)
+
+                const headers = new Headers()
+                encrypted.requestHeaders.forEach(header => headers.set(header.name, header.value))
+                const responseBody = await this.helper.callRawSDKEndpoint(
+                    'user/info',
+                    encrypted.requestBody,
+                    headers
+                )
+                const clearResponseBase64 = await encryptor.decryptResponse(responseBody)
+                const userInfo = JSON.parse(atob(clearResponseBase64))
+                expect(userInfo.sub).toEqual(expectedUserInfo.subject)
+
+                await expect(async () => await encryptor.canEncryptRequest())
+                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+                await expect(async () => await encryptor.canDecryptResponse())
+                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+            } finally {
+                await encryptor.release()
+            }
+        }
+    }
+}
+
+export class PowerAuth_EncryptorTests extends PowerAuth_EncryptorTestBase {
 
     override shouldCreateActivationBeforeTest(): boolean {
         return this.context.testName !== 'testApplicationScopeWithoutActivation'
@@ -46,44 +90,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
     }
 
     async testActivationScopedExchange() {
-        const userId = this.helper.userId
-        expect(userId).toBeDefined()
-        const expectedUserInfo = this.helper.userInfo(userId!)
-        const storeResult = await this.helper.fillUserInfo(expectedUserInfo)
-        expect(storeResult.status).toBe('OK')
-
-        for (let exchange = 0; exchange < 2; exchange++) {
-            const encryptor = await this.sdk.getEncryptorForActivationScope()
-            try {
-                expect(encryptor.scope).toBe('ACTIVATION')
-                expect(await encryptor.canEncryptRequest()).toBe(true)
-                expect(await encryptor.canDecryptResponse()).toBe(false)
-
-                const encrypted = await encryptor.encryptRequest(btoa('{}'))
-                expect(encrypted.requestBody.length > 0).toBe(true)
-                expect(encrypted.requestHeaders.length > 0).toBe(true)
-                expect(await encryptor.canEncryptRequest()).toBe(false)
-                expect(await encryptor.canDecryptResponse()).toBe(true)
-
-                const headers = new Headers()
-                encrypted.requestHeaders.forEach(header => headers.set(header.name, header.value))
-                const responseBody = await this.helper.callRawSDKEndpoint(
-                    'pa/v3/user/info',
-                    encrypted.requestBody,
-                    headers
-                )
-                const clearResponseBase64 = await encryptor.decryptResponse(responseBody)
-                const userInfo = JSON.parse(atob(clearResponseBase64))
-                expect(userInfo.sub).toEqual(expectedUserInfo.subject)
-
-                await expect(async () => await encryptor.canEncryptRequest())
-                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-                await expect(async () => await encryptor.canDecryptResponse())
-                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-            } finally {
-                await encryptor.release()
-            }
-        }
+        await this.verifyActivationScopedExchange()
     }
 
     async testReleaseIsCachedAndIdempotent() {
@@ -144,5 +151,15 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         } finally {
             await encryptor.release()
         }
+    }
+}
+
+export class PowerAuth_EncryptorProtocol4Tests extends PowerAuth_EncryptorTestBase {
+    override provideCustomConfig(): CustomConfig {
+        return { algorithm: PowerAuthAlgorithm.P384_L3 }
+    }
+
+    async testProtocol4ActivationScopedExchange() {
+        await this.verifyActivationScopedExchange()
     }
 }
