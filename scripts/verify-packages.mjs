@@ -149,6 +149,7 @@ function verifyReactNative(packageDir, expectedPackage) {
   const modulePath = requireEntry(packageDir, packageJson.module)
   const declarationPath = requireEntry(packageDir, packageJson.types)
   requireEntry(packageDir, packageJson["react-native"])
+  requireFile(packageDir, "Package.swift")
   requireFile(packageDir, "react-native.config.js")
   requireFile(packageDir, "react-native-powerauth-mobile-sdk.podspec")
   requireFile(packageDir, "android/build.gradle")

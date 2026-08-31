@@ -16,7 +16,7 @@
 
 #import "PowerAuthStorageUtilsModule.h"
 #import "Errors.h"
-#import <PowerAuth2/PowerAuthKeychain.h>
+@import PowerAuth2;
 
 static NSString * const kStorageTypeSecure = @"SECURE";
 static NSString * const kStorageTypeStandard = @"STANDARD";
