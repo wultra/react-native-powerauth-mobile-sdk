@@ -19,14 +19,28 @@ The library is available for the following __React Native (0.87+)__ platforms:
 npm i react-native-powerauth-mobile-sdk --save
 ```
 
-#### 2. Install pods for iOS
+#### 2. Configure iOS dependencies
 
-To make integration working with iOS, don't forget to install Pods:
+CocoaPods remains the default and supported React Native integration. Install the pods:
 
 ```sh
 cd ios
 pod install
 ```
+
+React Native 0.87 also provides experimental, opt-in Swift Package Manager support. To try it instead of CocoaPods, run this once from the application root:
+
+```sh
+npx react-native spm --deintegrate
+```
+
+After a fresh clone and in CI, restore the generated SwiftPM integration before building:
+
+```sh
+npx react-native spm
+```
+
+SwiftPM commands and generated layouts may change in future React Native releases, so do not use this integration in production yet. The SDK supplies its native `PowerAuth2` dependency automatically; do not add the package manually.
 
 #### 3. Import PowerAuth in your js/ts files
 

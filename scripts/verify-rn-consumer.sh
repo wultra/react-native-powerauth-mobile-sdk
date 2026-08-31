@@ -7,8 +7,8 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
 platform="${1:-}"
-if [[ "$platform" != "android" && "$platform" != "ios" ]]; then
-  echo "Usage: $0 <android|ios>" >&2
+if [[ "$platform" != "android" && "$platform" != "ios" && "$platform" != "ios-spm" ]]; then
+  echo "Usage: $0 <android|ios|ios-spm>" >&2
   exit 1
 fi
 
@@ -40,7 +40,7 @@ if [[ "$platform" == "android" ]]; then
     exit 1
   fi
   ./android/gradlew -p android :app:assembleDebug
-else
+elif [[ "$platform" == "ios" ]]; then
   pushd ios >/dev/null
   pod install
   xcodebuild build \
@@ -50,6 +50,19 @@ else
     -destination 'generic/platform=iOS Simulator' \
     CODE_SIGNING_ALLOWED=NO \
     IPHONEOS_DEPLOYMENT_TARGET=15.1
+  popd >/dev/null
+else
+  npx react-native spm scaffold --deintegrate --yes
+  pushd ios >/dev/null
+  for configuration in Debug Release; do
+    xcodebuild build \
+      -project ConsumerApp.xcodeproj \
+      -scheme ConsumerApp \
+      -configuration "$configuration" \
+      -destination 'generic/platform=iOS Simulator' \
+      CODE_SIGNING_ALLOWED=NO \
+      IPHONEOS_DEPLOYMENT_TARGET=15.1
+  done
   popd >/dev/null
 fi
 

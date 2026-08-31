@@ -23,13 +23,6 @@
 
 #import "UIKit/UIKit.h"
 
-#import <PowerAuth2/PowerAuthSDK.h>
-#import <PowerAuth2/PowerAuthErrorConstants.h>
-#import <PowerAuth2/PowerAuthKeychain.h>
-#import <PowerAuth2/PowerAuthClientSslNoValidationStrategy.h>
-#import <PowerAuth2/PowerAuthCustomHeaderRequestInterceptor.h>
-#import <PowerAuth2/PowerAuthBasicHttpAuthenticationRequestInterceptor.h>
-
 @import PowerAuth2;
 
 @interface PA2PasswordChangeDataHandle : NSObject
