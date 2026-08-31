@@ -34,7 +34,7 @@ import com.wultra.android.powerauth.js.ObjectRegisterJs.ThreadSafeAction
 import io.getlime.security.powerauth.core.Password
 import io.getlime.security.powerauth.core.CoreEncryptor
 import java.nio.charset.StandardCharsets
-import java.util.Random
+import java.security.SecureRandom
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.locks.ReentrantLock
@@ -48,7 +48,7 @@ import java.util.concurrent.locks.ReentrantLock
 class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     private val lock = ReentrantLock(false)
     private val register: HashMap<String, RegisterEntry> = HashMap(16)
-    private val randomGenerator: Random = Random()
+    private val randomGenerator = SecureRandom()
     private var cleanupPeriod: Int = Constants.CLEANUP_PERIOD_DEFAULT
     private var cleanupTimer: Timer? = null
     private var isCleanupScheduled = false
@@ -140,6 +140,47 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 scheduleCleanup()
                 identifier
             }
+        })
+    }
+
+    /**
+     * Atomically transfers a child object to the caller only if its owner still matches.
+     *
+     * The returned object is removed without cleanup. The caller assumes responsibility for
+     * destroying it on every terminal path.
+     */
+    internal fun <T> takeObjectIfOwnerMatches(
+        objectId: String?,
+        expectedClass: Class<T>,
+        ownerId: String,
+        expectedOwner: Any
+    ): T? {
+        return synchronize(ThreadSafeAction {
+            val owner = register[ownerId]
+            if (owner == null ||
+                !owner.isStillValid ||
+                owner.`object`.managedInstance() !== expectedOwner
+            ) {
+                return@ThreadSafeAction null
+            }
+            val registrationId = translateObjectId(objectId)
+                ?: return@ThreadSafeAction null
+            val managedObject = register[registrationId]
+                ?: return@ThreadSafeAction null
+            val instance = managedObject.`object`.managedInstance()
+            if (managedObject.tag != ownerId || !expectedClass.isInstance(instance)) {
+                return@ThreadSafeAction null
+            }
+            if (!managedObject.isStillValid) {
+                register.remove(registrationId)
+                managedObject.`object`.cleanup()
+                scheduleCleanup()
+                return@ThreadSafeAction null
+            }
+            register.remove(registrationId)
+            scheduleCleanup()
+            @Suppress("UNCHECKED_CAST")
+            instance as T
         })
     }
 

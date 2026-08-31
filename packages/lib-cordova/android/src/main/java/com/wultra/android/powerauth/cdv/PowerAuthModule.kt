@@ -155,6 +155,14 @@ class PowerAuthModule : CordovaPlugin() {
                 changePassword(args, promise)
                 return true
             }
+            "beginPasswordChange" -> {
+                beginPasswordChange(args, promise)
+                return true
+            }
+            "finishPasswordChange" -> {
+                finishPasswordChange(args, promise)
+                return true
+            }
             "addBiometryFactor" -> {
                 addBiometryFactor(args, promise)
                 return true
@@ -474,6 +482,24 @@ class PowerAuthModule : CordovaPlugin() {
         val oldPassword = args.getDynamic(1)
         val newPassword = args.getDynamic(2)
         powerAuthJsModule.changePassword(instanceId, oldPassword, newPassword, promise)
+    }
+
+    private fun beginPasswordChange(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        val oldPassword = args.getDynamic(1)
+        powerAuthJsModule.beginPasswordChange(instanceId, oldPassword, promise)
+    }
+
+    private fun finishPasswordChange(args: JSONArray, promise: Promise) {
+        val instanceId = args.getString(0)
+        val newPassword = args.getDynamic(1)
+        val passwordChangeDataId = args.getString(2)
+        powerAuthJsModule.finishPasswordChange(
+            instanceId,
+            newPassword,
+            passwordChangeDataId,
+            promise
+        )
     }
 
     private fun addBiometryFactor(args: JSONArray, promise: Promise) {

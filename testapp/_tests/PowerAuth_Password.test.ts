@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
@@ -47,6 +47,99 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
     }
 
+    async testChangePasswordInTwoSteps() {
+        const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+        await this.sdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
+        await this.sdk.validatePassword(this.credentials.invalidPassword)
+        await expect(async () =>
+            await this.sdk.finishPasswordChange(this.credentials.validPassword, changeData)
+        ).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+
+        const restoreData = await this.sdk.beginPasswordChange(this.credentials.invalidPassword)
+        await this.sdk.finishPasswordChange(this.credentials.validPassword, restoreData)
+        await this.sdk.validatePassword(this.credentials.validPassword)
+    }
+
+    async testChangeSecurePasswordInTwoSteps() {
+        const changeData = await this.sdk.beginPasswordChange(
+            await importPassword(this.credentials.validPassword)
+        )
+        await this.sdk.finishPasswordChange(
+            await importPassword(this.credentials.invalidPassword),
+            changeData
+        )
+        await this.sdk.validatePassword(this.credentials.invalidPassword)
+
+        const restoreData = await this.sdk.beginPasswordChange(
+            await importPassword(this.credentials.invalidPassword)
+        )
+        await this.sdk.finishPasswordChange(
+            await importPassword(this.credentials.validPassword),
+            restoreData
+        )
+        await this.sdk.validatePassword(this.credentials.validPassword)
+    }
+
+    async testReleasePasswordChangeData() {
+        const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+        await changeData.release()
+        await changeData.release()
+        await expect(async () =>
+            await this.sdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
+        ).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+    }
+
+    async testFailedFinishConsumesPasswordChangeData() {
+        const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+        await expect(async () =>
+            await this.sdk.finishPasswordChange('12', changeData)
+        ).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () =>
+            await this.sdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
+        ).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+    }
+
+    async testPasswordChangeDataIsBoundToOwner() {
+        const otherSdk = new PowerAuth(`other-${this.sdk.instanceId}`)
+        await otherSdk.configure(
+            await this.sdk.configuration,
+            await this.sdk.clientConfiguration,
+            await this.sdk.biometryConfiguration,
+            await this.sdk.keychainConfiguration,
+            await this.sdk.sharingConfiguration
+        )
+        try {
+            const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+            await expect(async () =>
+                await otherSdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
+            ).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+        } finally {
+            await otherSdk.deconfigure()
+        }
+    }
+
+    async testDeconfigurationInvalidatesPasswordChangeData() {
+        const configuration = await this.sdk.configuration
+        const clientConfiguration = await this.sdk.clientConfiguration
+        const biometryConfiguration = await this.sdk.biometryConfiguration
+        const keychainConfiguration = await this.sdk.keychainConfiguration
+        const sharingConfiguration = await this.sdk.sharingConfiguration
+        const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+
+        await this.sdk.deconfigure()
+        await expect(async () =>
+            await this.sdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
+        ).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+
+        await this.sdk.configure(
+            configuration,
+            clientConfiguration,
+            biometryConfiguration,
+            keychainConfiguration,
+            sharingConfiguration
+        )
+    }
+
     async testChangeSecurePassword() {
         await this.sdk.changePassword(await importPassword(this.credentials.validPassword), await importPassword(this.credentials.invalidPassword))
         await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))
@@ -59,9 +152,9 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
     }
 
     async testChangePasswordUnsafe() {
-        await this.sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)
+        await this.sdk.changePasswordUnsafe(this.credentials.validPassword, this.credentials.invalidPassword)
         await this.sdk.validatePassword(this.credentials.invalidPassword)
-        await this.sdk.unsafeChangePassword(this.credentials.invalidPassword, this.credentials.validPassword)
+        await this.sdk.changePasswordUnsafe(this.credentials.invalidPassword, this.credentials.validPassword)
         await this.sdk.validatePassword(this.credentials.validPassword)
     }
 
