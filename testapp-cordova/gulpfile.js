@@ -50,7 +50,7 @@ const copyTestFiles = () =>
         .src([`${rnTestAppDir}/src/IntegrationUtils.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
         .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk";/g, ''))
         .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk"/g, ''))
-        .pipe(replace('import { Platform } from "react-native";', platformClass))
+        .pipe(replace(/import\s*\{\s*Platform\s*\}\s*from\s*["']react-native["'];?/g, platformClass))
         .pipe(replace('import { Config as EnvConfig } from "react-native-config"', envConfigStr))
         .pipe(gulp.dest(tempDir));
 

@@ -85,47 +85,29 @@ PAJS_METHOD_START(initialize,
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(release,
-                  PAJS_ARGUMENT(encryptorId, NSString*))
-{
-    [_objectRegister releaseObjectWithId:encryptorId expectedClass:[PowerAuthEncryptor class]];
-    resolve(nil);
-}
-PAJS_METHOD_END
-
 PAJS_METHOD_START(canEncryptRequest,
                   PAJS_ARGUMENT(encryptorId, NSString*))
 {
-    __block NSNumber * value = nil;
-    BOOL found = [_objectRegister processObjectWithId:encryptorId
-                                       expectedClass:[PowerAuthEncryptor class]
-                                               touch:YES
-                                              action:^(PowerAuthEncryptor * encryptor) {
-        value = @(encryptor.canEncryptRequest);
-    }];
-    if (found) {
-        resolve(value);
-    } else {
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
     }
+    resolve(@(encryptor.canEncryptRequest));
 }
 PAJS_METHOD_END
 
 PAJS_METHOD_START(canDecryptResponse,
                   PAJS_ARGUMENT(encryptorId, NSString*))
 {
-    __block NSNumber * value = nil;
-    BOOL found = [_objectRegister processObjectWithId:encryptorId
-                                       expectedClass:[PowerAuthEncryptor class]
-                                               touch:YES
-                                              action:^(PowerAuthEncryptor * encryptor) {
-        value = @(encryptor.canDecryptResponse);
-    }];
-    if (found) {
-        resolve(value);
-    } else {
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
     }
+    resolve(@(encryptor.canDecryptResponse));
 }
 PAJS_METHOD_END
 
@@ -140,32 +122,26 @@ PAJS_METHOD_START(encryptRequest,
         reject(EC_WRONG_PARAMETER, @"Request body is not valid Base64", nil);
         return;
     }
-    __block NSDictionary * result = nil;
-    __block NSError * encryptionError = nil;
-    BOOL found = [_objectRegister processObjectWithId:encryptorId
-                                       expectedClass:[PowerAuthEncryptor class]
-                                              touch:YES
-                                             action:^(PowerAuthEncryptor * encryptor) {
-        PowerAuthEncryptedRequest * encryptedRequest = [encryptor encryptRequest:clearBody error:&encryptionError];
-        NSString * serializedBody = encryptedRequest
-            ? [encryptedRequest.requestBody base64EncodedStringWithOptions:0]
-            : nil;
-        if (!serializedBody) {
-            return;
-        }
-        NSMutableArray * headers = [NSMutableArray arrayWithCapacity:encryptedRequest.requestHeaders.count];
-        for (PowerAuthHttpHeader * header in encryptedRequest.requestHeaders) {
-            [headers addObject:@{ @"name": header.key, @"value": header.value }];
-        }
-        result = @{ @"requestBody": serializedBody, @"requestHeaders": headers };
-    }];
-    if (!found) {
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
-    } else if (!result) {
-        ProcessError(encryptionError, reject);
-    } else {
-        resolve(result);
+        return;
     }
+    NSError * encryptionError = nil;
+    PowerAuthEncryptedRequest * encryptedRequest = [encryptor encryptRequest:clearBody error:&encryptionError];
+    NSString * serializedBody = encryptedRequest
+        ? [encryptedRequest.requestBody base64EncodedStringWithOptions:0]
+        : nil;
+    if (!serializedBody) {
+        ProcessError(encryptionError, reject);
+        return;
+    }
+    NSMutableArray * headers = [NSMutableArray arrayWithCapacity:encryptedRequest.requestHeaders.count];
+    for (PowerAuthHttpHeader * header in encryptedRequest.requestHeaders) {
+        [headers addObject:@{ @"name": header.key, @"value": header.value }];
+    }
+    resolve(@{ @"requestBody": serializedBody, @"requestHeaders": headers });
 }
 PAJS_METHOD_END
 
@@ -173,34 +149,33 @@ PAJS_METHOD_START(decryptResponse,
                   PAJS_ARGUMENT(encryptorId, NSString*)
                   PAJS_ARGUMENT(responseBodyBase64, NSString*))
 {
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
     NSData * bodyData = [[NSData alloc] initWithBase64EncodedString:responseBodyBase64 options:0];
     if (!bodyData) {
+        [_objectRegister releaseObjectWithId:encryptorId];
         reject(EC_WRONG_PARAMETER, @"Response body is not valid Base64", nil);
         return;
     }
-    __block NSString * result = nil;
-    __block NSError * decryptionError = nil;
-    BOOL found = [_objectRegister processObjectWithId:encryptorId
-                                       expectedClass:[PowerAuthEncryptor class]
-                                               touch:YES
-                                              action:^(PowerAuthEncryptor * encryptor) {
-        PowerAuthEncryptedResponse * encryptedResponse = [[PowerAuthEncryptedResponse alloc] initWithResponseBody:bodyData error:&decryptionError];
-        NSData * clearResponse = encryptedResponse
-            ? [encryptor decryptResponse:encryptedResponse error:&decryptionError]
-            : nil;
-        result = [clearResponse base64EncodedStringWithOptions:0];
-    }];
-
-    // The response attempt consumes the stateful encryptor on every terminal path.
-    [_objectRegister releaseObjectWithId:encryptorId expectedClass:[PowerAuthEncryptor class]];
-
-    if (!found) {
+    if (!encryptor) {
+        [_objectRegister releaseObjectWithId:encryptorId];
         reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
-    } else if (!result) {
-        ProcessError(decryptionError, reject);
-    } else {
-        resolve(result);
+        return;
     }
+    NSError * decryptionError = nil;
+    PowerAuthEncryptedResponse * encryptedResponse = [[PowerAuthEncryptedResponse alloc] initWithResponseBody:bodyData error:&decryptionError];
+    NSData * clearResponse = encryptedResponse
+        ? [encryptor decryptResponse:encryptedResponse error:&decryptionError]
+        : nil;
+    NSString * result = [clearResponse base64EncodedStringWithOptions:0];
+
+    [_objectRegister releaseObjectWithId:encryptorId];
+
+    if (!result) {
+        ProcessError(decryptionError, reject);
+        return;
+    }
+    resolve(result);
 }
 PAJS_METHOD_END
 

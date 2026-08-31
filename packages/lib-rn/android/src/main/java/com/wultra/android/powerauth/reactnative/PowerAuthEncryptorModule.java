@@ -60,11 +60,6 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
         powerAuthEncryptorJsModule.initialize(scope, ownerId, promise);
     }
 
-    @ReactMethod
-    void release(@NonNull String encryptorId, Promise promise) {
-        powerAuthEncryptorJsModule.release(encryptorId, promise);
-    }
-
     // Encryption
 
     @ReactMethod

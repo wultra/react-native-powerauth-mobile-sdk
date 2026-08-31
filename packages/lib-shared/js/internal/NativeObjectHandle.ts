@@ -15,6 +15,7 @@
  */
 
 import { PowerAuthError, PowerAuthErrorCode } from "../model/PowerAuthError"
+import { PowerAuthNativeObject } from "../model/PowerAuthNativeObject"
 import { NativeWrapper } from "./NativeWrapper"
 
 /**
@@ -25,6 +26,7 @@ import { NativeWrapper } from "./NativeWrapper"
  */
 export class NativeObjectHandle {
     private objectId: string | undefined
+    private releasePromise: Promise<void> | undefined
 
     constructor(objectId: string) {
         this.objectId = objectId
@@ -47,14 +49,21 @@ export class NativeObjectHandle {
     }
 
     /** Invalidates this handle and releases its native object at most once. */
-    async release(releaseNativeObject: (objectId: string) => Promise<void>): Promise<void> {
+    release(): Promise<void> {
+        if (!this.releasePromise) {
+            this.releasePromise = this.releaseNativeObject()
+        }
+        return this.releasePromise
+    }
+
+    private async releaseNativeObject(): Promise<void> {
         const objectId = this.objectId
         this.objectId = undefined
         if (objectId) {
             try {
-                await releaseNativeObject(objectId)
-            } catch (error: any) {
-                throw NativeWrapper.processException(error)
+                await PowerAuthNativeObject.releaseNativeObject(objectId)
+            } catch {
+                console.warn("Failed to release native object")
             }
         }
     }

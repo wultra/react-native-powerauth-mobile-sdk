@@ -30,6 +30,10 @@ class PowerAuthObjectRegister : CordovaPlugin() {
                 isValidNativeObject(args, promise)
                 return true
             }
+            "releaseNativeObject" -> {
+                releaseNativeObject(args, promise)
+                return true
+            }
             "debugDump" -> {
                 debugDump(args, promise)
                 return true
@@ -46,6 +50,11 @@ class PowerAuthObjectRegister : CordovaPlugin() {
     private fun isValidNativeObject(args: JSONArray, promise: Promise) {
         val objectId = args.getOptString(0)
         objectRegisterJs.isValidNativeObject(objectId, promise)
+    }
+
+    private fun releaseNativeObject(args: JSONArray, promise: Promise) {
+        val objectId = args.getOptString(0)
+        objectRegisterJs.releaseNativeObject(objectId, promise)
     }
 
     private fun debugDump(args: JSONArray, promise: Promise) {

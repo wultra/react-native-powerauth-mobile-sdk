@@ -252,16 +252,15 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     }
 
     /**
-     * Transform an object while holding the register lock.
+     * Transform an object and mark it as used while holding the register lock.
      *
      * This prevents release or automatic cleanup from destroying a native object while a
      * synchronous operation is using it.
      */
     @Throws(Throwable::class)
-    internal fun <T, R : Any> withObjectAndTransform(
+    internal fun <T, R : Any> useObjectAndTransform(
         objectId: String?,
         expectedClass: Class<T>,
-        touch: Boolean,
         action: (T) -> R
     ): R? {
         return synchronizeThrow {
@@ -273,9 +272,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
             }
             @Suppress("UNCHECKED_CAST")
             val result = action(instance as T)
-            if (touch) {
-                managedObject.touch()
-            }
+            managedObject.setUsed()
             result
         }
     }
@@ -319,6 +316,24 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 expectedClass,
                 OPT_REMOVE
             )
+        })
+    }
+
+    /**
+     * Immediately release an object regardless of its type or expiration policy.
+     */
+    internal fun releaseObject(objectId: String?): Boolean {
+        return synchronize(ThreadSafeAction {
+            val registrationId = translateObjectId(objectId)
+            val managedObject = registrationId?.let { register[it] }
+            if (registrationId == null || managedObject == null) {
+                false
+            } else {
+                managedObject.`object`.cleanup()
+                register.remove(registrationId)
+                scheduleCleanup()
+                true
+            }
         })
     }
 
@@ -778,6 +793,12 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
     @JsApiMethod
     fun isValidNativeObject(objectId: String?, promise: Promise) {
         promise.resolve(containsObject(objectId))
+    }
+
+    @JsApiMethod
+    fun releaseNativeObject(objectId: String?, promise: Promise) {
+        releaseObject(objectId)
+        promise.resolve(null)
     }
 
     @JsApiMethod

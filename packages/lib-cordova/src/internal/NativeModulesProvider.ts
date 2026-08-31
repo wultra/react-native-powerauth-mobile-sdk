@@ -53,6 +53,10 @@ class NativeObjectRegisterImpl extends NativeCordovaModule implements NativeObje
     async isValidNativeObject(objectId: string): Promise<boolean> {
         return await this.callNative("isValidNativeObject", [objectId])
     }
+
+    async releaseNativeObject(objectId: string): Promise<void> {
+        return await this.callNative("releaseNativeObject", [objectId])
+    }
 }
 
 class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerAuthEncryptorIfc {
@@ -61,10 +65,6 @@ class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerA
 
     async initialize(scope: string, ownerId: string): Promise<string> {
         return await this.callNative("initialize", [scope, ownerId])
-    }
-
-    async release(encryptorId: string): Promise<void> {
-        return await this.callNative("release", [encryptorId]);
     }
 
     async canEncryptRequest(encryptorId: string): Promise<boolean> {
