@@ -126,6 +126,6 @@ export class TestWithActivation extends TestSuite {
 
     async afterEach() {
         await super.afterEach()
-        this.helper?.cleanup()
+        await this.helper?.cleanup()
     }
 }
