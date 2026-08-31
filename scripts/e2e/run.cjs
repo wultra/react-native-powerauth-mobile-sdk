@@ -171,6 +171,7 @@ function printHelp(exitCode) {
       '  --out artifacts/e2e            Output directory (default: artifacts/e2e)',
       '  --collector-host 127.0.0.1     Collector bind host (default: 127.0.0.1)',
       '  --collector-port 8137          Collector port (default: 8137)',
+      '  --metro-port 8081              Metro port (default: 8081)',
       '  --timeout 45m                  Collector timeout (default: 45m)',
       '  --expected-runs N              Override expected runs',
       '  --ios-simulator \"iPhone 15\"    iOS simulator name (optional)',
@@ -196,6 +197,7 @@ function parseArgs(argv) {
     outDir: 'artifacts/e2e',
     collectorHost: '127.0.0.1',
     collectorPort: 8137,
+    metroPort: 8081,
     timeout: '45m',
     expectedRuns: undefined,
     iosSimulator: undefined,
@@ -226,6 +228,9 @@ function parseArgs(argv) {
       i++;
     } else if (a === '--collector-port' && next) {
       args.collectorPort = Number(next);
+      i++;
+    } else if (a === '--metro-port' && next) {
+      args.metroPort = Number(next);
       i++;
     } else if (a === '--timeout' && next) {
       args.timeout = next;
@@ -265,6 +270,9 @@ async function main() {
 
   if (!Number.isFinite(args.collectorPort) || args.collectorPort <= 0) {
     throw new Error(`Invalid --collector-port value '${args.collectorPort}'.`);
+  }
+  if (!Number.isInteger(args.metroPort) || args.metroPort <= 0 || args.metroPort > 65535) {
+    throw new Error(`Invalid --metro-port value '${args.metroPort}'.`);
   }
 
   // Derive how many runs the collector should wait for.
@@ -389,7 +397,7 @@ async function main() {
   // Start Metro for RN and skip it later.
   let metro = null;
   if (includeRn && args.metro) {
-    const metroArgs = ['workspace', 'testapp', 'start:prepared'];
+    const metroArgs = ['workspace', 'testapp', 'start:prepared', '--port', String(args.metroPort)];
 
     if (args.metroResetCache) {
       metroArgs.push('--reset-cache');
@@ -409,13 +417,19 @@ async function main() {
 
   const runRnAndroid = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'android:prepared'];
+    const base = ['workspace', 'testapp', 'android:prepared', '--port', String(args.metroPort)];
     const argv = args.metro || args.ci ? base.concat(['--no-packager']) : base;
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN Android...`);
 
-    const child = spawnLogged(cmd, argv, { cwd: resolveFromRepoRoot('.') });
+    const child = spawnLogged(cmd, argv, {
+      cwd: resolveFromRepoRoot('.'),
+      env: {
+        ...process.env,
+        RCT_METRO_PORT: String(args.metroPort),
+      },
+    });
     const r = await waitForExit(child, 'rn-android');
 
     runResults.push({ name: 'rn-android', ...r });
@@ -423,7 +437,7 @@ async function main() {
 
   const runRnIos = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'ios:prepared'];
+    const base = ['workspace', 'testapp', 'ios:prepared', '--port', String(args.metroPort)];
     const extra = [];
 
     if (args.metro || args.ci) extra.push('--no-packager');
@@ -437,7 +451,13 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN iOS...`);
 
-    const child = spawnLogged(cmd, argv, { cwd: resolveFromRepoRoot('.') });
+    const child = spawnLogged(cmd, argv, {
+      cwd: resolveFromRepoRoot('.'),
+      env: {
+        ...process.env,
+        RCT_METRO_PORT: String(args.metroPort),
+      },
+    });
     const r = await waitForExit(child, 'rn-ios');
 
     runResults.push({ name: 'rn-ios', ...r });
