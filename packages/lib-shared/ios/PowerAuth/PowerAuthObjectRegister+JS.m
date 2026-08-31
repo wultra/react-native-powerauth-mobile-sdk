@@ -51,6 +51,14 @@ PAJS_METHOD_START(isValidNativeObject,
 }
 PAJS_METHOD_END
 
+PAJS_METHOD_START(releaseNativeObject,
+                  PAJS_ARGUMENT(objectId, NSString*))
+{
+    [self releaseObjectWithId:objectId];
+    resolve(nil);
+}
+PAJS_METHOD_END
+
 #if DEBUG
 
 // MARK: - JS DEBUG

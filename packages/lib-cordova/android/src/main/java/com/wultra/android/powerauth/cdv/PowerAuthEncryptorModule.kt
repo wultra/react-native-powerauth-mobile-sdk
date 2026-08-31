@@ -29,10 +29,6 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
                 initialize(args, promise)
                 return true
             }
-            "release" -> {
-                release(args, promise)
-                return true
-            }
             // Encryption
             "canEncryptRequest" -> {
                 canEncryptRequest(args, promise)
@@ -59,11 +55,6 @@ class PowerAuthEncryptorModule : CordovaPlugin() {
         val scope = args.getString(0)
         val ownerId = args.getString(1)
         powerAuthEncryptorJsModule.initialize(scope, ownerId, promise)
-    }
-
-    private fun release(args: JSONArray, promise: Promise) {
-        val encryptorId = args.getString(0)
-        powerAuthEncryptorJsModule.release(encryptorId, promise)
     }
 
     // Encryption

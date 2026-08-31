@@ -22,9 +22,6 @@ export interface PowerAuthEncryptorIfc {
     /** Acquires and registers one native encryptor. */
     initialize(scope: string, ownerId: string): Promise<string>
 
-    /** Releases the native encryptor. Repeated release is safe. */
-    release(encryptorId: string): Promise<void>
-
     /** Returns whether the native encryptor can encrypt a request. */
     canEncryptRequest(encryptorId: string): Promise<boolean>
 

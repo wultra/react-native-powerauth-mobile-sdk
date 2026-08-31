@@ -101,6 +101,6 @@ export class PowerAuthEncryptorImpl implements PowerAuthEncryptor {
     }
 
     release(): Promise<void> {
-        return this.handle.release(objectId => NativeEncryptor.release(objectId))
+        return this.handle.release()
     }
 }
