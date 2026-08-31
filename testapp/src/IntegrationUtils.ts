@@ -140,21 +140,28 @@ export class IntegrationHelper {
 
     /** Cleanup after the test is finished */
     async cleanup(): Promise<void> {
-        if (await this._sdk.isConfigured() == false) {
-            return
+        const isConfigured = await this._sdk.isConfigured()
+        let activationId: string | undefined
+
+        if (isConfigured) {
+            activationId = await this._sdk.getActivationIdentifier()
+
+            // REMOVE ACTIVATION LOCALLY
+            await this._sdk.removeActivationLocal()
+        } else {
+            activationId = this._createdActivation?.registrationId
         }
 
-        const activationId = await this._sdk.getActivationIdentifier()
-
-        // REMOVE ACTIVATION LOCALLY
-        await this._sdk.removeActivationLocal()
-
-        // REMOVE ACTIVATION ON THE SERVER
-        if (activationId != null) {
-            await this.removeRegistration(activationId)
+        try {
+            // REMOVE ACTIVATION ON THE SERVER
+            if (activationId != null) {
+                await this.removeRegistration(activationId)
+            }
+        } finally {
+            if (isConfigured) {
+                await this._sdk.deconfigure()
+            }
         }
-
-        await this._sdk.deconfigure()
     }
 
     // --- COMPLEX TASKS ---
@@ -241,7 +248,11 @@ export class IntegrationHelper {
     }
 
     async removeRegistration(registrationId?: string): Promise<void> {
-        await this.makeCall("", `${AppConfig.cloudServerUrl}/v2/registrations/${registrationId ?? this._createdActivation?.registrationId}`, "DELETE")
+        const id = registrationId ?? this._createdActivation?.registrationId
+        await this.makeCall("", `${AppConfig.cloudServerUrl}/v2/registrations/${id}`, "DELETE")
+        if (id === this._createdActivation?.registrationId) {
+            this._createdActivation = undefined
+        }
     }
 
     async getRegistrationDetail(registrationId?: string): Promise<RegistrationDetail> {
