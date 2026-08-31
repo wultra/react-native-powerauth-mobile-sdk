@@ -10,6 +10,7 @@
 - Added PowerAuth algorithm selection, offline authentication-code component length, native-backed asynchronous configuration getters, current algorithm reporting, and instance-data cleanup. Omitting the algorithm now uses the native protocol-4 `P384_L3` default; applications that must remain on protocol 3.3 need to select `PowerAuthAlgorithm.LEGACY` explicitly.
 - Added protocol-upgrade availability and pending-state checks, password-authorized upgrade execution, result data, optional Android biometric-factor migration, and automatic biometric-factor preservation on iOS.
 - Added the native-backed two-step password-change API with `beginPasswordChange()`, `finishPasswordChange()`, and opaque `PowerAuthPasswordChangeData`. Deprecated the legacy one-step, validation, and unsafe password-change APIs, and enforced activation-persistence authentication purpose.
+- Added explicit-key digital signatures, JWS/JWT calculation and verification, device public-key export, and certificate signing request generation. Binary inputs and outputs use Base64 strings, and the legacy server/device signature helpers are deprecated.
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)

@@ -102,6 +102,38 @@ static NSString * PAJSAlgorithmToString(PowerAuthAlgorithm algorithm)
     }
 }
 
+static BOOL PAJSParseSignatureKeyId(
+    NSString * value,
+    PowerAuthSignatureKeyId * keyId,
+    RCTPromiseRejectBlock reject)
+{
+    if ([value isEqualToString:@"master"]) {
+        *keyId = PowerAuthSignatureKeyId_Master;
+    } else if ([value isEqualToString:@"masterEc"]) {
+        *keyId = PowerAuthSignatureKeyId_Master_EC;
+    } else if ([value isEqualToString:@"masterMlDsa"]) {
+        *keyId = PowerAuthSignatureKeyId_Master_ML_DSA;
+    } else if ([value isEqualToString:@"server"]) {
+        *keyId = PowerAuthSignatureKeyId_Server;
+    } else if ([value isEqualToString:@"serverEc"]) {
+        *keyId = PowerAuthSignatureKeyId_Server_EC;
+    } else if ([value isEqualToString:@"serverMlDsa"]) {
+        *keyId = PowerAuthSignatureKeyId_Server_ML_DSA;
+    } else if ([value isEqualToString:@"device"]) {
+        *keyId = PowerAuthSignatureKeyId_Device;
+    } else if ([value isEqualToString:@"deviceEc"]) {
+        *keyId = PowerAuthSignatureKeyId_Device_EC;
+    } else if ([value isEqualToString:@"deviceMlDsa"]) {
+        *keyId = PowerAuthSignatureKeyId_Device_ML_DSA;
+    } else if ([value isEqualToString:@"macPersonalized"]) {
+        *keyId = PowerAuthSignatureKeyId_MacPersonalized;
+    } else {
+        reject(EC_WRONG_PARAMETER, [NSString stringWithFormat:@"Unknown signature key identifier: %@", value], nil);
+        return NO;
+    }
+    return YES;
+}
+
 static PowerAuthConfiguration * PAJSBuildConfiguration(
     NSString * instanceId,
     NSDictionary * configuration,
@@ -847,6 +879,217 @@ PAJS_METHOD_START(offlineAuthenticationCode,
             resolve(authenticationCode);
         } else {
             reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither an offline authentication code nor an error.", nil);
+        }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(verifyDigitalSignature,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(signature, PAJS_NONNULL_ARGUMENT NSString*)
+                  PAJS_ARGUMENT(data, PAJS_NONNULL_ARGUMENT NSString*)
+                  PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    NSData * decodedSignature = DecodeNSDataValue(signature, DF_BASE64, reject);
+    if (!decodedSignature) {
+        return;
+    }
+    NSData * decodedData = DecodeNSDataValue(data, DF_BASE64, reject);
+    if (!decodedData) {
+        return;
+    }
+    PowerAuthSignatureKeyId keyId;
+    if (!PAJSParseSignatureKeyId(signatureKeyId, &keyId, reject)) {
+        return;
+    }
+    NSError * error = nil;
+    if ([powerAuth verifyDigitalSignature:decodedSignature signedData:decodedData keyIdentifier:keyId error:&error]) {
+        resolve(nil);
+    } else if (error) {
+        ProcessError(error, reject);
+    } else {
+        reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK failed to verify a digital signature without an error.", nil);
+    }
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(calculateDigitalSignature,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(authDict, NSDictionary*)
+                  PAJS_ARGUMENT(data, PAJS_NONNULL_ARGUMENT NSString*)
+                  PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    if (!auth) {
+        return;
+    }
+    NSData * decodedData = DecodeNSDataValue(data, DF_BASE64, reject);
+    if (!decodedData) {
+        return;
+    }
+    PowerAuthSignatureKeyId keyId;
+    if (!PAJSParseSignatureKeyId(signatureKeyId, &keyId, reject)) {
+        return;
+    }
+    [powerAuth calculateDigitalSignature:auth dataToSign:decodedData keyIdentifier:keyId callback:^(NSData * signature, NSError * error) {
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else if (signature) {
+            resolve([signature base64EncodedStringWithOptions:0]);
+        } else {
+            reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned neither a digital signature nor an error.", nil);
+        }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(exportDevicePublicKeys,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(format, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthDevicePublicKeyFormat nativeFormat;
+    if ([format isEqualToString:@"der"]) {
+        nativeFormat = PowerAuthDevicePublicKeyFormat_Der;
+    } else if ([format isEqualToString:@"raw"]) {
+        nativeFormat = PowerAuthDevicePublicKeyFormat_Raw;
+    } else {
+        reject(EC_WRONG_PARAMETER, [NSString stringWithFormat:@"Unknown device public key format: %@", format], nil);
+        return;
+    }
+    NSError * error = nil;
+    NSArray<PowerAuthDevicePublicKeyData*> * keys = [powerAuth exportDevicePublicKeysToFormat:nativeFormat error:&error];
+    if (error) {
+        ProcessError(error, reject);
+        return;
+    }
+    if (!keys) {
+        reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned neither device public keys nor an error.", nil);
+        return;
+    }
+    NSMutableArray * result = [[NSMutableArray alloc] initWithCapacity:keys.count];
+    for (PowerAuthDevicePublicKeyData * key in keys) {
+        NSString * keyType;
+        switch (key.keyType) {
+            case PowerAuthSignatureKeyType_EC:
+                keyType = @"ec";
+                break;
+            case PowerAuthSignatureKeyType_ML_DSA:
+                keyType = @"mlDsa";
+                break;
+            default:
+                reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned an unknown signature key type.", nil);
+                return;
+        }
+        [result addObject:@{
+            @"keyType": keyType,
+            @"keyAlgorithm": key.keyAlgorithm,
+            @"keyData": [key.keyData base64EncodedStringWithOptions:0]
+        }];
+    }
+    resolve(result);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(verifyJwsSignature,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(signature, PAJS_NONNULL_ARGUMENT NSString*)
+                  PAJS_BOOL_ARGUMENT(compact)
+                  PAJS_BOOL_ARGUMENT(strict)
+                  PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthSignatureKeyId keyId;
+    if (!PAJSParseSignatureKeyId(signatureKeyId, &keyId, reject)) {
+        return;
+    }
+    NSError * error = nil;
+    if ([powerAuth verifyJwsSignature:signature compact:compact strict:strict keyIdentifier:keyId error:&error]) {
+        resolve(nil);
+    } else if (error) {
+        ProcessError(error, reject);
+    } else {
+        reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK failed to verify a JWS signature without an error.", nil);
+    }
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(calculateJwsSignature,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(authDict, NSDictionary*)
+                  PAJS_ARGUMENT(data, PAJS_NONNULL_ARGUMENT NSString*)
+                  PAJS_ARGUMENT(dataType, PAJS_NULLABLE_ARGUMENT NSString*)
+                  PAJS_BOOL_ARGUMENT(compact)
+                  PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    if (!auth) {
+        return;
+    }
+    NSData * decodedData = DecodeNSDataValue(data, DF_BASE64, reject);
+    if (!decodedData) {
+        return;
+    }
+    PowerAuthSignatureKeyId keyId;
+    if (!PAJSParseSignatureKeyId(signatureKeyId, &keyId, reject)) {
+        return;
+    }
+    [powerAuth calculateJwsSignature:auth
+                         dataToSign:decodedData
+                           dataType:dataType
+                            compact:compact
+                      keyIdentifier:keyId
+                           callback:^(NSString * signature, NSError * error) {
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else if (signature) {
+            resolve(signature);
+        } else {
+            reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned neither a JWS signature nor an error.", nil);
+        }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(createCertificateSigningRequest,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(authDict, NSDictionary*)
+                  PAJS_ARGUMENT(distinguishedNames, NSDictionary*)
+                  PAJS_ARGUMENT(subjectAltNames, PAJS_NULLABLE_ARGUMENT NSArray*)
+                  PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    if (!auth) {
+        return;
+    }
+    PowerAuthSignatureKeyId keyId;
+    if (!PAJSParseSignatureKeyId(signatureKeyId, &keyId, reject)) {
+        return;
+    }
+    [powerAuth createCertificateSigningRequestWithAuthentication:auth
+                                              distinguishedNames:distinguishedNames
+                                                 subjectAltNames:subjectAltNames
+                                                   keyIdentifier:keyId
+                                                        callback:^(NSString * csr, NSError * error) {
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else if (csr) {
+            resolve(csr);
+        } else {
+            reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned neither a certificate signing request nor an error.", nil);
         }
     }];
     PA_BLOCK_END
