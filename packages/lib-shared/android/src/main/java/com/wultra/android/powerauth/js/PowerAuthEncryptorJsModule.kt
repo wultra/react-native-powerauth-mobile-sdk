@@ -46,30 +46,27 @@ class PowerAuthEncryptorJsModule(
             val sdk = resolveSdk(ownerId, promise) ?: return
             val listener = object : IGetEncryptorListener {
                 override fun onGetEncryptorSuccess(encryptor: CoreEncryptor) {
-                    var registered = false
-                    try {
-                        val objectId = objectRegister.registerObjectIfOwnerMatches(
+                    val objectId = try {
+                        objectRegister.registerObjectIfOwnerMatches(
                             ownerId,
                             sdk,
                             ManagedAny.wrap(encryptor, cleanup { it.destroy() }),
                             listOf(ReleasePolicy.keepAlive(Constants.ENCRYPTOR_KEY_KEEP_ALIVE_TIME))
                         )
-                        if (objectId == null) {
-                            encryptor.destroy()
-                            promise.reject(
-                                Errors.EC_INSTANCE_NOT_CONFIGURED,
-                                "PowerAuth instance is no longer configured"
-                            )
-                            return
-                        }
-                        registered = true
-                        promise.resolve(objectId)
                     } catch (t: Throwable) {
-                        if (!registered) {
-                            encryptor.destroy()
-                        }
+                        encryptor.destroy()
                         Errors.rejectPromise(promise, t)
+                        return
                     }
+                    if (objectId == null) {
+                        encryptor.destroy()
+                        promise.reject(
+                            Errors.EC_INSTANCE_NOT_CONFIGURED,
+                            "PowerAuth instance is no longer configured"
+                        )
+                        return
+                    }
+                    promise.resolve(objectId)
                 }
 
                 override fun onGetEncryptorFailed(t: Throwable) {
