@@ -86,13 +86,19 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         }
     }
 
-    async testReleaseIsIdempotent() {
+    async testReleaseIsCachedAndIdempotent() {
         const encryptor = await this.sdk.getEncryptorForActivationScope()
-        await encryptor.release()
-        await encryptor.release()
+        const firstRelease = encryptor.release()
+        const secondRelease = encryptor.release()
+
+        expect(firstRelease === secondRelease).toBe(true)
 
         await expect(async () => await encryptor.canEncryptRequest())
             .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+
+        await Promise.all([firstRelease, secondRelease])
+        expect(encryptor.release() === firstRelease).toBe(true)
+
         await expect(async () => await encryptor.encryptRequest(btoa('{}')))
             .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }

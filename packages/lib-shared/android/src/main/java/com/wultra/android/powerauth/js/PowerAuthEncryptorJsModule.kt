@@ -85,12 +85,6 @@ class PowerAuthEncryptorJsModule(
     }
 
     @JsApiMethod
-    fun release(encryptorId: String, promise: Promise) {
-        objectRegister.releaseObject(encryptorId, CoreEncryptor::class.java)
-        promise.resolve(null)
-    }
-
-    @JsApiMethod
     fun canEncryptRequest(encryptorId: String, promise: Promise) {
         withEncryptor(encryptorId, promise) { it.canEncryptRequest() }
     }
@@ -108,31 +102,16 @@ class PowerAuthEncryptorJsModule(
             Errors.rejectPromise(promise, t)
             return
         }
-        try {
-            val result = objectRegister.withObjectAndTransform(
-                encryptorId,
-                CoreEncryptor::class.java,
-                true
-            ) { encryptor ->
-                val encryptedRequest = encryptor.encryptRequest(clearBody)
-                val headers = Arguments.createArray()
-                encryptedRequest.requestHeaders.forEach { header ->
-                    val serializedHeader = Arguments.createMap()
-                    serializedHeader.putString("name", header.key)
-                    serializedHeader.putString("value", header.value)
-                    headers.pushMap(serializedHeader)
-                }
-                val serializedRequest = Arguments.createMap()
-                serializedRequest.putString(
-                    "requestBody",
-                    DataFormat.BASE64.encodeBytes(encryptedRequest.requestBody)
+        withEncryptor(encryptorId, promise) { encryptor ->
+            val encryptedRequest = encryptor.encryptRequest(clearBody)
+            Arguments.makeNativeMap(
+                mapOf(
+                    "requestBody" to DataFormat.BASE64.encodeBytes(encryptedRequest.requestBody),
+                    "requestHeaders" to encryptedRequest.requestHeaders.map { header ->
+                        mapOf("name" to header.key, "value" to header.value)
+                    }
                 )
-                serializedRequest.putArray("requestHeaders", headers)
-                serializedRequest
-            } ?: throw invalidEncryptor(encryptorId)
-            promise.resolve(result)
-        } catch (t: Throwable) {
-            Errors.rejectPromise(promise, t)
+            )
         }
     }
 
@@ -144,41 +123,34 @@ class PowerAuthEncryptorJsModule(
             Errors.rejectPromise(promise, t)
             return
         }
-        try {
-            val result = objectRegister.withObjectAndTransform(
-                encryptorId,
-                CoreEncryptor::class.java,
-                true
-            ) { encryptor ->
-                DataFormat.BASE64.encodeBytes(
-                    encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
-                )
-            } ?: throw invalidEncryptor(encryptorId)
-            promise.resolve(result)
-        } catch (t: Throwable) {
-            Errors.rejectPromise(promise, t)
-        } finally {
-            // A native encryptor can decrypt only the matching response. Consume the handle after
-            // the attempt regardless of whether native decryption succeeds.
-            objectRegister.releaseObject(encryptorId, CoreEncryptor::class.java)
+        withEncryptor(encryptorId, promise, destroyAfter = true) { encryptor ->
+            DataFormat.BASE64.encodeBytes(
+                encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
+            )
         }
     }
 
     private fun <T : Any> withEncryptor(
         encryptorId: String,
         promise: Promise,
+        destroyAfter: Boolean = false,
         action: (CoreEncryptor) -> T
     ) {
         try {
-            val result = objectRegister.withObjectAndTransform(
+            val result = objectRegister.useObjectAndTransform(
                 encryptorId,
                 CoreEncryptor::class.java,
-                true,
                 action
             ) ?: throw invalidEncryptor(encryptorId)
             promise.resolve(result)
         } catch (t: Throwable) {
             Errors.rejectPromise(promise, t)
+        } finally {
+            if (destroyAfter) {
+                // A native encryptor can decrypt only the matching response. Consume the handle
+                // after the attempt regardless of whether native decryption succeeds.
+                objectRegister.removeObject(encryptorId, CoreEncryptor::class.java)
+            }
         }
     }
 
