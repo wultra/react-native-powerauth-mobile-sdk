@@ -39,6 +39,15 @@ PAJS_MODULE_BASIC(PowerAuthObjectRegister)
                        ifOwnerMatches:(nonnull id)expectedOwner
                               ownerId:(nonnull NSString*)ownerId
                              policies:(NSArray<NSNumber*>*_Nonnull)policies;
+
+/**
+ Atomically transfer a child object to the caller only if its owner still matches.
+ The returned object is removed without cleanup.
+ */
+- (nullable id) takeObjectWithId:(nonnull NSString*)objectId
+                   expectedClass:(nonnull Class)expectedClass
+                  ifOwnerMatches:(nonnull id)expectedOwner
+                         ownerId:(nonnull NSString*)ownerId;
 /**
  Register object with application specific identifier. Returns NO if such object is already
  registered.

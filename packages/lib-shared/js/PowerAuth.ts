@@ -33,6 +33,7 @@ import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { resolveAuthentication } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
+import { PowerAuthPasswordChangeData } from './model/PowerAuthPasswordChangeData';
 import { PowerAuthRawAuthentication, toPowerAuthRawPassword } from './model/PowerAuthNativeTypes';
 import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
@@ -301,7 +302,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     async persistActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
+        return NativeWrapper.thisCall("persistActivation", this.instanceId, await this.authenticateForPersistence(authentication));
     }
 
     /** Activation identifier or undefined if object has no valid activation. */
@@ -322,7 +323,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
     async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("removeActivationWithAuthentication", this.instanceId,  await this.authenticate(authentication));
+        return NativeWrapper.thisCall("removeActivationWithAuthentication", this.instanceId, await this.authenticateForRequest(authentication));
     }
 
     /**
@@ -417,13 +418,52 @@ export class PowerAuth {
     }
 
     /**
-     * Change the password, validate old password by calling a PowerAuth Standard RESTful API endpoint `/pa/signature/validate`.
+     * Begins a password change by validating the old password on the server.
+     *
+     * Call `release()` on the returned object if the operation is abandoned.
+     *
+     * @param oldPassword Password currently used for the knowledge factor.
+     */
+    async beginPasswordChange(oldPassword: PasswordType): Promise<PowerAuthPasswordChangeData> {
+        return PowerAuthPasswordChangeData.begin(
+            this.instanceId,
+            await toPowerAuthRawPassword(oldPassword)
+        )
+    }
+
+    /**
+     * Finishes a password change initiated by `beginPasswordChange()`.
+     *
+     * The password-change data is consumed and released regardless of whether the operation
+     * succeeds or fails.
+     *
+     * @param newPassword New password to use for the knowledge factor.
+     * @param passwordChangeData Data returned by `beginPasswordChange()`.
+     */
+    async finishPasswordChange(
+        newPassword: PasswordType,
+        passwordChangeData: PowerAuthPasswordChangeData
+    ): Promise<void> {
+        return passwordChangeData.executeAndRelease(async objectId =>
+            NativeWrapper.thisCall(
+                "finishPasswordChange",
+                this.instanceId,
+                await toPowerAuthRawPassword(newPassword),
+                objectId
+            )
+        )
+    }
+
+    /**
+     * Change the password, validate old password by calling PowerAuth Standard RESTful API endpoints.
      *
      * @param oldPassword Old password, currently set to store the data.
      * @param newPassword New password, to be set in case authentication with old password passes.
+     * @deprecated Use `beginPasswordChange()` and `finishPasswordChange()`.
      */
     async changePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("changePassword", this.instanceId, await toPowerAuthRawPassword(oldPassword), await toPowerAuthRawPassword(newPassword));
+        const changeData = await this.beginPasswordChange(oldPassword)
+        return this.finishPasswordChange(newPassword, changeData)
     }
 
     /**
@@ -436,9 +476,23 @@ export class PowerAuth {
      @param oldPassword Old password, currently set to store the data.
      @param newPassword New password, to be set in case authentication with old password passes.
      @returns Returns true in case password was changed without error, false otherwise.
+     @deprecated Use `beginPasswordChange()` and `finishPasswordChange()`.
      */
     async unsafeChangePassword(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
         return NativeWrapper.thisCallBool("unsafeChangePassword", this.instanceId, await toPowerAuthRawPassword(oldPassword), await toPowerAuthRawPassword(newPassword));
+    }
+
+    /**
+     * Change the password using unsafe local re-encryption.
+     *
+     * You are responsible for validating the old password against a server endpoint before using
+     * this method. An incorrect old password corrupts the local activation data and makes it
+     * irreversibly unusable.
+     *
+     * @deprecated Use `beginPasswordChange()` and `finishPasswordChange()`.
+     */
+    async changePasswordUnsafe(oldPassword: PasswordType, newPassword: PasswordType): Promise<boolean> {
+        return this.unsafeChangePassword(oldPassword, newPassword)
     }
 
     /**
@@ -527,7 +581,7 @@ export class PowerAuth {
      * @param index Index of the derived key using KDF.
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticate(authentication), index);
+        return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticateForRequest(authentication), index);
     }
 
     /**
@@ -541,7 +595,7 @@ export class PowerAuth {
      * @param dataFormat Data format of the input data.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string, dataFormat: PowerAuthDataFormat): Promise<string> {
-        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data, dataFormat);
+        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticateForRequest(authentication), data, dataFormat);
     }
 
     /**
@@ -550,9 +604,11 @@ export class PowerAuth {
      * This method calls PowerAuth Standard RESTful API endpoint `/pa/signature/validate` to validate the signature value.
      *
      * @param password Password to be verified.
+     * @deprecated Use `beginPasswordChange()` and release the returned data if no password change follows.
      */
     async validatePassword(password: PasswordType): Promise<void> {
-        return NativeWrapper.thisCall("validatePassword", this.instanceId, await toPowerAuthRawPassword(password));
+        const changeData = await this.beginPasswordChange(password)
+        return changeData.release()
     }
 
     /**
@@ -657,5 +713,19 @@ export class PowerAuth {
      */
     private async authenticate(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
         return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
+    }
+    private async authenticateForRequest(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
+        if (authentication.isActivationPersist) {
+            throw new PowerAuthError(undefined, "Authentication object is configured for activation persistence", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        return this.authenticate(authentication)
+    }
+
+    private async authenticateForPersistence(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
+        const persistenceAuthentication = authentication.convertLegacyObject(true)
+        if (!persistenceAuthentication.isActivationPersist) {
+            throw new PowerAuthError(undefined, "Authentication object is not configured for activation persistence", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        return persistenceAuthentication.toRawAuthentication()
     }
 }

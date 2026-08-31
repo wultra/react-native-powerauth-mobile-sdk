@@ -189,6 +189,34 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     }];
 }
 
+- (id) takeObjectWithId:(NSString*)objectId
+          expectedClass:(Class)expectedClass
+         ifOwnerMatches:(id)expectedOwner
+                ownerId:(NSString*)ownerId
+{
+    return [self synchronized:^id{
+        PowerAuthManagedObject * owner = _register[ownerId];
+        if (!owner || ![owner isStillValid] || owner.object != expectedOwner) {
+            return nil;
+        }
+        NSString * registeredId = [self translateObjectId:objectId];
+        PowerAuthManagedObject * managedObject = registeredId ? _register[registeredId] : nil;
+        if (!managedObject ||
+            ![managedObject.tag isEqualToString:ownerId] ||
+            ![managedObject.object isKindOfClass:expectedClass]) {
+            return nil;
+        }
+        if (![managedObject isStillValid]) {
+            [_register removeObjectForKey:registeredId];
+            [self scheduleClenaup];
+            return nil;
+        }
+        [_register removeObjectForKey:registeredId];
+        [self scheduleClenaup];
+        return managedObject.object;
+    }];
+}
+
 - (BOOL) registerObject:(id)object withId:(NSString*)objectId tag:(NSString*)tag policies:(NSArray<NSNumber*>*)policies
 {
     return [self registerObjectWithId:objectId tag:tag policies:policies objectFactory:^id{
