@@ -4,6 +4,7 @@ package com.wultra.android.powerauth.cordova.plugin
 import android.app.Activity
 import com.wultra.android.powerauth.bridge.getDynamic
 import com.wultra.android.powerauth.bridge.getOptReadableMap
+import com.wultra.android.powerauth.bridge.getOptReadableArray
 import com.wultra.android.powerauth.bridge.getOptString
 import com.wultra.android.powerauth.bridge.getReadableMap
 import com.wultra.android.powerauth.cdv.util.Promise
@@ -145,6 +146,30 @@ class PowerAuthModule : CordovaPlugin() {
             }
             "verifyServerSignedData" -> {
                 verifyServerSignedData(args, promise)
+                return true
+            }
+            "verifyDigitalSignature" -> {
+                verifyDigitalSignature(args, promise)
+                return true
+            }
+            "calculateDigitalSignature" -> {
+                calculateDigitalSignature(args, promise)
+                return true
+            }
+            "exportDevicePublicKeys" -> {
+                exportDevicePublicKeys(args, promise)
+                return true
+            }
+            "verifyJwsSignature" -> {
+                verifyJwsSignature(args, promise)
+                return true
+            }
+            "calculateJwsSignature" -> {
+                calculateJwsSignature(args, promise)
+                return true
+            }
+            "createCertificateSigningRequest" -> {
+                createCertificateSigningRequest(args, promise)
                 return true
             }
             "unsafeChangePassword" -> {
@@ -466,6 +491,64 @@ class PowerAuthModule : CordovaPlugin() {
         val signature = args.getOptString(2)
         val masterKey = args.getBoolean(3)
         powerAuthJsModule.verifyServerSignedData(instanceId, data, signature, masterKey, promise)
+    }
+
+    private fun verifyDigitalSignature(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.verifyDigitalSignature(
+            args.getString(0),
+            args.getString(1),
+            args.getString(2),
+            args.getString(3),
+            promise
+        )
+    }
+
+    private fun calculateDigitalSignature(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.calculateDigitalSignature(
+            args.getString(0),
+            args.getReadableMap(1),
+            args.getString(2),
+            args.getString(3),
+            promise
+        )
+    }
+
+    private fun exportDevicePublicKeys(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.exportDevicePublicKeys(args.getString(0), args.getString(1), promise)
+    }
+
+    private fun verifyJwsSignature(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.verifyJwsSignature(
+            args.getString(0),
+            args.getString(1),
+            args.getBoolean(2),
+            args.getBoolean(3),
+            args.getString(4),
+            promise
+        )
+    }
+
+    private fun calculateJwsSignature(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.calculateJwsSignature(
+            args.getString(0),
+            args.getReadableMap(1),
+            args.getString(2),
+            args.getOptString(3),
+            args.getBoolean(4),
+            args.getString(5),
+            promise
+        )
+    }
+
+    private fun createCertificateSigningRequest(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.createCertificateSigningRequest(
+            args.getString(0),
+            args.getReadableMap(1),
+            args.getReadableMap(2),
+            args.getOptReadableArray(3),
+            args.getString(4),
+            promise
+        )
     }
 
     private fun unsafeChangePassword(args: JSONArray, promise: Promise) {

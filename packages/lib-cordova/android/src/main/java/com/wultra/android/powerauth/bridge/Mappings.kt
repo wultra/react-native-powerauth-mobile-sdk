@@ -44,6 +44,14 @@ fun JSONArray.getOptReadableMap(pos: Int): ReadableMap? {
     return ReadableNativeMap(obj)
 }
 
+@Throws(JSONException::class)
+fun JSONArray.getOptReadableArray(pos: Int): ReadableArray? {
+    if (isNull(pos)) {
+        return null
+    }
+    return ReadableNativeArray(getJSONArray(pos))
+}
+
 fun JSONObject.toMap(): Map<String, Any?> = keys().asSequence()
     .associateWith { ait ->
         when (val value = this[ait]) {
@@ -80,4 +88,3 @@ fun Any?.toReadableType(): ReadableType {
         else -> ReadableType.Null
     }
 }
-

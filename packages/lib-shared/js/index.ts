@@ -51,6 +51,8 @@ export * from './model/PowerAuthUserInfo';
 export * from './model/BaseNativeObject';
 export * from './model/PowerAuthOIDCParameters';
 export * from './model/PowerAuthProtocolUpgradeResult';
+export * from './model/PowerAuthSignatureKeyId';
+export * from './model/PowerAuthDevicePublicKey';
 
 // Debug features
 
