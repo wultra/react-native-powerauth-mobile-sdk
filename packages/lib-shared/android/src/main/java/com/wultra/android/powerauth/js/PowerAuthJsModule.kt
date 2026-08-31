@@ -306,37 +306,11 @@ class PowerAuthJsModule(
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
             var auth: PowerAuthAuthentication? = null
             try {
-                val biometricPrompt = if (
-                    authMap.getBoolean("isBiometry") &&
-                    authMap.getString("biometryKeyId") == null
-                ) {
-                    val promptMap: ReadableMap? =
-                        if (authMap.hasKey("biometricPrompt")) authMap.getMap("biometricPrompt") else null
-                    val fragmentActivity = getCurrentActivity() as FragmentActivity?
-                        ?: throw WrapperException(
-                            Errors.EC_REACT_NATIVE_ERROR,
-                            "Current fragment activity is not available"
-                        )
-                    if (sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup) {
-                        if (promptMap == null) {
-                            throw WrapperException(
-                                Errors.EC_WRONG_PARAMETER,
-                                "Biometric prompt is required when authenticateOnBiometricKeySetup is enabled."
-                            )
-                        }
-                        val titleDesc = extractPromptStrings(promptMap)
-                        PowerAuthBiometricPrompt.prompt(
-                            fragmentActivity,
-                            titleDesc.first,
-                            titleDesc.second
-                        )
-                    } else {
-                        PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(fragmentActivity)
-                    }
-                } else {
-                    null
-                }
-                val authentication = constructAuthentication(authMap, true, true, biometricPrompt)
+                val authentication = constructAuthentication(
+                    authMap,
+                    true,
+                    sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
+                )
                 auth = authentication
                 sdk.persistActivationWithAuthentication(
                     context,
@@ -378,19 +352,20 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
-                sdk.removeActivationWithAuthentication(
-                    context,
-                    auth,
-                    object : IActivationRemoveListener {
-                        override fun onActivationRemoveSucceed() {
-                            promise.resolve(null)
-                        }
+                withOwnedAuthentication(authMap) { authentication ->
+                    sdk.removeActivationWithAuthentication(
+                        context,
+                        authentication,
+                        object : IActivationRemoveListener {
+                            override fun onActivationRemoveSucceed() {
+                                promise.resolve(null)
+                            }
 
-                        override fun onActivationRemoveFailed(t: Throwable) {
-                            Errors.rejectPromise(promise, t)
-                        }
-                    })
+                            override fun onActivationRemoveFailed(t: Throwable) {
+                                Errors.rejectPromise(promise, t)
+                            }
+                        })
+                }
             }
         })
     }
@@ -422,10 +397,16 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val paramMap = if (params == null) null else getStringMap(params)
                 val header: PowerAuthAuthorizationHttpHeader =
-                    sdk.requestGetSignatureWithAuthentication(context, auth, uriId, paramMap)
+                    withOwnedAuthentication(authMap) { authentication ->
+                        sdk.requestGetSignatureWithAuthentication(
+                            context,
+                            authentication,
+                            uriId,
+                            paramMap
+                        )
+                    }
                 val headerObject: ReadableMap? = getHttpHeaderObject(header)
 
                 if (headerObject != null) {
@@ -453,16 +434,17 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 val header: PowerAuthAuthorizationHttpHeader =
-                    sdk.requestSignatureWithAuthentication(
-                        context,
-                        auth,
-                        method,
-                        uriId,
-                        decodedBody
-                    )
+                    withOwnedAuthentication(authMap) { authentication ->
+                        sdk.requestSignatureWithAuthentication(
+                            context,
+                            authentication,
+                            method,
+                            uriId,
+                            decodedBody
+                        )
+                    }
                 if (header.isValid) {
                     val returnMap: WritableMap = Arguments.createMap()
                     returnMap.putString("key", header.key)
@@ -491,10 +473,16 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
-                val signature: String? =
-                    sdk.offlineSignatureWithAuthentication(context, auth, uriId, decodedBody, nonce)
+                val signature: String? = withOwnedAuthentication(authMap) { authentication ->
+                    sdk.offlineSignatureWithAuthentication(
+                        context,
+                        authentication,
+                        uriId,
+                        decodedBody,
+                        nonce
+                    )
+                }
                 if (signature != null) {
                     promise.resolve(signature)
                 } else {
@@ -710,29 +698,30 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
-                sdk.fetchEncryptionKey(
-                    context,
-                    auth,
-                    index.toLong(),
-                    object : IFetchEncryptionKeyListener {
-                        override fun onFetchEncryptionKeySucceed(encryptedEncryptionKey: SecureData) {
-                            try {
-                                promise.resolve(
-                                    Base64.encodeToString(
-                                        encryptedEncryptionKey.sensitiveData,
-                                        Base64.NO_WRAP
+                withOwnedAuthentication(authMap) { authentication ->
+                    sdk.fetchEncryptionKey(
+                        context,
+                        authentication,
+                        index.toLong(),
+                        object : IFetchEncryptionKeyListener {
+                            override fun onFetchEncryptionKeySucceed(encryptedEncryptionKey: SecureData) {
+                                try {
+                                    promise.resolve(
+                                        Base64.encodeToString(
+                                            encryptedEncryptionKey.sensitiveData,
+                                            Base64.NO_WRAP
+                                        )
                                     )
-                                )
-                            } finally {
-                                encryptedEncryptionKey.destroy()
+                                } finally {
+                                    encryptedEncryptionKey.destroy()
+                                }
                             }
-                        }
 
-                        override fun onFetchEncryptionKeyFailed(t: Throwable) {
-                            Errors.rejectPromise(promise, t)
-                        }
-                    })
+                            override fun onFetchEncryptionKeyFailed(t: Throwable) {
+                                Errors.rejectPromise(promise, t)
+                            }
+                        })
+                }
             }
         })
     }
@@ -749,7 +738,6 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
                 val format = DataFormat.fromString(dataFormat)
                 val decodedData = format.decodeBytes(data)
                 if (decodedData == null) {
@@ -759,19 +747,21 @@ class PowerAuthJsModule(
                     )
                     return
                 }
-                sdk.signDataWithDevicePrivateKey(
-                    context,
-                    auth,
-                    decodedData,
-                    object : IDataSignatureListener {
-                        override fun onDataSignedSucceed(signature: ByteArray) {
-                            promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))
-                        }
+                withOwnedAuthentication(authMap) { authentication ->
+                    sdk.signDataWithDevicePrivateKey(
+                        context,
+                        authentication,
+                        decodedData,
+                        object : IDataSignatureListener {
+                            override fun onDataSignedSucceed(signature: ByteArray) {
+                                promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))
+                            }
 
-                        override fun onDataSignedFailed(t: Throwable) {
-                            Errors.rejectPromise(promise, t)
-                        }
-                    })
+                            override fun onDataSignedFailed(t: Throwable) {
+                                Errors.rejectPromise(promise, t)
+                            }
+                        })
+                }
             }
         })
     }
@@ -918,20 +908,25 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth: PowerAuthAuthentication = constructAuthentication(authMap, false, false)
-                sdk.tokenStore
-                    .requestAccessToken(context, tokenName, auth, object : IGetTokenListener {
-                        override fun onGetTokenSucceeded(token: PowerAuthToken) {
-                            val response: WritableMap = Arguments.createMap()
-                            response.putString("tokenName", token.tokenName)
-                            response.putString("tokenIdentifier", token.tokenIdentifier)
-                            promise.resolve(response)
-                        }
+                withOwnedAuthentication(authMap) { authentication ->
+                    sdk.tokenStore
+                        .requestAccessToken(
+                            context,
+                            tokenName,
+                            authentication,
+                            object : IGetTokenListener {
+                                override fun onGetTokenSucceeded(token: PowerAuthToken) {
+                                    val response: WritableMap = Arguments.createMap()
+                                    response.putString("tokenName", token.tokenName)
+                                    response.putString("tokenIdentifier", token.tokenIdentifier)
+                                    promise.resolve(response)
+                                }
 
-                        override fun onGetTokenFailed(t: Throwable) {
-                            Errors.rejectPromise(promise, t)
-                        }
-                    })
+                                override fun onGetTokenFailed(t: Throwable) {
+                                    Errors.rejectPromise(promise, t)
+                                }
+                            })
+                }
             }
         })
     }
@@ -1205,14 +1200,14 @@ class PowerAuthJsModule(
      * Helper function converts input readable map to PowerAuthAuthentication object.
      * @param map Map with authentication data.
      * @param forPersist Set true if authentication is required for activation persist.
+     * @param authenticateOnBiometricKeySetup Set true to require authentication during biometric key setup.
      * @return [PowerAuthAuthentication] instance.
      */
     @Throws(WrapperException::class)
     private fun constructAuthentication(
         map: ReadableMap,
         forPersist: Boolean,
-        copyPassword: Boolean,
-        biometricPrompt: PowerAuthBiometricPrompt? = null
+        authenticateOnBiometricKeySetup: Boolean = true
     ): PowerAuthAuthentication {
         val biometryKeyId: String? = map.getString("biometryKeyId")
         val biometryKey: SecureData?
@@ -1227,43 +1222,108 @@ class PowerAuthJsModule(
         } else {
             biometryKey = null
         }
-        val password: Password?
-        if (map.hasKey("password")) {
-            val managedPassword = passwordModule.usePassword(map.getDynamic("password"))
-            password = if (copyPassword) managedPassword.copyToImmutable() else managedPassword
-        } else {
-            password = null
-        }
-        if (forPersist) {
-            // Authentication for activation persist
-            if (password == null) {
-                throw WrapperException(
-                    Errors.EC_WRONG_PARAMETER,
-                    "PowerAuthPassword or string is required"
+        val biometricPrompt = if (
+            forPersist &&
+            map.getBoolean("isBiometry") &&
+            biometryKeyId == null
+        ) {
+            val fragmentActivity = getCurrentActivity() as FragmentActivity?
+                ?: throw WrapperException(
+                    Errors.EC_REACT_NATIVE_ERROR,
+                    "Current fragment activity is not available"
                 )
-            }
-            return if (biometricPrompt != null) {
-                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometricPrompt)
-            } else if (biometryKey == null) {
-                PowerAuthAuthentication.persistWithPassword(password)
+            if (authenticateOnBiometricKeySetup) {
+                val promptMap: ReadableMap? =
+                    if (map.hasKey("biometricPrompt")) map.getMap("biometricPrompt") else null
+                if (promptMap == null) {
+                    throw WrapperException(
+                        Errors.EC_WRONG_PARAMETER,
+                        "Biometric prompt is required when authenticateOnBiometricKeySetup is enabled."
+                    )
+                }
+                val titleDesc = extractPromptStrings(promptMap)
+                PowerAuthBiometricPrompt.prompt(
+                    fragmentActivity,
+                    titleDesc.first,
+                    titleDesc.second
+                )
             } else {
-                // This is currently not supported in RN wrapper. Application has no way to create
-                // persist authentication object prepared with valid biometry key. This is supported
-                // in native SDK, but application has to create its own biometry-supporting infrastructure.
-                //
-                // We can still use this option in tests, to simulate biometry-related operations
-                // with no user's interaction.
-                PowerAuthAuthentication.persistWithPasswordAndBiometry(password, biometryKey.copy())
+                PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(fragmentActivity)
             }
         } else {
-            // Authentication for data signing
-            return if (biometryKey != null) {
-                PowerAuthAuthentication.possessionWithBiometry(biometryKey.copy())
-            } else if (password != null) {
-                PowerAuthAuthentication.possessionWithPassword(password)
+            null
+        }
+        var password: Password? = if (map.hasKey("password")) {
+            passwordModule.usePassword(map.getDynamic("password")).copyToImmutable()
+        } else {
+            null
+        }
+        var ownedBiometryKey: SecureData? = null
+
+        try {
+            val authentication = if (forPersist) {
+                // Authentication for activation persist
+                val ownedPassword = password
+                    ?: throw WrapperException(
+                        Errors.EC_WRONG_PARAMETER,
+                        "PowerAuthPassword or string is required"
+                    )
+                if (biometricPrompt != null) {
+                    PowerAuthAuthentication.persistWithPasswordAndBiometry(
+                        ownedPassword,
+                        biometricPrompt
+                    )
+                } else if (biometryKey == null) {
+                    PowerAuthAuthentication.persistWithPassword(ownedPassword)
+                } else {
+                    // This is currently not supported in RN wrapper. Application has no way to create
+                    // persist authentication object prepared with valid biometry key. This is supported
+                    // in native SDK, but application has to create its own biometry-supporting infrastructure.
+                    //
+                    // We can still use this option in tests, to simulate biometry-related operations
+                    // with no user's interaction.
+                    ownedBiometryKey = biometryKey.copy()
+                    PowerAuthAuthentication.persistWithPasswordAndBiometry(
+                        ownedPassword,
+                        ownedBiometryKey
+                    )
+                }
             } else {
-                PowerAuthAuthentication.possession()
+                // Authentication for data signing
+                if (biometryKey != null) {
+                    ownedBiometryKey = biometryKey.copy()
+                    password?.destroy()
+                    password = null
+                    PowerAuthAuthentication.possessionWithBiometry(ownedBiometryKey)
+                } else if (password != null) {
+                    PowerAuthAuthentication.possessionWithPassword(password)
+                } else {
+                    PowerAuthAuthentication.possession()
+                }
             }
+
+            password = null
+            ownedBiometryKey = null
+            return authentication
+        } catch (t: Throwable) {
+            password?.destroy()
+            ownedBiometryKey?.destroy()
+            throw t
+        }
+    }
+
+    /**
+     * Executes an operation and destroys its copied authentication data after the native call returns.
+     */
+    private fun <T> withOwnedAuthentication(
+        map: ReadableMap,
+        block: (PowerAuthAuthentication) -> T
+    ): T {
+        val authentication = constructAuthentication(map, false)
+        return try {
+            block(authentication)
+        } finally {
+            authentication.destroy()
         }
     }
 
