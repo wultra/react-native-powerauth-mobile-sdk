@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 #import "PowerAuthObjectRegister.h"
-#import <PowerAuth2/PowerAuthSDK.h>
+@import PowerAuth2;
 #import <React/RCTBridge.h>
 
 PowerAuthSDK * LiftPowerAuthSdk(NSString * instanceId, RCTBridge * bridge)

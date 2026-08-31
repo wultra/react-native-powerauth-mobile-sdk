@@ -16,7 +16,7 @@
 
 #import "PowerAuthCryptoUtilsModule.h"
 #import "Errors.h"
-#import <PowerAuth2/PowerAuthLegacyCryptoUtils.h>
+@import PowerAuth2;
 
 @implementation PowerAuthCryptoUtilsModule
 
