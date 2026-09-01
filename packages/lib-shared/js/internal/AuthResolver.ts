@@ -18,6 +18,7 @@ import { PowerAuthAuthentication } from '../index';
 import { NativeWrapper } from './NativeWrapper';
 import { PowerAuthNativeObject } from '../model/PowerAuthNativeObject';
 import { PowerAuthRawAuthentication } from '../model/PowerAuthNativeTypes';
+import { PowerAuthError, PowerAuthErrorCode } from '../model/PowerAuthError';
 
 /**
  * Method will process `PowerAuthAuthentication` object are will return object according to the platform.
@@ -43,13 +44,25 @@ export async function resolveAuthentication(instanceId: string, authentication: 
     }
     // On both platforms we need to fetch the key for every biometric authentication.
     // If the key is already set, use it.
-    if (privateAuth.isBiometry && privateAuth.biometryKeyId === undefined) {
+    if (privateAuth.isBiometry && !privateAuth.biometryKeyId) {
         try {
             // Alter the reusable flag
             const isReusable = privateAuth.isReusable = privateAuth.isReusable || makeReusable
             // Acquire biometry key. The function returns ID to underlying data object with a limited validity.
-            privateAuth.biometryKeyId = (await NativeWrapper.thisCall('authenticateWithBiometry', instanceId, correctAuth.biometricPrompt, isReusable)) as string;
-            return correctAuth;
+            const biometryKeyId = await NativeWrapper.thisCallNull<string>(
+                'authenticateWithBiometry',
+                instanceId,
+                correctAuth.biometricPrompt,
+                isReusable
+            )
+            if (!biometryKeyId) {
+                throw new PowerAuthError(
+                    undefined,
+                    'Biometric authentication did not produce a valid native key.',
+                    PowerAuthErrorCode.INVALID_NATIVE_OBJECT
+                )
+            }
+            privateAuth.biometryKeyId = biometryKeyId
         } catch (e) {
             throw NativeWrapper.processException(e)
         }

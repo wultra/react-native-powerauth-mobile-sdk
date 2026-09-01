@@ -89,6 +89,17 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(pa2.sharingConfiguration).toBeDefined()
     }
 
+    async testGroupedBiometricAuthenticationRejectsNonBiometricAuthentication() {
+        const sdk = (await this.getHelper1()).sdk
+        let callbackInvoked = false
+
+        await expect(async () => await sdk.groupedBiometricAuthentication(
+            PowerAuthAuthentication.possession(),
+            async () => { callbackInvoked = true }
+        )).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        expect(callbackInvoked).toBe(false)
+    }
+
     async testReconfigureWhileActive() {
         const helper1 = await this.getHelper1()
         const sdk1 = helper1.sdk

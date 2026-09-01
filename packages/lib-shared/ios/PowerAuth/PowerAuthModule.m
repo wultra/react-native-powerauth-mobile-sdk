@@ -562,16 +562,6 @@ PAJS_METHOD_START(addBiometryFactor,
                   PAJS_ARGUMENT(foo, id))
 {
     PA_BLOCK_START
-    // Workaround for native SDK. We're expectint MISSING or PEDNING_ACTIVATION
-    // but native SDK prioritize biometry-related error in this situation.
-    if (![powerAuth hasValidActivation]) {
-        reject(EC_MISSING_ACTIVATION, nil, nil);
-        return;
-    }
-    if ([powerAuth hasPendingActivation]) {
-        reject(EC_PENDING_ACTIVATION, nil, nil);
-        return;
-    }
     PowerAuthCorePassword * corePassword = [UsePassword(password, _objectRegister, reject) copyToImmutable];
     if (!corePassword) {
         return;
@@ -1168,29 +1158,20 @@ PAJS_METHOD_END
             return [PowerAuthAuthentication possessionWithCorePassword:password];
         } else if (useBiometry) {
             NSString * biometryKeyId = GetNSStringValueFromDict(dict, @"biometryKeyId");
-            if (biometryKeyId) {
-                PowerAuthSecureData * biometryKey = [_objectRegister useObjectWithId:biometryKeyId
-                                                                      expectedClass:[PowerAuthData class]
-                                                                          transform:^id(PowerAuthData * data) {
-                    return [data.secureData copy];
-                }];
-                if (biometryKey) {
-                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKey];
-                } else {
-                    reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
-                    return nil;
-                }
+            if (!biometryKeyId) {
+                reject(EC_WRONG_PARAMETER, @"Biometric signing requires a pre-authorized biometry key.", nil);
+                return nil;
             }
-            NSString * biometryPrompt = GetValueAtPathFromDict(dict, @"biometricPrompt.promptMessage", [NSString class]);
-            NSString * cancelButton   = GetValueAtPathFromDict(dict, @"biometricPrompt.promptTitle", [NSString class]);
-            if (biometryPrompt || cancelButton) {
-                LAContext * context = [[LAContext alloc] init];
-                context.localizedReason = biometryPrompt;
-                context.localizedCancelTitle = cancelButton;
-                return [PowerAuthAuthentication possessionWithBiometryContext:context];
-            } else {
-                return [PowerAuthAuthentication possessionWithBiometry];
+            PowerAuthSecureData * biometryKey = [_objectRegister useObjectWithId:biometryKeyId
+                                                                  expectedClass:[PowerAuthData class]
+                                                                      transform:^id(PowerAuthData * data) {
+                return [data.secureData copy];
+            }];
+            if (biometryKey) {
+                return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKey];
             }
+            reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
+            return nil;
         } else {
             return [PowerAuthAuthentication possession];
         }
