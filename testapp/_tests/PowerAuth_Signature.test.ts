@@ -117,6 +117,12 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.offlineAuthenticationCode(persistAuth, '/wrong-purpose', 'MDEyMzQ1Njc=', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
     }
 
     async testLegacyRequestSignatureCompatibility() {
@@ -145,17 +151,6 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         )
         expect(legacyCode).toBeDefined()
         expect(legacyCode.length > 0).toBe(true)
-    }
-
-    async testAuthenticationPurpose() {
-        const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
-
-        await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
-            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))
-            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => await this.sdk.offlineAuthenticationCode(persistAuth, '/wrong-purpose', 'MDEyMzQ1Njc=', '{}'))
-            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
     }
 
     async testWrongPassword() {
