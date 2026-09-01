@@ -308,7 +308,6 @@ class PowerAuthJsModule(
             try {
                 val authentication = constructAuthentication(
                     authMap,
-                    true,
                     sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
                 )
                 auth = authentication
@@ -1199,16 +1198,21 @@ class PowerAuthJsModule(
     /**
      * Helper function converts input readable map to PowerAuthAuthentication object.
      * @param map Map with authentication data.
-     * @param forPersist Set true if authentication is required for activation persist.
      * @param authenticateOnBiometricKeySetup Set true to require authentication during biometric key setup.
      * @return [PowerAuthAuthentication] instance.
      */
     @Throws(WrapperException::class)
     private fun constructAuthentication(
         map: ReadableMap,
-        forPersist: Boolean,
         authenticateOnBiometricKeySetup: Boolean = true
     ): PowerAuthAuthentication {
+        if (!map.hasKey("isPersist")) {
+            throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "Missing isPersist in authentication object."
+            )
+        }
+        val forPersist = map.getBoolean("isPersist")
         val biometryKeyId: String? = map.getString("biometryKeyId")
         val biometryKey: SecureData?
         if (biometryKeyId != null) {
@@ -1319,7 +1323,7 @@ class PowerAuthJsModule(
         map: ReadableMap,
         block: (PowerAuthAuthentication) -> T
     ): T {
-        val authentication = constructAuthentication(map, false)
+        val authentication = constructAuthentication(map)
         return try {
             block(authentication)
         } finally {
