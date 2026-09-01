@@ -17,7 +17,7 @@
 import { expect } from "mobile-testbed";
 import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
 export class PowerAuth_ActivationTests extends TestWithActivation {
 
@@ -34,6 +34,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
 
     async createActivationTest(useSignature: boolean) {
         const sdk = this.helper.sdk
+        const persistence = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
+        const invalidPersistence = PowerAuthAuthentication.persistWithPassword(this.credentials.invalidPassword)
         expect(sdk).toBeDefined()
 
         expect(await sdk.canStartActivation()).toBe(true)
@@ -44,7 +46,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.getExternalPendingOperation()).toBeUndefined()
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
-        await expect(async () => await sdk.persistActivation(this.credentials!.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
+        await expect(async () => await sdk.persistActivation(invalidPersistence)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         // [ 1 ] Prepare activation on the server
         const detail = await this.helper.createActivation()
@@ -81,7 +83,9 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(activationId).toBe(activationDetail.registrationId)
 
         // [ 3 ] Now persist activation locally
-        await sdk.persistActivation(this.credentials.knowledge)
+        await expect(async () => await sdk.persistActivation(this.credentials.knowledge))
+            .toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await sdk.persistActivation(persistence)
 
         activationId = await sdk.getActivationIdentifier()
         activationFingerprint = await sdk.getActivationFingerprint()
@@ -121,7 +125,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasValidActivation()).toBe(true)
 
         await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
-        await expect(async () => await sdk.persistActivation(this.credentials.invalidKnowledge)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
+        await expect(async () => await sdk.persistActivation(invalidPersistence)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         expect(await sdk.canStartActivation()).toBe(false)
         expect(await sdk.hasPendingActivation()).toBe(false)
