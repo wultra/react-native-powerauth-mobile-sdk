@@ -148,18 +148,6 @@ static NSDictionary * PAJSBiometricConfigurationToDictionary(PowerAuthBiometricC
     };
 }
 
-static NSDictionary * PAJSKeychainConfigurationToDictionary(PowerAuthKeychainConfiguration * configuration)
-{
-    NSMutableDictionary * result = [[NSMutableDictionary alloc] init];
-    if (configuration.keychainAttribute_AccessGroup) {
-        result[@"accessGroupName"] = configuration.keychainAttribute_AccessGroup;
-    }
-    if (configuration.keychainAttribute_UserDefaultsSuiteName) {
-        result[@"userDefaultsSuiteName"] = configuration.keychainAttribute_UserDefaultsSuiteName;
-    }
-    return result;
-}
-
 static NSDictionary * PAJSSharingConfigurationToDictionary(PowerAuthSharingConfiguration * configuration)
 {
     NSMutableDictionary * result = [@{
@@ -277,7 +265,7 @@ PAJS_METHOD_START(getKeychainConfiguration,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
-    resolve(PAJSKeychainConfigurationToDictionary(powerAuth.keychainConfiguration));
+    resolve(nil);
     PA_BLOCK_END
 }
 PAJS_METHOD_END
