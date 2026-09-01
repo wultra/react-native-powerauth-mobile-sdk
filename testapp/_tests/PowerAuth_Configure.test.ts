@@ -15,10 +15,12 @@
 //
 
 import { Platform } from "react-native"
-import { PowerAuth, PowerAuthActivation, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthDebug, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthKeychainProtection, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
-import { IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
+import { AppConfig, IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
+
+const normalizeEndpointUrl = (url: string) => url.replace(/\/+$/, "")
 
 export class PowerAuth_ConfigureTests extends TestWithActivation {
 
@@ -68,8 +70,13 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(await sdk2.clientConfiguration).toBeDefined()
         expect(await sdk1.biometryConfiguration).toBeDefined()
         expect(await sdk2.biometryConfiguration).toBeDefined()
-        expect(await sdk1.keychainConfiguration).toBeDefined()
-        expect(await sdk2.keychainConfiguration).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(await sdk1.keychainConfiguration).toBeDefined()
+            expect(await sdk2.keychainConfiguration).toBeDefined()
+        } else {
+            expect(await sdk1.keychainConfiguration).toBeUndefined()
+            expect(await sdk2.keychainConfiguration).toBeUndefined()
+        }
         expect(await sdk1.sharingConfiguration).toBeUndefined()
         expect(await sdk2.sharingConfiguration).toBeUndefined()
 
@@ -84,8 +91,13 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(await pa2.clientConfiguration).toBeDefined()
         expect(await pa1.biometryConfiguration).toBeDefined()
         expect(await pa2.biometryConfiguration).toBeDefined()
-        expect(await pa1.keychainConfiguration).toBeDefined()
-        expect(await pa2.keychainConfiguration).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(await pa1.keychainConfiguration).toBeDefined()
+            expect(await pa2.keychainConfiguration).toBeDefined()
+        } else {
+            expect(await pa1.keychainConfiguration).toBeUndefined()
+            expect(await pa2.keychainConfiguration).toBeUndefined()
+        }
         expect(await pa1.sharingConfiguration).toBeUndefined()
         expect(await pa2.sharingConfiguration).toBeUndefined()
     }
@@ -125,8 +137,13 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(config2).toBeDefined()
         expect(clientConfig1).toBeDefined()
         expect(clientConfig2).toBeDefined()
-        expect(keychainConfig1).toBeDefined()
-        expect(keychainConfig2).toBeDefined()
+        if (Platform.OS === 'android') {
+            expect(keychainConfig1).toBeDefined()
+            expect(keychainConfig2).toBeDefined()
+        } else {
+            expect(keychainConfig1).toBeUndefined()
+            expect(keychainConfig2).toBeUndefined()
+        }
         expect(biometryConfig1).toBeDefined()
         expect(biometryConfig2).toBeDefined()
         expect(sharingConfig1).toBeUndefined()
@@ -173,6 +190,31 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(sharingConfiguration?.sharedMemoryIdentifier).toBe("tst1")
     }
 
+    async iosTestDeprecatedKeychainConfiguration() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const configuration = await sdk.configuration
+        const keychainConfiguration = new PowerAuthKeychainConfiguration()
+        keychainConfiguration.accessGroupName = "fake.accessGroup"
+        keychainConfiguration.userDefaultsSuiteName = "com.wultra.test.powerauth"
+
+        expect(await sdk.isConfigured()).toBe(true)
+        expect(await sdk.keychainConfiguration).toBeUndefined()
+        await sdk.deconfigure()
+        await PowerAuth.cleanupInstanceData(
+            sdk.instanceId,
+            configuration,
+            keychainConfiguration
+        )
+        await sdk.configure(
+            configuration,
+            undefined,
+            undefined,
+            keychainConfiguration
+        )
+        expect(await sdk.isConfigured()).toBe(true)
+    }
+
     async testConfigurationAlgorithms() {
         const helper = await this.getHelper1()
         const sdk = helper.sdk
@@ -209,17 +251,124 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await sdk.deconfigure()
 
         const clientConfiguration = new PowerAuthClientConfiguration()
-        clientConfiguration.connectionTimeout = 12
-        clientConfiguration.readTimeout = 14
+        clientConfiguration.connectionTimeout = 12.5
+        clientConfiguration.readTimeout = 14.25
+        clientConfiguration.enableUnsecureTraffic = true
         clientConfiguration.customHttpHeaders = [{ name: "X-Test", value: "secret" }]
         clientConfiguration.basicHttpAuthentication = { username: "user", password: "secret" }
         await sdk.configure(configuration, clientConfiguration)
 
         const effective = await sdk.clientConfiguration
-        expect(effective.connectionTimeout).toBe(12)
-        expect(effective.readTimeout).toBe(Platform.OS === 'ios' ? 12 : 14)
+        expect(effective.connectionTimeout).toBe(12.5)
+        expect(effective.readTimeout).toBe(Platform.OS === 'ios' ? 12.5 : 14.25)
+        expect(effective.enableUnsecureTraffic).toBe(true)
         expect(effective.customHttpHeaders).toBeUndefined()
         expect(effective.basicHttpAuthentication).toBeUndefined()
+    }
+
+    async testInvalidConfigurationValues() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const configuration = await sdk.configuration
+        await sdk.deconfigure()
+
+        await expect(async () => await sdk.configure(new PowerAuthConfiguration(
+            configuration.configuration,
+            configuration.baseEndpointUrl,
+            configuration.algorithm,
+            3
+        ))).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+
+        await expect(async () => await sdk.configure({
+            configuration: configuration.configuration,
+            baseEndpointUrl: configuration.baseEndpointUrl,
+            algorithm: "invalid" as PowerAuthAlgorithm
+        })).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+    }
+
+    async testFullConfiguration() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+
+        expect(await sdk.isConfigured()).toBe(true)
+
+        const configuration = await sdk.configuration
+        const applicationDetail = await helper.getApplicationDetail()
+        expect(normalizeEndpointUrl(configuration.baseEndpointUrl)).toBe(normalizeEndpointUrl(AppConfig.enrollmentUrl))
+        expect(configuration.configuration).toBe(applicationDetail.mobileSdkConfig)
+        expect(configuration.offlineAuthenticationCodeComponentLength).toBe(6)
+        expect(configuration.algorithm).toBe(await sdk.currentAlgorithm)
+
+        const clientConfiguration = await sdk.clientConfiguration
+        expect(clientConfiguration.connectionTimeout).toBe(12)
+        expect(clientConfiguration.readTimeout).toBe(Platform.OS === 'android' ? 34 : 12)
+        expect(clientConfiguration.enableUnsecureTraffic).toBe(true)
+
+        const biometryConfiguration = await sdk.biometryConfiguration
+        expect(biometryConfiguration.invalidateBiometricFactorAfterChange).toBe(false)
+        expect(biometryConfiguration.fallbackToDevicePasscode).toBe(Platform.OS === 'ios')
+        expect(biometryConfiguration.confirmBiometricAuthentication).toBe(Platform.OS === 'android')
+        expect(biometryConfiguration.authenticateOnBiometricKeySetup).toBe(Platform.OS === 'ios')
+        expect(biometryConfiguration.fallbackToSharedBiometryKey).toBe(Platform.OS === 'ios')
+        expect(biometryConfiguration.useLegacySymmetricKey).toBe(Platform.OS === 'android')
+
+        const keychainConfiguration = await sdk.keychainConfiguration
+        if (Platform.OS === 'android') {
+            expect(keychainConfiguration).toBeDefined()
+            expect(keychainConfiguration?.minimalRequiredKeychainProtection).toBe(PowerAuthKeychainProtection.SOFTWARE)
+        } else {
+            expect(keychainConfiguration).toBeUndefined()
+        }
+
+        const sharingConfiguration = await sdk.sharingConfiguration
+        if (Platform.OS === 'ios') {
+            expect(sharingConfiguration?.appGroup).toBe("group.com.wultra.testGroup")
+            expect(sharingConfiguration?.appIdentifier).toBe("SharedInstanceTests")
+            expect(sharingConfiguration?.keychainAccessGroup).toBe("fake.accessGroup")
+            expect(sharingConfiguration?.sharedMemoryIdentifier).toBe("test")
+        } else {
+            expect(sharingConfiguration).toBeUndefined()
+        }
+    }
+
+    async testDebugTracingRedactsClientSecrets() {
+        const helper = await this.getHelper1()
+        const sdk = helper.sdk
+        const configuration = await sdk.configuration
+        await sdk.deconfigure()
+
+        const headerSecret = "sensitive-header-value"
+        const usernameSecret = "sensitive-basic-username"
+        const passwordSecret = "sensitive-basic-password"
+        const clientConfiguration = new PowerAuthClientConfiguration()
+        clientConfiguration.customHttpHeaders = [{ name: "X-Sensitive", value: headerSecret }]
+        clientConfiguration.basicHttpAuthentication = {
+            username: usernameSecret,
+            password: passwordSecret
+        }
+
+        const originalLog = console.log
+        const debugWasEnabled = PowerAuthDebug.isEnabled
+        const messages: string[] = []
+        try {
+            PowerAuthDebug.isEnabled = true
+            console.log = (...args: any[]) => messages.push(args.join(" "))
+            PowerAuthDebug.traceNativeCodeCalls(false, true)
+            await sdk.configure(configuration, clientConfiguration)
+        } finally {
+            PowerAuthDebug.traceNativeCodeCalls(false, false)
+            PowerAuthDebug.isEnabled = debugWasEnabled
+            console.log = originalLog
+        }
+
+        const trace = messages.join("\n")
+        expect(trace.includes(headerSecret)).toBe(false)
+        expect(trace.includes(usernameSecret)).toBe(false)
+        expect(trace.includes(passwordSecret)).toBe(false)
+        expect(trace.includes("***")).toBe(true)
+        expect(clientConfiguration.customHttpHeaders?.[0].value).toBe(headerSecret)
+        expect(clientConfiguration.basicHttpAuthentication?.username).toBe(usernameSecret)
+        expect(clientConfiguration.basicHttpAuthentication?.password).toBe(passwordSecret)
     }
 
     async testCleanupInstanceData() {
@@ -390,7 +539,45 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
                 "tst1"
             )
         }
+        if (this.currentTestName === 'iosTestDeprecatedKeychainConfiguration') {
+            keychainConfig = new PowerAuthKeychainConfiguration()
+            keychainConfig.accessGroupName = "fake.accessGroup"
+            keychainConfig.userDefaultsSuiteName = "com.wultra.test.powerauth"
+        }
+        let configuration: PowerAuthConfiguration | undefined
+        if (this.currentTestName === 'testFullConfiguration') {
+            const applicationDetail = await helper.getApplicationDetail()
+            configuration = new PowerAuthConfiguration(
+                applicationDetail.mobileSdkConfig,
+                AppConfig.enrollmentUrl,
+                undefined,
+                6
+            )
+            clientConfig = new PowerAuthClientConfiguration()
+            clientConfig.enableUnsecureTraffic = true
+            clientConfig.connectionTimeout = 12
+            clientConfig.readTimeout = 34
+            biometryConfig = new PowerAuthBiometryConfiguration()
+            biometryConfig.invalidateBiometricFactorAfterChange = false
+            biometryConfig.fallbackToDevicePasscode = true
+            biometryConfig.confirmBiometricAuthentication = true
+            biometryConfig.authenticateOnBiometricKeySetup = false
+            biometryConfig.fallbackToSharedBiometryKey = false
+            biometryConfig.useLegacySymmetricKey = true
+            if (Platform.OS === 'android') {
+                keychainConfig = new PowerAuthKeychainConfiguration()
+                keychainConfig.minimalRequiredKeychainProtection = PowerAuthKeychainProtection.SOFTWARE
+            } else {
+                sharingConfig = new PowerAuthSharingConfiguration(
+                    "group.com.wultra.testGroup",
+                    "SharedInstanceTests",
+                    "fake.accessGroup",
+                    "test"
+                )
+            }
+        }
         await helper.configure({
+            configuration,
             clientConfiguration: clientConfig,
             biometryConfiguration: biometryConfig,
             keychainConfiguration: keychainConfig,
