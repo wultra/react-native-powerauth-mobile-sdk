@@ -81,6 +81,10 @@ In case that you need an advanced configuration, then you can import and use the
 
 > Note 3: If you enforce the protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target at least Android 6.0. Your application should also properly handle `"INSUFFICIENT_KEYCHAIN_PROTECTION"` error code reported when the device has insufficient capabilities to run your application. You should properly inform user about this situation.
 
+<!-- begin box warning -->
+Do not enable `fallbackToDevicePasscode` when your application must distinguish biometric authentication from knowledge-factor authentication, including applications subject to regulations that require a biometric factor. If the key is unlocked with the device passcode, the resulting authentication is no longer proof that the user authenticated with biometry.
+<!-- end -->
+
 The following code snipped shows usage of the advanced configuration:
 
 ```javascript

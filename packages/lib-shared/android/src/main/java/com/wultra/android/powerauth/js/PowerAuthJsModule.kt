@@ -570,21 +570,17 @@ class PowerAuthJsModule(
     ) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            if (!sdk.hasValidActivation()) {
-                Errors.rejectPromise(promise, PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION))
-                return@powerAuthBlock
-            }
-            val corePassword: Password = passwordModule.usePasswordCopy(password)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val fragmentActivity = getCurrentActivity() as FragmentActivity?
+                    ?: throw IllegalStateException("Current fragment activity is not available")
+                val biometricPrompt = buildBiometricPrompt(
+                    fragmentActivity,
+                    prompt,
+                    allowNoPrompt = true,
+                    authenticateOnBiometricKeySetup = sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
+                )
+                val corePassword = passwordModule.usePasswordCopy(password)
                 try {
-                    val fragmentActivity = getCurrentActivity() as FragmentActivity?
-                        ?: throw IllegalStateException("Current fragment activity is not available")
-                    val biometricPrompt = buildBiometricPrompt(
-                        fragmentActivity,
-                        prompt,
-                        allowNoPrompt = true,
-                        authenticateOnBiometricKeySetup = sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
-                    )
                     sdk.addBiometryFactor(
                         context,
                         corePassword,
@@ -602,14 +598,10 @@ class PowerAuthJsModule(
                         })
                 } catch (t: Throwable) {
                     corePassword.destroy()
-                    Errors.rejectPromise(promise, t)
+                    throw t
                 }
-            } else {
-                corePassword.destroy()
-                promise.reject(
-                    Errors.EC_BIOMETRY_NOT_SUPPORTED,
-                    "Biometry not supported on this android version."
-                )
+            } catch (t: Throwable) {
+                Errors.rejectPromise(promise, t)
             }
         })
     }
@@ -1180,26 +1172,17 @@ class PowerAuthJsModule(
             )
         }
         val forPersist = map.getBoolean("isPersist")
+        val useBiometry = map.getBoolean("isBiometry")
         val biometryKeyId: String? = map.getString("biometryKeyId")
-        val biometryKey = if (biometryKeyId != null) {
-            val keyCopy = objectRegister.useObjectAndTransform(
-                biometryKeyId,
-                SecureData::class.java
-            ) { it.copy() }
-            if (keyCopy == null) {
-                throw WrapperException(
-                    Errors.EC_INVALID_NATIVE_OBJECT,
-                    "Biometric key in PowerAuthAuthentication object is no longer valid."
-                )
-            }
-            keyCopy
-        } else {
-            null
+        if (!forPersist && useBiometry && biometryKeyId.isNullOrEmpty()) {
+            throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "biometryKeyId is required for biometric authentication."
+            )
         }
         val biometricPrompt = if (
             forPersist &&
-            map.getBoolean("isBiometry") &&
-            biometryKeyId == null
+            useBiometry
         ) {
             val fragmentActivity = getCurrentActivity() as FragmentActivity?
                 ?: throw WrapperException(
@@ -1217,48 +1200,47 @@ class PowerAuthJsModule(
         } else {
             null
         }
-        var password: Password? = if (map.hasKey("password")) {
-            passwordModule.usePassword(map.getDynamic("password")).copyToImmutable()
-        } else {
-            null
-        }
-        var ownedBiometryKey: SecureData? = null
-
+        var password: Password? = null
+        var biometryKey: SecureData? = null
         try {
+            password = if (map.hasKey("password")) {
+                passwordModule.usePasswordCopy(map.getDynamic("password"))
+            } else {
+                null
+            }
             val authentication = if (forPersist) {
                 // Authentication for activation persist
                 val ownedPassword = password
                     ?: throw WrapperException(
                         Errors.EC_WRONG_PARAMETER,
-                        "PowerAuthPassword or string is required"
+                        "Password is required for persisting activation."
                     )
-                if (biometricPrompt != null) {
+                if (useBiometry) {
                     PowerAuthAuthentication.persistWithPasswordAndBiometry(
                         ownedPassword,
-                        biometricPrompt
+                        checkNotNull(biometricPrompt)
                     )
-                } else if (biometryKey == null) {
-                    PowerAuthAuthentication.persistWithPassword(ownedPassword)
                 } else {
-                    // This is currently not supported in RN wrapper. Application has no way to create
-                    // persist authentication object prepared with valid biometry key. This is supported
-                    // in native SDK, but application has to create its own biometry-supporting infrastructure.
-                    //
-                    // We can still use this option in tests, to simulate biometry-related operations
-                    // with no user's interaction.
-                    ownedBiometryKey = biometryKey.copy()
-                    PowerAuthAuthentication.persistWithPasswordAndBiometry(
-                        ownedPassword,
-                        ownedBiometryKey
-                    )
+                    PowerAuthAuthentication.persistWithPassword(ownedPassword)
                 }
             } else {
                 // Authentication for data signing
+                biometryKey = if (biometryKeyId != null) {
+                    objectRegister.useObjectAndTransform(
+                        biometryKeyId,
+                        SecureData::class.java
+                    ) { it.copy() }
+                        ?: throw WrapperException(
+                            Errors.EC_INVALID_NATIVE_OBJECT,
+                            "Biometric key for ID '$biometryKeyId' (from biometryKeyId) not found or expired for signing."
+                        )
+                } else {
+                    null
+                }
                 if (biometryKey != null) {
-                    ownedBiometryKey = biometryKey.copy()
                     password?.destroy()
                     password = null
-                    PowerAuthAuthentication.possessionWithBiometry(ownedBiometryKey)
+                    PowerAuthAuthentication.possessionWithBiometry(biometryKey)
                 } else if (password != null) {
                     PowerAuthAuthentication.possessionWithPassword(password)
                 } else {
@@ -1267,11 +1249,11 @@ class PowerAuthJsModule(
             }
 
             password = null
-            ownedBiometryKey = null
+            biometryKey = null
             return authentication
         } catch (t: Throwable) {
             password?.destroy()
-            ownedBiometryKey?.destroy()
+            biometryKey?.destroy()
             throw t
         }
     }

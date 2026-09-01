@@ -38,6 +38,10 @@ export interface PowerAuthBiometryConfigurationType {
      * If set to `true`, then the key protected with the biometry can be accessed also with a device passcode.
      * If set, then `invalidateBiometricFactorAfterChange` has no effect. The default is `false`,
      * so fallback to device's passcode is not enabled.
+     *
+     * Do not enable this option when the application must distinguish biometric authentication
+     * from knowledge-factor authentication. A device-passcode fallback is not proof that the user
+     * authenticated with biometry.
      */
     readonly fallbackToDevicePasscode?: boolean
     /**
@@ -88,6 +92,9 @@ export interface PowerAuthBiometryConfigurationType {
  */
 export class PowerAuthBiometryConfiguration implements PowerAuthBiometryConfigurationType {
     invalidateBiometricFactorAfterChange: boolean
+    /**
+     * @deprecated Use `invalidateBiometricFactorAfterChange`.
+     */
     linkItemsToCurrentSet!: boolean
     fallbackToDevicePasscode: boolean
     confirmBiometricAuthentication: boolean

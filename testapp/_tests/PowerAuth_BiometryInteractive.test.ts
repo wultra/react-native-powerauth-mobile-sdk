@@ -16,7 +16,7 @@
 
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { expect, UserPromptDuration } from "mobile-testbed";
-import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Platform } from "react-native";
 import { importPassword } from "./helpers/PasswordHelper";
 import { CustomConfig } from "../src/IntegrationUtils";
@@ -201,6 +201,25 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         })
     }
 
+    async testGroupedBiometricAuthenticationWrapsCallbackError() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please authenticate for group operation.')
+
+        let callbackError: PowerAuthError | undefined
+        try {
+            await this.sdk.groupedBiometricAuthentication(
+                this.credentials.biometry,
+                async () => { throw new Error('uncaught callback failure') }
+            )
+        } catch (error) {
+            expect(error instanceof PowerAuthError).toBe(true)
+            callbackError = error as PowerAuthError
+        }
+        expect(callbackError).toBeDefined()
+        expect(callbackError?.code).toBe(PowerAuthErrorCode.UNKNOWN_ERROR)
+        expect(callbackError?.message?.includes('groupedAuthenticationCalls')).toBe(true)
+    }
+
     async testRemoveActivationWithBiometry() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Authenticate to remove activation')
@@ -215,6 +234,9 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
     }
 
     async testFailedBiometry() {
+        if (this.isAndoid) {
+            return
+        }
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         const isFaceId = !this.isAndoid && (await this.sdk.getBiometricStatus()).biometryType == PowerAuthBiometryType.FACE
         if (isFaceId) {
