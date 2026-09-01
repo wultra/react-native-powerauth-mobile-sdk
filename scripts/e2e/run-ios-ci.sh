@@ -255,7 +255,6 @@ install_and_launch_rn_app() {
     if [ "${attempt}" -lt "${RN_LAUNCH_ATTEMPTS}" ]; then
       echo "[e2e] WARNING: RN iOS launch failed; rebooting simulator before retry."
       run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
-      open -a Simulator --args -CurrentDeviceUDID "${SIM_ID}" || true
       if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
         echo "[e2e] ERROR: Failed to start simulator ${SIM_ID} during launch retry."
         return 1
@@ -340,7 +339,6 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     fi
     if pick_simulator_from_list "${available_list}"; then
       echo "[e2e] Booting iOS simulator asynchronously: ${SIM_LINE}"
-      open -a Simulator || true
       SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
       if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
         echo "[e2e] ERROR: Failed to start simulator ${SIM_ID}."
@@ -356,11 +354,8 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     exit 1
   fi
 else
-  echo "[e2e] Skipping simulator boot for Cordova"
-  if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown booted; then
-    echo "[e2e] ERROR: Failed to shut down the booted iOS simulator."
-    exit 1
-  fi
+  # ios-sim owns the target lifecycle; a global shutdown can hang on hosted runners.
+  echo "[e2e] Cordova will manage simulator startup."
 fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
@@ -383,12 +378,12 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   RN_DERIVED_DATA_PATH="${E2E_RN_DERIVED_DATA_PATH:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios}"
   RN_BUILD_SETTINGS=("ARCHS=$(uname -m)")
   configure_rn_compiler_cache
-  echo "[e2e] Building RN iOS app for simulator ${SIM_ID}..."
+  echo "[e2e] Building RN iOS app for a generic $(uname -m) simulator destination..."
   if ! xcodebuild \
     -workspace testapp/ios/testapp.xcworkspace \
     -scheme testapp \
     -configuration Debug \
-    -destination "id=${SIM_ID}" \
+    -destination "generic/platform=iOS Simulator" \
     -derivedDataPath "${RN_DERIVED_DATA_PATH}" \
     -showBuildTimingSummary \
     "${RN_BUILD_SETTINGS[@]}" \
@@ -408,7 +403,6 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     abort_with_logs
   fi
 
-  open -a Simulator --args -CurrentDeviceUDID "${SIM_ID}" || true
   echo "[e2e] Waiting for iOS simulator ${SIM_ID} to finish booting..."
   if ! wait_for_simulator_ready "${SIMULATOR_BOOT_DEADLINE}"; then
     echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting."
