@@ -1683,9 +1683,9 @@ class PowerAuthJsModule(
             val enableUnsecureTraffic: Boolean =
                 if (map.hasKey("enableUnsecureTraffic")) map.getBoolean("enableUnsecureTraffic") else PowerAuthClientConfiguration.DEFAULT_ALLOW_UNSECURED_CONNECTION
             val connectionTimeout: Int =
-                if (map.hasKey("connectionTimeout")) map.getInt("connectionTimeout") * 1000 else PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT
+                if (map.hasKey("connectionTimeout")) (map.getDouble("connectionTimeout") * 1000).toInt() else PowerAuthClientConfiguration.DEFAULT_CONNECTION_TIMEOUT
             val readTimeout: Int =
-                if (map.hasKey("readTimeout")) map.getInt("readTimeout") * 1000 else PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT
+                if (map.hasKey("readTimeout")) (map.getDouble("readTimeout") * 1000).toInt() else PowerAuthClientConfiguration.DEFAULT_READ_TIMEOUT
             val customHeaders: ReadableArray? = map.getArray("customHttpHeaders")
             val basicAuth: ReadableMap? = map.getMap("basicHttpAuthentication")
 

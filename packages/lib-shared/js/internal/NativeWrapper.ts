@@ -291,27 +291,49 @@ export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T
  * @returns Pretty string created from arguments array.
  */
 function prettyArgs(fname: string, args: any[]): string {
+    const sanitizedArgs = [...args]
     switch (fname) {
         case 'changePassword':
         case 'unsafeChangePassword': 
-            args[1] = args[2] = '***' 
+            sanitizedArgs[1] = sanitizedArgs[2] = '***'
             break
         case 'validatePassword':
         case 'addBiometryFactor':
-            args[1] = '***'
+            sanitizedArgs[1] = '***'
             break
+        case 'configure': {
+            const clientConfiguration = sanitizedArgs[2]
+            if (clientConfiguration) {
+                sanitizedArgs[2] = {
+                    ...clientConfiguration,
+                    customHttpHeaders: Array.isArray(clientConfiguration.customHttpHeaders)
+                        ? clientConfiguration.customHttpHeaders.map((header: any) => ({
+                            ...header,
+                            value: '***'
+                        }))
+                        : clientConfiguration.customHttpHeaders,
+                    basicHttpAuthentication: clientConfiguration.basicHttpAuthentication
+                        ? {
+                            username: '***',
+                            password: '***'
+                        }
+                        : clientConfiguration.basicHttpAuthentication
+                }
+            }
+            break
+        }
         default:
             break
     }
     let authIndex = 0
-    if (args[1] instanceof PowerAuthAuthentication) {
+    if (sanitizedArgs[1] instanceof PowerAuthAuthentication) {
         authIndex = 1
-    } else if (args[2] instanceof PowerAuthAuthentication) {
+    } else if (sanitizedArgs[2] instanceof PowerAuthAuthentication) {
         authIndex = 2
     }
     if (authIndex > 0) {
-        const auth = args[authIndex]
-        args[authIndex] = {
+        const auth = sanitizedArgs[authIndex]
+        sanitizedArgs[authIndex] = {
             password: auth.password ? '***' : undefined,
             biometricPrompt: auth.biometricPrompt,
             isPersist: auth.isPersist,
@@ -326,6 +348,6 @@ function prettyArgs(fname: string, args: any[]): string {
         }
     }
 
-    const v = JSON.stringify(args)
+    const v = JSON.stringify(sanitizedArgs)
     return v.slice(1, v.length - 1)
 }

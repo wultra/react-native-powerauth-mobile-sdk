@@ -20,12 +20,14 @@ import {
     buildClientConfiguration,
     buildConfiguration,
     buildKeychainConfiguration,
+    buildSharingConfiguration,
     PowerAuthAlgorithm,
     PowerAuthBiometryConfiguration,
     PowerAuthClientConfiguration,
     PowerAuthConfiguration, 
     PowerAuthKeychainConfiguration,
-    PowerAuthKeychainProtection} from "react-native-powerauth-mobile-sdk";
+    PowerAuthKeychainProtection,
+    PowerAuthSharingConfiguration} from "react-native-powerauth-mobile-sdk";
 import { TestSuite, expect } from "mobile-testbed";
 
 const SDK_CONFIG = 'ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ=='
@@ -60,12 +62,18 @@ export class ConfigurationObjectsTests extends TestSuite {
             algorithm: PowerAuthAlgorithm.P384_L5,
             offlineAuthenticationCodeComponentLength: 6
         })
+        expect(PowerAuthAlgorithm.LEGACY).toBe("legacy")
+        expect(PowerAuthAlgorithm.P384).toBe("p384")
+        expect(PowerAuthAlgorithm.P384_L3).toBe("p384l3")
+        expect(PowerAuthAlgorithm.P384_L5).toBe("p384l5")
     }
     
     testClientConfiguration() {
         // Default config
         const defaultConfig = PowerAuthClientConfiguration.default()
         expect(defaultConfig).toEqual({ connectionTimeout: 20, readTimeout: 20, enableUnsecureTraffic: false })
+        expect(defaultConfig.customHttpHeaders).toBeNull()
+        expect(defaultConfig.basicHttpAuthentication).toBeNull()
         expect(Object.isFrozen(defaultConfig)).toBe(true)
 
         // Config class
@@ -217,5 +225,38 @@ export class ConfigurationObjectsTests extends TestSuite {
         config = buildKeychainConfiguration({userDefaultsSuiteName: "SuperDefaults"})
         expect(config).toEqual({userDefaultsSuiteName: "SuperDefaults", minimalRequiredKeychainProtection: PowerAuthKeychainProtection.NONE})
         expect(Object.isFrozen(config)).toBe(true)
+    }
+
+    testSharingConfiguration() {
+        const config = new PowerAuthSharingConfiguration(
+            "group.com.wultra.test",
+            "com.wultra.test",
+            "com.wultra.test.keychain",
+            "test"
+        )
+        expect(config).toEqual({
+            appGroup: "group.com.wultra.test",
+            appIdentifier: "com.wultra.test",
+            keychainAccessGroup: "com.wultra.test.keychain",
+            sharedMemoryIdentifier: "test"
+        })
+        expect(Object.isFrozen(config)).toBe(false)
+
+        const frozen = buildSharingConfiguration(config)
+        expect(frozen).toEqual({
+            appGroup: config.appGroup,
+            appIdentifier: config.appIdentifier,
+            keychainAccessGroup: config.keychainAccessGroup,
+            sharedMemoryIdentifier: config.sharedMemoryIdentifier,
+            isProvided: true
+        })
+        expect(Object.isFrozen(frozen)).toBe(true)
+
+        const withoutSharedMemory = new PowerAuthSharingConfiguration(
+            config.appGroup,
+            config.appIdentifier,
+            config.keychainAccessGroup
+        )
+        expect(withoutSharedMemory.sharedMemoryIdentifier).toBeUndefined()
     }
 }

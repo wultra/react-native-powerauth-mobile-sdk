@@ -145,7 +145,7 @@ const sharingConfiguration = await powerAuth.sharingConfiguration;   // iOS only
 
 The effective client configuration does not contain `customHttpHeaders` or `basicHttpAuthentication`. Native SDKs store those input-only values as request interceptors and cannot safely reconstruct them. Keep the original values if you need to configure another instance.
 
-On iOS, the effective keychain configuration contains only the deprecated `accessGroupName` and `userDefaultsSuiteName` values. Android-specific keychain protection is returned only on Android.
+The effective keychain configuration is returned only on Android. It is `undefined` on Apple platforms. The deprecated Apple `accessGroupName` and `userDefaultsSuiteName` properties are input-only, so applications that still use them must retain their original values for reconfiguration or cleanup.
 
 If configuration fails because stored instance data has an incompatible format, remove that data with the same configuration values before retrying:
 
