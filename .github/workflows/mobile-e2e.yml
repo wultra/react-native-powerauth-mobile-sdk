@@ -235,7 +235,7 @@ jobs:
 
       - name: Detect Xcode version
         run: |
-          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+          xcodebuild -version | awk 'NR == 1 { print "XCODE_VERSION=" $2 }' >> "$GITHUB_ENV"
 
       - name: Cache CocoaPods downloads (RN)
         uses: actions/cache@v4
@@ -314,7 +314,7 @@ jobs:
 
       - name: Detect Xcode version
         run: |
-          echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
+          xcodebuild -version | awk 'NR == 1 { print "XCODE_VERSION=" $2 }' >> "$GITHUB_ENV"
 
       - name: Build test infra packages
         run: |
