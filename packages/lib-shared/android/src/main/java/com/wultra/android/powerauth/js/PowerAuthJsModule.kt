@@ -456,7 +456,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth = constructAuthentication(authMap, false, true)
+                val auth = constructAuthentication(authMap)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 try {
                     sdk.offlineAuthenticationCode(
