@@ -280,7 +280,7 @@ export class PowerAuth {
      * @returns HTTP header with a PowerAuth authentication code.
      */
     async authenticationHeaderForRequestWithParams(authentication: PowerAuthAuthentication, method: string, uriId: string, params?: Record<string, string>): Promise<PowerAuthHttpHeader> {
-        return NativeWrapper.thisCall("authenticationHeaderForRequestWithParams", this.instanceId, await this.authenticateForRequest(authentication), method, uriId, params ?? undefined);
+        return NativeWrapper.thisCall("authenticationHeaderForRequestWithParams", this.instanceId, await this.authenticate(authentication), method, uriId, params ?? undefined);
     }
 
     /**
@@ -295,7 +295,7 @@ export class PowerAuth {
      * @returns HTTP header with a PowerAuth authentication code.
      */
     async authenticationHeaderForRequestWithBody(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthHttpHeader> {
-        return NativeWrapper.thisCall("authenticationHeaderForRequestWithBody", this.instanceId, await this.authenticateForRequest(authentication), method, uriId, body);
+        return NativeWrapper.thisCall("authenticationHeaderForRequestWithBody", this.instanceId, await this.authenticate(authentication), method, uriId, body);
     }
 
     /**
@@ -328,7 +328,7 @@ export class PowerAuth {
      * @returns Offline authentication code calculated for all involved factors.
      */
     async offlineAuthenticationCode(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return NativeWrapper.thisCall("offlineAuthenticationCode", this.instanceId, await this.authenticateForRequest(authentication), uriId, body, nonce);
+        return NativeWrapper.thisCall("offlineAuthenticationCode", this.instanceId, await this.authenticate(authentication), uriId, body, nonce);
     }
 
     /**
@@ -578,13 +578,6 @@ export class PowerAuth {
      */
     private async authenticate(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
         return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
-    }
-
-    private async authenticateForRequest(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
-        if (authentication.isActivationPersist) {
-            throw new PowerAuthError(undefined, "Authentication object is configured for activation persistence", PowerAuthErrorCode.WRONG_PARAMETER)
-        }
-        return this.authenticate(authentication)
     }
 }
 
