@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import { PowerAuthHttpHeader } from './PowerAuthHttpHeader'
-
-export { PowerAuthHttpHeader } from './PowerAuthHttpHeader'
+import type { PowerAuthHttpHeader } from './PowerAuthHttpHeader'
 
 /**
  * Interface that contains configuration for RESTful API client used internally by SDK.
