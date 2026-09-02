@@ -14,8 +14,9 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthConfiguration, PowerAuthErrorCode, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthErrorCode, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
 import { TestSuite, expect } from "mobile-testbed";
+import { createE2ePowerAuthConfiguration } from "../src/IntegrationUtils";
 import { Register } from "./helpers/NativeObjectRegister";
 import { importPassword } from "./helpers/PasswordHelper";
 
@@ -308,7 +309,10 @@ export class PowerAuthPasswordTests extends TestSuite {
 
     async testGlobalRelease() {
         // Dummy values for PA configuration
-        const config = new PowerAuthConfiguration('ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==', 'http://localhost/wrong')
+        const config = createE2ePowerAuthConfiguration(
+            'ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==',
+            'http://localhost/wrong'
+        )
 
         // Owner object represents an instance of PowerAuth class that typically owns various object types
         const powerAuthInstanceId = this.getRandomId()
