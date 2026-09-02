@@ -120,10 +120,11 @@ PRs and pushes to `develop` or `release/*` run the four E2E checks independently
 
 When a new commit is pushed to a same-repository PR, GitHub creates a visible
 workflow run for the `pull_request: synchronize` event. Its first attempt is
-cancelled by the lightweight `CI run config` job before any emulator, simulator,
-or build job starts. This avoids consuming expensive runners for a commit that
-may immediately be superseded. The cancelled run remains available in the
-Actions and PR checks UI.
+cancelled by the first step of each E2E job before checkout, dependency
+installation, emulator, simulator, or build work starts. This avoids spending
+CI time on a commit that may immediately be superseded. The cancelled run
+remains available in the Actions and PR checks UI, and each E2E job can be
+rerun independently.
 
 To run the checks for that exact commit, open the cancelled workflow run and
 choose **Re-run all jobs**, or rerun an individual job. Reruns use the original

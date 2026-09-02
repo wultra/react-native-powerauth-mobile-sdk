@@ -36,10 +36,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
-  # A PR synchronize event often becomes stale as soon as another commit is pushed.
-  # Cancel its first attempt before allocating expensive emulator/simulator runners.
-  pr-update-gate:
-    name: CI run config
+  e2e-android-rn:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -47,7 +44,10 @@ jobs:
       actions: write
       contents: read
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the emulator or E2E tests.
       - name: Cancel first attempt for a PR update
         if: >-
           github.event_name == 'pull_request' &&
@@ -63,25 +63,13 @@ jobs:
             });
             await new Promise((resolve) => setTimeout(resolve, 30_000));
             core.setFailed('Cancellation was requested, but the workflow is still running.');
-      - name: Continue CI
-        if: >-
-          github.event_name != 'pull_request' ||
-          github.event.action != 'synchronize' ||
-          github.run_attempt > 1
-        run: echo "CI is enabled for this workflow attempt."
-
-  e2e-android-rn:
-    needs: pr-update-gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 
@@ -134,17 +122,39 @@ jobs:
           path: artifacts/e2e
 
   e2e-android-cordova:
-    needs: pr-update-gate
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the emulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 
@@ -197,7 +207,12 @@ jobs:
           path: artifacts/e2e
 
   e2e-ios-rn:
-    needs: pr-update-gate
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
@@ -205,13 +220,30 @@ jobs:
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the simulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 
@@ -265,7 +297,12 @@ jobs:
           path: artifacts/e2e
 
   e2e-ios-cordova:
-    needs: pr-update-gate
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
@@ -273,13 +310,30 @@ jobs:
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the simulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 
