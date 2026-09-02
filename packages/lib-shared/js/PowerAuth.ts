@@ -302,7 +302,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     async persistActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("persistActivation", this.instanceId, await this.authenticateForPersistence(authentication));
+        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
     }
 
     /** Activation identifier or undefined if object has no valid activation. */
@@ -323,7 +323,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
      */
     async removeActivationWithAuthentication(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("removeActivationWithAuthentication", this.instanceId, await this.authenticateForRequest(authentication));
+        return NativeWrapper.thisCall("removeActivationWithAuthentication", this.instanceId, await this.authenticate(authentication));
     }
 
     /**
@@ -581,7 +581,7 @@ export class PowerAuth {
      * @param index Index of the derived key using KDF.
      */
     async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
-        return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticateForRequest(authentication), index);
+        return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticate(authentication), index);
     }
 
     /**
@@ -595,7 +595,7 @@ export class PowerAuth {
      * @param dataFormat Data format of the input data.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string, dataFormat: PowerAuthDataFormat): Promise<string> {
-        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticateForRequest(authentication), data, dataFormat);
+        return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data, dataFormat);
     }
 
     /**
@@ -713,19 +713,5 @@ export class PowerAuth {
      */
     private async authenticate(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
         return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
-    }
-    private async authenticateForRequest(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
-        if (authentication.isActivationPersist) {
-            throw new PowerAuthError(undefined, "Authentication object is configured for activation persistence", PowerAuthErrorCode.WRONG_PARAMETER)
-        }
-        return this.authenticate(authentication)
-    }
-
-    private async authenticateForPersistence(authentication: PowerAuthAuthentication): Promise<PowerAuthRawAuthentication> {
-        const persistenceAuthentication = authentication.convertLegacyObject(true)
-        if (!persistenceAuthentication.isActivationPersist) {
-            throw new PowerAuthError(undefined, "Authentication object is not configured for activation persistence", PowerAuthErrorCode.WRONG_PARAMETER)
-        }
-        return persistenceAuthentication.toRawAuthentication()
     }
 }
