@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Mobile E2E (simulator/emulator)
+name: Tests
 run-name: ${{ github.workflow }} / ${{ github.event.action || github.event_name }}
 
 on:
@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
-  e2e-android-rn:
+  rn-android:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -111,7 +111,7 @@ jobs:
           name: mobile-e2e-artifacts-android-rn
           path: artifacts/e2e
 
-  e2e-android-cordova:
+  cordova-android:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -186,7 +186,7 @@ jobs:
           name: mobile-e2e-artifacts-android-cordova
           path: artifacts/e2e
 
-  e2e-ios-rn:
+  rn-ios:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -266,7 +266,7 @@ jobs:
           name: mobile-e2e-artifacts-ios-rn
           path: artifacts/e2e
 
-  e2e-ios-cordova:
+  cordova-ios:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
