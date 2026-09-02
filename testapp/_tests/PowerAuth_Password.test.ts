@@ -91,9 +91,10 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
 
     async testFailedFinishConsumesPasswordChangeData() {
         const changeData = await this.sdk.beginPasswordChange(this.credentials.validPassword)
+        // Fail while resolving the new password without relying on a server-side password policy.
         await expect(async () =>
-            await this.sdk.finishPasswordChange('12', changeData)
-        ).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+            await this.sdk.finishPasswordChange(undefined as unknown as string, changeData)
+        ).toThrow()
         await expect(async () =>
             await this.sdk.finishPasswordChange(this.credentials.invalidPassword, changeData)
         ).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
