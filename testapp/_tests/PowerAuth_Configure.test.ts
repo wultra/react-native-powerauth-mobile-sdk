@@ -18,7 +18,7 @@ import { Platform } from "react-native"
 import { PowerAuth, PowerAuthActivation, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration, PowerAuthDebug, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthKeychainProtection, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
-import { AppConfig, IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
+import { AppConfig, IntegrationHelper, createE2ePowerAuthConfiguration, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
 
 const normalizeEndpointUrl = (url: string) => url.replace(/\/+$/, "")
 
@@ -545,8 +545,13 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
             keychainConfig.userDefaultsSuiteName = "com.wultra.test.powerauth"
         }
         let configuration: PowerAuthConfiguration | undefined
-        if (this.currentTestName === 'testFullConfiguration') {
-            const applicationDetail = await helper.getApplicationDetail()
+        const applicationDetail = await helper.getApplicationDetail()
+        if (this.currentTestName === 'testConfigurationAlgorithms') {
+            configuration = new PowerAuthConfiguration(
+                applicationDetail.mobileSdkConfig,
+                AppConfig.enrollmentUrl
+            )
+        } else if (this.currentTestName === 'testFullConfiguration') {
             configuration = new PowerAuthConfiguration(
                 applicationDetail.mobileSdkConfig,
                 AppConfig.enrollmentUrl,
@@ -575,6 +580,11 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
                     "test"
                 )
             }
+        } else {
+            configuration = createE2ePowerAuthConfiguration(
+                applicationDetail.mobileSdkConfig,
+                AppConfig.enrollmentUrl
+            )
         }
         await helper.configure({
             configuration,
