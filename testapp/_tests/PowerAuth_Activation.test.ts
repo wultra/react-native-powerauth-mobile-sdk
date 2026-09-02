@@ -17,6 +17,7 @@
 import { expect } from "mobile-testbed";
 import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
+import { isBiometryEnrolledForTests } from "../src/IntegrationUtils";
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
 function withTimeout<T>(operation: Promise<T>, timeoutMs: number = 10_000): Promise<T> {
@@ -162,8 +163,13 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
             sdk.offlineAuthenticationCode(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc4OWFiY2RlZg==', undefined)
         )).toThrow()
         await expect(async () => await sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toThrow({errorCode: expectedError})
-        // Native SDKs prioritize platform-specific biometry errors for this invalid activation state.
-        await expect(async () => await sdk.addBiometryFactor(this.credentials.validPassword, 'Auth title', 'Auth desc')).toThrow()
+        // On Android without enrolled biometry, addBiometryFactor opens the system enrollment UI
+        // instead of failing in-process. Only exercise this negative path when biometry is ready.
+        if (await isBiometryEnrolledForTests(sdk)) {
+            await expect(async () => await sdk.addBiometryFactor(this.credentials.validPassword)).toThrow()
+        } else {
+            this.debugInfo(`Skipping addBiometryFactor invalid-state check in ${stage} - biometry not enrolled`)
+        }
         await expect(async () => await sdk.fetchEncryptionKey(this.credentials.knowledge, 99)).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, 'Data', 'UTF8')).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: expectedError})

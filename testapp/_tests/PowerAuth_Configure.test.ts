@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
-import { IntegrationHelper } from "../src/IntegrationUtils"
+import { IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
 
 export class PowerAuth_ConfigureTests extends TestWithActivation {
 
@@ -209,11 +209,10 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         const helper2 = await this.getHelper2()
         const sdk2 = helper2.sdk
 
-        // TODO This is because of Android on CI.
-        // We can revisit this once we settle on a reliable emulator on CI with enrollable biometry
-        const biometricStatus = await sdk1.getBiometricStatus()
-        if (biometricStatus.systemStatus !== PowerAuthBiometryStatus.OK) {
-            this.reportSkip(`Biometric status is ${biometricStatus.systemStatus}`)
+        // Skip on CI emulators without enrolled biometry. Calling addBiometryFactor on Android
+        // with no enrolled templates opens the system fingerprint enrollment screen.
+        if (!(await isBiometryEnrolledForTests(sdk1))) {
+            this.reportSkip(`Biometric status is ${(await sdk1.getBiometricStatus()).systemStatus}`)
             return
         }
 
@@ -309,10 +308,6 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
                 "fake.accessGroup", // This will work only in simulator
                 "tst1"
             )
-        }
-        if (this.currentTestName === 'testConfigurationWithBiometry') {
-            biometryConfig = new PowerAuthBiometryConfiguration()
-            biometryConfig.authenticateOnBiometricKeySetup = false
         }
         await helper.configure({
             clientConfiguration: clientConfig,
