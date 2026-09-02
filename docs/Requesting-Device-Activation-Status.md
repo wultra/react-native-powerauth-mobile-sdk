@@ -86,6 +86,10 @@ if (await powerAuth.hasProtocolUpgradeAvailable()) {
 
 On iOS, the SDK preserves an existing biometry factor automatically. On Android, pass `true` as the second argument to `startProtocolUpgrade()` to migrate an existing biometry factor. This option works only when `authenticateOnBiometricKeySetup` is `false`. If `result.biometryFactorRemoved` is `true`, add the biometry factor again after the upgrade.
 
+When `activationStatusFetchRequired` is `false`, `result.activationFingerprint` contains the new fingerprint. When a status fetch is required, that result property is `null`; finish the upgrade and obtain the current value with `getActivationFingerprint()` instead.
+
+If `hasPendingProtocolUpgrade()` returns `true`, call `fetchActivationStatus()` to finish the upgrade. Some SDK operations are not available while an upgrade is pending.
+
 To get more information about activation states, check the [Activation States](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation.md#activation-states) chapter available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 
 ## Read Next
