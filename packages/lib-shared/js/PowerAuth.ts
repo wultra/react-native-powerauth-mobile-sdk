@@ -256,7 +256,9 @@ export class PowerAuth {
      *
      * On Android, set `upgradeBiometry` to `true` to migrate an existing local
      * biometry factor. This is supported only when `authenticateOnBiometricKeySetup`
-     * is disabled. On iOS, the native SDK preserves the factor automatically.
+     * is disabled. Otherwise, use the default value and add the biometry factor
+     * again after the upgrade if it was removed. On iOS, the native SDK preserves
+     * the factor automatically.
      *
      * If the result requires an activation status fetch, call
      * `fetchActivationStatus()` to finish the upgrade.

@@ -35,6 +35,8 @@ export interface PowerAuthProtocolUpgradeResult {
      * Indicates whether the biometry factor was removed during the upgrade.
      *
      * This value is available only on Android and is always `false` on iOS.
+     * If `true`, consider adding the biometry factor again after the protocol
+     * upgrade is fully finished.
      */
     biometryFactorRemoved: boolean
 }
