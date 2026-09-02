@@ -58,6 +58,34 @@ if (await powerAuth.hasValidActivation()) {
 
 Note that the status fetch may fail at an unrecoverable error `PowerAuthErrorCode.PROTOCOL_UPGRADE`, meaning that it's not possible to upgrade the PowerAuth protocol to a newer version. In this case, it's recommended to [remove the activation locally](Device-Activation-Removal.md).
 
+## Authenticated Protocol Upgrade
+
+The fetched activation status can show that a protocol upgrade is available. The upgrade requires the knowledge factor:
+
+```javascript
+await powerAuth.fetchActivationStatus();
+
+if (await powerAuth.hasProtocolUpgradeAvailable()) {
+    const password = await PowerAuthPassword.fromString("1234");
+    const result = await powerAuth.startProtocolUpgrade(password);
+
+    if (result.activationStatusFetchRequired) {
+        await powerAuth.fetchActivationStatus();
+    }
+
+    const upgradedFingerprint = result.activationFingerprint ??
+        await powerAuth.getActivationFingerprint();
+    // If your activation flow presents or records the activation fingerprint,
+    // process the new fingerprint after the upgrade is complete.
+
+    if (result.biometryFactorRemoved) {
+        // Add the biometry factor again after the upgrade.
+    }
+}
+```
+
+On iOS, the SDK preserves an existing biometry factor automatically. On Android, pass `true` as the second argument to `startProtocolUpgrade()` to migrate an existing biometry factor. This option works only when `authenticateOnBiometricKeySetup` is `false`. If `result.biometryFactorRemoved` is `true`, add the biometry factor again after the upgrade.
+
 To get more information about activation states, check the [Activation States](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation.md#activation-states) chapter available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 
 ## Read Next
