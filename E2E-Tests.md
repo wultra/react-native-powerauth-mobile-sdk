@@ -107,6 +107,10 @@ node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 813
 
 Workflow file: `.github/workflows/mobile-e2e.yml`
 
+Mobile CI is the single PR integration workflow. It builds and runs the test
+applications, so the former standalone Cordova and React Native integration
+build workflows are no longer needed.
+
 PRs and pushes to `develop` or `release/*` run the four E2E checks independently:
 
 - `e2e-android-rn`
