@@ -242,7 +242,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             data,
             PowerAuthSignatureKeyId.DEVICE_EC
         )
-        await expect(this.sdk.verifyDigitalSignature(signature, data, PowerAuthSignatureKeyId.DEVICE_EC)).toSucceed()
+        await expect(async () => await this.sdk.verifyDigitalSignature(signature, data, PowerAuthSignatureKeyId.DEVICE_EC)).toSucceed()
 
         const decodedData = atob(data)
         const tamperedData = btoa(
@@ -279,7 +279,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         expect(components.length).toBe(3)
         expect(JSON.parse(decodeBase64Url(components[0])).typ).toBe('JWT')
         expect(decodeBase64Url(components[1])).toBe(data)
-        await expect(this.sdk.verifyJwsSignature(
+        await expect(async () => await this.sdk.verifyJwsSignature(
             compact,
             true,
             true,
@@ -302,7 +302,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             PowerAuthSignatureKeyId.DEVICE
         )
         expect(JSON.parse(json)).toBeDefined()
-        await expect(this.sdk.verifyJwsSignature(
+        await expect(async () => await this.sdk.verifyJwsSignature(
             json,
             false,
             true,
@@ -360,8 +360,8 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 function encodeBase64Url(value: string): string {
     return btoa(value)
         .replace(/\+/g, '-')
-        .split('/').join('_')
-        .split('=')[0]
+        .replace(/\//g, '_')
+        .replace(/=+$/, '')
 }
 
 function decodeBase64Url(value: string): string {
