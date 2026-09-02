@@ -15,6 +15,13 @@ Do not make style, formatting, workflow/CI, speculative, or “consider adding
 tests” comments. Do not post review content to GitHub without the user's
 approval; any content that could be posted must start with `🤖`.
 
+The PR CI workflows intentionally create a visible cancelled first attempt for
+`pull_request: synchronize` events. A lightweight `CI run config` job cancels that attempt
+before expensive build or E2E jobs start; rerunning the workflow or an
+individual job is the supported way to execute CI for that exact commit. Do
+not report this expected cancellation, the skipped dependent jobs, or the
+absence of a custom aggregate status as a PR defect.
+
 Check grammar only in public documentation/JSDoc, and only when the PR base is
 not a `release/*` branch. Public API, behavior, or release changes need matching
 user-facing documentation and changelog coverage; internal refactors do not.
