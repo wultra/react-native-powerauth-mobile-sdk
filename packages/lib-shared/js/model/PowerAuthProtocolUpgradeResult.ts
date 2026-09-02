@@ -27,9 +27,9 @@ export interface PowerAuthProtocolUpgradeResult {
     /**
      * Decimalized activation fingerprint.
      *
-     * The value is unavailable while an activation status fetch is still required.
+     * The value is `null` while an activation status fetch is still required.
      */
-    activationFingerprint?: string
+    activationFingerprint: string | null
 
     /**
      * Indicates whether the biometry factor was removed during the upgrade.
