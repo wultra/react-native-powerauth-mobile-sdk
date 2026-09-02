@@ -10,7 +10,7 @@ on:
 jobs:
   build-library:
     name: Build and Pack
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v7
