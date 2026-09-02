@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { CustomConfig } from "../src/IntegrationUtils";
+import { createNonInteractiveBiometryConfiguration, CustomConfig } from "../src/IntegrationUtils";
 
 class PowerAuth_LegacyAuthBase extends TestWithActivation {
 
@@ -30,11 +30,8 @@ class PowerAuth_LegacyAuthBase extends TestWithActivation {
     }
 
     provideCustomConfig(): CustomConfig {
-        // Use config that allows create activation with biometry key with no user's interaction
-        const config = new PowerAuthBiometryConfiguration()
-        config.authenticateOnBiometricKeySetup = false
         return {
-            biometryConfiguration: config
+            biometryConfiguration: createNonInteractiveBiometryConfiguration()
         }
     }
 
