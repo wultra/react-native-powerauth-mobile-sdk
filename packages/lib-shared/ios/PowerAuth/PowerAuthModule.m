@@ -942,6 +942,7 @@ PAJS_METHOD_START(calculateDigitalSignature,
         return;
     }
     [powerAuth calculateDigitalSignature:auth dataToSign:decodedData keyIdentifier:keyId callback:^(NSData * signature, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
         (void)auth;
         if (error) {
             ProcessError(error, reject);
@@ -1055,6 +1056,7 @@ PAJS_METHOD_START(calculateJwsSignature,
                             compact:compact
                       keyIdentifier:keyId
                            callback:^(NSString * signature, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
         (void)auth;
         if (error) {
             ProcessError(error, reject);
@@ -1089,6 +1091,7 @@ PAJS_METHOD_START(createCertificateSigningRequest,
                                                  subjectAltNames:subjectAltNames
                                                    keyIdentifier:keyId
                                                         callback:^(NSString * csr, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
         (void)auth;
         if (error) {
             ProcessError(error, reject);
