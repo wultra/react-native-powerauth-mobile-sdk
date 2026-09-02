@@ -76,11 +76,11 @@ export class PowerAuth_ProtocolUpgradeTests extends TestWithActivation {
         expect(result.biometryFactorRemoved).toBe(false)
 
         if (result.activationStatusFetchRequired) {
-            expect(result.activationFingerprint).toBeUndefined()
+            expect(result.activationFingerprint).toBeNull()
             expect(await this.sdk.hasPendingProtocolUpgrade()).toBe(true)
             await this.sdk.fetchActivationStatus()
         } else {
-            expect(result.activationFingerprint).toBeDefined()
+            expect(result.activationFingerprint).toBeNotNull()
         }
 
         expect(await this.sdk.hasPendingProtocolUpgrade()).toBe(false)

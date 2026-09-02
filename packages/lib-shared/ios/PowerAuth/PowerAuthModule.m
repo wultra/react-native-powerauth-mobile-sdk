@@ -488,11 +488,11 @@ PAJS_METHOD_START(startProtocolUpgrade,
         if (error) {
             ProcessError(error, reject);
         } else if (result) {
-            resolve(PatchNull(@{
+            resolve(@{
                 @"activationStatusFetchRequired": @(result.activationStatusFetchRequired),
                 @"activationFingerprint": result.activationFingerprint ?: [NSNull null],
                 @"biometryFactorRemoved": @NO
-            }));
+            });
         } else {
             reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither a protocol upgrade result nor an error.", nil);
         }
