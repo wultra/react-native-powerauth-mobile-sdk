@@ -107,4 +107,29 @@ node packages/mobile-test-runner/dist/cli.js collect --host 127.0.0.1 --port 813
 
 Workflow file: `.github/workflows/mobile-e2e.yml`
 
-PRs and default branch pushes run both RN and Cordova.
+Mobile CI is the single PR integration workflow. It builds and runs the test
+applications, so the former standalone Cordova and React Native integration
+build workflows are no longer needed.
+
+PRs and pushes to `develop` or `release/*` run the four E2E checks independently:
+
+- `e2e-android-rn`
+- `e2e-android-cordova`
+- `e2e-ios-rn`
+- `e2e-ios-cordova`
+
+When a new commit is pushed to a same-repository PR, GitHub creates a visible
+workflow run for the `pull_request: synchronize` event. Its first attempt is
+cancelled by the first step of each E2E job before checkout, dependency
+installation, emulator, simulator, or build work starts. The cancellation log
+explains that this saves CI time and that the job can be rerun. This avoids spending
+CI time on a commit that may immediately be superseded. The cancelled run
+remains available in the Actions and PR checks UI, and each E2E job can be
+rerun independently.
+
+To run the checks for that exact commit, open the cancelled workflow run and
+choose **Re-run all jobs**, or rerun an individual job. Reruns use the original
+PR commit and bypass the first-attempt cancellation gate. Initial PR runs
+(opened, reopened, or marked ready for review), pushes, and manual
+`workflow_dispatch` runs execute normally. Fork pull requests are skipped to
+avoid running untrusted code with the workflow's build and test resources.

@@ -6,9 +6,7 @@
 ![released](https://img.shields.io/github/release-date/wultra/react-native-powerauth-mobile-sdk)
 
 [![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-library.yml)
-[![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-cordova.yml)
-[![Build](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/build-react-native.yml)
-[![End2End tests](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/mobile-e2e.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/mobile-e2e.yml)
+[![Mobile CI](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/mobile-e2e.yml/badge.svg)](https://github.com/wultra/react-native-powerauth-mobile-sdk/actions/workflows/mobile-e2e.yml)
 
 
 In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-suite) service, mobile applications need to perform the required network and cryptographic processes, as described in the PowerAuth documentation. To simplify the implementation of these processes, developers can use This PowerAuth JS SDK library (for Android and iOS) from this repository.
@@ -19,6 +17,10 @@ In order to connect to the [PowerAuth](https://www.wultra.com/mobile-security-su
 ## Documentation
 
 The documentation is available at the [Wultra Developer Portal](https://developers.wultra.com/components/react-native-powerauth-mobile-sdk/) or inside the [docs](docs) folder.
+
+The Mobile CI workflow builds and runs the React Native and Cordova test
+applications on Android and iOS, providing both integration-build and E2E
+coverage.
 
 ## License
 

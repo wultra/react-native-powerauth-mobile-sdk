@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Mobile E2E (simulator/emulator)
+name: Tests
+run-name: ${{ github.workflow }} / ${{ github.event.action || github.event_name }}
 
 on:
   push:
@@ -24,57 +25,58 @@ on:
       - opened
       - reopened
       - ready_for_review
-  repository_dispatch:
-    types:
-      - ci-mobile-e2e
+      - synchronize
   workflow_dispatch:
 
 permissions:
   contents: read
-  statuses: write
 
 concurrency:
-  group: mobile-e2e-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.client_payload.pr_number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'repository_dispatch' }}
+  group: mobile-e2e-${{ github.event_name }}-${{ github.event.pull_request.head.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
-  mark-pending:
-    name: Mark Pending
+  rn-android:
     if: >-
-      (github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository) ||
-      github.event_name == 'repository_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set pending commit status
-        uses: actions/github-script@v7
-        env:
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha }}
-        with:
-          script: |
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: process.env.COMMIT_SHA,
-              state: 'pending',
-              context: 'ci/mobile-e2e',
-              description: 'Mobile E2E tests are running',
-              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-            });
-
-  e2e-android-rn:
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the emulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Enable KVM
         run: |
@@ -82,26 +84,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (Android emulator, RN)
         uses: reactivecircus/android-emulator-runner@v2
@@ -124,19 +111,47 @@ jobs:
           name: mobile-e2e-artifacts-android-rn
           path: artifacts/e2e
 
-  e2e-android-cordova:
+  cordova-android:
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the emulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Enable KVM
         run: |
@@ -144,26 +159,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (Android emulator, Cordova)
         uses: reactivecircus/android-emulator-runner@v2
@@ -186,7 +186,13 @@ jobs:
           name: mobile-e2e-artifacts-android-cordova
           path: artifacts/e2e
 
-  e2e-ios-rn:
+  rn-ios:
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
@@ -194,28 +200,41 @@ jobs:
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the simulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Detect Xcode version
         run: |
           echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
-
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
 
       - name: Cache CocoaPods (RN)
         uses: actions/cache@v4
@@ -235,12 +254,6 @@ jobs:
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
 
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
-
       - name: Run E2E (iOS simulator, RN)
         env:
           E2E_MODE: rn
@@ -253,7 +266,13 @@ jobs:
           name: mobile-e2e-artifacts-ios-rn
           path: artifacts/e2e
 
-  e2e-ios-cordova:
+  cordova-ios:
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: write
+      contents: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
@@ -261,40 +280,47 @@ jobs:
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
     steps:
+      # A PR synchronize event often becomes stale as soon as another commit is pushed.
+      # Cancel its first attempt before running the simulator or E2E tests.
+      - name: Cancel first attempt for a PR update
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.action == 'synchronize' &&
+          github.run_attempt == 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
+            await github.rest.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            await new Promise((resolve) => setTimeout(resolve, 30_000));
+            core.setFailed('Cancellation was requested, but the workflow is still running.');
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Detect Xcode version
         run: |
           echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
-
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
 
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (iOS simulator, Cordova)
         env:
@@ -307,48 +333,3 @@ jobs:
         with:
           name: mobile-e2e-artifacts-ios-cordova
           path: artifacts/e2e
-
-  report-status:
-    name: Report Status
-    if: >-
-      always() &&
-      ((github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository) ||
-      github.event_name == 'repository_dispatch')
-    needs:
-      - mark-pending
-      - e2e-android-rn
-      - e2e-android-cordova
-      - e2e-ios-rn
-      - e2e-ios-cordova
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set final commit status
-        uses: actions/github-script@v7
-        env:
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.event.client_payload.commit_sha }}
-          ANDROID_RN_RESULT: ${{ needs.e2e-android-rn.result }}
-          ANDROID_CORDOVA_RESULT: ${{ needs.e2e-android-cordova.result }}
-          IOS_RN_RESULT: ${{ needs.e2e-ios-rn.result }}
-          IOS_CORDOVA_RESULT: ${{ needs.e2e-ios-cordova.result }}
-        with:
-          script: |
-            const results = [
-              process.env.ANDROID_RN_RESULT,
-              process.env.ANDROID_CORDOVA_RESULT,
-              process.env.IOS_RN_RESULT,
-              process.env.IOS_CORDOVA_RESULT,
-            ];
-            const success = results.every((result) => result === 'success');
-
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: process.env.COMMIT_SHA,
-              state: success ? 'success' : 'failure',
-              context: 'ci/mobile-e2e',
-              description: success
-                ? 'Mobile E2E tests succeeded'
-                : 'Mobile E2E tests failed',
-              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-            });
