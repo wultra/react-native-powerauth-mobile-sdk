@@ -121,11 +121,30 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 
     async testAuthenticationPurpose() {
         const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
+        const data = btoa('test')
 
         await expect(async () => await this.sdk.fetchEncryptionKey(persistAuth, 0))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
+        await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, data, 'BASE64'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.calculateDigitalSignature(
+            persistAuth,
+            data,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.calculateJwsSignature(
+            persistAuth,
+            data,
+            'JWT',
+            true,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.createCertificateSigningRequest(
+            persistAuth,
+            { CN: 'PowerAuth Integration Test' },
+            undefined,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))
@@ -224,6 +243,16 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             PowerAuthSignatureKeyId.DEVICE_EC
         )
         await expect(this.sdk.verifyDigitalSignature(signature, data, PowerAuthSignatureKeyId.DEVICE_EC)).toSucceed()
+
+        const decodedData = atob(data)
+        const tamperedData = btoa(
+            String.fromCharCode((decodedData.charCodeAt(0) + 1) % 256) + decodedData.slice(1)
+        )
+        await expect(async () => await this.sdk.verifyDigitalSignature(
+            signature,
+            tamperedData,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_SIGNATURE })
 
         const decodedSignature = atob(signature)
         const tamperedSignature = btoa(

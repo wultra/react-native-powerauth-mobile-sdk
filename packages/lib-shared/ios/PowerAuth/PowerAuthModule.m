@@ -923,7 +923,7 @@ PAJS_METHOD_START(calculateDigitalSignature,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1031,7 +1031,7 @@ PAJS_METHOD_START(calculateJwsSignature,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1070,7 +1070,7 @@ PAJS_METHOD_START(createCertificateSigningRequest,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
