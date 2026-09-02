@@ -47,9 +47,9 @@ In case that you need an advanced configuration, then you can import and use the
   - `algorithm` - optional algorithm selected for communication with the server. The available values are `PowerAuthAlgorithm.LEGACY`, `P384`, `P384_L3`, and `P384_L5`. If omitted, the native SDK default (`P384_L3`) is used.
   - `offlineAuthenticationCodeComponentLength` - length of one offline authentication-code component, from `4` through `8`. The default is `8`.
 
-> Upgrading applications that previously relied on the implicit legacy protocol must explicitly set `PowerAuthAlgorithm.LEGACY`. Omitting `algorithm` now enables the native protocol-4 default and requires a compatible PowerAuth Server.
-
-The selected algorithm can change in a later application version. If it does not match an activation already stored on the device, complete an [authenticated protocol upgrade](Requesting-Device-Activation-Status.md#authenticated-protocol-upgrade).
+  > Upgrading applications that previously relied on the implicit legacy protocol must explicitly set `PowerAuthAlgorithm.LEGACY`. Omitting `algorithm` now enables the native protocol-4 default and requires a compatible PowerAuth Server.
+  >
+  > The selected algorithm can change in a later application version. If it does not match an activation already stored on the device, complete an [authenticated protocol upgrade](Requesting-Device-Activation-Status.md#authenticated-protocol-upgrade).
 
 - `PowerAuthClientConfiguration` class or `PowerAuthClientConfigurationType` interface － to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
