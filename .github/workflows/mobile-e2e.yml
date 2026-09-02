@@ -36,8 +36,10 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
+  # A PR synchronize event often becomes stale as soon as another commit is pushed.
+  # Cancel its first attempt before allocating expensive emulator/simulator runners.
   pr-update-gate:
-    name: PR update gate
+    name: CI run config
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
