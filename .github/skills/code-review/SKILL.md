@@ -19,7 +19,8 @@ The PR CI workflows intentionally create a visible cancelled first attempt for
 `pull_request: synchronize` events. The first step of each E2E job cancels that
 attempt before checkout or expensive build/E2E work starts; rerunning the
 workflow or an individual job is the supported way to execute CI for that
-exact commit. Do not report this expected cancellation or the absence of a
+exact commit. The cancellation log explains that this saves CI time. Do not
+report this expected cancellation or the absence of a
 custom aggregate status as a PR defect.
 
 Check grammar only in public documentation/JSDoc, and only when the PR base is

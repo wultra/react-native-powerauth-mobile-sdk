@@ -56,6 +56,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
             await github.rest.actions.cancelWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -68,10 +73,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Enable KVM
         run: |
@@ -79,26 +84,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (Android emulator, RN)
         uses: reactivecircus/android-emulator-runner@v2
@@ -141,6 +131,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
             await github.rest.actions.cancelWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -153,10 +148,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Enable KVM
         run: |
@@ -164,26 +159,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (Android emulator, Cordova)
         uses: reactivecircus/android-emulator-runner@v2
@@ -230,6 +210,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
             await github.rest.actions.cancelWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -242,23 +227,14 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Detect Xcode version
         run: |
           echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
-
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
 
       - name: Cache CocoaPods (RN)
         uses: actions/cache@v4
@@ -277,12 +253,6 @@ jobs:
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (iOS simulator, RN)
         env:
@@ -320,6 +290,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.info(
+              `Cancelling the first attempt for PR #${context.payload.pull_request.number} ` +
+              `because the PR was updated. This saves CI time; rerun this job to test ` +
+              `commit ${context.payload.pull_request.head.sha}.`,
+            );
             await github.rest.actions.cancelWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -332,35 +307,20 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - name: Prepare environment
+        uses: ./.github/actions/prepare
         with:
-          node-version: "20"
+          env-file: ${{ secrets.ENV_TEST_FILE }}
 
       - name: Detect Xcode version
         run: |
           echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
-
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.3.1 --activate
-
-      - name: Install dependencies
-        run: |
-          yarn install --immutable
 
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
           yarn workspace mobile-test-reporter build
           yarn workspace mobile-test-runner build
-
-      - name: Write testapp env (.env)
-        env:
-          ENV_TEST_FILE: ${{ secrets.ENV_TEST_FILE }}
-        run: |
-          printf '%s\n' "${ENV_TEST_FILE}" > testapp/.env
 
       - name: Run E2E (iOS simulator, Cordova)
         env:
