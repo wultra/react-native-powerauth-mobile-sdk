@@ -29,7 +29,6 @@ import io.getlime.security.powerauth.exception.*
 import io.getlime.security.powerauth.keychain.KeychainProtection
 import io.getlime.security.powerauth.networking.interceptors.BasicHttpAuthenticationRequestInterceptor
 import io.getlime.security.powerauth.networking.interceptors.CustomHeaderRequestInterceptor
-import io.getlime.security.powerauth.networking.interfaces.ICancelable
 import io.getlime.security.powerauth.networking.response.*
 import io.getlime.security.powerauth.networking.ssl.HttpClientSslNoValidationStrategy
 import io.getlime.security.powerauth.sdk.*
@@ -44,56 +43,6 @@ class PowerAuthJsModule(
 ) : BaseJavaJsModule, ActivityAwareModule {
 
     private val configurationLock = Any()
-
-    private class PendingCancelable(private var onCancel: (() -> Unit)?) {
-        private var task: ICancelable? = null
-        private var completed = false
-
-        fun startTask(operation: () -> ICancelable?) {
-            var taskToCancel: ICancelable? = null
-            synchronized(this) {
-                if (completed) {
-                    return
-                }
-                val newTask = operation()
-                if (completed) {
-                    taskToCancel = newTask
-                } else {
-                    task = newTask
-                }
-            }
-            taskToCancel?.cancel()
-        }
-
-        fun complete(): Boolean {
-            return synchronized(this) {
-                if (completed) {
-                    false
-                } else {
-                    completed = true
-                    task = null
-                    onCancel = null
-                    true
-                }
-            }
-        }
-
-        fun cancel() {
-            val cancellation = synchronized(this) {
-                if (completed) {
-                    null
-                } else {
-                    completed = true
-                    val result = Pair(task, onCancel)
-                    task = null
-                    onCancel = null
-                    result
-                }
-            }
-            cancellation?.first?.cancel()
-            cancellation?.second?.invoke()
-        }
-    }
 
     private fun clearPasswordChangeData(data: PowerAuthPasswordChangeData) {
         data.secureClear()
@@ -765,92 +714,52 @@ class PowerAuthJsModule(
         val context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
             val coreOldPassword = passwordModule.usePasswordCopy(oldPassword)
-            val pending = PendingCancelable {
-                coreOldPassword.destroy()
-                promise.reject(
-                    Errors.EC_INSTANCE_NOT_CONFIGURED,
-                    "PowerAuth instance was deconfigured during password validation"
-                )
-            }
-            val pendingId = objectRegister.registerObjectIfOwnerMatches(
-                instanceId,
-                sdk,
-                ManagedAny.wrap(pending, cleanup { it.cancel() }),
-                listOf(ReleasePolicy.manual())
-            )
-            if (pendingId == null) {
-                pending.cancel()
-                return@powerAuthBlock
-            }
             try {
-                pending.startTask {
-                    sdk.beginPasswordChange(
-                        context,
-                        coreOldPassword,
-                        object : IBeginPasswordChangeListener {
-                        override fun onBeginPasswordChangeSucceed(
-                            passwordChangeData: PowerAuthPasswordChangeData
-                        ) {
-                            if (!pending.complete()) {
-                                clearPasswordChangeData(passwordChangeData)
-                                return
-                            }
-                            objectRegister.releaseObject(
-                                pendingId,
-                                PendingCancelable::class.java
-                            )
-                            try {
-                                val objectId = objectRegister.registerObjectIfOwnerMatches(
-                                    instanceId,
-                                    sdk,
-                                    ManagedAny.wrap(
-                                        passwordChangeData,
-                                        cleanup { clearPasswordChangeData(it) }
-                                    ),
-                                    listOf(
-                                        ReleasePolicy.expire(
-                                            Constants.PASSWORD_CHANGE_DATA_EXPIRE_TIME
-                                        )
+                sdk.beginPasswordChange(
+                    context,
+                    coreOldPassword,
+                    object : IBeginPasswordChangeListener {
+                    override fun onBeginPasswordChangeSucceed(
+                        passwordChangeData: PowerAuthPasswordChangeData
+                    ) {
+                        try {
+                            val objectId = objectRegister.registerObjectIfOwnerMatches(
+                                instanceId,
+                                sdk,
+                                ManagedAny.wrap(
+                                    passwordChangeData,
+                                    cleanup { clearPasswordChangeData(it) }
+                                ),
+                                listOf(
+                                    ReleasePolicy.expire(
+                                        Constants.PASSWORD_CHANGE_DATA_EXPIRE_TIME
                                     )
                                 )
-                                if (objectId == null) {
-                                    clearPasswordChangeData(passwordChangeData)
-                                    promise.reject(
-                                        Errors.EC_INSTANCE_NOT_CONFIGURED,
-                                        "PowerAuth instance is no longer configured"
-                                    )
-                                    return
-                                }
-                                promise.resolve(objectId)
-                            } catch (t: Throwable) {
+                            )
+                            if (objectId == null) {
                                 clearPasswordChangeData(passwordChangeData)
-                                Errors.rejectPromise(promise, t)
-                            }
-                        }
-
-                        override fun onBeginPasswordChangeFailed(t: Throwable) {
-                            if (!pending.complete()) {
+                                promise.reject(
+                                    Errors.EC_INSTANCE_NOT_CONFIGURED,
+                                    "PowerAuth instance is no longer configured"
+                                )
                                 return
                             }
-                            objectRegister.releaseObject(
-                                pendingId,
-                                PendingCancelable::class.java
-                            )
-                            coreOldPassword.destroy()
+                            promise.resolve(objectId)
+                        } catch (t: Throwable) {
+                            clearPasswordChangeData(passwordChangeData)
                             Errors.rejectPromise(promise, t)
                         }
-                        }
-                    )
-                }
+                    }
+
+                    override fun onBeginPasswordChangeFailed(t: Throwable) {
+                        coreOldPassword.destroy()
+                        Errors.rejectPromise(promise, t)
+                    }
+                    }
+                )
             } catch (t: Throwable) {
-                if (pending.complete()) {
-                    objectRegister.releaseObject(
-                        pendingId,
-                        PendingCancelable::class.java
-                    )
-                    coreOldPassword.destroy()
-                    throw t
-                }
+                coreOldPassword.destroy()
+                throw t
             }
         })
     }
@@ -879,69 +788,29 @@ class PowerAuthJsModule(
                 clearPasswordChangeData(passwordChangeData)
                 throw t
             }
-            val pending = PendingCancelable {
+            try {
+                sdk.finishPasswordChange(
+                    context,
+                    coreNewPassword,
+                    passwordChangeData,
+                    object : IFinishPasswordChangeListener {
+                    override fun onFinishPasswordChangeSucceed() {
+                        coreNewPassword.destroy()
+                        clearPasswordChangeData(passwordChangeData)
+                        promise.resolve(null)
+                    }
+
+                    override fun onFinishPasswordChangeFailed(t: Throwable) {
+                        coreNewPassword.destroy()
+                        clearPasswordChangeData(passwordChangeData)
+                        Errors.rejectPromise(promise, t)
+                    }
+                    }
+                )
+            } catch (t: Throwable) {
                 coreNewPassword.destroy()
                 clearPasswordChangeData(passwordChangeData)
-                promise.reject(
-                    Errors.EC_INSTANCE_NOT_CONFIGURED,
-                    "PowerAuth instance was deconfigured during password change"
-                )
-            }
-            val pendingId = objectRegister.registerObjectIfOwnerMatches(
-                instanceId,
-                sdk,
-                ManagedAny.wrap(pending, cleanup { it.cancel() }),
-                listOf(ReleasePolicy.manual())
-            )
-            if (pendingId == null) {
-                pending.cancel()
-                return@powerAuthBlock
-            }
-            try {
-                pending.startTask {
-                    sdk.finishPasswordChange(
-                        context,
-                        coreNewPassword,
-                        passwordChangeData,
-                        object : IFinishPasswordChangeListener {
-                        override fun onFinishPasswordChangeSucceed() {
-                            if (!pending.complete()) {
-                                return
-                            }
-                            objectRegister.releaseObject(
-                                pendingId,
-                                PendingCancelable::class.java
-                            )
-                            coreNewPassword.destroy()
-                            clearPasswordChangeData(passwordChangeData)
-                            promise.resolve(null)
-                        }
-
-                        override fun onFinishPasswordChangeFailed(t: Throwable) {
-                            if (!pending.complete()) {
-                                return
-                            }
-                            objectRegister.releaseObject(
-                                pendingId,
-                                PendingCancelable::class.java
-                            )
-                            coreNewPassword.destroy()
-                            clearPasswordChangeData(passwordChangeData)
-                            Errors.rejectPromise(promise, t)
-                        }
-                        }
-                    )
-                }
-            } catch (t: Throwable) {
-                if (pending.complete()) {
-                    objectRegister.releaseObject(
-                        pendingId,
-                        PendingCancelable::class.java
-                    )
-                    coreNewPassword.destroy()
-                    clearPasswordChangeData(passwordChangeData)
-                    throw t
-                }
+                throw t
             }
         })
     }

@@ -65,88 +65,6 @@
 
 @end
 
-@interface PA2PendingOperationHandle : NSObject
-
-- (instancetype)initWithCancellation:(dispatch_block_t)cancellation;
-- (void)startTask:(nullable id<PowerAuthOperationTask> (^)(void))operation;
-- (BOOL)complete;
-- (void)cancel;
-
-@end
-
-@implementation PA2PendingOperationHandle
-{
-    id<PowerAuthOperationTask> _task;
-    dispatch_block_t _cancellation;
-    BOOL _completed;
-}
-
-- (instancetype)initWithCancellation:(dispatch_block_t)cancellation
-{
-    self = [super init];
-    if (self) {
-        _cancellation = cancellation;
-    }
-    return self;
-}
-
-- (void)startTask:(id<PowerAuthOperationTask> (^)(void))operation
-{
-    __block id<PowerAuthOperationTask> taskToCancel;
-    @synchronized (self) {
-        if (_completed) {
-            return;
-        }
-        id<PowerAuthOperationTask> task = operation();
-        if (_completed) {
-            taskToCancel = task;
-        } else {
-            _task = task;
-        }
-    }
-    [taskToCancel cancel];
-}
-
-- (BOOL)complete
-{
-    @synchronized (self) {
-        if (_completed) {
-            return NO;
-        }
-        _completed = YES;
-        _task = nil;
-        _cancellation = nil;
-        return YES;
-    }
-}
-
-- (void)cancel
-{
-    __block id<PowerAuthOperationTask> task;
-    __block dispatch_block_t cancellation;
-    @synchronized (self) {
-        if (_completed) {
-            return;
-        }
-        _completed = YES;
-        task = _task;
-        cancellation = _cancellation;
-        _task = nil;
-        _cancellation = nil;
-    }
-    [task cancel];
-    if (cancellation) {
-        cancellation();
-    }
-}
-
-- (void)dealloc
-{
-    [self cancel];
-}
-
-@end
-
 @implementation PowerAuthModule
 {
     PowerAuthObjectRegister * _objectRegister;
@@ -368,49 +286,28 @@ PAJS_METHOD_START(beginPasswordChange,
         return;
     }
     PowerAuthCorePassword * immutableOldPassword = [coreOldPassword copyToImmutable];
-    PA2PendingOperationHandle * pending = [[PA2PendingOperationHandle alloc] initWithCancellation:^{
-        [immutableOldPassword secureClear];
-        reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance was deconfigured during password validation.", nil);
-    }];
-    NSString * pendingId = [_objectRegister registerObject:pending
-                                           ifOwnerMatches:powerAuth
-                                                  ownerId:instanceId
-                                                 policies:@[ RP_MANUAL() ]];
-    if (!pendingId) {
-        [pending cancel];
-        return;
-    }
-    __weak PA2PendingOperationHandle * weakPending = pending;
-    [pending startTask:^id<PowerAuthOperationTask> {
-        return [powerAuth beginPasswordChangeWithCorePassword:immutableOldPassword callback:^(PowerAuthPasswordChangeData * changeData, NSError * error) {
-            PA2PendingOperationHandle * strongPending = weakPending;
-            if (![strongPending complete]) {
-                [changeData secureClear];
-                return;
-            }
-            [_objectRegister releaseObjectWithId:pendingId expectedClass:[PA2PendingOperationHandle class]];
-            if (error) {
-                [immutableOldPassword secureClear];
-                ProcessError(error, reject);
-                return;
-            }
-            if (!changeData) {
-                [immutableOldPassword secureClear];
-                reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither password-change data nor an error.", nil);
-                return;
-            }
-            PA2PasswordChangeDataHandle * handle = [[PA2PasswordChangeDataHandle alloc] initWithChangeData:changeData];
-            NSString * objectId = [_objectRegister registerObject:handle
-                                                  ifOwnerMatches:powerAuth
-                                                         ownerId:instanceId
-                                                        policies:@[ RP_EXPIRE(PASSWORD_CHANGE_DATA_EXPIRE_TIME) ]];
-            if (!objectId) {
-                [handle clear];
-                reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is no longer configured.", nil);
-                return;
-            }
-            resolve(objectId);
-        }];
+    [powerAuth beginPasswordChangeWithCorePassword:immutableOldPassword callback:^(PowerAuthPasswordChangeData * changeData, NSError * error) {
+        if (error) {
+            [immutableOldPassword secureClear];
+            ProcessError(error, reject);
+            return;
+        }
+        if (!changeData) {
+            [immutableOldPassword secureClear];
+            reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither password-change data nor an error.", nil);
+            return;
+        }
+        PA2PasswordChangeDataHandle * handle = [[PA2PasswordChangeDataHandle alloc] initWithChangeData:changeData];
+        NSString * objectId = [_objectRegister registerObject:handle
+                                              ifOwnerMatches:powerAuth
+                                                     ownerId:instanceId
+                                                    policies:@[ RP_EXPIRE(PASSWORD_CHANGE_DATA_EXPIRE_TIME) ]];
+        if (!objectId) {
+            [handle clear];
+            reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is no longer configured.", nil);
+            return;
+        }
+        resolve(objectId);
     }];
     PA_BLOCK_END
 }
@@ -438,35 +335,14 @@ PAJS_METHOD_START(finishPasswordChange,
         return;
     }
     PowerAuthCorePassword * immutableNewPassword = [coreNewPassword copyToImmutable];
-    PA2PendingOperationHandle * pending = [[PA2PendingOperationHandle alloc] initWithCancellation:^{
+    [powerAuth finishPasswordChangeWithNewCorePassword:immutableNewPassword changeData:changeData callback:^(NSError * error) {
         [immutableNewPassword secureClear];
         [handle clear];
-        reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance was deconfigured during password change.", nil);
-    }];
-    NSString * pendingId = [_objectRegister registerObject:pending
-                                           ifOwnerMatches:powerAuth
-                                                  ownerId:instanceId
-                                                 policies:@[ RP_MANUAL() ]];
-    if (!pendingId) {
-        [pending cancel];
-        return;
-    }
-    __weak PA2PendingOperationHandle * weakPending = pending;
-    [pending startTask:^id<PowerAuthOperationTask> {
-        return [powerAuth finishPasswordChangeWithNewCorePassword:immutableNewPassword changeData:changeData callback:^(NSError * error) {
-            PA2PendingOperationHandle * strongPending = weakPending;
-            if (![strongPending complete]) {
-                return;
-            }
-            [_objectRegister releaseObjectWithId:pendingId expectedClass:[PA2PendingOperationHandle class]];
-            [immutableNewPassword secureClear];
-            [handle clear];
-            if (error) {
-                ProcessError(error, reject);
-            } else {
-                resolve(nil);
-            }
-        }];
+        if (error) {
+            ProcessError(error, reject);
+        } else {
+            resolve(nil);
+        }
     }];
     PA_BLOCK_END
 }
