@@ -18,7 +18,7 @@ import { expect } from "mobile-testbed";
 import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { isBiometryEnrolledForTests } from "../src/IntegrationUtils";
-import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
 function withTimeout<T>(operation: Promise<T>, timeoutMs: number = 10_000): Promise<T> {
     return new Promise((resolve, reject) => {
@@ -158,17 +158,23 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
     async runFailingMethodsDuringActivation(stage: string, expectedFetchError: PowerAuthErrorCode, expectedError: PowerAuthErrorCode) {
         const sdk = this.sdk
         this.debugInfo(`Evaluating wrong API usage in ${stage}`)
+        const deviceSigningError =
+            await sdk.currentAlgorithm !== PowerAuthAlgorithm.LEGACY && await sdk.hasPendingActivation()
+                ? PowerAuthErrorCode.INVALID_ACTIVATION_STATE
+                : expectedError
         // Fetch has a slightly different error handling, so it needs a different error code than other API functions.
         // TODO: This should be unified in future versions
         await expect(async () => await sdk.fetchActivationStatus()).toThrow({errorCode: expectedFetchError})
-        await expect(async () => await sdk.removeActivationWithAuthentication(this.credentials.invalidKnowledge)).toThrow({errorCode: expectedError})
+        await expect(async () => await sdk.removeActivationWithAuthentication(this.credentials.invalidKnowledge))
+            .toThrow({errorCode: expectedError})
         // Native SDKs use different error codes for invalid transitional activation states.
         await expect(async () => await sdk.authenticationHeaderForRequestWithParams(this.credentials.knowledge, 'GET', '/some/uriid')).toThrow()
         await expect(async () => await sdk.authenticationHeaderForRequestWithBody(this.credentials.knowledge, 'POST', '/some/uriid', undefined)).toThrow()
         await expect(async () => await withTimeout(
             sdk.offlineAuthenticationCode(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc4OWFiY2RlZg==', undefined)
         )).toThrow()
-        await expect(async () => await sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toThrow({errorCode: expectedError})
+        await expect(async () => await sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword))
+            .toThrow({errorCode: expectedError})
         // On Android without enrolled biometry, addBiometryFactor opens the system enrollment UI
         // instead of failing in-process. Only exercise this negative path when biometry is ready.
         if (await isBiometryEnrolledForTests(sdk)) {
@@ -176,9 +182,13 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         } else {
             this.debugInfo(`Skipping addBiometryFactor invalid-state check in ${stage} - biometry not enrolled`)
         }
-        await expect(async () => await sdk.fetchEncryptionKey(this.credentials.knowledge, 99)).toThrow({errorCode: expectedError})
-        await expect(async () => await sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, 'Data', 'UTF8')).toThrow({errorCode: expectedError})
-        await expect(async () => await sdk.validatePassword(this.credentials.validPassword)).toThrow({errorCode: expectedError})
+        if (await sdk.currentAlgorithm === PowerAuthAlgorithm.LEGACY) {
+            await expect(async () => await sdk.fetchEncryptionKey(this.credentials.knowledge, 99)).toThrow({errorCode: expectedError})
+        }
+        await expect(async () => await sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, 'Data', 'UTF8'))
+            .toThrow({errorCode: deviceSigningError})
+        await expect(async () => await sdk.validatePassword(this.credentials.validPassword))
+            .toThrow({errorCode: expectedError})
 
         // TODO: following functions should fail and not return false or some different error
         expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBe(false)
@@ -191,9 +201,11 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         await expect(async () =>
             await this.sdk.removeActivationWithAuthentication(this.credentials.persistence)
         ).toThrow(expectedError)
-        await expect(async () =>
-            await this.sdk.fetchEncryptionKey(this.credentials.persistence, 1)
-        ).toThrow(expectedError)
+        if (await this.sdk.currentAlgorithm === PowerAuthAlgorithm.LEGACY) {
+            await expect(async () =>
+                await this.sdk.fetchEncryptionKey(this.credentials.persistence, 1)
+            ).toThrow(expectedError)
+        }
         await expect(async () =>
             await this.sdk.signDataWithDevicePrivateKey(this.credentials.persistence, 'Data', 'UTF8')
         ).toThrow(expectedError)

@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthAuthentication } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthAlgorithm, PowerAuthAuthentication } from "react-native-powerauth-mobile-sdk";
 import { TestSuite } from "mobile-testbed";
 import { CustomConfig, IntegrationHelper } from "../../src/IntegrationUtils";
 
@@ -62,6 +62,17 @@ export interface ActivationCredentials {
  * `automaticallyCreateActivationHelper` and `automaticallyCreateActivation` in the custom `beforeAll()` method.
  */
 export class TestWithActivation extends TestSuite {
+
+    private testAlgorithm?: PowerAuthAlgorithm
+
+    /**
+     * Configures the algorithm used by this suite unless the suite provides its own
+     * configuration or algorithm.
+     */
+    withAlgorithm(algorithm?: PowerAuthAlgorithm): this {
+        this.testAlgorithm = algorithm
+        return this
+    }
     
     /**
      * Overridable method. If returns true, then helper will automatically create an activation in `beforeEach()` method.
@@ -118,7 +129,11 @@ export class TestWithActivation extends TestSuite {
         this.credentials = this.generateActivationCredentials()
         this.sdk = new PowerAuth(IntegrationHelper.randomString(30))
         this.helper = new IntegrationHelper(this.sdk)
-        await this.helper.configure(this.provideCustomConfig())
+        const providedConfig = this.provideCustomConfig()
+        const config = providedConfig.configuration !== undefined || providedConfig.algorithm !== undefined
+            ? providedConfig
+            : { ...providedConfig, algorithm: this.testAlgorithm }
+        await this.helper.configure(config)
         if (this.shouldCreateActivationBeforeTest()) {
             await this.helper.prepareActiveActivation(this.credentials.validPassword, undefined, this.activateWithBiometrics())
         }
