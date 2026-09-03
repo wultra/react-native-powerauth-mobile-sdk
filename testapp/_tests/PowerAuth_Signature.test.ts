@@ -276,13 +276,13 @@ class SignatureHelper {
         const version       = components.get('pa_version')
         const activationId  = components.get('pa_activation_id')
         const nonce         = components.get('pa_nonce')
-        const signatureType = components.get('pa_signature_type')
-        const signature     = components.get('pa_signature')
+        const signatureType = components.get('pa_auth_code_type') ?? components.get('pa_signature_type')
+        const signature     = components.get('pa_auth_code') ?? components.get('pa_signature')
         if (!version)       throw new Error('Missing pa_version in PA signature')
         if (!activationId)  throw new Error('Missing pa_activation_id in PA signature')
         if (!nonce)         throw new Error('Missing pa_nonce in PA signature')
-        if (!signatureType) throw new Error('Missing pa_signature_type in PA signature')
-        if (!signature)     throw new Error('Missing pa_signature in PA signature')
+        if (!signatureType) throw new Error('Missing signature factor type in PA signature')
+        if (!signature)     throw new Error('Missing signature code in PA signature')
         return {
             signature: signature,
             activationId: activationId,
