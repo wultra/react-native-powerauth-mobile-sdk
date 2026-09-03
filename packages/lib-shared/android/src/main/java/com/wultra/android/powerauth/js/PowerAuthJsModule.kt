@@ -1145,6 +1145,79 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
+    fun fetchSecureVaultKey(
+        instanceId: String,
+        authMap: ReadableMap,
+        keyIdentifier: String,
+        promise: Promise
+    ) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val nativeKeyIdentifier = secureVaultKeyIdFromString(keyIdentifier)
+            withOwnedAuthentication(authMap) { authentication ->
+                sdk.fetchSecureVaultKey(
+                    context,
+                    authentication,
+                    nativeKeyIdentifier,
+                    object : IFetchSecureVaultKeyListener {
+                        override fun onFetchSecureVaultKeySucceed(vaultKey: PowerAuthSecureVaultKey) {
+                            val objectId = objectRegister.registerObjectIfOwnerMatches(
+                                instanceId,
+                                sdk,
+                                ManagedAny.wrap(vaultKey),
+                                listOf(ReleasePolicy.keepAlive(Constants.SECURE_VAULT_KEY_KEEP_ALIVE_TIME))
+                            )
+                            if (objectId != null) {
+                                promise.resolve(objectId)
+                            } else {
+                                promise.reject(
+                                    Errors.EC_INSTANCE_NOT_CONFIGURED,
+                                    "PowerAuth instance '$instanceId' is no longer configured."
+                                )
+                            }
+                        }
+
+                        override fun onFetchSecureVaultKeyFailed(t: Throwable) {
+                            Errors.rejectPromise(promise, t)
+                        }
+                    }
+                )
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun deriveSecureVaultKey(objectId: String, index: Double, keySize: Int, promise: Promise) {
+        try {
+            // Index/keySize bounds are validated in PowerAuthSecureVaultKey.deriveKey (JS), matching Flutter.
+            val vaultKey = objectRegister.touchObject(objectId, PowerAuthSecureVaultKey::class.java)
+                ?: throw WrapperException(
+                    Errors.EC_INVALID_NATIVE_OBJECT,
+                    "Secure Vault key object '$objectId' is no longer valid."
+                )
+            val derivedKey = vaultKey.deriveKey(index.toLong(), keySize)
+            try {
+                promise.resolve(Base64.encodeToString(derivedKey.sensitiveData, Base64.NO_WRAP))
+            } finally {
+                derivedKey.destroy()
+            }
+        } catch (t: Throwable) {
+            Errors.rejectPromise(promise, t)
+        }
+    }
+
+    @PowerAuthSecureVaultKeyId
+    private fun secureVaultKeyIdFromString(value: String): Int {
+        return when (value) {
+            "knowledge" -> PowerAuthSecureVaultKeyId.KNOWLEDGE
+            "knowledgeOrBiometry" -> PowerAuthSecureVaultKeyId.KNOWLEDGE_OR_BIOMETRY
+            else -> throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "Unknown Secure Vault key identifier: $value"
+            )
+        }
+    }
+
+    @JsApiMethod
     fun signDataWithDevicePrivateKey(
         instanceId: String,
         authMap: ReadableMap,

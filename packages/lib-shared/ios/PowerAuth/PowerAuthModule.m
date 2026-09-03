@@ -134,6 +134,22 @@ static BOOL PAJSParseSignatureKeyId(
     return YES;
 }
 
+static BOOL PAJSParseSecureVaultKeyId(
+    NSString * value,
+    PowerAuthSecureVaultKeyId * keyId,
+    RCTPromiseRejectBlock reject)
+{
+    if ([value isEqualToString:@"knowledge"]) {
+        *keyId = PowerAuthSecureVaultKeyId_Knowledge;
+    } else if ([value isEqualToString:@"knowledgeOrBiometry"]) {
+        *keyId = PowerAuthSecureVaultKeyId_KnowledgeOrBiometry;
+    } else {
+        reject(EC_WRONG_PARAMETER, [NSString stringWithFormat:@"Unknown Secure Vault key identifier: %@", value], nil);
+        return NO;
+    }
+    return YES;
+}
+
 static PowerAuthConfiguration * PAJSBuildConfiguration(
     NSString * instanceId,
     NSDictionary * configuration,
@@ -1319,6 +1335,69 @@ PAJS_METHOD_START(fetchEncryptionKey,
         }
     }];
     PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(fetchSecureVaultKey,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(authDict, NSDictionary*)
+                  PAJS_ARGUMENT(keyIdentifierValue, NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthSecureVaultKeyId keyIdentifier;
+    if (!PAJSParseSecureVaultKeyId(keyIdentifierValue, &keyIdentifier, reject)) {
+        return;
+    }
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
+    if (!auth) {
+        return;
+    }
+    [powerAuth fetchSecureVaultKey:auth keyIdentifier:keyIdentifier callback:^(PowerAuthSecureVaultKey * vaultKey, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+            return;
+        }
+        if (!vaultKey) {
+            reject(EC_UNKNOWN_ERROR, @"PowerAuth SDK returned neither a Secure Vault key nor an error.", nil);
+            return;
+        }
+        NSString * objectId = [self->_objectRegister registerObject:vaultKey
+                                                     ifOwnerMatches:powerAuth
+                                                            ownerId:instanceId
+                                                           policies:@[ RP_KEEP_ALIVE(SECURE_VAULT_KEY_KEEP_ALIVE_TIME) ]];
+        if (!objectId) {
+            reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is no longer configured.", nil);
+            return;
+        }
+        resolve(objectId);
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(deriveSecureVaultKey,
+                  PAJS_ARGUMENT(objectId, NSString*)
+                  PAJS_ARGUMENT(index, PAJS_NONNULL_ARGUMENT NSNumber*)
+                  PAJS_ARGUMENT(keySize, PAJS_NONNULL_ARGUMENT NSNumber*))
+{
+    // Index/keySize bounds are validated in PowerAuthSecureVaultKey.deriveKey (JS), matching Flutter.
+    PowerAuthSecureVaultKey * vaultKey = [_objectRegister touchObjectWithId:objectId
+                                                              expectedClass:[PowerAuthSecureVaultKey class]];
+    if (!vaultKey) {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Secure Vault key object is no longer valid.", nil);
+        return;
+    }
+    NSError * error = nil;
+    PowerAuthSecureData * derivedKey = [vaultKey deriveKeyWithIndex:(UInt64)index.unsignedLongLongValue
+                                                           keySize:(UInt64)keySize.unsignedLongLongValue
+                                                             error:&error];
+    if (!derivedKey) {
+        ProcessError(error, reject);
+        return;
+    }
+    resolve([derivedKey.sensitiveData base64EncodedStringWithOptions:0]);
 }
 PAJS_METHOD_END
 

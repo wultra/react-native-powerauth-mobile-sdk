@@ -45,6 +45,7 @@ import { PowerAuthProtocolUpgradeResult } from "./model/PowerAuthProtocolUpgrade
 import type { Base64String } from "./PowerAuthCryptoUtils";
 import { PowerAuthSignatureKeyId } from "./model/PowerAuthSignatureKeyId";
 import { type PowerAuthDevicePublicKeyData, PowerAuthDevicePublicKeyFormat } from "./model/PowerAuthDevicePublicKey";
+import { PowerAuthSecureVaultKey, PowerAuthSecureVaultKeyId } from "./model/PowerAuthSecureVaultKey";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -678,16 +679,39 @@ export class PowerAuth {
     }
 
     /**
-     * Generate a derived encryption key with given index. The key is returned in form of base64 encoded string.
+     * Generates a legacy encryption key with the given index.
      *
-     * This method calls PowerAuth Standard RESTful API endpoint `/pa/vault/unlock` to obtain the vault encryption key used
-     * for subsequent key derivation using given index.
+     * The returned key is encoded as a Base64 string. This API works only for activations
+     * using PowerAuth protocol 3.3.
      *
-     * @param authentication Authentication used for vault unlocking call.
+     * @param authentication Authentication used for the vault unlocking call.
      * @param index Index of the derived key using KDF.
+     * @deprecated Migrate the activation to protocol 4 and use `fetchSecureVaultKey()`.
      */
-    async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<string> {
+    async fetchEncryptionKey(authentication: PowerAuthAuthentication, index: number): Promise<Base64String> {
         return NativeWrapper.thisCall("fetchEncryptionKey", this.instanceId, await this.authenticate(authentication), index);
+    }
+
+    /**
+     * Fetches a native-backed Secure Vault base key for purpose-specific key derivation.
+     *
+     * This API requires an activation using PowerAuth protocol 4. The base key never leaves
+     * the native layer and must be released as soon as all required keys have been derived.
+     *
+     * @param authentication Authentication used for the vault unlocking call.
+     * @param keyIdentifier Secure Vault base key to retrieve.
+     */
+    async fetchSecureVaultKey(
+        authentication: PowerAuthAuthentication,
+        keyIdentifier: PowerAuthSecureVaultKeyId
+    ): Promise<PowerAuthSecureVaultKey> {
+        const objectId = await NativeWrapper.thisCall<string>(
+            "fetchSecureVaultKey",
+            this.instanceId,
+            await this.authenticate(authentication),
+            keyIdentifier
+        )
+        return PowerAuthSecureVaultKey.fromNative(keyIdentifier, objectId)
     }
 
     /**
