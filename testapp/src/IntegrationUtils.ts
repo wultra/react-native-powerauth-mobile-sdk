@@ -38,6 +38,8 @@ export class AppConfig {
 
 export interface CustomConfig {
     configuration?: PowerAuthConfiguration,
+    /** Algorithm used when the helper creates the default test configuration. */
+    algorithm?: PowerAuthAlgorithm,
     clientConfiguration?: PowerAuthClientConfiguration,
     biometryConfiguration?: PowerAuthBiometryConfiguration,
     keychainConfiguration?: PowerAuthKeychainConfiguration,
@@ -61,18 +63,19 @@ export async function isBiometryEnrolledForTests(sdk: PowerAuth): Promise<boolea
 }
 
 /**
- * E2E infrastructure still runs PowerAuth protocol V3.3. Native SDK 2.0 defaults to
- * EC_P384_ML_L3 when algorithm is omitted, so integration tests must opt into legacy.
+ * Most E2E tests still run PowerAuth protocol V3.3. Focused protocol-4 suites can
+ * select another algorithm explicitly.
  */
 export function createE2ePowerAuthConfiguration(
     configuration: string,
     baseEndpointUrl: string,
-    offlineAuthenticationCodeComponentLength: number = 8
+    offlineAuthenticationCodeComponentLength: number = 8,
+    algorithm: PowerAuthAlgorithm = PowerAuthAlgorithm.LEGACY
 ): PowerAuthConfiguration {
     return new PowerAuthConfiguration(
         configuration,
         baseEndpointUrl,
-        PowerAuthAlgorithm.LEGACY,
+        algorithm,
         offlineAuthenticationCodeComponentLength
     )
 }
@@ -184,7 +187,12 @@ export class IntegrationHelper {
 
         // CONFIGURE SDK
         await this._sdk.configure(
-            config?.configuration ?? createE2ePowerAuthConfiguration(appDetail.mobileSdkConfig, AppConfig.enrollmentUrl),
+            config?.configuration ?? createE2ePowerAuthConfiguration(
+                appDetail.mobileSdkConfig,
+                AppConfig.enrollmentUrl,
+                8,
+                config?.algorithm
+            ),
             config?.clientConfiguration,
             config?.biometryConfiguration ?? createNonInteractiveBiometryConfiguration(),
             config?.keychainConfiguration,

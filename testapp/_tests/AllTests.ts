@@ -25,6 +25,7 @@ import { PowerAuth_PasswordTests } from "./PowerAuth_Password.test";
 import { PowerAuth_BiometryTests } from "./PowerAuth_Biometry.test";
 import { PowerAuth_BiometryInteractiveTests } from "./PowerAuth_BiometryInteractive.test";
 import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
+import { PowerAuth_AdvancedSignatureTests } from "./PowerAuth_AdvancedSignature.test";
 import { PowerAuth_TokenTests } from "./PowerAuth_Token.test";
 import { PowerAuth_KDFTests } from "./PowerAuth_KDF.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
@@ -49,6 +50,7 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_ActivationTests(),
         new PowerAuth_PasswordTests(),
         new PowerAuth_SignatureTests(),
+        new PowerAuth_AdvancedSignatureTests(),
         new PowerAuth_TokenTests(),
         new PowerAuth_KDFTests(),
         new PowerAuth_EncryptorTests(),

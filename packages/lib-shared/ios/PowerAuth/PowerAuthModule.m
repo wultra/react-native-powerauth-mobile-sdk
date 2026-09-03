@@ -1106,7 +1106,15 @@ PAJS_METHOD_START(verifyServerSignedData,
                   PAJS_BOOL_ARGUMENT(masterKey))
 {
     PA_BLOCK_START
-    BOOL result = [powerAuth verifyServerSignedData:[RCTConvert NSData:data] signature:signature masterKey:masterKey];
+    NSData * decodedSignature = [[NSData alloc] initWithBase64EncodedString:signature options:0];
+    if (!decodedSignature) {
+        resolve(@(NO));
+        return;
+    }
+    BOOL result = [powerAuth verifyDigitalSignature:decodedSignature
+                                        signedData:[RCTConvert NSData:data]
+                                     keyIdentifier:masterKey ? PowerAuthSignatureKeyId_Master_EC : PowerAuthSignatureKeyId_Server_EC
+                                             error:nil];
     resolve(@(result));
     PA_BLOCK_END
 }
@@ -1333,7 +1341,10 @@ PAJS_METHOD_START(signDataWithDevicePrivateKey,
         return;
     }
     
-    [powerAuth signDataWithDevicePrivateKey:auth data:decodedData callback:^(NSData * signature, NSError * error) {
+    [powerAuth calculateDigitalSignature:auth
+                              dataToSign:decodedData
+                           keyIdentifier:PowerAuthSignatureKeyId_Device_EC
+                                callback:^(NSData * signature, NSError * error) {
         // Keep authentication and its sensitive values alive until the asynchronous operation completes.
         (void)auth;
         if (signature) {
