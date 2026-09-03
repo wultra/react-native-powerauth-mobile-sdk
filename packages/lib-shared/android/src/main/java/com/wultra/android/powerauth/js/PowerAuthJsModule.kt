@@ -638,13 +638,18 @@ class PowerAuthJsModule(
                 try {
                     val decodedData = data.toByteArray(StandardCharsets.UTF_8)
                     val decodedSignature = Base64.decode(signature, Base64.NO_WRAP)
-                    promise.resolve(
-                        sdk.verifyServerSignedData(
-                            decodedData,
-                            decodedSignature,
-                            masterKey
-                        )
-                    )
+                    val keyId = if (masterKey) {
+                        PowerAuthSignatureKeyId.MASTER_EC
+                    } else {
+                        PowerAuthSignatureKeyId.SERVER_EC
+                    }
+                    try {
+                        sdk.verifyDigitalSignature(decodedSignature, decodedData, keyId)
+                        promise.resolve(true)
+                    } catch (_: PowerAuthErrorException) {
+                        // Preserve the deprecated API contract: verification failures resolve to false.
+                        promise.resolve(false)
+                    }
                 } catch (e: Exception) {
                     Errors.rejectPromise(promise, e)
                 }
@@ -1161,16 +1166,17 @@ class PowerAuthJsModule(
                     return
                 }
                 withOwnedAuthentication(authMap) { authentication ->
-                    sdk.signDataWithDevicePrivateKey(
+                    sdk.calculateDigitalSignature(
                         context,
                         authentication,
                         decodedData,
-                        object : IDataSignatureListener {
-                            override fun onDataSignedSucceed(signature: ByteArray) {
+                        PowerAuthSignatureKeyId.DEVICE_EC,
+                        object : IDigitalSignatureListener {
+                            override fun onDigitalSignatureSucceed(signature: ByteArray) {
                                 promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))
                             }
 
-                            override fun onDataSignedFailed(t: Throwable) {
+                            override fun onDigitalSignatureFailed(t: Throwable) {
                                 Errors.rejectPromise(promise, t)
                             }
                         })
