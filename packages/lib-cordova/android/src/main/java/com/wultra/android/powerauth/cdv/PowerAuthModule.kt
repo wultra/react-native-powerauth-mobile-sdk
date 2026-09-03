@@ -216,6 +216,14 @@ class PowerAuthModule : CordovaPlugin() {
                 fetchEncryptionKey(args, promise)
                 return true
             }
+            "fetchSecureVaultKey" -> {
+                fetchSecureVaultKey(args, promise)
+                return true
+            }
+            "deriveSecureVaultKey" -> {
+                deriveSecureVaultKey(args, promise)
+                return true
+            }
             "signDataWithDevicePrivateKey" -> {
                 signDataWithDevicePrivateKey(args, promise)
                 return true
@@ -626,6 +634,24 @@ class PowerAuthModule : CordovaPlugin() {
         val authMap = args.getReadableMap(1)
         val index = args.getInt(2)
         powerAuthJsModule.fetchEncryptionKey(instanceId, authMap, index, promise)
+    }
+
+    private fun fetchSecureVaultKey(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.fetchSecureVaultKey(
+            args.getString(0),
+            args.getReadableMap(1),
+            args.getString(2),
+            promise
+        )
+    }
+
+    private fun deriveSecureVaultKey(args: JSONArray, promise: Promise) {
+        powerAuthJsModule.deriveSecureVaultKey(
+            args.getString(0),
+            args.getDouble(1),
+            args.getInt(2),
+            promise
+        )
     }
 
     private fun signDataWithDevicePrivateKey(args: JSONArray, promise: Promise) {
