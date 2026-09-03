@@ -30,6 +30,11 @@ public class PowerAuthUtils {
      * Function that lifts PowerAuthSDK instance from the React-Native module if present (configured). If the object is not available, returns nil.
      * Might throw IllegalStateException from the RN layer.
      *
+     * Note: calling persistActivationWithAuthentication/removeActivationLocal etc. directly on the lifted
+     * instance bypasses PasswordCodePointScheme's marker bookkeeping (which lives in PowerAuthJsModule). This
+     * is safe - the affected activation just silently keeps using the legacy (1st. code point only) scheme -
+     * but it means the corrected scheme never engages for such an activation.
+     *
      * @param instanceId Id of the instance that was configured from the JS/TS layer.
      * @param reactContext React context obtained from your ReactNative module or app.
      * @return Native PowerAuthSDK or null if such instance is not configured.

@@ -20,6 +20,7 @@
 #import "Constants.h"
 #import "Utilities.h"
 #import "PAJS.h"
+#import "PasswordCodePointScheme.h"
 
 #import "UIKit/UIKit.h"
 
@@ -325,8 +326,11 @@ PAJS_METHOD_START(persistActivation,
     
     NSError* error = nil;
     bool success = [powerAuth persistActivationWithAuthentication:auth error:&error];
-    
+
     if (success) {
+        if ([RCTConvert BOOL:authentication[@"passwordIsSchemeSafe"]]) {
+            PACPS_MarkActivationWithCorrectedPasswordScheme(instanceId, self->_objectRegister);
+        }
         resolve(@YES);
     } else {
         ProcessError(error, reject);
@@ -361,10 +365,12 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
     PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
     if (!auth) return;
     
+    NSString * activationId = powerAuth.activationIdentifier;
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
         if (error) {
             ProcessError(error, reject);
         } else {
+            PACPS_ClearPasswordCodePointScheme(activationId, powerAuth);
             resolve(@YES);
         }
     }];
@@ -376,7 +382,9 @@ PAJS_METHOD_START(removeActivationLocal,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
+    NSString * activationId = powerAuth.activationIdentifier;
     [powerAuth removeActivationLocal];
+    PACPS_ClearPasswordCodePointScheme(activationId, powerAuth);
     resolve(nil);
     PA_BLOCK_END
 }

@@ -30,6 +30,7 @@ import { PowerAuth_KDFTests } from "./PowerAuth_KDF.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
 import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
+import { PowerAuthPasswordScheme_ActivationTests, PowerAuthPasswordSchemeSharedStorage_ActivationTests } from "./PowerAuthPasswordScheme_Activation.test";
 import { PowerAuth_LegacyAuthBiometryTests, PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
@@ -53,6 +54,8 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_KDFTests(),
         new PowerAuth_EncryptorTests(),
         new PowerAuthActivationTests(),
+        new PowerAuthPasswordScheme_ActivationTests(),
+        new PowerAuthPasswordSchemeSharedStorage_ActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
         new PowerAuthUtilsTests(),
         new PowerAuthPasswordTests(),

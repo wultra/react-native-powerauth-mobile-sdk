@@ -81,6 +81,10 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p2.addCharacter(51)).toBe(4)
 
         await expect(async () => p1.addCharacter(0x110000)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        // 0xD800-0xDFFF (UTF-16 surrogates) are not valid standalone Unicode scalar values - passing one
+        // directly as a code point must be rejected, not crash the app when later NFC-normalized.
+        await expect(async () => p1.addCharacter(0xD800)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // high surrogate
+        await expect(async () => p1.addCharacter(0xDFFF)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // low surrogate
 
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
@@ -133,6 +137,9 @@ export class PowerAuthPasswordTests extends TestSuite {
         await expect(async () => p1.insertCharacter('X', -1)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         await expect(async () => p1.insertCharacter('X', 6)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         await expect(async () => p1.insertCharacter(0x110000, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        // 0xD800-0xDFFF (UTF-16 surrogates) are not valid standalone Unicode scalar values.
+        await expect(async () => p1.insertCharacter(0xD800, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // high surrogate
+        await expect(async () => p1.insertCharacter(0xDFFF, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER}) // low surrogate
 
         expect(await p1.isEqualTo(p2)).toBe(true)
     }
@@ -381,5 +388,119 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEqualTo(p2)).toBe(true)
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
+    }
+
+    // A multi-code-point string (decomposed diacritic or multi-code-point emoji) may or may not
+    // get stored in full - it is a native, per-instance/activation decision, see
+    // `PasswordCodePointScheme`. No owning instance -> legacy (1st. code point only, see
+    // `testUnicode`/`testFromString` above). Configured but not-yet-activated instance -> corrected
+    // (all code points kept).
+
+    // 'e' + combining acute accent (U+0301), written as an explicit escape (not a literal 'é') so it
+    // stays genuinely decomposed no matter how this file is saved/edited - a literal accented character
+    // in source is commonly re-saved as its precomposed form by editors/tools, which would silently turn
+    // this into a single-code-point string and make the test below a no-op for NFC composition.
+    decomposedEAcute = "é"
+    // The same logical character, already precomposed into a single code point (also an explicit
+    // escape, for the same reason). NFC-normalizing `decomposedEAcute` must produce exactly this.
+    composedEAcute = "é"
+    // ZWJ family emoji: man, ZWJ, woman, ZWJ, girl - 5 code points, no NFC composition rule.
+    familyEmoji = "👨‍👩‍👧"
+    // Flag sequence: 2 regional indicator code points, no NFC composition rule.
+    flagEmoji = "🇨🇿"
+
+    async testCodePointSchemeWithoutOwner() {
+        const p1 = new PowerAuthPassword()
+        this.cleanup.push(p1)
+
+        // Legacy scheme must store the raw (non-NFC-normalized) 1st. code point - 'e' (U+0065) - not
+        // the NFC-composed 'é' (U+00E9), otherwise derived password bytes for legacy activations would
+        // silently change. Verify the actual stored content, not just the length.
+        expect(await p1.addCharacter(this.decomposedEAcute)).toBe(1)
+        const rawE = new PowerAuthPassword()
+        this.cleanup.push(rawE)
+        await rawE.addCharacter(0x65)
+        expect(await p1.isEqualTo(rawE)).toBe(true)
+
+        // Legacy scheme keeps only the 1st. of the 5/2 code points - verify the actual value, not just
+        // the count.
+        expect(await p1.addCharacter(this.familyEmoji)).toBe(2)
+        const rawManOnly = new PowerAuthPassword()
+        this.cleanup.push(rawManOnly)
+        await rawManOnly.addCharacter(0x65)
+        await rawManOnly.addCharacter(0x1F468)
+        expect(await p1.isEqualTo(rawManOnly)).toBe(true)
+
+        expect(await p1.addCharacter(this.flagEmoji)).toBe(3)
+
+        // insertCharacter must use the same raw code point as addCharacter - regression check for the
+        // bug where NFC normalization ran before the legacy/corrected decision.
+        const p2 = new PowerAuthPassword()
+        this.cleanup.push(p2)
+        expect(await p2.insertCharacter(this.decomposedEAcute, 0)).toBe(1)
+        expect(await p2.isEqualTo(rawE)).toBe(true)
+        expect(await p2.insertCharacter(this.familyEmoji, 1)).toBe(2)
+        expect(await p2.isEqualTo(rawManOnly)).toBe(true)
+    }
+
+    // A precomposed input has nothing for NFC to normalize, so legacy and corrected schemes must
+    // produce byte-identical results - this would only diverge if the two code paths disagreed on
+    // something other than normalization.
+    async testCodePointSchemePrecomposedInputMatchesAcrossSchemes() {
+        const legacy = new PowerAuthPassword()
+        this.cleanup.push(legacy)
+        await legacy.addCharacter(this.composedEAcute)
+
+        const config = new PowerAuthConfiguration('ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==', 'http://localhost/wrong')
+        const powerAuth = new PowerAuth(this.getRandomId())
+        this.cleanup.push(powerAuth)
+        await powerAuth.configure(config)
+        expect(await powerAuth.hasValidActivation()).toBe(false)
+
+        const corrected = powerAuth.createPassword()
+        this.cleanup.push(corrected)
+        await corrected.addCharacter(this.composedEAcute)
+
+        expect(await legacy.isEqualTo(corrected)).toBe(true)
+    }
+
+    async testCodePointSchemeForNonActivatedInstance() {
+        // Dummy config, same as testGlobalRelease - configure() is local-only, no server call.
+        const config = new PowerAuthConfiguration('ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==', 'http://localhost/wrong')
+        const powerAuth = new PowerAuth(this.getRandomId())
+        this.cleanup.push(powerAuth)
+        await powerAuth.configure(config)
+
+        expect(await powerAuth.hasValidActivation()).toBe(false)
+
+        const p1 = powerAuth.createPassword()
+        this.cleanup.push(p1)
+
+        // Corrected scheme NFC-composes the decomposed accent into a single 'é' (U+00E9) - verify the
+        // actual stored content, not just the length.
+        expect(await p1.addCharacter(this.decomposedEAcute)).toBe(1)
+        const composedE = powerAuth.createPassword()
+        this.cleanup.push(composedE)
+        await composedE.addCharacter(0xE9)
+        expect(await p1.isEqualTo(composedE)).toBe(true)
+
+        // Cross-input-source equivalence: this is the actual point of NFC - the same logical password
+        // typed as a decomposed sequence (this.decomposedEAcute) or typed as an already-precomposed
+        // character (this.composedEAcute) must store identical bytes.
+        const fromComposedInput = powerAuth.createPassword()
+        this.cleanup.push(fromComposedInput)
+        await fromComposedInput.addCharacter(this.composedEAcute)
+        expect(await p1.isEqualTo(fromComposedInput)).toBe(true)
+
+        expect(await p1.addCharacter(this.familyEmoji)).toBe(6)  // +5 code points
+        expect(await p1.addCharacter(this.flagEmoji)).toBe(8)    // +2 code points
+
+        // insertCharacter must NFC-normalize just like addCharacter - regression check for the bug
+        // where NFC normalization ran before the legacy/corrected decision.
+        const p2 = powerAuth.createPassword()
+        this.cleanup.push(p2)
+        expect(await p2.insertCharacter(this.decomposedEAcute, 0)).toBe(1)
+        expect(await p2.isEqualTo(composedE)).toBe(true)
+        expect(await p2.insertCharacter(this.familyEmoji, 1)).toBe(6)
     }
 }

@@ -44,11 +44,17 @@ export type PowerAuthRawPasswordType = PowerAuthRawPassword | string
  */
 export interface PowerAuthRawAuthentication {
     readonly password?: string | PowerAuthRawPassword
-    readonly biometricPrompt?: PowerAuthBiometricPrompt    
+    readonly biometricPrompt?: PowerAuthBiometricPrompt
     readonly isPersist?: boolean
     readonly isBiometry: boolean
     isReusable: boolean
-    biometryKeyId?: string    
+    biometryKeyId?: string
+    /**
+     * `persistActivation` only: true if `password` is a string, or a `PowerAuthPassword` bound to the
+     * persisting `PowerAuth` instance. Tells native whether it's safe to mark the activation as using
+     * the corrected code point scheme.
+     */
+    readonly passwordIsSchemeSafe?: boolean
 }
 
 /**

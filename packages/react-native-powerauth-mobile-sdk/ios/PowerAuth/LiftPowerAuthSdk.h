@@ -31,6 +31,12 @@
 #endif
 
 /// Function that lifts PowerAuthSDK instance from the React-Native module if present (configured). If the object is not available, returns nil.
+///
+/// Note: calling `persistActivationWithAuthentication:`/`removeActivationLocal` etc. directly on the lifted
+/// instance bypasses `PasswordCodePointScheme`'s marker bookkeeping (which lives in `PowerAuthModule`). This
+/// is safe - the affected activation just silently keeps using the legacy (1st. code point only) scheme - but
+/// it means the corrected scheme never engages for such an activation.
+///
 /// @param instanceId Id of the instance that was configured from the JS/TS layer.
 /// @param bridge React bridge reference obtained from your ReactNative module or app.
 /// @return Native PowerAuthSDK or nil if such instance is not configured.

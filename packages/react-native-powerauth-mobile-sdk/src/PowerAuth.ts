@@ -230,11 +230,15 @@ export class PowerAuth {
 
     /**
      * Persists activation that was created and store related data using provided authentication instance.
-     * 
+     *
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     async persistActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
+        const auth = authentication.convertLegacyObject(true)
+        const password = auth.password
+        const passwordIsSchemeSafe = password === undefined || typeof password === 'string' || password.isBoundToInstance(this.instanceId)
+        const rawAuthentication = await auth.toRawAuthentication()
+        return NativeWrapper.thisCall("persistActivation", this.instanceId, { ...rawAuthentication, passwordIsSchemeSafe })
     }
 
     /** Activation identifier or undefined if object has no valid activation. */

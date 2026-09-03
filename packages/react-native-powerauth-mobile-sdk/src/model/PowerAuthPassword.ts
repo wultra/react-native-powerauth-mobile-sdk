@@ -56,7 +56,7 @@ export type CharacterType = string | number
  * 
  * - If you call any `PowerAuthPassword` method except `release()`, then the auto-cleanup
  *   timer is reset, so the native password will live for another 5 minutes.
- * 
+ *
  * Be aware that this class is effective only if you're using a numeric PIN for the passphrase
  * although its API accepts full Unicode code point at the input. This is because it's quite
  * simple to re-implement the PIN keyboard with your custom UI components. On opposite to that,
@@ -141,24 +141,31 @@ export class PowerAuthPassword extends BaseNativeObject {
     /**
      * Append character to the end of the password. This method also
      * extends the lifetime of the underlying native password.
-     * 
+     *
+     * A `character` string may expand into more than one raw (unnormalized) code point (e.g. a
+     * multi-code-point emoji or a decomposed diacritic); how many actually get stored, and whether
+     * they're NFC-normalized first, is decided natively, per activation - see `PasswordCodePointScheme`
+     * on each platform.
+     *
      * @param character Character to add at the end of password.
      * @returns Number of characters stored in the password.
      */
     addCharacter(character: CharacterType): Promise<number> {
-        return this.withObjectId(id => NativePassword.addCharacter(id, this.getCodePoint(character)))
+        return this.withObjectId(id => NativePassword.addCharacter(id, this.resolveCodePoints(character), this.powerAuthInstanceId))
     }
 
     /**
      * Insert character at the specified position. This method also
      * extends the lifetime of the underlying native password.
-     * 
+     *
+     * See `addCharacter` for how a single `character` may expand into more than one stored code point.
+     *
      * @param character Character to insert.
      * @param at Position where character will be inserted. Must be in range 0, upt to length, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Number of characters stored in the password.
      */
     insertCharacter(character: CharacterType, at: number): Promise<number> {
-        return this.withObjectId(id => NativePassword.insertCharacter(id, this.getCodePoint(character), at))
+        return this.withObjectId(id => NativePassword.insertCharacter(id, this.resolveCodePoints(character), at, this.powerAuthInstanceId))
     }
 
     /**
@@ -191,6 +198,14 @@ export class PowerAuthPassword extends BaseNativeObject {
      */
     isEqualTo(password: PowerAuthPassword): Promise<boolean> {
         return this.withObjectId(id1 => password.withObjectId(id2 => NativePassword.isEqual(id1, id2)))
+    }
+
+    /**
+     * Returns true if this password is bound to the given PowerAuth instance identifier.
+     * @internal
+     */
+    isBoundToInstance(instanceId: string): boolean {
+        return this.powerAuthInstanceId === instanceId
     }
 
     /**
@@ -246,25 +261,27 @@ export class PowerAuthPassword extends BaseNativeObject {
     }
 
     /**
-     * Function translate string or number into unicode code point. If string parameter is provided,
-     * then the `codePointAt(0)` is returned.
-     * @param character CharacterType to translate. 
-     * @returns number with Unicode Code Point.
+     * Translates a string or number into a list of raw Unicode code points to send to the native side.
+     *
+     * Deliberately does NOT apply any normalization - whether to normalize and how many code points to
+     * store is a native, per-activation decision (see `PasswordCodePointScheme`).
+     *
+     * @param character CharacterType to translate.
+     * @returns Array with one or more Unicode code points, in the order they should be stored.
      */
-    private getCodePoint(character: CharacterType): number {
-        let c: number
-        if (typeof character === 'string') {
-            if (character.length === 0) {
-                throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
-            }
-            const cp = character.codePointAt(0)
-            if (cp === undefined) {
-                throw new PowerAuthError(undefined, "Failed to extract 1st. code point", PowerAuthErrorCode.WRONG_PARAMETER)
-            }
-            c = cp
-        } else {
-            c = character
+    private resolveCodePoints(character: CharacterType): number[] {
+        if (typeof character !== 'string') {
+            return [character]
         }
-        return c
+        if (character.length === 0) {
+            throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        // `Array.from` with a mapper iterates the string by code point (correctly handling UTF-16
+        // surrogate pairs), so `c` here is always exactly one code point and `codePointAt(0)` is safe.
+        const codePoints = Array.from(character, c => c.codePointAt(0) as number)
+        if (codePoints.length === 0) {
+            throw new PowerAuthError(undefined, "Failed to extract code points", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        return codePoints
     }
 }

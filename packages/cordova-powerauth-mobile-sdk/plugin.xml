@@ -72,6 +72,7 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/IManagedObject.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ManagedAny.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ObjectRegisterJs.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PasswordCodePointScheme.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PinTester.java" target-dir="com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthEncryptorJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
@@ -116,6 +117,8 @@
         <header-file src="ios/PowerAuth/Constants.h" />
         <header-file src="ios/PowerAuth/Errors.h" />
         <source-file src="ios/PowerAuth/Errors.m" />
+        <header-file src="ios/PowerAuth/PasswordCodePointScheme.h" />
+        <source-file src="ios/PowerAuth/PasswordCodePointScheme.m" />
         <header-file src="ios/PowerAuth/PowerAuthData.h" />
         <source-file src="ios/PowerAuth/PowerAuthData.m" />
         <header-file src="ios/PowerAuth/PowerAuthEncryptorModule.h" />
