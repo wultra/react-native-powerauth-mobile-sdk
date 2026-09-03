@@ -30,6 +30,9 @@
 /// Time interval in milliseconds to keep encryptor object alive in memory
 #define ENCRYPTOR_KEEP_ALIVE_TIME       (5 * 60 * 1000)
 
+/// Time interval in milliseconds to keep a Secure Vault base key in memory.
+#define SECURE_VAULT_KEY_KEEP_ALIVE_TIME (5 * 60 * 1000)
+
 /// Upper limit for Unicode Code Point
 #define CODEPOINT_MAX                    0x10FFFF
 
