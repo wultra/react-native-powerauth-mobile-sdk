@@ -62,15 +62,11 @@ export async function isBiometryEnrolledForTests(sdk: PowerAuth): Promise<boolea
     return status.systemStatus === PowerAuthBiometryStatus.OK
 }
 
-/**
- * Most E2E tests still run PowerAuth protocol V3.3. Focused protocol-4 suites can
- * select another algorithm explicitly.
- */
 export function createE2ePowerAuthConfiguration(
     configuration: string,
     baseEndpointUrl: string,
     offlineAuthenticationCodeComponentLength: number = 8,
-    algorithm: PowerAuthAlgorithm = PowerAuthAlgorithm.LEGACY
+    algorithm?: PowerAuthAlgorithm
 ): PowerAuthConfiguration {
     return new PowerAuthConfiguration(
         configuration,
@@ -141,15 +137,13 @@ export class IntegrationHelper {
     /** Cleanup after the test is finished */
     async cleanup(): Promise<void> {
         const isConfigured = await this._sdk.isConfigured()
-        let activationId: string | undefined
+        let activationId = this._createdActivation?.registrationId
 
         if (isConfigured) {
-            activationId = await this._sdk.getActivationIdentifier()
+            activationId = await this._sdk.getActivationIdentifier() ?? activationId
 
             // REMOVE ACTIVATION LOCALLY
             await this._sdk.removeActivationLocal()
-        } else {
-            activationId = this._createdActivation?.registrationId
         }
 
         try {

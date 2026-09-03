@@ -15,12 +15,37 @@
 //
 
 import { expect } from "mobile-testbed";
-import { PowerAuthAlgorithm, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { CustomConfig } from "../src/IntegrationUtils";
+import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
-class PowerAuth_EncryptorTestBase extends TestWithActivation {
-    protected async verifyActivationScopedExchange() {
+export class PowerAuth_EncryptorTests extends TestWithActivation {
+
+    override shouldCreateActivationBeforeTest(): boolean {
+        return this.context.testName !== 'testApplicationScopeWithoutActivation'
+    }
+
+    async testApplicationScopeWithoutActivation() {
+        expect(await this.sdk.hasValidActivation()).toBe(false)
+        await expect(async () => await this.sdk.getEncryptorForActivationScope())
+            .toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
+
+        const encryptor = await this.sdk.getEncryptorForApplicationScope()
+        try {
+            expect(encryptor.scope).toBe('APPLICATION')
+            expect(await encryptor.canEncryptRequest()).toBe(true)
+            expect(await encryptor.canDecryptResponse()).toBe(false)
+
+            const encrypted = await encryptor.encryptRequest(btoa('{}'))
+            expect(encrypted.requestBody.length > 0).toBe(true)
+            expect(encrypted.requestHeaders.length > 0).toBe(true)
+            expect(await encryptor.canEncryptRequest()).toBe(false)
+            expect(await encryptor.canDecryptResponse()).toBe(true)
+        } finally {
+            await encryptor.release()
+        }
+    }
+
+    async testActivationScopedExchange() {
         const userId = this.helper.userId
         expect(userId).toBeDefined()
         const expectedUserInfo = this.helper.userInfo(userId!)
@@ -59,38 +84,6 @@ class PowerAuth_EncryptorTestBase extends TestWithActivation {
                 await encryptor.release()
             }
         }
-    }
-}
-
-export class PowerAuth_EncryptorTests extends PowerAuth_EncryptorTestBase {
-
-    override shouldCreateActivationBeforeTest(): boolean {
-        return this.context.testName !== 'testApplicationScopeWithoutActivation'
-    }
-
-    async testApplicationScopeWithoutActivation() {
-        expect(await this.sdk.hasValidActivation()).toBe(false)
-        await expect(async () => await this.sdk.getEncryptorForActivationScope())
-            .toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
-
-        const encryptor = await this.sdk.getEncryptorForApplicationScope()
-        try {
-            expect(encryptor.scope).toBe('APPLICATION')
-            expect(await encryptor.canEncryptRequest()).toBe(true)
-            expect(await encryptor.canDecryptResponse()).toBe(false)
-
-            const encrypted = await encryptor.encryptRequest(btoa('{}'))
-            expect(encrypted.requestBody.length > 0).toBe(true)
-            expect(encrypted.requestHeaders.length > 0).toBe(true)
-            expect(await encryptor.canEncryptRequest()).toBe(false)
-            expect(await encryptor.canDecryptResponse()).toBe(true)
-        } finally {
-            await encryptor.release()
-        }
-    }
-
-    async testActivationScopedExchange() {
-        await this.verifyActivationScopedExchange()
     }
 
     async testReleaseIsCachedAndIdempotent() {
@@ -151,15 +144,5 @@ export class PowerAuth_EncryptorTests extends PowerAuth_EncryptorTestBase {
         } finally {
             await encryptor.release()
         }
-    }
-}
-
-export class PowerAuth_EncryptorProtocol4Tests extends PowerAuth_EncryptorTestBase {
-    override provideCustomConfig(): CustomConfig {
-        return { algorithm: PowerAuthAlgorithm.P384_L3 }
-    }
-
-    async testProtocol4ActivationScopedExchange() {
-        await this.verifyActivationScopedExchange()
     }
 }

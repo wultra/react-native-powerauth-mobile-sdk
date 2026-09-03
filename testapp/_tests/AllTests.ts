@@ -15,6 +15,7 @@
 //
 
 import { TestSuite } from "mobile-testbed";
+import { PowerAuthAlgorithm } from "react-native-powerauth-mobile-sdk";
 import { TestRunnerTests } from "./testbed/TestRunner.test";
 import { TestSuiteTests } from "./testbed/TestSuite.test";
 import { PowerAuthActivationCodeUtilTests } from "./PowerAuthActivationCodeUtil.test";
@@ -34,47 +35,84 @@ import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
 import { PowerAuth_LegacyAuthBiometryTests, PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
-import { PowerAuth_EncryptorProtocol4Tests, PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
+import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
 import { PowerAuth_TimeSyncTests } from "./PowerAuth_TimeSync.test";
 import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test";
 import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test";
 import { PowerAuth_ErrorDataTests } from "./PowerAuth_ErrorData.test";
 import { PowerAuth_ProtocolUpgradeTests } from "./PowerAuth_ProtocolUpgrade.test";
 import { PowerAuth_SecureVaultTests } from "./PowerAuth_SecureVault.test";
+import { TestWithActivation } from "./helpers/TestWithActivation";
+
+interface AlgorithmPass {
+    name: string
+    algorithm?: PowerAuthAlgorithm
+}
+
+type ActivationTestConstructor<T extends TestWithActivation = TestWithActivation> =
+    new (suiteName?: string) => T
+
+const legacyPass: AlgorithmPass = {
+    name: "legacy",
+    algorithm: PowerAuthAlgorithm.LEGACY
+}
+
+const defaultPass: AlgorithmPass = {
+    name: "default"
+}
+
+function suiteForPass<T extends TestWithActivation>(
+    TestClass: ActivationTestConstructor<T>,
+    pass: AlgorithmPass
+): T {
+    return new TestClass(`${TestClass.name} [${pass.name}]`).withAlgorithm(pass.algorithm)
+}
+
+function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
+    const isLegacy = pass.algorithm === PowerAuthAlgorithm.LEGACY
+    return [
+        suiteForPass(PowerAuth_ActivationTests, pass),
+        suiteForPass(PowerAuth_PasswordTests, pass),
+        suiteForPass(PowerAuth_SignatureTests, pass),
+        ...(isLegacy ? [] : [
+            suiteForPass(PowerAuth_AdvancedSignatureTests, pass),
+            suiteForPass(PowerAuth_SecureVaultTests, pass)
+        ]),
+        suiteForPass(PowerAuth_TokenTests, pass),
+        ...(isLegacy ? [suiteForPass(PowerAuth_KDFTests, pass)] : []),
+        suiteForPass(PowerAuth_EncryptorTests, pass),
+        suiteForPass(PowerAuth_UserInfoTest, pass),
+        suiteForPass(PowerAuth_LegacyAuthTests, pass),
+        suiteForPass(PowerAuth_ErrorDataTests, pass)
+    ]
+}
 
 export function getLibraryTests(): TestSuite[] {
     return [
-        new PowerAuth_TimeSyncTests(),
         new ConfigurationObjectsTests(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ProtocolUpgradeTests(),
-        new PowerAuth_ActivationTests(),
-        new PowerAuth_PasswordTests(),
-        new PowerAuth_SignatureTests(),
-        new PowerAuth_AdvancedSignatureTests(),
-        new PowerAuth_SecureVaultTests(),
-        new PowerAuth_TokenTests(),
-        new PowerAuth_KDFTests(),
-        new PowerAuth_EncryptorTests(),
-        new PowerAuth_EncryptorProtocol4Tests(),
+        new PowerAuth_TimeSyncTests(),
+        ...getAlgorithmPassTests(legacyPass),
+        ...getAlgorithmPassTests(defaultPass),
         new PowerAuthActivationTests(),
         new PowerAuthActivationCodeUtilTests(),
         new PowerAuthUtilsTests(),
         new PowerAuthPasswordTests(),
         new PowerAuthPassphraseMeterTests(),
-        new PowerAuth_UserInfoTest(),
-        new PowerAuth_LegacyAuthTests(),
         new NativeObjectRegisterTests(),
-        new PowerAuth_CryptoUtilsTest(),
-        new PowerAuth_ErrorDataTests()
+        new PowerAuth_CryptoUtilsTest()
     ]
 }
 
 export function getInteractiveLibraryTests(): TestSuite[] {
     return [
-        new PowerAuth_BiometryTests(),
-        new PowerAuth_BiometryInteractiveTests(),
-        new PowerAuth_LegacyAuthBiometryTests()
+        suiteForPass(PowerAuth_BiometryTests, legacyPass),
+        suiteForPass(PowerAuth_BiometryInteractiveTests, legacyPass),
+        suiteForPass(PowerAuth_LegacyAuthBiometryTests, legacyPass),
+        suiteForPass(PowerAuth_BiometryTests, defaultPass),
+        suiteForPass(PowerAuth_BiometryInteractiveTests, defaultPass),
+        suiteForPass(PowerAuth_LegacyAuthBiometryTests, defaultPass)
     ]
 }
 
