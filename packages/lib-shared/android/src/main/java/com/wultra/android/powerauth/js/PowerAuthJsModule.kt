@@ -21,7 +21,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Base64
-import android.util.Pair
 import androidx.fragment.app.FragmentActivity
 import com.wultra.android.powerauth.bridge.*
 import io.getlime.security.powerauth.biometry.*
@@ -78,10 +77,12 @@ class PowerAuthJsModule(
                 val paConfig: PowerAuthConfiguration = getPowerAuthConfigurationFromMap(instanceId, configuration)
                     ?: throw PowerAuthErrorException(PowerAuthErrorCodes.WRONG_PARAMETER, "Provided configuration is invalid")
                 val paClientConfig: PowerAuthClientConfiguration = getPowerAuthClientConfigurationFromMap(clientConfiguration)
-                val paKeychainConfig: PowerAuthKeychainConfiguration = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration, biometryConfiguration)
+                val paBiometricConfig = getPowerAuthBiometricConfigurationFromMap(biometryConfiguration)
+                val paKeychainConfig: PowerAuthKeychainConfiguration = getPowerAuthKeychainConfigurationFromMap(keychainConfiguration)
                 // Configure the instance
                 val instance: PowerAuthSDK = PowerAuthSDK.Builder(paConfig)
                     .clientConfiguration(paClientConfig)
+                    .biometricConfiguration(paBiometricConfig)
                     .keychainConfiguration(paKeychainConfig)
                     .build(this.context)
                 ManagedAny.wrap(instance)
@@ -569,39 +570,38 @@ class PowerAuthJsModule(
     ) {
         val context: Context = this.context
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            if (!sdk.hasValidActivation()) {
-                Errors.rejectPromise(promise, PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION))
-                return@powerAuthBlock
-            }
-            val corePassword: Password = passwordModule.usePassword(password)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val fragmentActivity = getCurrentActivity() as FragmentActivity?
+                    ?: throw IllegalStateException("Current fragment activity is not available")
+                val biometricPrompt = buildBiometricPrompt(
+                    fragmentActivity,
+                    prompt,
+                    allowNoPrompt = true,
+                    authenticateOnBiometricKeySetup = sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
+                )
+                val corePassword = passwordModule.usePasswordCopy(password)
                 try {
-                    val fragmentActivity = getCurrentActivity() as FragmentActivity?
-                        ?: throw IllegalStateException("Current fragment activity is not available")
-                    val titleDesc = extractPromptStrings(prompt)
                     sdk.addBiometryFactor(
                         context,
-                        fragmentActivity,
-                        titleDesc.first,
-                        titleDesc.second,
                         corePassword,
+                        biometricPrompt,
                         object : IAddBiometryFactorListener {
                             override fun onAddBiometryFactorSucceed() {
+                                corePassword.destroy()
                                 promise.resolve(null)
                             }
 
                             override fun onAddBiometryFactorFailed(error: Throwable) {
+                                corePassword.destroy()
                                 Errors.rejectPromise(promise, error)
                             }
                         })
-                } catch (e: Exception) {
-                    Errors.rejectPromise(promise, e)
+                } catch (t: Throwable) {
+                    corePassword.destroy()
+                    throw t
                 }
-            } else {
-                promise.reject(
-                    Errors.EC_REACT_NATIVE_ERROR,
-                    "Biometry not supported on this android version."
-                )
+            } catch (t: Throwable) {
+                Errors.rejectPromise(promise, t)
             }
         })
     }
@@ -614,10 +614,7 @@ class PowerAuthJsModule(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     promise.resolve(sdk.hasBiometryFactor(context))
                 } else {
-                    promise.reject(
-                        Errors.EC_REACT_NATIVE_ERROR,
-                        "Biometry not supported on this android version."
-                    )
+                    promise.resolve(false)
                 }
             }
         })
@@ -627,28 +624,15 @@ class PowerAuthJsModule(
     fun removeBiometryFactor(instanceId: String, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (sdk.removeBiometryFactor(context)) {
+            sdk.removeBiometryFactor(context, object : IRemoveBiometryFactorListener {
+                override fun onRemoveBiometryFactorSucceed() {
                     promise.resolve(null)
-                } else {
-                    if (!sdk.hasBiometryFactor(context)) {
-                        promise.reject(
-                            Errors.EC_BIOMETRY_NOT_CONFIGURED,
-                            "Biometry not configured in this PowerAuth instance"
-                        )
-                    } else {
-                        promise.reject(
-                            Errors.EC_REACT_NATIVE_ERROR,
-                            "Failed to remove biometry factor"
-                        )
-                    }
                 }
-            } else {
-                promise.reject(
-                    Errors.EC_BIOMETRY_NOT_SUPPORTED,
-                    "Biometry not supported on this android version"
-                )
-            }
+
+                override fun onRemoveBiometryFactorFailed(t: Throwable) {
+                    Errors.rejectPromise(promise, t)
+                }
+            })
         })
     }
 
@@ -678,6 +662,20 @@ class PowerAuthJsModule(
         map.putString("biometryType", biometryType)
         map.putString("canAuthenticate", canAuthenticate)
         promise.resolve(map)
+    }
+
+    @JsApiMethod
+    fun getBiometricStatus(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            promise.resolve(getBiometricStatusMap(sdk.getBiometricStatus(context)))
+        })
+    }
+
+    @JsApiMethod
+    fun isAuthenticationWithBiometricsAvailable(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            promise.resolve(sdk.isAuthenticationWithBiometricsAvailable(context))
+        })
     }
 
     @JsApiMethod
@@ -771,43 +769,6 @@ class PowerAuthJsModule(
         })
     }
 
-    /**
-     * Validate biometric status before use.
-     * @param sdk PowerAuthSDK instance
-     * @throws WrapperException In case that biometry is not available for any reason.
-     */
-    @Throws(WrapperException::class)
-    private fun validateBiometryBeforeUse(sdk: PowerAuthSDK) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            when (BiometricAuthentication.canAuthenticate(context)) {
-                BiometricStatus.OK -> if (sdk.hasValidActivation() && !sdk.hasBiometryFactor(context)) {
-                    // Has valid activation, but factor is not set
-                    throw WrapperException(
-                        Errors.EC_BIOMETRY_NOT_CONFIGURED,
-                        "Biometry factor is not configured"
-                    )
-                }
-
-                BiometricStatus.NOT_AVAILABLE -> throw WrapperException(
-                    Errors.EC_BIOMETRY_NOT_AVAILABLE,
-                    "Biometry is not available"
-                )
-
-                BiometricStatus.NOT_ENROLLED -> throw WrapperException(
-                    Errors.EC_BIOMETRY_NOT_ENROLLED,
-                    "Biometry is not enrolled on device"
-                )
-
-                BiometricStatus.NOT_SUPPORTED -> throw WrapperException(
-                    Errors.EC_BIOMETRY_NOT_SUPPORTED,
-                    "Biometry is not supported"
-                )
-            }
-        } else {
-            throw WrapperException(Errors.EC_BIOMETRY_NOT_SUPPORTED, "Biometry is not supported")
-        }
-    }
-
     @JsApiMethod
     fun authenticateWithBiometry(
         instanceId: String,
@@ -819,18 +780,19 @@ class PowerAuthJsModule(
         this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 try {
-                    validateBiometryBeforeUse(sdk)
                     val fragmentActivity = getCurrentActivity() as FragmentActivity?
                         ?: throw WrapperException(
                             Errors.EC_REACT_NATIVE_ERROR,
                             "Current fragment activity is not available"
                         )
-                    val titleDesc = extractPromptStrings(prompt)
+                    val biometricPrompt = buildBiometricPrompt(
+                        fragmentActivity,
+                        prompt,
+                        allowNoPrompt = false
+                    )
                     sdk.authenticateUsingBiometrics(
                         context,
-                        fragmentActivity,
-                        titleDesc.first,
-                        titleDesc.second,
+                        biometricPrompt,
                         object : IAuthenticateWithBiometricsListener {
                             override fun onBiometricDialogCancelled(userCancel: Boolean) {
                                 promise.reject(
@@ -840,31 +802,46 @@ class PowerAuthJsModule(
                             }
 
                             override fun onBiometricDialogSuccess(authentication: PowerAuthAuthentication) {
-                                val biometryKey = authentication.biometryFactorRelatedKey!!.copy()
-                                authentication.destroy()
-                                // Allocate native managed object object
-                                val managedBytes = ManagedAny.wrap(
-                                    biometryKey,
-                                    cleanup { data: SecureData -> data.destroy() }
-                                )
-                                // If reusable authentication is going to be created, then "keep alive" release policy is applied.
-                                // Basically, the data will be available up to 10 seconds from the last access.
-                                // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
-                                // to combine it with "expire" policy to make sure that key don't remain in memory forever.
-                                val releasePolicies =
-                                    if (makeReusable) listOf(
+                                val biometryKey = try {
+                                    authentication.biometryFactorRelatedKey?.copy()
+                                        ?: throw WrapperException(
+                                            Errors.EC_REACT_NATIVE_ERROR,
+                                            "Biometric key is missing after successful authentication."
+                                        )
+                                } catch (t: Throwable) {
+                                    Errors.rejectPromise(promise, t)
+                                    return
+                                } finally {
+                                    authentication.destroy()
+                                }
+                                try {
+                                    val managedBytes = ManagedAny.wrap(
+                                        biometryKey,
+                                        cleanup { data: SecureData -> data.destroy() }
+                                    )
+                                    val releasePolicies = listOfNotNull(
+                                        if (makeReusable) null else ReleasePolicy.afterUse(1),
                                         ReleasePolicy.keepAlive(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME)
                                     )
-                                    else listOf(
-                                        ReleasePolicy.afterUse(1),
-                                        ReleasePolicy.expire(Constants.BIOMETRY_KEY_KEEP_ALIVE_TIME)
+                                    val managedId = objectRegister.registerObjectIfOwnerMatches(
+                                        instanceId,
+                                        sdk,
+                                        managedBytes,
+                                        releasePolicies
                                     )
-                                val managedId = objectRegister.registerObject(
-                                    managedBytes,
-                                    instanceId,
-                                    releasePolicies
-                                )
-                                promise.resolve(managedId)
+                                    if (managedId == null) {
+                                        biometryKey.destroy()
+                                        promise.reject(
+                                            Errors.EC_INSTANCE_NOT_CONFIGURED,
+                                            "PowerAuth instance is no longer configured."
+                                        )
+                                    } else {
+                                        promise.resolve(managedId)
+                                    }
+                                } catch (t: Throwable) {
+                                    biometryKey.destroy()
+                                    Errors.rejectPromise(promise, t)
+                                }
                             }
 
                             override fun onBiometricDialogFailed(error: PowerAuthErrorException) {
@@ -1183,7 +1160,7 @@ class PowerAuthJsModule(
      * @param authenticateOnBiometricKeySetup Set true to require authentication during biometric key setup.
      * @return [PowerAuthAuthentication] instance.
      */
-    @Throws(WrapperException::class)
+    @Throws(Throwable::class)
     private fun constructAuthentication(
         map: ReadableMap,
         authenticateOnBiometricKeySetup: Boolean = true
@@ -1195,92 +1172,75 @@ class PowerAuthJsModule(
             )
         }
         val forPersist = map.getBoolean("isPersist")
+        val useBiometry = map.getBoolean("isBiometry")
         val biometryKeyId: String? = map.getString("biometryKeyId")
-        val biometryKey: SecureData?
-        if (biometryKeyId != null) {
-            biometryKey = objectRegister.useObject(biometryKeyId, SecureData::class.java)
-            if (biometryKey == null) {
-                throw WrapperException(
-                    Errors.EC_INVALID_NATIVE_OBJECT,
-                    "Biometric key in PowerAuthAuthentication object is no longer valid."
-                )
-            }
-        } else {
-            biometryKey = null
+        if (!forPersist && useBiometry && biometryKeyId.isNullOrEmpty()) {
+            throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "biometryKeyId is required for biometric authentication."
+            )
         }
         val biometricPrompt = if (
             forPersist &&
-            map.getBoolean("isBiometry") &&
-            biometryKeyId == null
+            useBiometry
         ) {
             val fragmentActivity = getCurrentActivity() as FragmentActivity?
                 ?: throw WrapperException(
                     Errors.EC_REACT_NATIVE_ERROR,
                     "Current fragment activity is not available"
                 )
-            if (authenticateOnBiometricKeySetup) {
-                val promptMap: ReadableMap? =
-                    if (map.hasKey("biometricPrompt")) map.getMap("biometricPrompt") else null
-                if (promptMap == null) {
-                    throw WrapperException(
-                        Errors.EC_WRONG_PARAMETER,
-                        "Biometric prompt is required when authenticateOnBiometricKeySetup is enabled."
-                    )
-                }
-                val titleDesc = extractPromptStrings(promptMap)
-                PowerAuthBiometricPrompt.prompt(
-                    fragmentActivity,
-                    titleDesc.first,
-                    titleDesc.second
-                )
-            } else {
-                PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(fragmentActivity)
-            }
+            val promptMap: ReadableMap? =
+                if (map.hasKey("biometricPrompt")) map.getMap("biometricPrompt") else null
+            buildBiometricPrompt(
+                fragmentActivity,
+                promptMap,
+                allowNoPrompt = true,
+                authenticateOnBiometricKeySetup = authenticateOnBiometricKeySetup
+            )
         } else {
             null
         }
-        var password: Password? = if (map.hasKey("password")) {
-            passwordModule.usePassword(map.getDynamic("password")).copyToImmutable()
-        } else {
-            null
-        }
-        var ownedBiometryKey: SecureData? = null
-
+        var password: Password? = null
+        var biometryKey: SecureData? = null
         try {
+            password = if (map.hasKey("password")) {
+                passwordModule.usePasswordCopy(map.getDynamic("password"))
+            } else {
+                null
+            }
             val authentication = if (forPersist) {
                 // Authentication for activation persist
                 val ownedPassword = password
                     ?: throw WrapperException(
                         Errors.EC_WRONG_PARAMETER,
-                        "PowerAuthPassword or string is required"
+                        "Password is required for persisting activation."
                     )
-                if (biometricPrompt != null) {
+                if (useBiometry) {
                     PowerAuthAuthentication.persistWithPasswordAndBiometry(
                         ownedPassword,
-                        biometricPrompt
+                        checkNotNull(biometricPrompt)
                     )
-                } else if (biometryKey == null) {
-                    PowerAuthAuthentication.persistWithPassword(ownedPassword)
                 } else {
-                    // This is currently not supported in RN wrapper. Application has no way to create
-                    // persist authentication object prepared with valid biometry key. This is supported
-                    // in native SDK, but application has to create its own biometry-supporting infrastructure.
-                    //
-                    // We can still use this option in tests, to simulate biometry-related operations
-                    // with no user's interaction.
-                    ownedBiometryKey = biometryKey.copy()
-                    PowerAuthAuthentication.persistWithPasswordAndBiometry(
-                        ownedPassword,
-                        ownedBiometryKey
-                    )
+                    PowerAuthAuthentication.persistWithPassword(ownedPassword)
                 }
             } else {
                 // Authentication for data signing
+                biometryKey = if (biometryKeyId != null) {
+                    objectRegister.useObjectAndTransform(
+                        biometryKeyId,
+                        SecureData::class.java
+                    ) { it.copy() }
+                        ?: throw WrapperException(
+                            Errors.EC_INVALID_NATIVE_OBJECT,
+                            "Biometric key for ID '$biometryKeyId' (from biometryKeyId) not found or expired for signing."
+                        )
+                } else {
+                    null
+                }
                 if (biometryKey != null) {
-                    ownedBiometryKey = biometryKey.copy()
                     password?.destroy()
                     password = null
-                    PowerAuthAuthentication.possessionWithBiometry(ownedBiometryKey)
+                    PowerAuthAuthentication.possessionWithBiometry(biometryKey)
                 } else if (password != null) {
                     PowerAuthAuthentication.possessionWithPassword(password)
                 } else {
@@ -1289,11 +1249,11 @@ class PowerAuthJsModule(
             }
 
             password = null
-            ownedBiometryKey = null
+            biometryKey = null
             return authentication
         } catch (t: Throwable) {
             password?.destroy()
-            ownedBiometryKey?.destroy()
+            biometryKey?.destroy()
             throw t
         }
     }
@@ -1313,21 +1273,69 @@ class PowerAuthJsModule(
         }
     }
 
-    /**
-     * Extract strings from biometric prompt.
-     * @param prompt Map with prompt data.
-     * @return Pair where first item is title and second description for biometric dialog.
-     */
-    private fun extractPromptStrings(prompt: ReadableMap?): Pair<String, String> {
-        var title: String? = prompt?.getString("promptTitle")
-        var description: String? = prompt?.getString("promptMessage")
-        if (title == null) {
-            title = Constants.MISSING_REQUIRED_STRING
+    private fun buildBiometricPrompt(
+        activity: FragmentActivity,
+        prompt: ReadableMap?,
+        allowNoPrompt: Boolean,
+        authenticateOnBiometricKeySetup: Boolean = true
+    ): PowerAuthBiometricPrompt {
+        if (prompt == null) {
+            if (allowNoPrompt && !authenticateOnBiometricKeySetup) {
+                return PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(activity)
+            }
+            throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                if (allowNoPrompt) {
+                    "Biometric prompt is required when authenticateOnBiometricKeySetup is enabled."
+                } else {
+                    "Biometric prompt is required for biometric authentication."
+                }
+            )
         }
-        if (description == null) {
-            description = Constants.MISSING_REQUIRED_STRING
+        val title = prompt.getString("promptTitle")?.takeIf { it.isNotBlank() }
+            ?: throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "Biometric prompt title is required on Android."
+            )
+        val message = prompt.getString("promptMessage")?.takeIf { it.isNotBlank() }
+            ?: throw WrapperException(
+                Errors.EC_WRONG_PARAMETER,
+                "Biometric prompt message is required on Android."
+            )
+        val builder = PowerAuthBiometricPrompt.Builder(activity)
+            .setTitle(title)
+            .setDescription(message)
+        prompt.getString("promptSubtitle")?.takeIf { it.isNotBlank() }?.let {
+            builder.setSubtitle(it)
         }
-        return Pair.create(title, description)
+        return builder.build()
+    }
+
+    private fun getBiometricStatusMap(status: PowerAuthBiometricStatus): WritableMap {
+        val systemStatus = when (status.systemStatus) {
+            BiometricStatus.OK -> "OK"
+            BiometricStatus.NOT_ENROLLED -> "NOT_ENROLLED"
+            BiometricStatus.NOT_AVAILABLE -> "NOT_AVAILABLE"
+            BiometricStatus.NOT_SUPPORTED -> "NOT_SUPPORTED"
+            else -> "NOT_SUPPORTED"
+        }
+        val biometryType = when (status.biometryType) {
+            BiometryType.NONE -> "NONE"
+            BiometryType.FINGERPRINT -> "FINGERPRINT"
+            BiometryType.FACE -> "FACE"
+            BiometryType.IRIS -> "IRIS"
+            BiometryType.GENERIC -> "GENERIC"
+            else -> "GENERIC"
+        }
+        return Arguments.createMap().apply {
+            putBoolean(
+                "isAuthenticationWithBiometricsAvailable",
+                status.isAuthenticationWithBiometricsAvailable
+            )
+            putBoolean("isBiometricFactorConfigured", status.isBiometricFactorConfigured)
+            putString("systemStatus", systemStatus)
+            putString("biometryType", biometryType)
+        }
     }
 
     // PowerAuthBlock instance
@@ -1549,32 +1557,40 @@ class PowerAuthJsModule(
         /**
          * Convert ReadableMaps to [PowerAuthKeychainConfiguration] object.
          * @param keychainMap Map with keychain configuration.
-         * @param biometryMap Map with biometry configuration.
          * @return [PowerAuthKeychainConfiguration] created from given maps.
          */
         private fun getPowerAuthKeychainConfigurationFromMap(
-            keychainMap: ReadableMap,
-            biometryMap: ReadableMap
+            keychainMap: ReadableMap
         ): PowerAuthKeychainConfiguration {
-            // Biometry configuration
-            val linkItemsToCurrentSet: Boolean =
-                if (biometryMap.hasKey("linkItemsToCurrentSet")) biometryMap.getBoolean("linkItemsToCurrentSet") else PowerAuthKeychainConfiguration.DEFAULT_LINK_BIOMETRY_ITEMS_TO_CURRENT_SET
-            val confirmBiometricAuthentication: Boolean =
-                if (biometryMap.hasKey("confirmBiometricAuthentication")) biometryMap.getBoolean("confirmBiometricAuthentication") else PowerAuthKeychainConfiguration.DEFAULT_CONFIRM_BIOMETRIC_AUTHENTICATION
-            val authenticateOnBiometricKeySetup: Boolean =
-                if (biometryMap.hasKey("authenticateOnBiometricKeySetup")) biometryMap.getBoolean("authenticateOnBiometricKeySetup") else PowerAuthKeychainConfiguration.DEFAULT_AUTHENTICATE_ON_BIOMETRIC_KEY_SETUP
-            val fallbackToSharedBiometryKey =
-                if (biometryMap.hasKey("fallbackToSharedBiometryKey")) biometryMap.getBoolean("fallbackToSharedBiometryKey") else PowerAuthKeychainConfiguration.DEFAULT_ENABLE_FALLBACK_TO_SHARED_BIOMETRY_KEY
-            // Keychain configuration
             val minimalRequiredKeychainProtection =
                 getKeychainProtectionFromString(keychainMap.getString("minimalRequiredKeychainProtection"))
             return PowerAuthKeychainConfiguration.Builder()
-                .linkBiometricItemsToCurrentSet(linkItemsToCurrentSet)
-                .confirmBiometricAuthentication(confirmBiometricAuthentication)
-                .authenticateOnBiometricKeySetup(authenticateOnBiometricKeySetup)
                 .minimalRequiredKeychainProtection(minimalRequiredKeychainProtection)
-                .enableFallbackToSharedBiometryKey(fallbackToSharedBiometryKey)
                 .build()
+        }
+
+        private fun getPowerAuthBiometricConfigurationFromMap(
+            map: ReadableMap
+        ): PowerAuthBiometricConfiguration {
+            val builder = PowerAuthBiometricConfiguration.Builder()
+            if (map.hasKey("invalidateBiometricFactorAfterChange")) {
+                builder.invalidateBiometricFactorAfterChange(map.getBoolean("invalidateBiometricFactorAfterChange"))
+            } else if (map.hasKey("linkItemsToCurrentSet")) {
+                builder.invalidateBiometricFactorAfterChange(map.getBoolean("linkItemsToCurrentSet"))
+            }
+            if (map.hasKey("confirmBiometricAuthentication")) {
+                builder.confirmBiometricAuthentication(map.getBoolean("confirmBiometricAuthentication"))
+            }
+            if (map.hasKey("authenticateOnBiometricKeySetup")) {
+                builder.authenticateOnBiometricKeySetup(map.getBoolean("authenticateOnBiometricKeySetup"))
+            }
+            if (map.hasKey("fallbackToSharedBiometryKey")) {
+                builder.enableFallbackToSharedBiometryKey(map.getBoolean("fallbackToSharedBiometryKey"))
+            }
+            if (map.hasKey("useLegacySymmetricKey")) {
+                builder.useLegacySymmetricKey(map.getBoolean("useLegacySymmetricKey"))
+            }
+            return builder.build()
         }
 
         // Helper methods

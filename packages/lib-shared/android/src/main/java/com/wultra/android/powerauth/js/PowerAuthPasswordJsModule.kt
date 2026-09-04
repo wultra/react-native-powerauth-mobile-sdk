@@ -199,6 +199,44 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     }
 
     /**
+     * Return an immutable password owned by an asynchronous native operation.
+     */
+    @Throws(WrapperException::class)
+    fun usePasswordCopy(anyPassword: Dynamic?): Password {
+        if (anyPassword != null) {
+            if (anyPassword.type === ReadableType.String) {
+                val password = Password(anyPassword.asString())
+                return try {
+                    password.copyToImmutable()
+                } finally {
+                    password.destroy()
+                }
+            }
+            if (anyPassword.type === ReadableType.Map) {
+                val map = anyPassword.asMap()
+                    ?: throw WrapperException(
+                        Errors.EC_WRONG_PARAMETER,
+                        "PowerAuthPassword map is required"
+                    )
+                val passwordObjectId = map.getString("objectId")
+                    ?: throw WrapperException(
+                        Errors.EC_INVALID_NATIVE_OBJECT,
+                        "PowerAuthPassword is not initialized"
+                    )
+                return objectRegister.useObjectAndTransform(
+                    passwordObjectId,
+                    Password::class.java
+                ) { it.copyToImmutable() }
+                    ?: throw WrapperException(
+                        Errors.EC_INVALID_NATIVE_OBJECT,
+                        "PowerAuthPassword object is no longer valid"
+                    )
+            }
+        }
+        throw WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required")
+    }
+
+    /**
      * Function translate dynamic object type into core Password object. The password object is
      * marked as touched in the object register if exists.
      * @param anyPassword Dynamic object representing a password.

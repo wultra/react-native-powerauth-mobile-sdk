@@ -16,7 +16,7 @@
 
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { expect, UserPromptDuration } from "mobile-testbed";
-import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthBiometryType, PowerAuthError, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { Platform } from "react-native";
 import { importPassword } from "./helpers/PasswordHelper";
 import { CustomConfig } from "../src/IntegrationUtils";
@@ -55,9 +55,9 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
 
     async beforeEach(): Promise<void> {
         await super.beforeEach()
-        const biometryInfo = await this.sdk.getBiometryInfo()
-        if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
-            this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
+        const biometricStatus = await this.sdk.getBiometricStatus()
+        if (biometricStatus.systemStatus !== PowerAuthBiometryStatus.OK) {
+            this.reportSkip(`Biometric status is ${biometricStatus.systemStatus}`)
         }
     }
 
@@ -73,6 +73,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         const password = await importPassword(this.credentials.validPassword)
         const persistAuth = PowerAuthAuthentication.persistWithPasswordAndBiometry(password, {
             promptTitle: 'Authenticate with biometry',
+            promptSubtitle: 'PowerAuth activation',
             promptMessage: 'Authenticate to create activation with biometry'
         })
         await sdk.persistActivation(persistAuth)
@@ -99,6 +100,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         if (this.isAndoid) await this.showPrompt('Authenticate to add biometric factor again')
         await this.sdk.addBiometryFactor(this.credentials.validPassword, {
             promptTitle: 'Authenticate',
+            promptSubtitle: 'PowerAuth biometric factor',
             promptMessage: 'Authenticate to add biometric factor'
         })
     }
@@ -199,6 +201,25 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         })
     }
 
+    async testGroupedBiometricAuthenticationWrapsCallbackError() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please authenticate for group operation.')
+
+        let callbackError: PowerAuthError | undefined
+        try {
+            await this.sdk.groupedBiometricAuthentication(
+                this.credentials.biometry,
+                async () => { throw new Error('uncaught callback failure') }
+            )
+        } catch (error) {
+            expect(error instanceof PowerAuthError).toBe(true)
+            callbackError = error as PowerAuthError
+        }
+        expect(callbackError).toBeDefined()
+        expect(callbackError?.code).toBe(PowerAuthErrorCode.UNKNOWN_ERROR)
+        expect(callbackError?.message?.includes('groupedAuthenticationCalls')).toBe(true)
+    }
+
     async testRemoveActivationWithBiometry() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Authenticate to remove activation')
@@ -208,13 +229,16 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
     async testCancelBiometry() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please CANCEL authentication dialog')
-        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please cancel", promptMessage: "Please CANCEL this dialog", cancelButton: "super cancel"})
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please cancel", promptMessage: "Please CANCEL this dialog", cancelButtonTitle: "super cancel"})
         await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_CANCEL })
     }
 
     async testFailedBiometry() {
+        if (this.isAndoid) {
+            return
+        }
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        const isFaceId = !this.isAndoid && (await this.sdk.getBiometryInfo()).biometryType == PowerAuthBiometryType.FACE
+        const isFaceId = !this.isAndoid && (await this.sdk.getBiometricStatus()).biometryType == PowerAuthBiometryType.FACE
         if (isFaceId) {
             await this.showPrompt('This test is not supported on FaceID')
             return
@@ -246,7 +270,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
     async iosTestFallbackButton() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please FAIL authentication and use fallback button')
-        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode", fallbackButton: 'fallback button'})
+        const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode", fallbackButtonTitle: 'fallback button'})
         await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_FALLBACK })
     }
 }

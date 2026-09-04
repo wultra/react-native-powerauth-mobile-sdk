@@ -52,19 +52,20 @@ In case that you need an advanced configuration, then you can import and use the
   - `customHttpHeaders` - custom HTTP headers that will be added to each HTTP request produced by the PowerAuth instance.
   - `basicHttpAuthentication` - basic HTTP Authentication will be added to each HTTP request produced by the PowerAuth instance.
 
-- `PowerAuthBiometryConfiguration` class or `PowerAuthBiometryConfigurationType` interface － to configure biometic authentication. You can alter the following parameters:
-  - `linkItemsToCurrentSet` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value depends on plafrom:
+- `PowerAuthBiometryConfiguration` class or `PowerAuthBiometryConfigurationType` interface － to configure biometric authentication. You can alter the following parameters:
+  - `invalidateBiometricFactorAfterChange` - set to `true` if the key protected with the biometry is invalidated if fingers are added or removed, or if the user re-enrolls for face. The default value depends on platform:
     - On Android is set to `true`
     - On iOS  is set to `false`
-  - `fallbackToDevicePasscode` - iOS specific, If set to `true`, then the key protected with the biometry can be accessed also with a device passcode. If set, then `linkItemsToCurrentSet` option has no effect. The default is `false`, so fallback to device's passcode is not enabled.
+  - `fallbackToDevicePasscode` - iOS specific, If set to `true`, then the key protected with the biometry can be accessed also with a device passcode. If set, then `invalidateBiometricFactorAfterChange` option has no effect. The default is `false`, so fallback to device's passcode is not enabled.
   - `confirmBiometricAuthentication` - Android specific, if set to `true`, then the user's confirmation will be required after the successful biometric authentication. The default value is `false`.
   - `authenticateOnBiometricKeySetup` - Android specific, if set to `true`, then the biometric key setup always require a biometric authentication. See note<sup>1</sup> below. The default value is `true`.
+  - `fallbackToSharedBiometryKey` - Android specific, defines whether fallback to a shared, legacy biometry key is enabled. By default, this is enabled for compatibility reasons.
+  - `useLegacySymmetricKey` - Android specific, if set to `true`, newly configured factors use the legacy AES-KDF protection. The default is `false`.
 
 - `PowerAuthKeychainConfiguration` class or `PowerAuthKeychainConfigurationType` interface － to configure an internal secure data storage. You can alter the following parameters:
   - `accessGroupName` - iOS specific, defines access group name used by the `PowerAuth` keychain instances. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
   - `userDefaultsSuiteName` - iOS specific, defines suite name used by the `UserDefaults` that check for Keychain data presence. This is useful in situations, when your application is sharing data with another application or application's extension from the same vendor. The default value is `null`. See note<sup>2</sup> below.
   - `minimalRequiredKeychainProtection` - Android specific, defines minimal required keychain protection level that must be supported on the current device. The default value is `PowerAuthKeychainProtection.NONE`. See note<sup>3</sup> below.
-  - `fallbackToSharedBiometryKey` - Android specific, defines whether fallback to a shared, legacy biometry key is enabled. By default, this is enabled for compatibility reasons. If your application uses multiple `PowerAuth` instances, it's recommended to set this configuration to `false`.
 
 - `PowerAuthSharingConfiguration` class or `PowerAuthSharingConfigurationType` interface - to configure an activation data sharing on iOS platform. You can alter the following parameters:
   - `appGroup` - defines name of app group that allows you sharing data between multiple applications. Be aware that the value  overrides `accessGroupName` property if it's provided in `PowerAuthKeychainConfiguration`.
@@ -74,11 +75,15 @@ In case that you need an advanced configuration, then you can import and use the
   - If you're not familiar with sharing data between iOS applications, or app extensions, then please refer the native PowerAuth mobile SDK documentation, where this topic is explained in more detail. 
 
 
-> Note 1: Setting `authenticateOnBiometricKeySetup` parameter to `true` leads to use symmetric AES cipher on the background so both configuration and usage of biometric key require the biometric authentication. If set to `false`, then RSA cipher is used and only the usage of biometric key require the biometric authentication. This is due to fact, that RSA cipher can encrypt data with using it's public key available immediate after the key-pair is created in Android KeyStore.
+> Note 1: Setting `authenticateOnBiometricKeySetup` to `true` requires a biometric prompt while persisting an activation or adding a biometric factor. If set to `false`, key setup can proceed without user interaction. The default key protection uses HMAC-KDF; set `useLegacySymmetricKey` only when compatibility with the legacy AES-KDF protection is required.
 
 > Note 2: You're responsible to migrate the keychain and `UserDefaults` data from non-shared storage to the shared one, before you configure the first `PowerAuth` instance. This is quite difficult to do in JavaScript, so it's recommended to do not alter `PowerAuthKeychainConfiguration` once your application is already shipped in AppStore.
 
 > Note 3: If you enforce the protection higher than `PowerAuthKeychainProtection.NONE`, then your application must target at least Android 6.0. Your application should also properly handle `"INSUFFICIENT_KEYCHAIN_PROTECTION"` error code reported when the device has insufficient capabilities to run your application. You should properly inform user about this situation.
+
+<!-- begin box warning -->
+Do not enable `fallbackToDevicePasscode` when your application must distinguish biometric authentication from knowledge-factor authentication, including applications subject to regulations that require a biometric factor. If the key is unlocked with the device passcode, the resulting authentication is no longer proof that the user authenticated with biometry.
+<!-- end -->
 
 The following code snipped shows usage of the advanced configuration:
 
@@ -97,7 +102,7 @@ class AppMyApplication {
             try {
               const configuration = new PowerAuthConfiguration("CONFIGURATION_STRING", "https://your-powerauth-server.com/enrollment-server")
               const clientConfiguration = { enableUnsecureTraffic: false };
-              const biometryConfiguration = { linkItemsToCurrentSet: true };
+              const biometryConfiguration = { invalidateBiometricFactorAfterChange: true };
               const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
               const sharingConfiguration = {
                     // This is iOS specific. All values will be ignored on Android platform.
@@ -120,4 +125,3 @@ class AppMyApplication {
 ## Read Next
 
 - [Device Activation](./Device-Activation.md)
-
