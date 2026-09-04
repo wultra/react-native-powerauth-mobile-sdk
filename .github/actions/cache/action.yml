@@ -5,7 +5,7 @@ inputs:
     description: Cache family with stable paths (distinct per native stack)
     required: true
   path:
-    description: Download or compiler-cache paths, never generated apps or credentials
+    description: Dependency or compiler-cache paths, never generated apps or credentials
     required: true
   key:
     description: Dependency, toolchain and build-configuration identity
@@ -16,7 +16,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # Bump v3 when archive paths change. Never use a commit SHA as the identity.
+    # Version the family key when its paths change. Never use a commit SHA as the identity.
     - id: exact
       uses: actions/cache/restore@v4
       with:

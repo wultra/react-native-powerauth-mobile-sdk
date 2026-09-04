@@ -223,8 +223,12 @@ abort_with_logs() {
 }
 
 install_rn_pods() {
-  # repository_dispatch currently restores Pods from the default branch cache,
-  # which can contain local podspecs generated for a different checkout.
+  if [ "${RN_PODS_CACHE_HIT:-}" = "true" ] && [ -d testapp/ios/build/generated/ios ] &&
+      cmp -s testapp/ios/Podfile.lock testapp/ios/Pods/Manifest.lock; then
+    echo "[e2e] Reusing matching prepared RN iOS CocoaPods."
+    return
+  fi
+
   if [ -d "testapp/ios/Pods" ]; then
     echo "[e2e] Removing potentially stale cached RN iOS Pods..."
     rm -rf -- "testapp/ios/Pods"
@@ -307,7 +311,7 @@ resolve_cordova_sim_target() {
     return 0
   fi
 
-  local available_json sdk_version runtime_id
+  local available_json sdk_version runtime_id boot_id
   sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
   runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
 
@@ -323,11 +327,18 @@ resolve_cordova_sim_target() {
         const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
           devices.find(d => d.deviceTypeIdentifier.includes(".iPad-"));
         if (!device) process.exit(1);
-        process.stdout.write(device.deviceTypeIdentifier.split(".").pop());
+        process.stdout.write(device.deviceTypeIdentifier.split(".").pop() + " " +
+          (device.state === "Shutdown" ? device.udid : ""));
       '
   )"; then
     echo "[e2e] ERROR: No simulator matches the active iOS ${sdk_version} SDK."
     return 1
+  fi
+  read -r CORDOVA_SIM_TARGET boot_id <<< "${CORDOVA_SIM_TARGET}"
+  CORDOVA_SIM_TARGET="${CORDOVA_SIM_TARGET},${sdk_version}"
+  if [ -n "${boot_id}" ]; then
+    echo "[e2e] Booting Cordova simulator during preparation: ${boot_id}"
+    run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${boot_id}" || return 1
   fi
 }
 
@@ -360,9 +371,6 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     echo "[e2e] ERROR: No iOS simulator UDID available for RN run."
     exit 1
   fi
-else
-  # ios-sim owns the target lifecycle; a global shutdown can hang on hosted runners.
-  echo "[e2e] Cordova will manage simulator startup."
 fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
@@ -382,7 +390,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   METRO_PID=$!
 
   # Keep compiler paths stable across fresh runners so ccache can reuse objects.
-  # Only the compiler cache is restored in CI, never DerivedData or built apps.
+  # DerivedData and built apps are never restored in CI.
   RN_DERIVED_DATA_PATH="${E2E_RN_DERIVED_DATA_PATH:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios}"
   RN_SIMULATOR_ARCH="$(uname -m)"
   RN_BUILD_SETTINGS=("ARCHS=${RN_SIMULATOR_ARCH}")
@@ -394,6 +402,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     -configuration Debug \
     -destination "generic/platform=iOS Simulator" \
     -derivedDataPath "${RN_DERIVED_DATA_PATH}" \
+    -showBuildTimingSummary \
     "${RN_BUILD_SETTINGS[@]}" \
     build; then
     echo "[e2e] ERROR: Failed to build the RN iOS app."
