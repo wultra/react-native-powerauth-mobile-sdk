@@ -80,16 +80,6 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
-      - name: Cache Gradle downloads
-        uses: ./.github/actions/cache
-        with:
-          family: gradle-rn
-          # Dependency-only; task/configuration caches can contain .env secrets.
-          path: &gradle-downloads |
-            ~/.gradle/caches/modules-2
-            ~/.gradle/wrapper/dists
-          key: ${{ hashFiles('yarn.lock', 'testapp/android/**/*.gradle', 'testapp/android/gradle.properties', 'testapp/android/gradle/wrapper/gradle-wrapper.properties', 'packages/lib-rn/android/build.gradle', 'packages/lib-rn/android/gradle.properties') }}
-
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -120,10 +110,6 @@ jobs:
         uses: ./.github/actions/cache-save
         with:
           family: yarn
-
-      - uses: ./.github/actions/cache-save
-        with:
-          family: gradle-rn
 
       - name: Upload artifacts
         if: always()
@@ -175,14 +161,6 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
-      - name: Cache Gradle downloads
-        uses: ./.github/actions/cache
-        with:
-          family: gradle-cordova
-          # Dependency-only; task/configuration caches can contain .env secrets.
-          path: *gradle-downloads
-          key: ${{ hashFiles('yarn.lock', 'packages/lib-cordova/android/build.gradle', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json') }}
-
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -210,10 +188,6 @@ jobs:
           script: bash scripts/e2e/run-android-ci.sh
 
       - *save-yarn
-
-      - uses: ./.github/actions/cache-save
-        with:
-          family: gradle-cordova
 
       - name: Upload artifacts
         if: always()
@@ -273,6 +247,13 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
+      - name: Set up Ruby gems
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.1"
+          bundler-cache: true
+          working-directory: testapp
+
       - name: Detect Xcode version
         run: |
           xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
@@ -302,8 +283,8 @@ jobs:
           family: ccache-rn
           # ccache validates native edits; stable keys avoid uploading for tiny SDK changes.
           key: xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-${{ hashFiles('yarn.lock', 'testapp/ios/Podfile.lock', 'testapp/ios/Podfile', 'testapp/Gemfile.lock', 'scripts/ci/ios-compiler-cache.sh', 'scripts/e2e/run-ios-ci.sh', 'packages/lib-rn/*.podspec', 'testapp/ios/testapp.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-
+          # ccache validates its own archive format; runner images may carry different versions.
+          restore-keys: xcode${{ env.XCODE_VERSION }}-ccache
 
       - name: Reset compiler cache statistics
         run: ccache --zero-stats
@@ -395,7 +376,7 @@ jobs:
       - name: Cache CocoaPods downloads (Cordova)
         uses: ./.github/actions/cache
         with:
-          # Keep the large Git Specs repository outside the download cache.
+          # CDN metadata is cheap to fetch; retain only prepared downloads.
           path: ~/Library/Caches/CocoaPods
           family: pods-cordova
           # PowerAuth prepares native frameworks in the download cache.

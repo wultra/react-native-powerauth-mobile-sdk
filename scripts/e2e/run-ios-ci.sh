@@ -223,16 +223,6 @@ abort_with_logs() {
 }
 
 install_rn_pods() {
-  echo "[e2e] Installing RN iOS Ruby gems..."
-  if ! command -v bundle >/dev/null 2>&1; then
-    echo "[e2e] Installing Bundler..."
-    gem install bundler -v 2.6.2
-  fi
-
-  if ! (cd testapp && bundle check); then
-    (cd testapp && bundle install)
-  fi
-
   # repository_dispatch currently restores Pods from the default branch cache,
   # which can contain local podspecs generated for a different checkout.
   if [ -d "testapp/ios/Pods" ]; then
