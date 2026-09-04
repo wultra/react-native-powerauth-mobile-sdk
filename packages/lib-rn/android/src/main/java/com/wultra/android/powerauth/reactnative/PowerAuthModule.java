@@ -151,6 +151,21 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void hasProtocolUpgradeAvailable(String instanceId, final Promise promise) {
+        powerAuthJsModule.hasProtocolUpgradeAvailable(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void hasPendingProtocolUpgrade(String instanceId, final Promise promise) {
+        powerAuthJsModule.hasPendingProtocolUpgrade(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void startProtocolUpgrade(String instanceId, final Dynamic password, final boolean upgradeBiometry, final Promise promise) {
+        powerAuthJsModule.startProtocolUpgrade(instanceId, password, upgradeBiometry, promise);
+    }
+
+    @ReactMethod
     public void createActivation(String instanceId, final ReadableMap activation, final Promise promise) {
         powerAuthJsModule.createActivation(instanceId, activation, promise);
     }

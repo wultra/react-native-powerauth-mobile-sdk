@@ -299,6 +299,7 @@ function prettyArgs(fname: string, args: any[]): string {
             break
         case 'validatePassword':
         case 'addBiometryFactor':
+        case 'startProtocolUpgrade':
             sanitizedArgs[1] = '***'
             break
         case 'configure': {
