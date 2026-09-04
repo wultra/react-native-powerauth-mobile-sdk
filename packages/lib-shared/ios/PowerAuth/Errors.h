@@ -16,7 +16,7 @@
 
 #import "Utilities.h"
 
-#import <PowerAuth2/PowerAuthErrorConstants.h>
+@import PowerAuth2;
 #import "PAJS.h"
 
 PA_EXTERN_C NSString * __nonnull const EC_NETWORK_ERROR;
