@@ -367,7 +367,7 @@ async function main() {
   const healthUrl = `http://127.0.0.1:${args.collectorPort}/health`;
   let lastHealth = { runs: -1, completed: -1 };
 
-  const startTime = Date.now();
+  let startTime;
   const startDeadlineMs = parseDurationToMs(process.env.E2E_STARTUP_TIMEOUT || '2m');
 
   const healthTimer = setInterval(async () => {
@@ -382,7 +382,7 @@ async function main() {
         console.log(`[e2e] collector status: runs=${runs} completed=${completed}`);
       }
 
-      if (runs === 0 && Date.now() - startTime > startDeadlineMs) {
+      if (startTime && runs === 0 && Date.now() - startTime > startDeadlineMs) {
         // eslint-disable-next-line no-console
         console.error(`[e2e] No run started within the startup timeout. Verify HTTP access to TEST_COLLECTOR_URL from the apps.`);
 
@@ -496,6 +496,8 @@ async function main() {
         if (platform === 'ios') await runCordovaIos();
       }
     }
+
+    startTime = Date.now();
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Waiting for collector to finish...`);
