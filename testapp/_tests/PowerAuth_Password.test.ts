@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuth, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
@@ -153,16 +153,38 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
     }
 
     async testChangePasswordUnsafe() {
-        await this.sdk.changePasswordUnsafe(this.credentials.validPassword, this.credentials.invalidPassword)
+        const changed = await this.sdk.changePasswordUnsafe(this.credentials.validPassword, this.credentials.invalidPassword)
+        if (await this.sdk.currentAlgorithm !== PowerAuthAlgorithm.LEGACY) {
+            expect(changed).toBe(false)
+            await this.sdk.validatePassword(this.credentials.validPassword)
+            await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword))
+                .toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
+            return
+        }
+        expect(changed).toBe(true)
         await this.sdk.validatePassword(this.credentials.invalidPassword)
-        await this.sdk.changePasswordUnsafe(this.credentials.invalidPassword, this.credentials.validPassword)
+        expect(await this.sdk.changePasswordUnsafe(this.credentials.invalidPassword, this.credentials.validPassword)).toBe(true)
         await this.sdk.validatePassword(this.credentials.validPassword)
     }
 
     async testChangeSecurePasswordUnsafe() {
-        await this.sdk.unsafeChangePassword(await importPassword(this.credentials.validPassword), await importPassword(this.credentials.invalidPassword))
+        const changed = await this.sdk.unsafeChangePassword(
+            await importPassword(this.credentials.validPassword),
+            await importPassword(this.credentials.invalidPassword)
+        )
+        if (await this.sdk.currentAlgorithm !== PowerAuthAlgorithm.LEGACY) {
+            expect(changed).toBe(false)
+            await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
+            await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword)))
+                .toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
+            return
+        }
+        expect(changed).toBe(true)
         await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))
-        await this.sdk.unsafeChangePassword(await importPassword(this.credentials.invalidPassword), await importPassword(this.credentials.validPassword))
+        expect(await this.sdk.unsafeChangePassword(
+            await importPassword(this.credentials.invalidPassword),
+            await importPassword(this.credentials.validPassword)
+        )).toBe(true)
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
     }
 
@@ -170,9 +192,17 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         const pValid = await importPassword(this.credentials.validPassword, false, this.sdk)
         const pInvalid = await importPassword(this.credentials.invalidPassword, false, this.sdk)
 
-        await this.sdk.unsafeChangePassword(pValid, pInvalid)
+        const changed = await this.sdk.unsafeChangePassword(pValid, pInvalid)
+        if (await this.sdk.currentAlgorithm !== PowerAuthAlgorithm.LEGACY) {
+            expect(changed).toBe(false)
+            await this.sdk.validatePassword(pValid)
+            await expect(async () => await this.sdk.validatePassword(pInvalid))
+                .toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
+            return
+        }
+        expect(changed).toBe(true)
         await this.sdk.validatePassword(pInvalid)
-        await this.sdk.unsafeChangePassword(pInvalid, pValid)
+        expect(await this.sdk.unsafeChangePassword(pInvalid, pValid)).toBe(true)
         await this.sdk.validatePassword(pValid)
     }
 
