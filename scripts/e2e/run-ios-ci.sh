@@ -250,6 +250,9 @@ install_rn_pods() {
   )
 }
 
+# shellcheck source=scripts/ci/ios-compiler-cache.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../ci/ios-compiler-cache.sh"
+
 install_and_launch_rn_app() {
   app_path="$1"
   bundle_id="$2"
@@ -388,8 +391,12 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   yarn workspace testapp start:prepared &
   METRO_PID=$!
 
-  RN_DERIVED_DATA_PATH="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios.XXXXXX")"
+  # Keep compiler paths stable across fresh runners so ccache can reuse objects.
+  # Only the compiler cache is restored in CI, never DerivedData or built apps.
+  RN_DERIVED_DATA_PATH="${E2E_RN_DERIVED_DATA_PATH:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios}"
   RN_SIMULATOR_ARCH="$(uname -m)"
+  RN_BUILD_SETTINGS=("ARCHS=${RN_SIMULATOR_ARCH}")
+  configure_rn_compiler_cache
   echo "[e2e] Building RN iOS app for a generic ${RN_SIMULATOR_ARCH} simulator destination..."
   if ! xcodebuild \
     -workspace testapp/ios/testapp.xcworkspace \
@@ -397,7 +404,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     -configuration Debug \
     -destination "generic/platform=iOS Simulator" \
     -derivedDataPath "${RN_DERIVED_DATA_PATH}" \
-    ARCHS="${RN_SIMULATOR_ARCH}" \
+    "${RN_BUILD_SETTINGS[@]}" \
     build; then
     echo "[e2e] ERROR: Failed to build the RN iOS app."
     abort_with_logs

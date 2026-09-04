@@ -44,6 +44,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -78,6 +79,16 @@ jobs:
         uses: ./.github/actions/prepare
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
+
+      - name: Cache Gradle downloads
+        uses: ./.github/actions/cache
+        with:
+          family: gradle-rn
+          # Dependency-only; task/configuration caches can contain .env secrets.
+          path: &gradle-downloads |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/dists
+          key: ${{ hashFiles('yarn.lock', 'testapp/android/**/*.gradle', 'testapp/android/gradle.properties', 'testapp/android/gradle/wrapper/gradle-wrapper.properties', 'packages/lib-rn/android/build.gradle', 'packages/lib-rn/android/gradle.properties') }}
 
       - name: Enable KVM
         run: |
@@ -105,6 +116,15 @@ jobs:
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
 
+      - &save-yarn
+        uses: ./.github/actions/cache-save
+        with:
+          family: yarn
+
+      - uses: ./.github/actions/cache-save
+        with:
+          family: gradle-rn
+
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -119,6 +139,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -154,6 +175,14 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
+      - name: Cache Gradle downloads
+        uses: ./.github/actions/cache
+        with:
+          family: gradle-cordova
+          # Dependency-only; task/configuration caches can contain .env secrets.
+          path: *gradle-downloads
+          key: ${{ hashFiles('yarn.lock', 'packages/lib-cordova/android/build.gradle', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json') }}
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -180,6 +209,12 @@ jobs:
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
 
+      - *save-yarn
+
+      - uses: ./.github/actions/cache-save
+        with:
+          family: gradle-cordova
+
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -194,9 +229,14 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
+      USE_CCACHE: "1"
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: "1G"
+      CCACHE_COMPILERCHECK: content
       E2E_COLLECTOR_TIMEOUT: "90m"
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
@@ -235,18 +275,38 @@ jobs:
 
       - name: Detect Xcode version
         run: |
-          xcodebuild -version | awk 'NR == 1 { print "XCODE_VERSION=" $2 }' >> "$GITHUB_ENV"
+          xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
 
       - name: Cache CocoaPods downloads (RN)
-        uses: actions/cache@v4
+        uses: ./.github/actions/cache
         with:
           path: |
             ~/Library/Caches/CocoaPods
-            ~/.cocoapods
-          key: ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
+            ~/.cocoapods/repos/trunk
+          family: pods-rn
+          # Gemfile.lock identifies the bundled CocoaPods version actually used.
+          key: xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock', 'testapp/ios/Podfile', 'testapp/Gemfile.lock', 'yarn.lock') }}
+
+      - name: Set up compiler cache
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          command -v ccache || brew install ccache
+          echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
+          ccache --version | awk 'NR == 1 { print "CCACHE_VERSION=" $3 }' >> "$GITHUB_ENV"
+
+      - name: Restore compiler cache (RN)
+        uses: ./.github/actions/cache
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          family: ccache-rn
+          # ccache validates native edits; stable keys avoid uploading for tiny SDK changes.
+          key: xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-${{ hashFiles('yarn.lock', 'testapp/ios/Podfile.lock', 'testapp/ios/Podfile', 'testapp/Gemfile.lock', 'scripts/ci/ios-compiler-cache.sh', 'scripts/e2e/run-ios-ci.sh', 'packages/lib-rn/*.podspec', 'testapp/ios/testapp.xcodeproj/project.pbxproj') }}
           restore-keys: |
-            ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-
-            ${{ runner.os }}-e2e-ios-cocoapods-v1-
+            xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-
+
+      - name: Reset compiler cache statistics
+        run: ccache --zero-stats
 
       - name: Build test infra packages
         run: |
@@ -258,6 +318,20 @@ jobs:
         env:
           E2E_MODE: rn
         run: bash scripts/e2e/run-ios-ci.sh
+
+      - name: Report compiler cache statistics
+        if: always()
+        run: ccache --show-stats && ccache --show-compression
+
+      - *save-yarn
+
+      - uses: ./.github/actions/cache-save
+        with:
+          family: pods-rn
+
+      - uses: ./.github/actions/cache-save
+        with:
+          family: ccache-rn
 
       - name: Upload artifacts
         if: always()
@@ -273,6 +347,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     runs-on: macos-latest
     timeout-minutes: 90
     env:
@@ -312,9 +387,19 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
-      - name: Detect Xcode version
+      - name: Detect Xcode and CocoaPods versions
         run: |
-          xcodebuild -version | awk 'NR == 1 { print "XCODE_VERSION=" $2 }' >> "$GITHUB_ENV"
+          xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
+          pod --version | awk 'NR == 1 { print "COCOAPODS_VERSION=" $1 }' >> "$GITHUB_ENV"
+
+      - name: Cache CocoaPods downloads (Cordova)
+        uses: ./.github/actions/cache
+        with:
+          # Keep the large Git Specs repository outside the download cache.
+          path: ~/Library/Caches/CocoaPods
+          family: pods-cordova
+          # PowerAuth prepares native frameworks in the download cache.
+          key: xcode${{ env.XCODE_VERSION }}-pods${{ env.COCOAPODS_VERSION }}-${{ hashFiles('packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json', 'yarn.lock') }}
 
       - name: Build test infra packages
         run: |
@@ -326,6 +411,12 @@ jobs:
         env:
           E2E_MODE: cordova
         run: bash scripts/e2e/run-ios-ci.sh
+
+      - *save-yarn
+
+      - uses: ./.github/actions/cache-save
+        with:
+          family: pods-cordova
 
       - name: Upload artifacts
         if: always()
