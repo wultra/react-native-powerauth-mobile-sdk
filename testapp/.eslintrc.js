@@ -9,11 +9,18 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['_tests/NativeObjectRegister.test.ts', '_tests/PowerAuthPassword.test.ts'],
+      rules: {
+        // The SDK register method is named `useObject`; it is not a React Hook.
+        'react-hooks/rules-of-hooks': 'off'
+      }
+    },
+    {
       files: ['metro.config.js', 'react-native.config.js', 'babel.config.js'],
       env: { node: true },
       parserOptions: { sourceType: 'script' },
       rules: {
-        '@typescript-eslint/no-var-requires': 'off'
+        '@typescript-eslint/no-require-imports': 'off'
       }
     }
   ]

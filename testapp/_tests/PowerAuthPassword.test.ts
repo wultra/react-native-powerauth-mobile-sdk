@@ -43,7 +43,7 @@ export class PowerAuthPasswordTests extends TestSuite {
     async afterEach(): Promise<void> {
         await super.afterEach()
         // Just to be sure, release all allocated objects from the memory
-        for (let i in this.cleanup) {
+        for (const i in this.cleanup) {
             const p = this.cleanup[i]
             if (p instanceof PowerAuthPassword) {
                 await p.release()
@@ -318,8 +318,8 @@ export class PowerAuthPasswordTests extends TestSuite {
         // We can create passwords even in PA instance is not configured, but every call to password API will fail
         let p1CleanupCalled = 0
         let p2CleanupCalled = 0
-        const p1 = powerAuth.createPassword(false, () => p2CleanupCalled += 1)
-        const p2 = powerAuth.createPassword(true, () => p2CleanupCalled += 1)
+        const p1 = powerAuth.createPassword(false, () => { p1CleanupCalled += 1 })
+        const p2 = powerAuth.createPassword(true, () => { p2CleanupCalled += 1 })
         this.cleanup.push(p1, p2)
         expect((p1 as any).powerAuthInstanceId).toBe(powerAuthInstanceId)
         expect((p2 as any).powerAuthInstanceId).toBe(powerAuthInstanceId)

@@ -14,7 +14,6 @@
     "android/src/main/java/com/wultra/android/powerauth/js/*",
     "android/build.gradle",
     "lib/*",
-    "ios/PowerAuth.xcodeproj/project.pbxproj",
     "ios/PowerAuth/Info.plist",
     "ios/PowerAuth/*.m",
     "ios/PowerAuth/*.mm",

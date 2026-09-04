@@ -37,6 +37,7 @@ concurrency:
 
 jobs:
   rn-android:
+    name: Android RN (API 36)
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -95,7 +96,7 @@ jobs:
         env:
           E2E_MODE: rn
         with:
-          api-level: 34
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: Nexus 6
@@ -108,7 +109,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-e2e-artifacts-android-rn
+          name: mobile-e2e-artifacts-android-rn-api-36
           path: artifacts/e2e
 
   cordova-android:
@@ -236,17 +237,16 @@ jobs:
         run: |
           echo "XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')" >> $GITHUB_ENV
 
-      - name: Cache CocoaPods (RN)
+      - name: Cache CocoaPods downloads (RN)
         uses: actions/cache@v4
         with:
           path: |
-            testapp/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-e2e-ios-rn-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-e2e-ios-rn-
-            ${{ runner.os }}-e2e-ios-
+            ${{ runner.os }}-e2e-ios-rn-cocoapods-v1-
+            ${{ runner.os }}-e2e-ios-cocoapods-v1-
 
       - name: Build test infra packages
         run: |
