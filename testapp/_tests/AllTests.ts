@@ -40,6 +40,7 @@ import { PowerAuth_UserInfoTest } from "./PowerAuth_UserInfo.test";
 import { PowerAuth_CryptoUtilsTest } from "./PowerAuth_CryptoUtils.test";
 import { PowerAuth_ErrorDataTests } from "./PowerAuth_ErrorData.test";
 import { PowerAuth_ProtocolUpgradeTests } from "./PowerAuth_ProtocolUpgrade.test";
+import { PowerAuth_SecureVaultTests } from "./PowerAuth_SecureVault.test";
 
 export function getLibraryTests(): TestSuite[] {
     return [
@@ -51,6 +52,7 @@ export function getLibraryTests(): TestSuite[] {
         new PowerAuth_PasswordTests(),
         new PowerAuth_SignatureTests(),
         new PowerAuth_AdvancedSignatureTests(),
+        new PowerAuth_SecureVaultTests(),
         new PowerAuth_TokenTests(),
         new PowerAuth_KDFTests(),
         new PowerAuth_EncryptorTests(),
