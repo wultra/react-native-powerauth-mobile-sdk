@@ -42,6 +42,125 @@ PAJS_MODULE_REGISTRY
 #define PA_BLOCK_START [self usePowerAuth:instanceId reject:reject callback:^(PowerAuthSDK * powerAuth) {
 #define PA_BLOCK_END }];
 
+static BOOL PAJSParseAlgorithm(NSString * value, PowerAuthAlgorithm * algorithm)
+{
+    if ([value isEqualToString:@"legacy"]) {
+        *algorithm = PowerAuthAlgorithm_LEGACY_P256;
+    } else if ([value isEqualToString:@"p384"]) {
+        *algorithm = PowerAuthAlgorithm_EC_P384;
+    } else if ([value isEqualToString:@"p384l3"]) {
+        *algorithm = PowerAuthAlgorithm_EC_P384_ML_L3;
+    } else if ([value isEqualToString:@"p384l5"]) {
+        *algorithm = PowerAuthAlgorithm_EC_P384_ML_L5;
+    } else {
+        return NO;
+    }
+    return YES;
+}
+
+static NSString * PAJSAlgorithmToString(PowerAuthAlgorithm algorithm)
+{
+    switch (algorithm) {
+        case PowerAuthAlgorithm_LEGACY_P256: return @"legacy";
+        case PowerAuthAlgorithm_EC_P384: return @"p384";
+        case PowerAuthAlgorithm_EC_P384_ML_L3: return @"p384l3";
+        case PowerAuthAlgorithm_EC_P384_ML_L5: return @"p384l5";
+        default: return nil;
+    }
+}
+
+static PowerAuthConfiguration * PAJSBuildConfiguration(
+    NSString * instanceId,
+    NSDictionary * configuration,
+    NSDictionary * sharingConfiguration,
+    RCTPromiseRejectBlock reject)
+{
+    NSString * baseEndpointUrl = CAST_TO(configuration[@"baseEndpointUrl"], NSString);
+    NSString * configurationString = CAST_TO(configuration[@"configuration"], NSString);
+    NSString * algorithmString = CAST_TO(configuration[@"algorithm"], NSString);
+    PowerAuthConfiguration * config;
+    if (algorithmString) {
+        PowerAuthAlgorithm algorithm;
+        if (!PAJSParseAlgorithm(algorithmString, &algorithm)) {
+            reject(EC_WRONG_PARAMETER, [NSString stringWithFormat:@"Unknown PowerAuth algorithm: %@", algorithmString], nil);
+            return nil;
+        }
+        config = [[PowerAuthConfiguration alloc] initWithInstanceId:instanceId
+                                                   baseEndpointUrl:baseEndpointUrl
+                                                     configuration:configurationString
+                                                         algorithm:algorithm];
+    } else {
+        config = [[PowerAuthConfiguration alloc] initWithInstanceId:instanceId
+                                                   baseEndpointUrl:baseEndpointUrl
+                                                     configuration:configurationString];
+    }
+    NSNumber * componentLength = CAST_TO(configuration[@"offlineAuthenticationCodeComponentLength"], NSNumber);
+    if (componentLength) {
+        config.offlineAuthenticationCodeComponentLength = componentLength.unsignedIntegerValue;
+    }
+    if (CAST_TO(sharingConfiguration[@"isProvided"], NSNumber).boolValue) {
+        PowerAuthSharingConfiguration * sharingConfig = [[PowerAuthSharingConfiguration alloc] initWithAppGroup:CAST_TO(sharingConfiguration[@"appGroup"], NSString)
+                                                                                                  appIdentifier:CAST_TO(sharingConfiguration[@"appIdentifier"], NSString)
+                                                                                            keychainAccessGroup:CAST_TO(sharingConfiguration[@"keychainAccessGroup"], NSString)];
+        sharingConfig.sharedMemoryIdentifier = CAST_TO(sharingConfiguration[@"sharedMemoryIdentifier"], NSString);
+        config.sharingConfiguration = sharingConfig;
+    }
+    NSError * validationError = nil;
+    if (![config validateConfiguration:&validationError]) {
+        reject(EC_WRONG_PARAMETER, validationError.localizedDescription ?: @"Provided configuration is invalid", validationError);
+        return nil;
+    }
+    return config;
+}
+
+static NSDictionary * PAJSConfigurationToDictionary(PowerAuthConfiguration * configuration)
+{
+    NSString * algorithm = PAJSAlgorithmToString(configuration.algorithm);
+    if (!algorithm) {
+        return nil;
+    }
+    return @{
+        @"configuration": configuration.configuration,
+        @"baseEndpointUrl": configuration.baseEndpointUrl,
+        @"algorithm": algorithm,
+        @"offlineAuthenticationCodeComponentLength": @(configuration.offlineAuthenticationCodeComponentLength)
+    };
+}
+
+static NSDictionary * PAJSClientConfigurationToDictionary(PowerAuthClientConfiguration * configuration)
+{
+    return @{
+        @"enableUnsecureTraffic": @([configuration.sslValidationStrategy isKindOfClass:[PowerAuthClientSslNoValidationStrategy class]]),
+        @"connectionTimeout": @(configuration.defaultRequestTimeout),
+        @"readTimeout": @(configuration.defaultRequestTimeout)
+    };
+}
+
+static NSDictionary * PAJSBiometricConfigurationToDictionary(PowerAuthBiometricConfiguration * configuration)
+{
+    return @{
+        @"invalidateBiometricFactorAfterChange": @(configuration.invalidateBiometricFactorAfterChange),
+        @"fallbackToDevicePasscode": @(configuration.allowFallbackToDevicePasscode),
+        @"confirmBiometricAuthentication": @NO,
+        @"authenticateOnBiometricKeySetup": @YES,
+        @"fallbackToSharedBiometryKey": @YES,
+        @"useLegacySymmetricKey": @NO
+    };
+}
+
+static NSDictionary * PAJSSharingConfigurationToDictionary(PowerAuthSharingConfiguration * configuration)
+{
+    NSMutableDictionary * result = [@{
+        @"appGroup": configuration.appGroup,
+        @"appIdentifier": configuration.appIdentifier,
+        @"keychainAccessGroup": configuration.keychainAccessGroup
+    } mutableCopy];
+    if (configuration.sharedMemoryIdentifier) {
+        result[@"sharedMemoryIdentifier"] = configuration.sharedMemoryIdentifier;
+    }
+    return result;
+}
+
 RCT_EXPORT_MODULE(PowerAuth);
 
 - (void) PAJS_INITIALIZE_METHOD
@@ -65,6 +184,102 @@ PAJS_METHOD_START(isConfigured,
 }
 PAJS_METHOD_END
 
+PAJS_METHOD_START(cleanupInstanceData,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(configuration, NSDictionary*)
+                  PAJS_ARGUMENT(keychainConfiguration, NSDictionary*)
+                  PAJS_ARGUMENT(sharingConfiguration, NSDictionary*))
+{
+    @synchronized (self) {
+        if (![self validateInstanceId:instanceId reject:reject]) {
+            return;
+        }
+        if ([_objectRegister findObjectWithId:instanceId expectedClass:[PowerAuthSDK class]]) {
+            reject(EC_WRONG_PARAMETER, @"Cannot clean up data for a configured PowerAuth instance.", nil);
+            return;
+        }
+        PowerAuthConfiguration * config = PAJSBuildConfiguration(instanceId, configuration, sharingConfiguration, reject);
+        if (!config) {
+            return;
+        }
+        PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
+        keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
+        keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
+        NSError * error = nil;
+        if ([PowerAuthSDK cleanupInstanceDataForConfiguration:config keychainConfiguration:keychainConfig error:&error]) {
+            resolve(nil);
+        } else {
+            ProcessError(error, reject);
+        }
+    }
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getConfiguration,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    NSDictionary * configuration = PAJSConfigurationToDictionary(powerAuth.configuration);
+    if (configuration) {
+        resolve(configuration);
+    } else {
+        reject(EC_WRONG_PARAMETER, @"Native SDK returned an unknown PowerAuth algorithm.", nil);
+    }
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getCurrentAlgorithm,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    NSString * algorithm = PAJSAlgorithmToString(powerAuth.currentAlgorithm);
+    if (algorithm) {
+        resolve(algorithm);
+    } else {
+        reject(EC_WRONG_PARAMETER, @"Native SDK returned an unknown PowerAuth algorithm.", nil);
+    }
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getClientConfiguration,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(PAJSClientConfigurationToDictionary(powerAuth.clientConfiguration));
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getBiometryConfiguration,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(PAJSBiometricConfigurationToDictionary(powerAuth.biometricConfiguration));
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getKeychainConfiguration,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(nil);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getSharingConfiguration,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthSharingConfiguration * sharingConfiguration = powerAuth.configuration.sharingConfiguration;
+    resolve(sharingConfiguration ? PAJSSharingConfigurationToDictionary(sharingConfiguration) : nil);
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
 PAJS_METHOD_START(configure,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(configuration, NSDictionary*)
@@ -73,100 +288,88 @@ PAJS_METHOD_START(configure,
                   PAJS_ARGUMENT(keychainConfiguration, NSDictionary*)
                   PAJS_ARGUMENT(sharingConfiguration, NSDictionary*))
 {
-    if (![self validateInstanceId:instanceId reject:reject]) {
-        return;
-    }
-    
-    // Instance config
-    // Preserve the PowerAuth 1.9 protocol until algorithm selection is exposed publicly.
-    PowerAuthConfiguration *config = [[PowerAuthConfiguration alloc] initWithInstanceId:instanceId
-                                                                        baseEndpointUrl:CAST_TO(configuration[@"baseEndpointUrl"], NSString)
-                                                                          configuration:CAST_TO(configuration[@"configuration"], NSString)
-                                                                              algorithm:PowerAuthAlgorithm_LEGACY_P256];
-    // Prepare sharing configuration
-    if (CAST_TO(sharingConfiguration[@"isProvided"], NSNumber).boolValue) {
-        PowerAuthSharingConfiguration * sharingConfig = [[PowerAuthSharingConfiguration alloc] initWithAppGroup:CAST_TO(sharingConfiguration[@"appGroup"], NSString)
-                                                                                                  appIdentifier:CAST_TO(sharingConfiguration[@"appIdentifier"], NSString)
-                                                                                            keychainAccessGroup:CAST_TO(sharingConfiguration[@"keychainAccessGroup"], NSString)];
-        sharingConfig.sharedMemoryIdentifier = CAST_TO(sharingConfiguration[@"sharedMemoryIdentifier"], NSString);
-        config.sharingConfiguration = sharingConfig;
-    }
-    
-    if (![config validateConfiguration]) {
-        reject(EC_WRONG_PARAMETER, @"Provided configuration is invalid", nil);
-        return;
-    }
-    
-    // HTTP client config
-    PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
-    clientConfig.defaultRequestTimeout = CAST_TO(clientConfiguration[@"connectionTimeout"], NSNumber).doubleValue;
-    if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
-        [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
-    }
-    
-    // Interceptors
-    NSMutableArray * interceptors = [[NSMutableArray alloc] init];
-    
-    // Custom HTTP headers
-    NSArray * httpHeaders = CAST_TO(clientConfiguration[@"customHttpHeaders"], NSArray);
-    if (httpHeaders) {
-        for (id object in httpHeaders) {
-            NSDictionary * map = CAST_TO(object, NSDictionary);
-            NSString * name = CAST_TO(map[@"name"], NSString);
-            NSString * value = CAST_TO(map[@"value"], NSString);
-            if (name && value) {
-                [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:name value:value]];
+    @synchronized (self) {
+        if (![self validateInstanceId:instanceId reject:reject]) {
+            return;
+        }
+
+        PowerAuthConfiguration * config = PAJSBuildConfiguration(instanceId, configuration, sharingConfiguration, reject);
+        if (!config) {
+            return;
+        }
+
+        // HTTP client config
+        PowerAuthClientConfiguration * clientConfig = [[PowerAuthClientConfiguration sharedInstance] copy];
+        clientConfig.defaultRequestTimeout = CAST_TO(clientConfiguration[@"connectionTimeout"], NSNumber).doubleValue;
+        if (CAST_TO(clientConfiguration[@"enableUnsecureTraffic"], NSNumber).boolValue) {
+            [clientConfig setSslValidationStrategy:[[PowerAuthClientSslNoValidationStrategy alloc] init]];
+        }
+
+        // Interceptors
+        NSMutableArray * interceptors = [[NSMutableArray alloc] init];
+
+        // Custom HTTP headers
+        NSArray * httpHeaders = CAST_TO(clientConfiguration[@"customHttpHeaders"], NSArray);
+        if (httpHeaders) {
+            for (id object in httpHeaders) {
+                NSDictionary * map = CAST_TO(object, NSDictionary);
+                NSString * name = CAST_TO(map[@"name"], NSString);
+                NSString * value = CAST_TO(map[@"value"], NSString);
+                if (name && value) {
+                    [interceptors addObject:[[PowerAuthCustomHeaderRequestInterceptor alloc] initWithHeaderKey:name value:value]];
+                }
             }
         }
-    }
-    // Basic Authentication
-    NSDictionary * basicAuth = CAST_TO(clientConfiguration[@"basicHttpAuthentication"], NSDictionary);
-    if (basicAuth) {
-        NSString * username = CAST_TO(basicAuth[@"username"], NSString);
-        NSString * password = CAST_TO(basicAuth[@"password"], NSString);
-        if (username && password) {
-            [interceptors addObject:[[PowerAuthBasicHttpAuthenticationRequestInterceptor alloc] initWithUsername:username password:password]];
+        // Basic Authentication
+        NSDictionary * basicAuth = CAST_TO(clientConfiguration[@"basicHttpAuthentication"], NSDictionary);
+        if (basicAuth) {
+            NSString * username = CAST_TO(basicAuth[@"username"], NSString);
+            NSString * password = CAST_TO(basicAuth[@"password"], NSString);
+            if (username && password) {
+                [interceptors addObject:[[PowerAuthBasicHttpAuthenticationRequestInterceptor alloc] initWithUsername:username password:password]];
+            }
         }
-    }
-    
-    [clientConfig setRequestInterceptors: interceptors];
-    
-    PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
-    // Keychain specific
-    keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
-    keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
 
-    PowerAuthBiometricConfiguration * biometricConfig = [[PowerAuthBiometricConfiguration alloc] init];
-    NSNumber * invalidateAfterChange = CAST_TO(biometryConfiguration[@"invalidateBiometricFactorAfterChange"], NSNumber);
-    if (!invalidateAfterChange) {
-        invalidateAfterChange = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber);
-    }
-    if (invalidateAfterChange) {
-        biometricConfig.invalidateBiometricFactorAfterChange = invalidateAfterChange.boolValue;
-    }
-    NSNumber * fallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber);
-    if (fallbackToDevicePasscode) {
-        biometricConfig.allowFallbackToDevicePasscode = fallbackToDevicePasscode.boolValue;
-    }
-    
-    // Now register the instance in the thread safe manner.
-    __block NSError * initializationError = nil;
-    BOOL registered = [_objectRegister registerObjectWithId:instanceId tag:instanceId policies:@[RP_MANUAL()] objectFactory:^id {
-        return [[PowerAuthSDK alloc] initWithConfiguration:config
-                                    biometricConfiguration:biometricConfig
-                                       clientConfiguration:clientConfig
-                                     keychainConfiguration:keychainConfig
-                                                     error:&initializationError];
-    }];
-    
-    if (registered) {
-        // Resolve success
-        resolve(@YES);
-    } else if (initializationError) {
-        ProcessError(initializationError, reject);
-    } else {
-        // Instance is already configured
-        reject(EC_REACT_NATIVE_ERROR, @"PowerAuth object with this instanceId is already configured.", nil);
+        [clientConfig setRequestInterceptors: interceptors];
+
+        // Preserve deprecated Apple keychain settings for existing applications. New applications
+        // should use PowerAuthSharingConfiguration.
+        PowerAuthKeychainConfiguration * keychainConfig = [[PowerAuthKeychainConfiguration sharedInstance] copy];
+        keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
+        keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
+
+        PowerAuthBiometricConfiguration * biometricConfig = [[PowerAuthBiometricConfiguration alloc] init];
+        NSNumber * invalidateAfterChange = CAST_TO(biometryConfiguration[@"invalidateBiometricFactorAfterChange"], NSNumber);
+        if (!invalidateAfterChange) {
+            invalidateAfterChange = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber);
+        }
+        if (invalidateAfterChange) {
+            biometricConfig.invalidateBiometricFactorAfterChange = invalidateAfterChange.boolValue;
+        }
+        NSNumber * fallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber);
+        if (fallbackToDevicePasscode) {
+            biometricConfig.allowFallbackToDevicePasscode = fallbackToDevicePasscode.boolValue;
+        }
+
+        // Now register the instance in the thread safe manner.
+        __block NSError * initializationError = nil;
+        BOOL registered = [_objectRegister registerObjectWithId:instanceId tag:instanceId policies:@[RP_MANUAL()] objectFactory:^id {
+            return [[PowerAuthSDK alloc] initWithConfiguration:config
+                                       biometricConfiguration:biometricConfig
+                                          clientConfiguration:clientConfig
+                                         keychainConfiguration:keychainConfig
+                                                        error:&initializationError];
+        }];
+
+        if (registered) {
+            // Resolve success
+            resolve(@YES);
+        } else if (initializationError) {
+            ProcessError(initializationError, reject);
+        } else {
+            // Instance is already configured
+            reject(EC_REACT_NATIVE_ERROR, @"PowerAuth object with this instanceId is already configured.", nil);
+        }
     }
 }
 PAJS_METHOD_END
@@ -174,9 +377,11 @@ PAJS_METHOD_END
 PAJS_METHOD_START(deconfigure,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
-    if ([self validateInstanceId:instanceId reject:reject]) {
-        [_objectRegister removeAllObjectsWithTag:instanceId];
-        resolve(@YES);
+    @synchronized (self) {
+        if ([self validateInstanceId:instanceId reject:reject]) {
+            [_objectRegister removeAllObjectsWithTag:instanceId];
+            resolve(@YES);
+        }
     }
 }
 PAJS_METHOD_END

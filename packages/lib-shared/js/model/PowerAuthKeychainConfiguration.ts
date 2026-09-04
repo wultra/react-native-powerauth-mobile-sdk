@@ -19,15 +19,17 @@
  */
 export interface PowerAuthKeychainConfigurationData {
     /**
-     * ### iOS specific
+     * ### iOS specific, deprecated
      * 
      * Access group name used by the `PowerAuth` keychain instances. This property
      * has no default value, so the application shoud provide a valid access group,
      * if such group should be used.
+     *
+     * @deprecated Configure activation sharing with `PowerAuthSharingConfiguration`.
      */
     readonly accessGroupName?: string
     /**
-     * ### iOS specific
+     * ### iOS specific, deprecated
      * 
      * Suite name used by the `UserDefaults` that check for Keychain data presence.
      * 
@@ -35,6 +37,8 @@ export interface PowerAuthKeychainConfigurationData {
      * user defaults with given suite name are created. In case a developer started using SDK
      * with no suite name specified, the developer is responsible for migrating data
      * to the new `UserDefaults` before using the SDK with the new suite name.
+     *
+     * @deprecated Configure activation sharing with `PowerAuthSharingConfiguration`.
      */
     readonly userDefaultsSuiteName?: string
     /**
@@ -98,7 +102,9 @@ export enum PowerAuthKeychainProtection {
  * Class representing the keychain settings.
  */
 export class PowerAuthKeychainConfiguration implements PowerAuthKeychainConfigurationType {
+    /** @deprecated Configure activation sharing with `PowerAuthSharingConfiguration`. */
     accessGroupName?: string
+    /** @deprecated Configure activation sharing with `PowerAuthSharingConfiguration`. */
     userDefaultsSuiteName?: string
     minimalRequiredKeychainProtection: PowerAuthKeychainProtection
     constructor() {
