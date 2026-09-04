@@ -63,7 +63,6 @@ export enum PowerAuthErrorCode {
      * - `serverResponseCode` - Error code as defined in standard PowerAuth RESTful API error response. 
      * - `serverResponseMessage` - Error message as defined in standard PowerAuth RESTful API error response.
      * - `responseBody` - String with JSON response body.
-     * - `currentRecoveryPukIndex` - (optional) Number with current recovery PUK index, in case that activation recovery failed. 
      */
     RESPONSE_ERROR = "RESPONSE_ERROR",
 
@@ -170,9 +169,6 @@ export enum PowerAuthErrorCode {
 
     /** Error in `correctTypedCharacter` */
     INVALID_CHARACTER = "INVALID_CHARACTER",
-
-    /** Used invalid recovery code in parseRecoveryCode */
-    INVALID_RECOVERY_CODE = "INVALID_RECOVERY_CODE",
 
     /** Error when generating a token */
     CANNOT_GENERATE_TOKEN = "CANNOT_GENERATE_TOKEN",

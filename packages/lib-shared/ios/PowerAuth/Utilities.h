@@ -15,6 +15,7 @@
  */
 
 #import "PAJS.h"
+#import <PowerAuth2/PowerAuthPassword.h>
 
 #ifdef __cplusplus
     // C++
@@ -89,7 +90,7 @@ PA_EXTERN_C NSData * DecodeNSDataValue(NSString * dataValue, DataFormat dataForm
 PA_EXTERN_C NSString * EncodeNSDataValue(NSData * dataValue, DataFormat dataFormat, RCTPromiseRejectBlock reject);
 
 
-@class PowerAuthCorePassword, PowerAuthObjectRegister, PowerAuthSDK;
+@class PowerAuthObjectRegister, PowerAuthSDK;
 
 /// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
 /// report an error. The password object is marked as used if found in register.

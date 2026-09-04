@@ -16,17 +16,15 @@
 package com.wultra.android.powerauth.js
 
 import android.content.Context
-import android.util.Base64
-import android.util.Pair
 import com.wultra.android.powerauth.bridge.*
-import io.getlime.security.powerauth.core.EciesCryptogram
-import io.getlime.security.powerauth.core.EciesEncryptor
-import io.getlime.security.powerauth.ecies.EciesMetadata
+import io.getlime.security.powerauth.core.CoreEncryptedResponse
+import io.getlime.security.powerauth.core.CoreEncryptor
 import io.getlime.security.powerauth.exception.PowerAuthErrorCodes
 import io.getlime.security.powerauth.exception.PowerAuthErrorException
-import io.getlime.security.powerauth.networking.response.IGetEciesEncryptorListener
+import io.getlime.security.powerauth.networking.response.IGetEncryptorListener
 import io.getlime.security.powerauth.sdk.PowerAuthSDK
-import java.util.Arrays
+import org.json.JSONObject
+import java.nio.charset.StandardCharsets
 import kotlin.math.min
 
 
@@ -75,9 +73,9 @@ class PowerAuthEncryptorJsModule(
             // Resolve PowerAuthSDK
             val sdk: PowerAuthSDK = resolveSdk(ownerId, promise) ?: return
 
-            val encryptorListener = object : IGetEciesEncryptorListener {
+            val encryptorListener = object : IGetEncryptorListener {
 
-                override fun onGetEciesEncryptorSuccess(encryptor: EciesEncryptor) {
+                override fun onGetEncryptorSuccess(encryptor: CoreEncryptor) {
                     // Create container with all required objects and register it to the register.
                     val instanceData = InstanceData(encryptor, ownerId, activationScope)
                     val releasePolicy = listOf(ReleasePolicy.keepAlive(releaseTime))
@@ -86,7 +84,7 @@ class PowerAuthEncryptorJsModule(
                     promise.resolve(objectId)
                 }
 
-                override fun onGetEciesEncryptorFailed(t: Throwable) {
+                override fun onGetEncryptorFailed(t: Throwable) {
                     if (activationScope && !sdk.hasValidActivation()) {
                         @Suppress("ThrowableNotThrown")
                         Errors.rejectPromise(promise, PowerAuthErrorException(PowerAuthErrorCodes.MISSING_ACTIVATION))
@@ -95,11 +93,11 @@ class PowerAuthEncryptorJsModule(
                 }
             }
 
-            // Get ECIES encryptor
+            // Get encryptor
             if (activationScope) {
-                sdk.getEciesEncryptorForActivationScope(context, encryptorListener)
+                sdk.getEncryptorForActivationScope(encryptorListener)
             } else {
-                sdk.getEciesEncryptorForApplicationScope(encryptorListener)
+                sdk.getEncryptorForApplicationScope(encryptorListener)
             }
 
         } catch (t: Throwable) {
@@ -134,7 +132,7 @@ class PowerAuthEncryptorJsModule(
                 return false
             }
         }
-        val result: Boolean = instanceData.coreEncryptor.canEncryptRequest()
+        val result: Boolean = instanceData.coreEncryptor?.canEncryptRequest() == true
         if (!result && promise != null) {
             promise.reject(
                 Errors.EC_INVALID_ENCRYPTOR,
@@ -164,21 +162,35 @@ class PowerAuthEncryptorJsModule(
                 return@action
             }
             // Encrypt
-            val encryptionResult: Pair<EciesEncryptor, EciesCryptogram> =
-                instanceData.coreEncryptor.encryptRequestSynchronized(data)
-                    ?: throw WrapperException(
-                        Errors.EC_ENCRYPTION_ERROR,
-                        "Failed to encrypt request"
-                    )
-            val metadata: EciesMetadata = encryptionResult.first.getMetadata()
-                ?: throw WrapperException(Errors.EC_INVALID_ENCRYPTOR, "Incompatible native SDK")
-            //  Wrap decryptor and register it in the object register
+            val coreEncryptor = instanceData.coreEncryptor
+                ?: throw WrapperException(Errors.EC_INVALID_ENCRYPTOR, "Encryptor is no longer available")
+            val encryptionResult = try {
+                coreEncryptor.encryptRequest(data)
+            } catch (t: Throwable) {
+                objectRegister.removeObject(encryptorId, InstanceData::class.java)
+                throw t
+            }
+            val requestBody: JSONObject
+            val requestHeaders = encryptionResult.requestHeaders
+            try {
+                requestBody = JSONObject(String(encryptionResult.requestBody, StandardCharsets.UTF_8))
+                if (requestHeaders.isEmpty()) {
+                    throw WrapperException(Errors.EC_INVALID_ENCRYPTOR, "Encrypted request contains no HTTP header")
+                }
+            } catch (t: Throwable) {
+                objectRegister.removeObject(encryptorId, InstanceData::class.java)
+                throw t
+            }
+            // PowerAuth 2.0 encryptors are one-shot. Transfer the native object to the
+            // decryptor and invalidate the original handle; BaseNativeObject recreates it
+            // transparently when the reusable JavaScript encryptor is used again.
             val decryptor = InstanceData(
-                encryptionResult.first,
+                instanceData.takeCoreEncryptor(),
                 instanceData.powerAuthInstanceId,
                 instanceData.isActivationScoped
             )
-            val releasePolicy = Arrays.asList(
+            objectRegister.removeObject(encryptorId, InstanceData::class.java)
+            val releasePolicy = listOf(
                 ReleasePolicy.afterUse(1), ReleasePolicy.keepAlive(
                     Constants.DECRYPTOR_KEY_KEEP_ALIVE_TIME
                 )
@@ -190,15 +202,17 @@ class PowerAuthEncryptorJsModule(
             )
             // Resolve
             val cryptogram: WritableMap = Arguments.createMap()
-            cryptogram.putString("temporaryKeyId", encryptionResult.second.temporaryKeyId)
-            cryptogram.putString("ephemeralPublicKey", encryptionResult.second.getKeyBase64())
-            cryptogram.putString("encryptedData", encryptionResult.second.getBodyBase64())
-            cryptogram.putString("mac", encryptionResult.second.getMacBase64())
-            cryptogram.putString("nonce", encryptionResult.second.getNonceBase64())
-            cryptogram.putDouble("timestamp", encryptionResult.second.timestamp.toDouble())
+            putOptionalString(cryptogram, requestBody, "temporaryKeyId")
+            putOptionalString(cryptogram, requestBody, "ephemeralPublicKey")
+            putOptionalString(cryptogram, requestBody, "encryptedData")
+            putOptionalString(cryptogram, requestBody, "mac")
+            putOptionalString(cryptogram, requestBody, "nonce")
+            if (requestBody.has("timestamp") && !requestBody.isNull("timestamp")) {
+                cryptogram.putDouble("timestamp", requestBody.getDouble("timestamp"))
+            }
             val header: WritableMap = Arguments.createMap()
-            header.putString("key", metadata.getHttpHeaderKey())
-            header.putString("value", metadata.getHttpHeaderValue())
+            header.putString("key", requestHeaders[0].key)
+            header.putString("value", requestHeaders[0].value)
             val result: WritableMap = Arguments.createMap()
             result.putMap("cryptogram", cryptogram)
             result.putMap("header", header)
@@ -229,7 +243,7 @@ class PowerAuthEncryptorJsModule(
                 return false
             }
         }
-        val result: Boolean = instanceData.coreEncryptor.canDecryptResponse()
+        val result: Boolean = instanceData.coreEncryptor?.canDecryptResponse() == true
         if (!result && promise != null) {
             promise.reject(
                 Errors.EC_INVALID_ENCRYPTOR,
@@ -263,32 +277,36 @@ class PowerAuthEncryptorJsModule(
                 return@action
             }
             // Decrypt
-            val coreCryptogram: EciesCryptogram = EciesCryptogram(
-                if (cryptogram.hasKey("temporaryKeyId")) cryptogram.getString("temporaryKeyId") else null,
-                if (cryptogram.hasKey("encryptedData")) cryptogram.getString("encryptedData") else null,
-                if (cryptogram.hasKey("mac")) cryptogram.getString("mac") else null,
-                if (cryptogram.hasKey("ephemeralPublicKey")) cryptogram.getString("ephemeralPublicKey") else null,
-                if (cryptogram.hasKey("nonce")) cryptogram.getString("nonce") else null,
-                if (cryptogram.hasKey("timestamp")) cryptogram.getDouble("timestamp").toLong() else 0
+            val responseBody = JSONObject()
+            copyOptionalString(cryptogram, responseBody, "temporaryKeyId")
+            copyOptionalString(cryptogram, responseBody, "ephemeralPublicKey")
+            copyOptionalString(cryptogram, responseBody, "encryptedData")
+            copyOptionalString(cryptogram, responseBody, "mac")
+            copyOptionalString(cryptogram, responseBody, "nonce")
+            if (cryptogram.hasKey("timestamp") && !cryptogram.isNull("timestamp")) {
+                responseBody.put("timestamp", cryptogram.getDouble("timestamp").toLong())
+            }
+            val coreEncryptor = instanceData.coreEncryptor
+                ?: throw WrapperException(Errors.EC_INVALID_ENCRYPTOR, "Decryptor is no longer available")
+            val decryptedResponse = coreEncryptor.decryptResponse(
+                CoreEncryptedResponse(responseBody.toString().toByteArray(StandardCharsets.UTF_8))
             )
-            val decryptedResponse: ByteArray =
-                instanceData.coreEncryptor.decryptResponse(coreCryptogram)
-                    ?: throw WrapperException(
-                        Errors.EC_ENCRYPTION_ERROR,
-                        "Failed to decrypt response"
-                    )
             val result = dataFormat.encodeBytes(decryptedResponse)
             promise.resolve(result)
         })
     }
 
     // Private methods
-    fun getBase64EncodedBytes(map: ReadableMap, key: String): ByteArray? {
-        val value: String? = if (map.hasKey(key)) map.getString(key) else null
-        if (value != null) {
-            return Base64.decode(value, Base64.NO_WRAP)
+    private fun putOptionalString(map: WritableMap, json: JSONObject, key: String) {
+        if (json.has(key) && !json.isNull(key)) {
+            map.putString(key, json.getString(key))
         }
-        return null
+    }
+
+    private fun copyOptionalString(map: ReadableMap, json: JSONObject, key: String) {
+        if (map.hasKey(key) && !map.isNull(key)) {
+            json.put(key, map.getString(key))
+        }
     }
 
     /**
@@ -331,14 +349,23 @@ class PowerAuthEncryptorJsModule(
      * Object containing all encryptor's data required for the request encryption.
      */
     internal class InstanceData(
-        coreEncryptor: EciesEncryptor,
+        coreEncryptor: CoreEncryptor,
         val powerAuthInstanceId: String,
         val isActivationScoped: Boolean
     ) : IManagedObject<Any> {
-        val coreEncryptor: EciesEncryptor = coreEncryptor
+        var coreEncryptor: CoreEncryptor? = coreEncryptor
+            private set
+
+        fun takeCoreEncryptor(): CoreEncryptor {
+            val result = coreEncryptor
+                ?: throw WrapperException(Errors.EC_INVALID_ENCRYPTOR, "Encryptor is no longer available")
+            coreEncryptor = null
+            return result
+        }
 
         override fun cleanup() {
-            coreEncryptor.destroy()
+            coreEncryptor?.destroy()
+            coreEncryptor = null
         }
 
         override fun managedInstance(): IManagedObject<Any> {

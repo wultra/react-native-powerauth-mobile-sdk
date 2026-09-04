@@ -21,7 +21,7 @@
 #import "PAJS.h"
 
 #import <PowerAuth2/PowerAuthSDK.h>
-@import PowerAuthCore;
+@import PowerAuth2;
 
 // MARK: - Module
 
@@ -107,18 +107,19 @@ PAJS_METHOD_START(initialize,
     }
     
     if (activationScope) {
-        [sdk eciesEncryptorForActivationScopeWithCallback:^(PowerAuthCoreEciesEncryptor * _Nullable encryptor, NSError * _Nullable error) {
-            [self processEciesEncryptor:encryptor sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
+        [sdk encryptorForActivationScopeWithCallback:^(PowerAuthEncryptor * _Nullable encryptor, NSError * _Nullable error) {
+            [self processEncryptor:encryptor error:error sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
         }];
     } else {
-        [sdk eciesEncryptorForApplicationScopeWithCallback:^(PowerAuthCoreEciesEncryptor * _Nullable encryptor, NSError * _Nullable error) {
-            [self processEciesEncryptor:encryptor sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
+        [sdk encryptorForApplicationScopeWithCallback:^(PowerAuthEncryptor * _Nullable encryptor, NSError * _Nullable error) {
+            [self processEncryptor:encryptor error:error sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
         }];
     }
 }
 PAJS_METHOD_END
 
-- (void) processEciesEncryptor:(PowerAuthCoreEciesEncryptor*)coreEncryptor
+- (void) processEncryptor:(PowerAuthEncryptor*)coreEncryptor
+                         error:(NSError*)error
                            sdk:(PowerAuthSDK*)sdk
                activationScope:(BOOL)activationScope
                        ownerId:(NSString*)ownerId
@@ -128,9 +129,9 @@ PAJS_METHOD_END
 {
     if (!coreEncryptor) {
         if (activationScope && ![sdk hasValidActivation]) {
-            reject(EC_MISSING_ACTIVATION, nil, nil);
+            reject(EC_MISSING_ACTIVATION, nil, error);
         } else {
-            reject(EC_UNKNOWN_ERROR, @"Failed to create ECIES encryptor", nil);
+            reject(EC_UNKNOWN_ERROR, @"Failed to create encryptor", error);
         }
         return;
     }
@@ -205,39 +206,29 @@ PAJS_METHOD_START(encryptRequest,
             [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
             return;
         }
-        // Encrypt
-        [encryptor.coreEncryptor encryptRequest:data completion:^(PowerAuthCoreEciesCryptogram * _Nullable cryptogram, PowerAuthCoreEciesEncryptor * _Nullable decryptor) {
-            if (!cryptogram || !decryptor) {
-                reject(EC_ENCRYPTION_ERROR, @"Failed to encrypt request", nil);
-                return;
-            }
-            PowerAuthCoreEciesMetaData * metadata = decryptor.associatedMetaData;
-            if (!metadata) {
-                // PA_SDK behavior has been changed...
-                reject(EC_INVALID_ENCRYPTOR, @"Incompatible native SDK", nil);
-                return;
-            }
-            // Wrap decryptor and register it in the object register
-            PowerAuthJsEncryptor * jsDecryptor = [[PowerAuthJsEncryptor alloc] initWithEncryptor:decryptor powerAuthInstanceId:encryptor.powerAuthInstanceId activationScoped:encryptor.activationScoped];
-            NSArray * policies = @[ RP_AFTER_USE(1), RP_EXPIRE(DECRYPTOR_KEEP_ALIVE_TIME) ];
-            NSString * decryptorId = [_objectRegister registerObject:jsDecryptor tag:encryptor.powerAuthInstanceId policies:policies];
-            // Resolve...
-            resolve(@{
-                @"cryptogram": @{
-                    @"temporaryKeyId": cryptogram.temporaryKeyId,
-                    @"ephemeralPublicKey": cryptogram.keyBase64,
-                    @"encryptedData": cryptogram.bodyBase64,
-                    @"mac": cryptogram.macBase64,
-                    @"nonce": cryptogram.nonceBase64,
-                    @"timestamp": [[NSNumber alloc] initWithUnsignedLongLong:cryptogram.timestamp]
-                },
-                @"header": @{
-                    @"key": metadata.httpHeaderKey,
-                    @"value": metadata.httpHeaderValue
-                },
-                @"decryptorId": decryptorId
-            });
-        }];
+        // Encrypt. PowerAuth 2.0 encryptors are one-shot, so the native object is
+        // transferred to the response decryptor and the original handle is invalidated.
+        NSError * error = nil;
+        PowerAuthEncryptedRequest * encryptedRequest = [encryptor.coreEncryptor encryptRequest:data error:&error];
+        NSDictionary * cryptogram = encryptedRequest
+            ? [NSJSONSerialization JSONObjectWithData:encryptedRequest.requestBody options:0 error:&error]
+            : nil;
+        PowerAuthHttpHeader * header = encryptedRequest.requestHeaders.firstObject;
+        if (![cryptogram isKindOfClass:[NSDictionary class]] || !header) {
+            reject(EC_ENCRYPTION_ERROR, @"Failed to encrypt request", error);
+            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
+            return;
+        }
+        PowerAuthEncryptor * coreDecryptor = [encryptor takeCoreEncryptor];
+        PowerAuthJsEncryptor * jsDecryptor = [[PowerAuthJsEncryptor alloc] initWithEncryptor:coreDecryptor powerAuthInstanceId:encryptor.powerAuthInstanceId activationScoped:encryptor.activationScoped];
+        [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
+        NSArray * policies = @[ RP_AFTER_USE(1), RP_EXPIRE(DECRYPTOR_KEEP_ALIVE_TIME) ];
+        NSString * decryptorId = [_objectRegister registerObject:jsDecryptor tag:encryptor.powerAuthInstanceId policies:policies];
+        resolve(@{
+            @"cryptogram": cryptogram,
+            @"header": @{ @"key": header.key, @"value": header.value },
+            @"decryptorId": decryptorId
+        });
     }];
 }
 PAJS_METHOD_END
@@ -299,15 +290,16 @@ PAJS_METHOD_START(decryptResponse,
             return;
         }
         // Decrypt
-        PowerAuthCoreEciesEncryptor * coreEncryptor = encryptor.coreEncryptor;
-        PowerAuthCoreEciesCryptogram * cryptogram = [[PowerAuthCoreEciesCryptogram alloc] init];
-        cryptogram.bodyBase64 = [RCTConvert NSString:data[@"encryptedData"]];
-        cryptogram.macBase64 = [RCTConvert NSString:data[@"mac"]];
-        cryptogram.nonceBase64 = [RCTConvert NSString:data[@"nonce"]];
-        cryptogram.timestamp = [[RCTConvert NSNumber:data[@"timestamp"]] unsignedLongLongValue];
-        NSData * response = [coreEncryptor decryptResponse:cryptogram];
+        NSError * error = nil;
+        NSData * responseBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:&error];
+        PowerAuthEncryptedResponse * encryptedResponse = responseBody
+            ? [[PowerAuthEncryptedResponse alloc] initWithResponseBody:responseBody error:&error]
+            : nil;
+        NSData * response = encryptedResponse
+            ? [encryptor.coreEncryptor decryptResponse:encryptedResponse error:&error]
+            : nil;
         if (!response) {
-            reject(EC_ENCRYPTION_ERROR, @"Failed to decrypt response", nil);
+            reject(EC_ENCRYPTION_ERROR, @"Failed to decrypt response", error);
             return;
         }
         NSString * result = EncodeNSDataValue(response, dataFormat, reject);
@@ -325,7 +317,7 @@ PAJS_METHOD_END
 
 @implementation PowerAuthJsEncryptor
 
-- (instancetype) initWithEncryptor:(PowerAuthCoreEciesEncryptor *)encryptor powerAuthInstanceId:(NSString *)powerAuthInstanceId activationScoped:(BOOL)activationScoped
+- (instancetype) initWithEncryptor:(PowerAuthEncryptor *)encryptor powerAuthInstanceId:(NSString *)powerAuthInstanceId activationScoped:(BOOL)activationScoped
 {
     self = [super init];
     if (self) {
@@ -334,6 +326,13 @@ PAJS_METHOD_END
         _powerAuthInstanceId = powerAuthInstanceId;
     }
     return self;
+}
+
+- (PowerAuthEncryptor*) takeCoreEncryptor
+{
+    PowerAuthEncryptor * encryptor = _coreEncryptor;
+    _coreEncryptor = nil;
+    return encryptor;
 }
 
 @end
