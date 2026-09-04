@@ -93,7 +93,7 @@ class DebugThisCall implements ThisCallTrampoline {
             }
             const r = await NativeModulesProvider.PowerAuth.callNative<T>(name, [instanceId, ...args])
             if (this.traceCall) {
-                console.log(` ret ${msg} => ${JSON.stringify(r)}`)
+                console.log(` ret ${msg} => ${prettyResult(name, r)}`)
             }
             return r
         } catch (e) {
@@ -297,10 +297,14 @@ function prettyArgs(fname: string, args: any[]): string {
         case 'unsafeChangePassword': 
             sanitizedArgs[1] = sanitizedArgs[2] = '***'
             break
+        case 'beginPasswordChange':
         case 'validatePassword':
         case 'addBiometryFactor':
         case 'startProtocolUpgrade':
             sanitizedArgs[1] = '***'
+            break
+        case 'finishPasswordChange':
+            sanitizedArgs[1] = sanitizedArgs[2] = '***'
             break
         case 'configure': {
             const clientConfiguration = sanitizedArgs[2]
@@ -326,6 +330,7 @@ function prettyArgs(fname: string, args: any[]): string {
         default:
             break
     }
+
     let authIndex = 0
     if (sanitizedArgs[1] instanceof PowerAuthAuthentication) {
         authIndex = 1
@@ -351,4 +356,8 @@ function prettyArgs(fname: string, args: any[]): string {
 
     const v = JSON.stringify(sanitizedArgs)
     return v.slice(1, v.length - 1)
+}
+
+function prettyResult(fname: string, result: any): string {
+    return fname === 'beginPasswordChange' ? '"***"' : JSON.stringify(result)
 }

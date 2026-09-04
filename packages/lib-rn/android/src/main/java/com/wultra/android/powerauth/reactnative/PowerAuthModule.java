@@ -216,6 +216,16 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void beginPasswordChange(String instanceId, final Dynamic oldPassword, final Promise promise) {
+        powerAuthJsModule.beginPasswordChange(instanceId, oldPassword, promise);
+    }
+
+    @ReactMethod
+    public void finishPasswordChange(String instanceId, final Dynamic newPassword, final String passwordChangeDataId, final Promise promise) {
+        powerAuthJsModule.finishPasswordChange(instanceId, newPassword, passwordChangeDataId, promise);
+    }
+
+    @ReactMethod
     public void addBiometryFactor(String instanceId, final Dynamic password, final ReadableMap prompt, final Promise promise) {
         powerAuthJsModule.addBiometryFactor(instanceId, password, prompt, promise);
     }

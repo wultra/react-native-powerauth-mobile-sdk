@@ -44,6 +44,11 @@ class PowerAuthJsModule(
 
     private val configurationLock = Any()
 
+    private fun clearPasswordChangeData(data: PowerAuthPasswordChangeData) {
+        data.secureClear()
+        data.oldPassword.destroy()
+    }
+
     // React integration
     override fun getName(): String {
         return "PowerAuth"
@@ -697,6 +702,116 @@ class PowerAuthJsModule(
                         Errors.rejectPromise(promise, t)
                     }
                 })
+        })
+    }
+
+    @JsApiMethod
+    fun beginPasswordChange(
+        instanceId: String,
+        oldPassword: Dynamic?,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val coreOldPassword = passwordModule.usePasswordCopy(oldPassword)
+            try {
+                sdk.beginPasswordChange(
+                    context,
+                    coreOldPassword,
+                    object : IBeginPasswordChangeListener {
+                    override fun onBeginPasswordChangeSucceed(
+                        passwordChangeData: PowerAuthPasswordChangeData
+                    ) {
+                        try {
+                            val objectId = objectRegister.registerObjectIfOwnerMatches(
+                                instanceId,
+                                sdk,
+                                ManagedAny.wrap(
+                                    passwordChangeData,
+                                    cleanup { clearPasswordChangeData(it) }
+                                ),
+                                listOf(
+                                    ReleasePolicy.expire(
+                                        Constants.PASSWORD_CHANGE_DATA_EXPIRE_TIME
+                                    )
+                                )
+                            )
+                            if (objectId == null) {
+                                clearPasswordChangeData(passwordChangeData)
+                                promise.reject(
+                                    Errors.EC_INSTANCE_NOT_CONFIGURED,
+                                    "PowerAuth instance is no longer configured"
+                                )
+                                return
+                            }
+                            promise.resolve(objectId)
+                        } catch (t: Throwable) {
+                            clearPasswordChangeData(passwordChangeData)
+                            Errors.rejectPromise(promise, t)
+                        }
+                    }
+
+                    override fun onBeginPasswordChangeFailed(t: Throwable) {
+                        coreOldPassword.destroy()
+                        Errors.rejectPromise(promise, t)
+                    }
+                    }
+                )
+            } catch (t: Throwable) {
+                coreOldPassword.destroy()
+                throw t
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun finishPasswordChange(
+        instanceId: String,
+        newPassword: Dynamic?,
+        passwordChangeDataId: String?,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val passwordChangeData = objectRegister.takeObjectIfOwnerMatches(
+                passwordChangeDataId,
+                PowerAuthPasswordChangeData::class.java,
+                instanceId,
+                sdk
+            ) ?: throw WrapperException(
+                Errors.EC_INVALID_NATIVE_OBJECT,
+                "Password change data object is no longer valid"
+            )
+            val coreNewPassword = try {
+                passwordModule.usePasswordCopy(newPassword)
+            } catch (t: Throwable) {
+                clearPasswordChangeData(passwordChangeData)
+                throw t
+            }
+            try {
+                sdk.finishPasswordChange(
+                    context,
+                    coreNewPassword,
+                    passwordChangeData,
+                    object : IFinishPasswordChangeListener {
+                    override fun onFinishPasswordChangeSucceed() {
+                        coreNewPassword.destroy()
+                        clearPasswordChangeData(passwordChangeData)
+                        promise.resolve(null)
+                    }
+
+                    override fun onFinishPasswordChangeFailed(t: Throwable) {
+                        coreNewPassword.destroy()
+                        clearPasswordChangeData(passwordChangeData)
+                        Errors.rejectPromise(promise, t)
+                    }
+                    }
+                )
+            } catch (t: Throwable) {
+                coreNewPassword.destroy()
+                clearPasswordChangeData(passwordChangeData)
+                throw t
+            }
         })
     }
 
