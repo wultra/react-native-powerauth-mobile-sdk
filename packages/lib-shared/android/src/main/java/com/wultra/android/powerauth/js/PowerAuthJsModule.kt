@@ -638,16 +638,194 @@ class PowerAuthJsModule(
                 try {
                     val decodedData = data.toByteArray(StandardCharsets.UTF_8)
                     val decodedSignature = Base64.decode(signature, Base64.NO_WRAP)
-                    promise.resolve(
-                        sdk.verifyServerSignedData(
-                            decodedData,
-                            decodedSignature,
-                            masterKey
-                        )
-                    )
+                    val keyId = if (masterKey) {
+                        PowerAuthSignatureKeyId.MASTER_EC
+                    } else {
+                        PowerAuthSignatureKeyId.SERVER_EC
+                    }
+                    try {
+                        sdk.verifyDigitalSignature(decodedSignature, decodedData, keyId)
+                        promise.resolve(true)
+                    } catch (_: PowerAuthErrorException) {
+                        // Preserve the deprecated API contract: verification failures resolve to false.
+                        promise.resolve(false)
+                    }
                 } catch (e: Exception) {
                     Errors.rejectPromise(promise, e)
                 }
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun verifyDigitalSignature(
+        instanceId: String,
+        signature: String,
+        data: String,
+        signatureKeyId: String,
+        promise: Promise
+    ) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val decodedSignature = DataFormat.BASE64.decodeBytes(signature)
+                ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode signature.")
+            val decodedData = DataFormat.BASE64.decodeBytes(data)
+                ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode data.")
+            sdk.verifyDigitalSignature(
+                decodedSignature,
+                decodedData,
+                signatureKeyIdFromString(signatureKeyId)
+            )
+            promise.resolve(null)
+        })
+    }
+
+    @JsApiMethod
+    fun calculateDigitalSignature(
+        instanceId: String,
+        authMap: ReadableMap,
+        data: String,
+        signatureKeyId: String,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val decodedData = DataFormat.BASE64.decodeBytes(data)
+                ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode data.")
+            withOwnedAuthentication(authMap) { authentication ->
+                sdk.calculateDigitalSignature(
+                    context,
+                    authentication,
+                    decodedData,
+                    signatureKeyIdFromString(signatureKeyId),
+                    object : IDigitalSignatureListener {
+                        override fun onDigitalSignatureSucceed(signature: ByteArray) {
+                            promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))
+                        }
+
+                        override fun onDigitalSignatureFailed(t: Throwable) {
+                            Errors.rejectPromise(promise, t)
+                        }
+                    }
+                )
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun exportDevicePublicKeys(instanceId: String, format: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val nativeFormat = when (format) {
+                "der" -> PowerAuthDevicePublicKeyFormat.DER
+                "raw" -> PowerAuthDevicePublicKeyFormat.RAW
+                else -> throw WrapperException(
+                    Errors.EC_WRONG_PARAMETER,
+                    "Unknown device public key format: $format"
+                )
+            }
+            val result = Arguments.createArray()
+            sdk.exportDevicePublicKeys(nativeFormat).forEach { key ->
+                val keyType = when (key.keyType) {
+                    PowerAuthSignatureKeyType.EC -> "ec"
+                    PowerAuthSignatureKeyType.ML_DSA -> "mlDsa"
+                    else -> throw WrapperException(
+                        Errors.EC_UNKNOWN_ERROR,
+                        "Unknown signature key type: ${key.keyType}"
+                    )
+                }
+                result.pushMap(Arguments.createMap().apply {
+                    putString("keyType", keyType)
+                    putString("keyAlgorithm", key.keyAlgorithm)
+                    putString("keyData", Base64.encodeToString(key.keyData, Base64.NO_WRAP))
+                })
+            }
+            promise.resolve(result)
+        })
+    }
+
+    @JsApiMethod
+    fun verifyJwsSignature(
+        instanceId: String,
+        signature: String,
+        compact: Boolean,
+        strict: Boolean,
+        signatureKeyId: String,
+        promise: Promise
+    ) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            sdk.verifyJwsSignature(
+                signature,
+                compact,
+                strict,
+                signatureKeyIdFromString(signatureKeyId)
+            )
+            promise.resolve(null)
+        })
+    }
+
+    @JsApiMethod
+    fun calculateJwsSignature(
+        instanceId: String,
+        authMap: ReadableMap,
+        data: String,
+        dataType: String?,
+        compact: Boolean,
+        signatureKeyId: String,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            val decodedData = DataFormat.BASE64.decodeBytes(data)
+                ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode data.")
+            withOwnedAuthentication(authMap) { authentication ->
+                sdk.calculateJwsSignature(
+                    context,
+                    authentication,
+                    decodedData,
+                    dataType,
+                    compact,
+                    signatureKeyIdFromString(signatureKeyId),
+                    object : IJwsSignatureListener {
+                        override fun onJwsSignatureSucceed(signedData: String, compactForm: Boolean) {
+                            promise.resolve(signedData)
+                        }
+
+                        override fun onJwsSignatureFailed(t: Throwable) {
+                            Errors.rejectPromise(promise, t)
+                        }
+                    }
+                )
+            }
+        })
+    }
+
+    @JsApiMethod
+    fun createCertificateSigningRequest(
+        instanceId: String,
+        authMap: ReadableMap,
+        distinguishedNames: ReadableMap,
+        subjectAltNames: ReadableArray?,
+        signatureKeyId: String,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
+            withOwnedAuthentication(authMap) { authentication ->
+                sdk.createCertificateSigningRequest(
+                    context,
+                    authentication,
+                    getStringMap(distinguishedNames),
+                    subjectAltNames?.let(::getStringList),
+                    signatureKeyIdFromString(signatureKeyId),
+                    object : ICreateCertificateSigningRequestListener {
+                        override fun onCreateCertificateSigningRequestSucceed(certificateSigningRequest: String) {
+                            promise.resolve(certificateSigningRequest)
+                        }
+
+                        override fun onCreateCertificateSigningRequestFailed(t: Throwable) {
+                            Errors.rejectPromise(promise, t)
+                        }
+                    }
+                )
             }
         })
     }
@@ -988,16 +1166,17 @@ class PowerAuthJsModule(
                     return
                 }
                 withOwnedAuthentication(authMap) { authentication ->
-                    sdk.signDataWithDevicePrivateKey(
+                    sdk.calculateDigitalSignature(
                         context,
                         authentication,
                         decodedData,
-                        object : IDataSignatureListener {
-                            override fun onDataSignedSucceed(signature: ByteArray) {
+                        PowerAuthSignatureKeyId.DEVICE_EC,
+                        object : IDigitalSignatureListener {
+                            override fun onDigitalSignatureSucceed(signature: ByteArray) {
                                 promise.resolve(Base64.encodeToString(signature, Base64.NO_WRAP))
                             }
 
-                            override fun onDataSignedFailed(t: Throwable) {
+                            override fun onDigitalSignatureFailed(t: Throwable) {
                                 Errors.rejectPromise(promise, t)
                             }
                         })
@@ -1955,6 +2134,35 @@ class PowerAuthJsModule(
                 }
             }
             return map
+        }
+
+        private fun getStringList(array: ReadableArray): List<String> {
+            return (0 until array.size()).map {
+                array.getString(it) ?: throw WrapperException(
+                    Errors.EC_WRONG_PARAMETER,
+                    "Subject alternative names must contain strings."
+                )
+            }
+        }
+
+        @PowerAuthSignatureKeyId
+        private fun signatureKeyIdFromString(value: String): Int {
+            return when (value) {
+                "master" -> PowerAuthSignatureKeyId.MASTER
+                "masterEc" -> PowerAuthSignatureKeyId.MASTER_EC
+                "masterMlDsa" -> PowerAuthSignatureKeyId.MASTER_ML_DSA
+                "server" -> PowerAuthSignatureKeyId.SERVER
+                "serverEc" -> PowerAuthSignatureKeyId.SERVER_EC
+                "serverMlDsa" -> PowerAuthSignatureKeyId.SERVER_ML_DSA
+                "device" -> PowerAuthSignatureKeyId.DEVICE
+                "deviceEc" -> PowerAuthSignatureKeyId.DEVICE_EC
+                "deviceMlDsa" -> PowerAuthSignatureKeyId.DEVICE_ML_DSA
+                "macPersonalized" -> PowerAuthSignatureKeyId.MAC_PERSONALIZED
+                else -> throw WrapperException(
+                    Errors.EC_WRONG_PARAMETER,
+                    "Unknown signature key identifier: $value"
+                )
+            }
         }
 
         /** Translate [PowerAuthHttpHeader] into a JavaScript object. */
