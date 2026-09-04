@@ -23,7 +23,6 @@ import com.facebook.react.bridge.BaseJavaModule;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule;
 
@@ -57,13 +56,8 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
     // JavaScript methods
 
     @ReactMethod
-    void initialize(@NonNull String scope, @NonNull String ownerId, int autoreleaseTime, Promise promise) {
-        powerAuthEncryptorJsModule.initialize(scope, ownerId, autoreleaseTime, promise);
-    }
-
-    @ReactMethod
-    void release(@NonNull String encryptorId) {
-        powerAuthEncryptorJsModule.release(encryptorId);
+    void initialize(@NonNull String scope, @NonNull String ownerId, Promise promise) {
+        powerAuthEncryptorJsModule.initialize(scope, ownerId, promise);
     }
 
     // Encryption
@@ -74,8 +68,8 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
     }
 
     @ReactMethod
-    void encryptRequest(@NonNull String encryptorId, @Nullable String body, @Nullable String bodyFormat, Promise promise) {
-        powerAuthEncryptorJsModule.encryptRequest(encryptorId, body, bodyFormat, promise);
+    void encryptRequest(@NonNull String encryptorId, @Nullable String requestBodyBase64, Promise promise) {
+        powerAuthEncryptorJsModule.encryptRequest(encryptorId, requestBodyBase64, promise);
     }
 
     // Decryption
@@ -86,7 +80,7 @@ public class PowerAuthEncryptorModule extends BaseJavaModule {
     }
 
     @ReactMethod
-    void decryptResponse(String encryptorId, ReadableMap cryptogram, String outputFormat, Promise promise) {
-        powerAuthEncryptorJsModule.decryptResponse(encryptorId, cryptogram, outputFormat, promise);
+    void decryptResponse(@NonNull String encryptorId, @NonNull String responseBody, Promise promise) {
+        powerAuthEncryptorJsModule.decryptResponse(encryptorId, responseBody, promise);
     }
 }

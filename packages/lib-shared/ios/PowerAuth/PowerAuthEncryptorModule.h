@@ -17,43 +17,7 @@
 #import "PAJS.h"
 #import "Errors.h"
 
-@class PowerAuthEncryptor;
-
-/// Object containing all encryptor's data required for the request encryption.
-@interface PowerAuthJsEncryptor: NSObject
-
-- (nonnull instancetype) initWithEncryptor:(nonnull PowerAuthEncryptor*)encryptor
-                       powerAuthInstanceId:(nonnull NSString*)powerAuthInstanceId
-                          activationScoped:(BOOL)activationScoped;
-
-- (nonnull PowerAuthEncryptor*) takeCoreEncryptor;
-
-@property (nonatomic, readonly) BOOL activationScoped;
-@property (nonatomic, readonly, strong, nullable) PowerAuthEncryptor * coreEncryptor;
-@property (nonatomic, readonly, strong, nonnull) NSString * powerAuthInstanceId;
-
-@end
-
 // "PowerAuthEncryptor" module
-
 PAJS_MODULE(PowerAuthEncryptorModule)
-
-/// Use native encryptor object with given identifier.
-/// - Parameters:
-///   - encryptorId: Encryptor's identifier.
-///   - reject: Reject function.
-///   - action: Action to execute when encryptor exists and can be used.
-- (void) useEncryptor:(nullable NSString*)encryptorId
-             rejecter:(nonnull RCTPromiseRejectBlock)reject
-               action:(NS_NOESCAPE void(^_Nonnull)(PowerAuthJsEncryptor * _Nonnull encryptor))action;
-
-/// Touch native encryptor object with given identifier in the object register.
-/// - Parameters:
-///   - encryptorId: Encryptor's identifier.
-///   - reject: Reject function.
-///   - action: Action to execute when encryptor exists and can be used.
-- (void) touchEncryptor:(nullable NSString*)encryptorId
-               rejecter:(nonnull RCTPromiseRejectBlock)reject
-                 action:(NS_NOESCAPE void(^_Nonnull)(PowerAuthJsEncryptor * _Nonnull encryptor))action;
 
 @end

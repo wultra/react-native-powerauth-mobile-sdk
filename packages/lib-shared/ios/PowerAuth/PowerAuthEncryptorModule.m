@@ -20,17 +20,12 @@
 #import "Utilities.h"
 #import "PAJS.h"
 
-#import <PowerAuth2/PowerAuthSDK.h>
 @import PowerAuth2;
-
-// MARK: - Module
 
 @implementation PowerAuthEncryptorModule
 {
     PowerAuthObjectRegister * _objectRegister;
 }
-
-// MARK: - ReactNative bridge
 
 PAJS_MODULE_REGISTRY
 
@@ -38,7 +33,6 @@ RCT_EXPORT_MODULE(PowerAuthEncryptor);
 
 - (void) PAJS_INITIALIZE_METHOD
 {
-    // RCTInitializing protocol allows us to get module dependencies before the object is used from JS.
     PAJS_OBJECT_REGISTER
 }
 
@@ -47,50 +41,11 @@ RCT_EXPORT_MODULE(PowerAuthEncryptor);
     return NO;
 }
 
-// MARK: - Helpers
-
-/// Touch or use native encryptor object with given identifier.
-/// - Parameters:
-///   - objectRegister: Native object register
-///   - encryptorId: Enccryptor's identifier.
-///   - touch: Determine whether "touch" or "use" function will be used to access the register.
-///   - reject: Reject function.
-///   - action: Action to execute when encryptor exists and can be used.
-static void WithEncryptor(PowerAuthObjectRegister * objectRegister, NSString * encryptorId, BOOL touch, RCTPromiseRejectBlock reject, NS_NOESCAPE void(^action)(PowerAuthJsEncryptor * encryptor))
-{
-    PowerAuthJsEncryptor * encryptor = touch
-                            ? [objectRegister touchObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]]
-                            : [objectRegister useObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-    if (encryptor) {
-        action(encryptor);
-    } else {
-        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
-    }
-}
-
-- (void) useEncryptor:(NSString*)encryptorId
-             rejecter:(RCTPromiseRejectBlock)reject
-               action:(NS_NOESCAPE void(^)(PowerAuthJsEncryptor * encryptor))action
-{
-    WithEncryptor(_objectRegister, encryptorId, NO, reject, action);
-}
-
-- (void) touchEncryptor:(NSString*)encryptorId
-               rejecter:(RCTPromiseRejectBlock)reject
-                 action:(NS_NOESCAPE void(^)(PowerAuthJsEncryptor * encryptor))action
-{
-    WithEncryptor(_objectRegister, encryptorId, YES, reject, action);
-}
-
-// MARK: - JS interface
-
 PAJS_METHOD_START(initialize,
                   PAJS_ARGUMENT(scope, NSString*)
-                  PAJS_ARGUMENT(ownerId, NSString*)
-                  PAJS_ARGUMENT(autoreleaseTime, PAJS_NONNULL_ARGUMENT NSNumber*))
+                  PAJS_ARGUMENT(ownerId, NSString*))
 {
-    // Input parameters validation
-    NSString * scopeType = [RCTConvert NSString: scope];
+    NSString * scopeType = [RCTConvert NSString:scope];
     BOOL activationScope;
     if ([scopeType isEqualToString:@"APPLICATION"]) {
         activationScope = NO;
@@ -100,239 +55,128 @@ PAJS_METHOD_START(initialize,
         reject(EC_WRONG_PARAMETER, @"scope parameter is missing or contains invalid value", nil);
         return;
     }
-    // Resolve PowerAuthSDK
+
     PowerAuthSDK * sdk = GetPowerAuthSdk(ownerId, _objectRegister, reject);
     if (!sdk) {
         return;
     }
-    
+
+    void (^callback)(PowerAuthEncryptor*, NSError*) = ^(PowerAuthEncryptor * encryptor, NSError * error) {
+        if (!encryptor) {
+            ProcessError(error, reject);
+            return;
+        }
+        NSString * objectId = [self->_objectRegister registerObject:encryptor
+                                                     ifOwnerMatches:sdk
+                                                            ownerId:ownerId
+                                                           policies:@[ RP_KEEP_ALIVE(ENCRYPTOR_KEEP_ALIVE_TIME) ]];
+        if (!objectId) {
+            reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is no longer configured", nil);
+            return;
+        }
+        resolve(objectId);
+    };
+
     if (activationScope) {
-        [sdk encryptorForActivationScopeWithCallback:^(PowerAuthEncryptor * _Nullable encryptor, NSError * _Nullable error) {
-            [self processEncryptor:encryptor error:error sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
-        }];
+        [sdk encryptorForActivationScopeWithCallback:callback];
     } else {
-        [sdk encryptorForApplicationScopeWithCallback:^(PowerAuthEncryptor * _Nullable encryptor, NSError * _Nullable error) {
-            [self processEncryptor:encryptor error:error sdk:sdk activationScope:activationScope ownerId:ownerId autoreleaseTime:autoreleaseTime resolve:resolve reject:reject];
-        }];
+        [sdk encryptorForApplicationScopeWithCallback:callback];
     }
 }
 PAJS_METHOD_END
-
-- (void) processEncryptor:(PowerAuthEncryptor*)coreEncryptor
-                         error:(NSError*)error
-                           sdk:(PowerAuthSDK*)sdk
-               activationScope:(BOOL)activationScope
-                       ownerId:(NSString*)ownerId
-               autoreleaseTime:(NSNumber*)autoreleaseTime
-                       resolve:(RCTPromiseResolveBlock)resolve
-                        reject:(RCTPromiseRejectBlock)reject
-{
-    if (!coreEncryptor) {
-        if (activationScope && ![sdk hasValidActivation]) {
-            reject(EC_MISSING_ACTIVATION, nil, error);
-        } else {
-            reject(EC_UNKNOWN_ERROR, @"Failed to create encryptor", error);
-        }
-        return;
-    }
-    // Create container with all required objects and register it to the register
-    PowerAuthJsEncryptor * encryptor = [[PowerAuthJsEncryptor alloc] initWithEncryptor:coreEncryptor powerAuthInstanceId:ownerId activationScoped:activationScope];
-    NSArray * policies = @[ RP_KEEP_ALIVE(RP_TIME_INTERVAL(autoreleaseTime, ENCRYPTOR_KEEP_ALIVE_TIME)) ];
-    NSString * encryptorId = [_objectRegister registerObject:encryptor tag:ownerId policies:policies];
-    resolve(encryptorId);
-}
-
-PAJS_METHOD_START(release,
-                  PAJS_ARGUMENT(encryptorId, NSString*))
-{
-    [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-    resolve(nil);
-}
-PAJS_METHOD_END
-
-// MARK: Encryption
-
-/// Determine whether encryptor is able to encrypt the request data. The function also validate state of PowerAuthSDK if
-/// encryptor is configured for an activation scope.
-/// - Parameters:
-///   - encryptor: Encryptor container
-///   - objectRegister: Object register.
-///   - reject: Reject function
-static BOOL CanEncrypt(PowerAuthJsEncryptor * encryptor, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject) {
-    PowerAuthSDK * sdk = GetPowerAuthSdk(encryptor.powerAuthInstanceId, objectRegister, reject);
-    if (!sdk) {
-        return NO;
-    }
-    if (encryptor.activationScoped) {
-        if (![sdk hasValidActivation]) {
-            if (reject) reject(EC_MISSING_ACTIVATION, nil, nil);
-            return NO;
-        }
-    }
-    BOOL result = encryptor.coreEncryptor.canEncryptRequest;
-    if (!result && reject) {
-        reject(EC_INVALID_ENCRYPTOR, @"Encryptor is not constructed for request encryption", nil);
-    }
-    return result;
-}
 
 PAJS_METHOD_START(canEncryptRequest,
                   PAJS_ARGUMENT(encryptorId, NSString*))
 {
-    [self touchEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
-        resolve(CanEncrypt(encryptor, _objectRegister, nil) ? @YES : @NO);
-    }];
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
+    }
+    resolve(@(encryptor.canEncryptRequest));
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(canDecryptResponse,
+                  PAJS_ARGUMENT(encryptorId, NSString*))
+{
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
+    }
+    resolve(@(encryptor.canDecryptResponse));
 }
 PAJS_METHOD_END
 
 PAJS_METHOD_START(encryptRequest,
                   PAJS_ARGUMENT(encryptorId, NSString*)
-                  PAJS_ARGUMENT(body, NSString*)
-                  PAJS_ARGUMENT(bodyFormat, NSString*))
+                  PAJS_ARGUMENT(requestBodyBase64, NSString*))
 {
-    [self useEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
-        // Input validations
-        DataFormat bodyDataFormat = GetPowerAuthDataFormat(bodyFormat, reject);
-        if (!bodyDataFormat) {
-            return;
-        }
-        NSData * data = DecodeNSDataValue(body, bodyDataFormat, reject);
-        if (!data) {
-            return;
-        }
-        // Test whether this is encryptor
-        if (!CanEncrypt(encryptor, _objectRegister, reject)) {
-            // If encryption is not available, then remove the object from the register.
-            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-            return;
-        }
-        // Encrypt. PowerAuth 2.0 encryptors are one-shot, so the native object is
-        // transferred to the response decryptor and the original handle is invalidated.
-        NSError * error = nil;
-        PowerAuthEncryptedRequest * encryptedRequest = [encryptor.coreEncryptor encryptRequest:data error:&error];
-        NSDictionary * cryptogram = encryptedRequest
-            ? [NSJSONSerialization JSONObjectWithData:encryptedRequest.requestBody options:0 error:&error]
-            : nil;
-        PowerAuthHttpHeader * header = encryptedRequest.requestHeaders.firstObject;
-        if (![cryptogram isKindOfClass:[NSDictionary class]] || !header) {
-            reject(EC_ENCRYPTION_ERROR, @"Failed to encrypt request", error);
-            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-            return;
-        }
-        PowerAuthEncryptor * coreDecryptor = [encryptor takeCoreEncryptor];
-        PowerAuthJsEncryptor * jsDecryptor = [[PowerAuthJsEncryptor alloc] initWithEncryptor:coreDecryptor powerAuthInstanceId:encryptor.powerAuthInstanceId activationScoped:encryptor.activationScoped];
-        [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-        NSArray * policies = @[ RP_AFTER_USE(1), RP_EXPIRE(DECRYPTOR_KEEP_ALIVE_TIME) ];
-        NSString * decryptorId = [_objectRegister registerObject:jsDecryptor tag:encryptor.powerAuthInstanceId policies:policies];
-        resolve(@{
-            @"cryptogram": cryptogram,
-            @"header": @{ @"key": header.key, @"value": header.value },
-            @"decryptorId": decryptorId
-        });
-    }];
-}
-PAJS_METHOD_END
-
-// MARK: Decryption
-
-/// Determine whether encryptor is able to decrypt the response cryptogram. The function also validate state of PowerAuthSDK if
-/// encryptor is configured for an activation scope.
-/// - Parameters:
-///   - encryptor: Encryptor container.
-///   - objectRegister: Object register.
-///   - reject: Reject function.
-static BOOL CanDecrypt(PowerAuthJsEncryptor * encryptor, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject) {
-    PowerAuthSDK * sdk = GetPowerAuthSdk(encryptor.powerAuthInstanceId, objectRegister, reject);
-    if (!sdk) {
-        return NO;
+    NSData * clearBody = requestBodyBase64
+        ? [[NSData alloc] initWithBase64EncodedString:requestBodyBase64 options:0]
+        : nil;
+    if (requestBodyBase64 && !clearBody) {
+        reject(EC_WRONG_PARAMETER, @"Request body is not valid Base64", nil);
+        return;
     }
-    if (encryptor.activationScoped) {
-        if (![sdk hasValidActivation]) {
-            if (reject) reject(EC_MISSING_ACTIVATION, nil, nil);
-            return NO;
-        }
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    if (!encryptor) {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
     }
-    BOOL result = encryptor.coreEncryptor.canDecryptResponse;
-    if (!result && reject) {
-        reject(EC_INVALID_ENCRYPTOR, @"Encryptor is not constructed for response decryption", nil);
+    NSError * encryptionError = nil;
+    PowerAuthEncryptedRequest * encryptedRequest = [encryptor encryptRequest:clearBody error:&encryptionError];
+    NSString * serializedBody = encryptedRequest
+        ? [encryptedRequest.requestBody base64EncodedStringWithOptions:0]
+        : nil;
+    if (!serializedBody) {
+        ProcessError(encryptionError, reject);
+        return;
     }
-    return result;
-}
-
-PAJS_METHOD_START(canDecryptResponse,
-                  PAJS_ARGUMENT(encryptorId, NSString*))
-{
-    [self touchEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
-        resolve(CanDecrypt(encryptor, _objectRegister, nil) ? @YES : @NO);
-    }];
+    NSMutableArray * headers = [NSMutableArray arrayWithCapacity:encryptedRequest.requestHeaders.count];
+    for (PowerAuthHttpHeader * header in encryptedRequest.requestHeaders) {
+        [headers addObject:@{ @"name": header.key, @"value": header.value }];
+    }
+    resolve(@{ @"requestBody": serializedBody, @"requestHeaders": headers });
 }
 PAJS_METHOD_END
 
 PAJS_METHOD_START(decryptResponse,
                   PAJS_ARGUMENT(encryptorId, NSString*)
-                  PAJS_ARGUMENT(data, NSDictionary*)
-                  PAJS_ARGUMENT(outputFormat, NSString*))
+                  PAJS_ARGUMENT(responseBodyBase64, NSString*))
 {
-    [self useEncryptor:encryptorId rejecter:reject action:^(PowerAuthJsEncryptor *encryptor) {
-        // Input validations
-        DataFormat dataFormat = GetPowerAuthDataFormat(outputFormat, reject);
-        if (!dataFormat) {
-            return;
-        }
-        if (![data isKindOfClass:[NSDictionary class]]) {
-            reject(EC_WRONG_PARAMETER, @"cryptogram is not an object", nil);
-            return;
-        }
-        // Test whether this is decryptor
-        if (!CanDecrypt(encryptor, _objectRegister, reject)) {
-            // Remove object from the register if decryption is no longer available.
-            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
-            return;
-        }
-        // Decrypt
-        NSError * error = nil;
-        NSData * responseBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:&error];
-        PowerAuthEncryptedResponse * encryptedResponse = responseBody
-            ? [[PowerAuthEncryptedResponse alloc] initWithResponseBody:responseBody error:&error]
-            : nil;
-        NSData * response = encryptedResponse
-            ? [encryptor.coreEncryptor decryptResponse:encryptedResponse error:&error]
-            : nil;
-        if (!response) {
-            reject(EC_ENCRYPTION_ERROR, @"Failed to decrypt response", error);
-            return;
-        }
-        NSString * result = EncodeNSDataValue(response, dataFormat, reject);
-        if (result) {
-            resolve(result);
-        }
-    }];
+    PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
+                                                         expectedClass:[PowerAuthEncryptor class]];
+    NSData * bodyData = [[NSData alloc] initWithBase64EncodedString:responseBodyBase64 options:0];
+    if (!bodyData) {
+        [_objectRegister releaseObjectWithId:encryptorId];
+        reject(EC_WRONG_PARAMETER, @"Response body is not valid Base64", nil);
+        return;
+    }
+    if (!encryptor) {
+        [_objectRegister releaseObjectWithId:encryptorId];
+        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+        return;
+    }
+    NSError * decryptionError = nil;
+    PowerAuthEncryptedResponse * encryptedResponse = [[PowerAuthEncryptedResponse alloc] initWithResponseBody:bodyData error:&decryptionError];
+    NSData * clearResponse = encryptedResponse
+        ? [encryptor decryptResponse:encryptedResponse error:&decryptionError]
+        : nil;
+    NSString * result = [clearResponse base64EncodedStringWithOptions:0];
+
+    [_objectRegister releaseObjectWithId:encryptorId];
+
+    if (!result) {
+        ProcessError(decryptionError, reject);
+        return;
+    }
+    resolve(result);
 }
 PAJS_METHOD_END
-
-@end
-
-
-// MARK: - JS object container
-
-@implementation PowerAuthJsEncryptor
-
-- (instancetype) initWithEncryptor:(PowerAuthEncryptor *)encryptor powerAuthInstanceId:(NSString *)powerAuthInstanceId activationScoped:(BOOL)activationScoped
-{
-    self = [super init];
-    if (self) {
-        _activationScoped = activationScoped;
-        _coreEncryptor = encryptor;
-        _powerAuthInstanceId = powerAuthInstanceId;
-    }
-    return self;
-}
-
-- (PowerAuthEncryptor*) takeCoreEncryptor
-{
-    PowerAuthEncryptor * encryptor = _coreEncryptor;
-    _coreEncryptor = nil;
-    return encryptor;
-}
 
 @end

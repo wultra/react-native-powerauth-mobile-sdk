@@ -15,198 +15,134 @@
 //
 
 import { expect } from "mobile-testbed";
+import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { TestWithActivation } from "./helpers/TestWithActivation";
-import { PowerAuthCryptogram, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
-import { Buffer } from 'buffer'
 
 export class PowerAuth_EncryptorTests extends TestWithActivation {
 
     override shouldCreateActivationBeforeTest(): boolean {
-        const n = this.context.testName
-        return !(n == 'testEncryptorWithoutActivation')
+        return this.context.testName !== 'testApplicationScopeWithoutActivation'
     }
 
-    async testEncryptorWithoutActivation() {
+    async testApplicationScopeWithoutActivation() {
         expect(await this.sdk.hasValidActivation()).toBe(false)
-        const activationScoped = this.sdk.getEncryptorForActivationScope()
-        expect(await activationScoped.canEncryptRequest()).toBe(false)
+        await expect(async () => await this.sdk.getEncryptorForActivationScope())
+            .toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
 
-        const applicationScoped = this.sdk.getEncryptorForApplicationScope()
-        expect(await applicationScoped.canEncryptRequest()).toBe(true)
-
-        await expect(async () => await activationScoped.encryptRequest("{}")).toThrow({ errorCode: PowerAuthErrorCode.MISSING_ACTIVATION })
-        await expect(async () => await applicationScoped.encryptRequest("{}")).toBeDefined()
-    }
-
-    async testActivationScopedEncryption_Default() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
-
-        for (let i = 1; i <= 2; i++) {
-            // Encrypt request
+        const encryptor = await this.sdk.getEncryptorForApplicationScope()
+        try {
+            expect(encryptor.scope).toBe('APPLICATION')
             expect(await encryptor.canEncryptRequest()).toBe(true)
-            const requestData = '{}'
-            const encrypted = await encryptor.encryptRequest(requestData)
-            const decryptor = encrypted.decryptor
-            expect(encrypted.cryptogram).toBeDefined()
-            expect(encrypted.header).toBeDefined()
-            expect(decryptor).toBeDefined()
-            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
+            expect(await encryptor.canDecryptResponse()).toBe(false)
 
-            // Let's use "user info" service for the test.
-            const headers = new Headers([[encrypted.header.key, encrypted.header.value]])
-            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
-
-            // Decrypt response
-            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram)
-            expect(decrypted).toBeDefined()
-
-            expect(decrypted).toEqual('{}') // empty user info should be returned since we're creating random usernames
-            expect(await decryptor.canDecryptResponse()).toBe(false)
+            const encrypted = await encryptor.encryptRequest(btoa('{}'))
+            expect(encrypted.requestBody.length > 0).toBe(true)
+            expect(encrypted.requestHeaders.length > 0).toBe(true)
+            expect(await encryptor.canEncryptRequest()).toBe(false)
+            expect(await encryptor.canDecryptResponse()).toBe(true)
+        } finally {
+            await encryptor.release()
         }
     }
 
-    async testActivationScopedEncryption_StringFormat() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
+    async testActivationScopedExchange() {
+        const userId = this.helper.userId
+        expect(userId).toBeDefined()
+        const expectedUserInfo = this.helper.userInfo(userId!)
+        const storeResult = await this.helper.fillUserInfo(expectedUserInfo)
+        expect(storeResult.status).toBe('OK')
 
-        for (let i = 1; i <= 2; i++) {
-            // Encrypt request
-            expect(await encryptor.canEncryptRequest()).toBe(true)
-            const requestData = '{}'
-            const encrypted = await encryptor.encryptRequest(requestData, "UTF8")
-            const decryptor = encrypted.decryptor
-            expect(encrypted.cryptogram).toBeDefined()
-            expect(encrypted.header).toBeDefined()
-            expect(decryptor).toBeDefined()
-            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
+        for (let exchange = 0; exchange < 2; exchange++) {
+            const encryptor = await this.sdk.getEncryptorForActivationScope()
+            try {
+                expect(encryptor.scope).toBe('ACTIVATION')
+                expect(await encryptor.canEncryptRequest()).toBe(true)
+                expect(await encryptor.canDecryptResponse()).toBe(false)
 
-            // Let's use "user info" service for the test.
-            const headers = new Headers()
-            headers.set(encrypted.header.key, encrypted.header.value)
-            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
+                const encrypted = await encryptor.encryptRequest(btoa('{}'))
+                expect(encrypted.requestBody.length > 0).toBe(true)
+                expect(encrypted.requestHeaders.length > 0).toBe(true)
+                expect(await encryptor.canEncryptRequest()).toBe(false)
+                expect(await encryptor.canDecryptResponse()).toBe(true)
 
-            // Decrypt response
-            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, "UTF8")
-            expect(decrypted).toBeDefined()
+                const headers = new Headers()
+                encrypted.requestHeaders.forEach(header => headers.set(header.name, header.value))
+                const responseBody = await this.helper.callRawSDKEndpoint(
+                    'pa/v3/user/info',
+                    encrypted.requestBody,
+                    headers
+                )
+                const clearResponseBase64 = await encryptor.decryptResponse(responseBody)
+                const userInfo = JSON.parse(atob(clearResponseBase64))
+                expect(userInfo.sub).toEqual(expectedUserInfo.subject)
 
-            expect(decrypted).toEqual('{}') // empty user info should be returned since we're creating random usernames
-            expect(await decryptor.canDecryptResponse()).toBe(false)
+                await expect(async () => await encryptor.canEncryptRequest())
+                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+                await expect(async () => await encryptor.canDecryptResponse())
+                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+            } finally {
+                await encryptor.release()
+            }
         }
     }
 
-    async testActivationScopedEncryption_Base64Format() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
+    async testReleaseIsCachedAndIdempotent() {
+        const encryptor = await this.sdk.getEncryptorForActivationScope()
+        const firstRelease = encryptor.release()
+        const secondRelease = encryptor.release()
 
-        for (let i = 1; i <= 2; i++) {
-            // Encrypt request
-            expect(await encryptor.canEncryptRequest()).toBe(true)
-            const data = Buffer.from("{}").toString('utf8')
-            const encrypted = await encryptor.encryptRequest(data, 'BASE64')
-            const decryptor = encrypted.decryptor
-            expect(encrypted.cryptogram).toBeDefined()
-            expect(encrypted.header).toBeDefined()
-            expect(decryptor).toBeDefined()
-            expect(decryptor.decryptorScope).toBe(encryptor.encryptorScope)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
-    
-            // Let's use "user info" service for the test
-            const headers = new Headers()
-            headers.set(encrypted.header.key, encrypted.header.value)
-            const response = await this.helper.callSDKEndpoint('/pa/v3/user/info', JSON.stringify(encrypted.cryptogram), headers)
-            expect(await decryptor.canDecryptResponse()).toBe(true)
-    
-            // Decrypt response
-            const decrypted = await decryptor.decryptResponse(response as PowerAuthCryptogram, 'BASE64')
-            expect(decrypted).toBeDefined()
-            expect(decrypted).toEqual('e30=') // e30= is '{}' as base64 and we're expecting empty body since we're creating random usernames
-    
-            expect(await decryptor.canDecryptResponse()).toBe(false)    
-        }
+        expect(firstRelease === secondRelease).toBe(true)
+
+        await expect(async () => await encryptor.canEncryptRequest())
+            .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+
+        await Promise.all([firstRelease, secondRelease])
+        expect(encryptor.release() === firstRelease).toBe(true)
+
+        await expect(async () => await encryptor.encryptRequest(btoa('{}')))
+            .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }
 
-    async testReleaseEncryptorAndDecryptor() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
-
-        // Encrypt request
+    async testDeconfigurationInvalidatesEncryptor() {
+        const encryptor = await this.sdk.getEncryptorForActivationScope()
         expect(await encryptor.canEncryptRequest()).toBe(true)
-
-        const data = Buffer.from("{}").toString('utf8')
-        const encrypted = await encryptor.encryptRequest(data, 'BASE64')
-        const decryptor = encrypted.decryptor
-        expect(encrypted.cryptogram).toBeDefined()
-        expect(encrypted.header).toBeDefined()
-        expect(decryptor).toBeDefined()
-        expect(await decryptor.canDecryptResponse()).toBe(true)
-
-        await decryptor.release()
-        expect(await decryptor.canDecryptResponse()).toBe(false)
-        await encryptor.release()
-        // POlling for the state automatically restore the native object.
-        expect(await encryptor.canEncryptRequest()).toBe(true)
-
-        // Remove activation also deactivate the encryptor
-        await this.sdk.removeActivationWithAuthentication(this.credentials.knowledge)
-        expect(await encryptor.canEncryptRequest()).toBe(false)
-   }
-
-   async testEncryptorAfterActivationRemove() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
-
-        // Encrypt request
-        expect(await encryptor.canEncryptRequest()).toBe(true)
-
-        const data = Buffer.from("{}").toString('utf8')
-        const encrypted = await encryptor.encryptRequest(data, 'BASE64')
-        const decryptor = encrypted.decryptor
-        expect(encrypted.cryptogram).toBeDefined()
-        expect(encrypted.header).toBeDefined()
-        expect(decryptor).toBeDefined()
-        expect(await decryptor.canDecryptResponse()).toBe(true)
-
-        await this.sdk.removeActivationLocal()
-        expect(await encryptor.canEncryptRequest()).toBe(false)
-        expect(await decryptor.canDecryptResponse()).toBe(false)
-    }
-
-   async testEncryptorAfterDeconfigure() {
-        // Acquire encryptor
-        const encryptor = this.sdk.getEncryptorForActivationScope()
-        expect(encryptor.encryptorScope).toBe('ACTIVATION')
-
-        // Encrypt request
-        expect(await encryptor.canEncryptRequest()).toBe(true)
-
-        const data = Buffer.from("{}").toString('utf8')
-        const encrypted = await encryptor.encryptRequest(data, 'BASE64')
-        const decryptor = encrypted.decryptor
-        expect(encrypted.cryptogram).toBeDefined()
-        expect(encrypted.header).toBeDefined()
-        expect(decryptor).toBeDefined()
-        expect(await decryptor.canDecryptResponse()).toBe(true)
-
-        const configuration = this.sdk.configuration
-        expect(configuration).toBeDefined()
 
         await this.sdk.deconfigure()
-        expect(await encryptor.canEncryptRequest()).toBe(false)
-        expect(await decryptor.canDecryptResponse()).toBe(false)
 
-        // Reconfigure the owner and re-check the invalidated objects
-        await this.sdk.configure(configuration!)
-        expect(await encryptor.canEncryptRequest()).toBe(true)
-        expect(await decryptor.canDecryptResponse()).toBe(false)
-   }
+        await expect(async () => await encryptor.canEncryptRequest())
+            .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await encryptor.release()
+    }
+
+    async testFailurePaths() {
+        let encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await expect(async () => await encryptor.encryptRequest('not base64'))
+                .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+            await expect(async () => await encryptor.decryptResponse(btoa('x')))
+                .toThrow()
+        } finally {
+            await encryptor.release()
+        }
+
+        encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await encryptor.encryptRequest(btoa('{}'))
+            await expect(async () => await encryptor.decryptResponse('**??=='))
+                .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        } finally {
+            await encryptor.release()
+        }
+
+        encryptor = await this.sdk.getEncryptorForActivationScope()
+        try {
+            await encryptor.encryptRequest(btoa('{}'))
+            await expect(async () => await encryptor.decryptResponse(btoa('not encrypted')))
+                .toThrow()
+            await expect(async () => await encryptor.canEncryptRequest())
+                .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        } finally {
+            await encryptor.release()
+        }
+    }
 }

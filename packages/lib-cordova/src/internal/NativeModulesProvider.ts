@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-//@ts-nocheck
-
 import { NativeModulesProviderIfc } from "./NativeModulesProviderIfc";
 import { NativeObjectRegisterIfc } from "../debug/NativeObjectRegisterIfc";
 import { PowerAuthEncryptorIfc } from "./NativeEncryptor";
-import { NativeObject } from "./NativeObject";
+import { PowerAuthEncryptedRequest } from "../model/PowerAuthEncryptor";
+import { PowerAuthNativeObject } from "../model/PowerAuthNativeObject";
+import { PowerAuthRawPasswordType } from "../model/PowerAuthNativeTypes";
+import { PinTestResult } from "../PowerAuthPassphraseMeter";
 import { PowerAuthPassphraseMeterIfc } from "./NativePassphraseMeter";
 import { PowerAuthPasswordIfc } from "./NativePassword";
 import { NativeCordovaModule } from "./NativeCordovaModule";
@@ -28,7 +29,7 @@ import { PowerAuthCryptoUtilsIfc } from "./NativeCryptoUtils";
 import { PowerAuthStorageUtilsIfc } from "./NativeStorageUtils";
 
 class Provider implements NativeModulesProviderIfc {
-    PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & NativeObject;
+    PowerAuthObjectRegister = new NativeObjectRegisterImpl() as NativeObjectRegisterIfc & PowerAuthNativeObject;
     PowerAuthEncryptor = new NativePowerAuthEncryptorImpl() as PowerAuthEncryptorIfc;
     PowerAuthPassphraseMeter = new PowerAuthPassphraseMeterImpl() as PowerAuthPassphraseMeterIfc;
     PowerAuthPassword = new PowerAuthPasswordImpl() as PowerAuthPasswordIfc;
@@ -52,34 +53,34 @@ class NativeObjectRegisterImpl extends NativeCordovaModule implements NativeObje
     async isValidNativeObject(objectId: string): Promise<boolean> {
         return await this.callNative("isValidNativeObject", [objectId])
     }
+
+    async releaseNativeObject(objectId: string): Promise<void> {
+        return await this.callNative("releaseNativeObject", [objectId])
+    }
 }
 
 class NativePowerAuthEncryptorImpl extends NativeCordovaModule implements PowerAuthEncryptorIfc {
 
     readonly pluginName = "PowerAuthEncryptorModule";
 
-    async initialize(scope: string, ownerId: string, autoreleaseTime: number): Promise<string> {
-        return await this.callNative("initialize", [scope, ownerId, autoreleaseTime])
-    }
-
-    async release(encryptorId: string): Promise<void> {
-        return await this.callNative("release", [encryptorId]);
+    async initialize(scope: string, ownerId: string): Promise<string> {
+        return await this.callNative("initialize", [scope, ownerId])
     }
 
     async canEncryptRequest(encryptorId: string): Promise<boolean> {
         return await this.callNative("canEncryptRequest", [encryptorId]);
     }
 
-    async encryptRequest(encryptorId: string, data: string | undefined, format: string | undefined): Promise<EncryptedRequestData> {
-        return await this.callNative("encryptRequest", [encryptorId, data, format]);
+    async encryptRequest(encryptorId: string, requestBodyBase64: string | undefined): Promise<PowerAuthEncryptedRequest> {
+        return await this.callNative("encryptRequest", [encryptorId, requestBodyBase64]);
     }
 
     async canDecryptResponse(encryptorId: string): Promise<boolean> {
         return await this.callNative("canDecryptResponse", [encryptorId]);
     }
 
-    async decryptResponse(encryptorId: string, cryptogram: PowerAuthCryptogram, outputFormat: string | undefined): Promise<string> {
-        return await this.callNative("decryptResponse", [encryptorId, cryptogram, outputFormat]);
+    async decryptResponse(encryptorId: string, responseBodyBase64: string): Promise<string> {
+        return await this.callNative("decryptResponse", [encryptorId, responseBodyBase64]);
     }
 }
 
@@ -87,7 +88,7 @@ class PowerAuthPassphraseMeterImpl extends NativeCordovaModule implements PowerA
 
     readonly pluginName = "PowerAuthPassphraseMeterModule";
     
-    async testPin(pin: RawPasswordType): Promise<PinTestResult> {
+    async testPin(pin: PowerAuthRawPasswordType): Promise<PinTestResult> {
         return await this.callNative("testPin", [pin]);
     }
 }

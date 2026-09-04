@@ -25,6 +25,13 @@ export interface PowerAuthNativeObject {
      * @param objectId Object identifier to test.
      */
     isValidNativeObject(objectId: string): Promise<boolean>
+
+    /**
+     * Release an object stored in the native object register.
+     * Releasing an unknown or already released object is safe.
+     * @param objectId Object identifier to release.
+     */
+    releaseNativeObject(objectId: string): Promise<void>
 }
 
 export const PowerAuthNativeObject = NativeModulesProvider.PowerAuthObjectRegister as PowerAuthNativeObject

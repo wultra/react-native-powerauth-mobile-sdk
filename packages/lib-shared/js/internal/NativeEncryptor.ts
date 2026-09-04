@@ -15,74 +15,24 @@
  */
 
 import { NativeModulesProvider } from "./NativeModulesProvider"
-import { PowerAuthCryptogram } from "../model/PowerAuthEncryptor"
-import { PowerAuthEncryptionHttpHeader } from "../model/PowerAuthEncryptionHttpHeader"
+import { PowerAuthEncryptedRequest } from "../model/PowerAuthEncryptor"
 
-/**
- * Data returned from encryptRequest() function.
- */
-export interface EncryptedRequestData {
-    /**
-     * Cryptogram that must be set to request body.
-     */
-    cryptogram: PowerAuthCryptogram
-    /**
-     * HTTP header indicating the encryption.
-     */
-    header: PowerAuthEncryptionHttpHeader
-    /**
-     * Identifier of newly created native object that is capable 
-     * to decrypt the response.
-     */
-    decryptorId: string
-}
-
-/**
- * Encryptor interface implemented in the native code.
- */
+/** Encryptor interface implemented by the native bridge. */
 export interface PowerAuthEncryptorIfc {
-    /**
-     * Create native encryptor and return identifier of the underlying native object.
-     * @param scope Scope of the encryptor.
-     * @param ownerId Instance identifier of parent PowerAuth class.
-     * @param autoreleaseTime Defines autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
-     * @returns Native object identifier.
-     */
-    initialize(scope: string, ownerId: string, autoreleaseTime: number): Promise<string>
+    /** Acquires and registers one native encryptor. */
+    initialize(scope: string, ownerId: string): Promise<string>
 
-    /**
-     * Release underlying object manually.
-     * @param encryptorId Native object identifier.
-     */
-    release(encryptorId: string): Promise<void>
-
-    /**
-     * Test whether encryptor supports encryption.
-     * @param encryptorId Native object identifier.
-     */
+    /** Returns whether the native encryptor can encrypt a request. */
     canEncryptRequest(encryptorId: string): Promise<boolean>
 
-    /**
-     * Encrypt request body and return data containing all information for the request construction.
-     * @param encryptorId Native object identifier.
-     * @param data Data to encrypt.
-     * @param format Data encoding. See `PowerAuthDataFormat` type for options. 
-     */
-    encryptRequest(encryptorId: string, data: string | undefined, format: string | undefined): Promise<EncryptedRequestData>
+    /** Encrypts an optional Base64-encoded request body. */
+    encryptRequest(encryptorId: string, requestBodyBase64: string | undefined): Promise<PowerAuthEncryptedRequest>
 
-    /**
-     * Test whether encryptor supports response decryption.
-     * @param encryptorId Native object identifier.
-     */
+    /** Returns whether the native encryptor can decrypt a response. */
     canDecryptResponse(encryptorId: string): Promise<boolean>
 
-    /**
-     * Decrypt response cryptogram.
-     * @param encryptorId Native object identifier.
-     * @param cryptogram Cryptogram to decrypt.
-     * @param outputFormat Data encoding. See `PowerAuthDataFormat` type for options. 
-     */
-    decryptResponse(encryptorId: string, cryptogram: PowerAuthCryptogram, outputFormat: string | undefined): Promise<string>
+    /** Decrypts a Base64-encoded encrypted response body to Base64-encoded bytes. */
+    decryptResponse(encryptorId: string, responseBodyBase64: string): Promise<string>
 }
 
 export const NativeEncryptor = NativeModulesProvider.PowerAuthEncryptor;

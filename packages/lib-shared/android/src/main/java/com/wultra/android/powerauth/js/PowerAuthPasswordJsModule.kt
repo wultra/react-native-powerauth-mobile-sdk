@@ -20,8 +20,6 @@ import com.wultra.android.powerauth.bridge.Promise
 import com.wultra.android.powerauth.bridge.JsApiMethod
 import com.wultra.android.powerauth.bridge.ReadableMap
 import com.wultra.android.powerauth.bridge.ReadableType
-import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.Action
-import com.wultra.android.powerauth.js.PowerAuthEncryptorJsModule.InstanceData
 import com.wultra.android.powerauth.bridge.BuildConfig
 
 import io.getlime.security.powerauth.core.Password
