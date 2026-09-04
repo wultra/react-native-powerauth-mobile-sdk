@@ -10,10 +10,10 @@ on:
 jobs:
   build-library:
     name: Build and Pack
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Prepare environment
         uses: ./.github/actions/prepare
         with:
