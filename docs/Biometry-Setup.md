@@ -88,9 +88,9 @@ const auth = PowerAuthAuthentication.biometry({
 try {
     await powerAuth.groupedBiometricAuthentication(auth, async (reusableAuth) => {
         try {
-            const r1 = await powerAuth.requestSignature(reusableAuth, "POST", "/operation/test", "{jsonbody: \"test1\"}");
+            const r1 = await powerAuth.authenticationHeaderForRequestWithBody(reusableAuth, "POST", "/operation/test", "{jsonbody: \"test1\"}");
             console.log(`r1 success`);
-            const r2 = await powerAuth.requestSignature(reusableAuth, "POST", "/operation/test2", "{jsonbody: \"test2\"}");
+            const r2 = await powerAuth.authenticationHeaderForRequestWithBody(reusableAuth, "POST", "/operation/test2", "{jsonbody: \"test2\"}");
             console.log(`r2 success`);
             // success
         } catch (e) {

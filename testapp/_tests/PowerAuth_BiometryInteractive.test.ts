@@ -151,7 +151,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             // Calculate signature 
             let data = '{}'
             let uriId = '/some/uriId'
-            let header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            let header = await this.sdk.authenticationHeaderForRequestWithBody(reusableAuth, 'POST', uriId, data)
             // Verify signature
             let result = await this.helper.verifySignature('POST', uriId, data, header.value)
             expect(result.signatureValid).toBe(true)
@@ -161,7 +161,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             data = '{"value":true}'
             uriId = '/another/uriId'
 
-            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            header = await this.sdk.authenticationHeaderForRequestWithBody(reusableAuth, 'POST', uriId, data)
             result = await this.helper.verifySignature('POST', uriId, data, header.value)
             expect(result.signatureValid).toBe(true)
 
@@ -170,7 +170,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             data = '{"value":false}'
             uriId = '/another/uriId'
 
-            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            header = await this.sdk.authenticationHeaderForRequestWithBody(reusableAuth, 'POST', uriId, data)
             result = await this.helper.verifySignature('POST', uriId, data, header.value)
             expect(result.signatureValid).toBe(true)
 
@@ -184,7 +184,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             data = '{"value":false, "something":true}'
             uriId = '/another/uriId'
 
-            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            header = await this.sdk.authenticationHeaderForRequestWithBody(reusableAuth, 'POST', uriId, data)
             result = await this.helper.verifySignature('POST', uriId, data, header.value)
             expect(result.signatureValid).toBe(true)
 
@@ -193,7 +193,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
             data = '{"value":false}'
             uriId = '/another/uriId'
 
-            header = await this.sdk.requestSignature(reusableAuth, 'POST', uriId, data)
+            header = await this.sdk.authenticationHeaderForRequestWithBody(reusableAuth, 'POST', uriId, data)
             result = await this.helper.verifySignature('POST', uriId, data, header.value)
             expect(result.signatureValid).toBe(true)
         })
@@ -209,7 +209,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please CANCEL authentication dialog')
         const auth = PowerAuthAuthentication.biometry({promptTitle: "Please cancel", promptMessage: "Please CANCEL this dialog", cancelButton: "super cancel"})
-        await expect(async () => this.sdk.requestSignature(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_CANCEL })
+        await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_CANCEL })
     }
 
     async testFailedBiometry() {
@@ -226,7 +226,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         // At biometry fail, the fake key is generated and the signature will be invalid
         const uriId = '/some/failed/uriId'
         const body = '{ failedApi: true }'
-        const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
+        const header = await this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', uriId, body)
         const result = await this.helper.verifySignature('POST', uriId, body, header.value)
         expect(result.signatureValid).toBe(false)
     }
@@ -238,7 +238,7 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         // At biometry passcode fallback, everything should work properly
         const uriId = '/some/fallback/uriId'
         const body = '{ fallbackApi: true }'
-        const header = await this.sdk.requestSignature(auth, 'POST', uriId, body)
+        const header = await this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', uriId, body)
         const result = await this.helper.verifySignature('POST', uriId, body, header.value)
         expect(result.signatureValid).toBe(true)
     }
@@ -247,6 +247,6 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please FAIL authentication and use fallback button')
         const auth = PowerAuthAuthentication.biometry({promptTitle: "Please fail", promptMessage: "Please use fallback to passcode", fallbackButton: 'fallback button'})
-        await expect(async () => this.sdk.requestSignature(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_FALLBACK })
+        await expect(async () => this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.BIOMETRY_FALLBACK })
     }
 }

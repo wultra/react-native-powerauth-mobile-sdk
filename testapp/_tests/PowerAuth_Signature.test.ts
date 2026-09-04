@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthAuthorizationHttpHeader, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode, PowerAuthHttpHeader } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -27,23 +27,41 @@ enum SignatureType {
 interface SignatureTestData {
     method: string,
     uriId: string,
-    body: string | undefined
+    body?: string
+    queryParams?: Record<string, string>
+    useParams?: boolean
     factors: SignatureType
     shouldFail?: boolean
 }
 
 const testData: SignatureTestData[] = [
     { method: 'POST', uriId: '/some/uriId', body: 'Hello world', factors: SignatureType.POSSESSION },
+    { method: 'GET', uriId: '/some/uriId', useParams: true, factors: SignatureType.POSSESSION },
+    { method: 'GET', uriId: '/some/uriId/params', queryParams: { message: 'Hello world', page: '1' }, useParams: true, factors: SignatureType.POSSESSION },
+    { method: 'POST', uriId: '/some/uriId/params', queryParams: { message: 'Hello world', page: '2' }, useParams: true, factors: SignatureType.POSSESSION },
     { method: 'POST', uriId: '/some/uriId', body: undefined, factors: SignatureType.POSSESSION },
     { method: 'POST', uriId: '/some/uriId/knowledge', body: '{ super value }', factors: SignatureType.POSSESSION_KNOWLEDGE },
     { method: 'POST', uriId: '/some/uriId/knowledge', body: undefined, factors: SignatureType.POSSESSION_KNOWLEDGE },
     { method: 'POST', uriId: '/failed/knowledge', body: undefined, factors: SignatureType.POSSESSION_KNOWLEDGE, shouldFail: true },
     { method: 'POST', uriId: '/failed/knowledge', body: 'undefined', factors: SignatureType.POSSESSION_KNOWLEDGE, shouldFail: true },
-    { method: 'POST', uriId: '/very/secure', body: '{}', factors: SignatureType.POSSESSION_KNOWLEDGE },
-
-    // TODO: normalization in test client seems to be broken
-    //{ method: 'GET',  uriId: '/uri/ID', body: new Map([['param1', 'valueX'], ['something', 'ExpectedValue']]), factors: SignatureType.POSSESSION }
+    { method: 'POST', uriId: '/very/secure', body: '{}', factors: SignatureType.POSSESSION_KNOWLEDGE }
 ]
+
+function withTimeout<T>(operation: Promise<T>, timeoutMs: number = 10_000): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error(`Operation did not complete within ${timeoutMs} ms`)), timeoutMs)
+        operation.then(
+            value => {
+                clearTimeout(timeout)
+                resolve(value)
+            },
+            error => {
+                clearTimeout(timeout)
+                reject(error)
+            }
+        )
+    })
+}
 
 export class PowerAuth_SignatureTests extends TestWithActivation {
 
@@ -67,30 +85,28 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             } else {
                 auth = this.credentials.biometry
             }
-            let header: PowerAuthAuthorizationHttpHeader
-            if (td.method === 'POST') {
-                const body = td.body
-                if (!(typeof body === 'string' || body === undefined)) {
-                    throw new Error(`Unsuported body type for test with uriId = ${td.uriId}`)
-                }
-                header = await sdk.requestSignature(auth, td.method, td.uriId, body)
-            } else if (td.method === 'GET') {
-                const body = td.body
-                if (typeof body === 'string') {
-                    throw new Error(`Unsuported body type for test with uriId = ${td.uriId}`)
-                }
-                header = await sdk.requestGetSignature(auth, td.uriId, body)
+            let header: PowerAuthHttpHeader
+            if (td.useParams) {
+                header = await sdk.authenticationHeaderForRequestWithParams(auth, td.method, td.uriId, td.queryParams)
             } else {
-                throw new Error(`Unsupported HTTP method ${td.method}`)
+                header = await sdk.authenticationHeaderForRequestWithBody(auth, td.method, td.uriId, td.body)
             }
 
             // Let's validate signature on the server
             const parsed = SignatureHelper.parseHeader(header.value)
+            expect(header.name).toBe('X-PowerAuth-Authorization')
             expect(parsed.activationId).toBe(activationId)
             expect(parsed.signatureType.toUpperCase()).toBe(td.factors)
 
-            const result = await this.helper.verifySignature(td.method, td.uriId, td.body || "", header.value)
-            expect(!td.shouldFail).toBe(result.signatureValid)
+            // The cloud verifier accepts query parameters only for GET. Verifying a header
+            // produced for POST as GET still proves that the supplied method affects the code.
+            if (td.useParams && td.method === 'POST') {
+                const result = await this.helper.verifySignature('GET', td.uriId, '', header.value, td.queryParams, true)
+                expect(result.signatureValid).toBe(false)
+            } else {
+                const result = await this.helper.verifySignature(td.method, td.uriId, td.body ?? "", header.value, td.queryParams, td.useParams)
+                expect(!td.shouldFail).toBe(result.signatureValid)
+            }
         }
     }
 
@@ -101,6 +117,40 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.offlineAuthenticationCode(persistAuth, '/wrong-purpose', 'MDEyMzQ1Njc=', '{}'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+    }
+
+    async testLegacyRequestSignatureCompatibility() {
+        const bodyHeader = await this.sdk.requestSignature(this.credentials.possession, 'POST', '/legacy/body', '{}')
+        expect(bodyHeader.key).toBe('X-PowerAuth-Authorization')
+        expect(bodyHeader.value).toBeDefined()
+        expect((await this.helper.verifySignature('POST', '/legacy/body', '{}', bodyHeader.value)).signatureValid).toBe(true)
+
+        const params = { value: '1' }
+        const paramsHeader = await this.sdk.requestGetSignature(this.credentials.possession, '/legacy/params', params)
+        expect(paramsHeader.key).toBe('X-PowerAuth-Authorization')
+        expect(paramsHeader.value).toBeDefined()
+        expect((await this.helper.verifySignature('GET', '/legacy/params', '', paramsHeader.value, params)).signatureValid).toBe(true)
+    }
+
+    async testOfflineAuthenticationCode() {
+        const nonce = 'MDEyMzQ1Njc4OWFiY2RlZg=='
+        const authenticationCode = await withTimeout(
+            this.sdk.offlineAuthenticationCode(this.credentials.knowledge, '/offline/code', nonce, '{}')
+        )
+        expect(authenticationCode).toBeDefined()
+        expect(authenticationCode.length > 0).toBe(true)
+
+        const legacyCode = await withTimeout(
+            this.sdk.offlineSignature(this.credentials.knowledge, '/offline/legacy', nonce, '{}')
+        )
+        expect(legacyCode).toBeDefined()
+        expect(legacyCode.length > 0).toBe(true)
     }
 
     async testWrongPassword() {

@@ -19,6 +19,22 @@ import { Platform } from "react-native";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 import { PowerAuthActivation, PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 
+function withTimeout<T>(operation: Promise<T>, timeoutMs: number = 10_000): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error(`Operation did not complete within ${timeoutMs} ms`)), timeoutMs)
+        operation.then(
+            value => {
+                clearTimeout(timeout)
+                resolve(value)
+            },
+            error => {
+                clearTimeout(timeout)
+                reject(error)
+            }
+        )
+    })
+}
+
 export class PowerAuth_ActivationTests extends TestWithActivation {
 
     async beforeAll(): Promise<void> {
@@ -45,7 +61,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.getActivationFingerprint()).toBeUndefined()
         expect(await sdk.getExternalPendingOperation()).toBeUndefined()
 
-        await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
+        await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
         await expect(async () => await sdk.persistActivation(invalidPersistence)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         // [ 1 ] Prepare activation on the server
@@ -65,7 +81,7 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         const expectedFetchError = Platform.OS === 'android'
             ? PowerAuthErrorCode.MISSING_ACTIVATION
             : PowerAuthErrorCode.PENDING_ACTIVATION
-        await this.runFailingMethodsDuringActivation('AFTER_CREATE', expectedFetchError, PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.INVALID_ACTIVATION_STATE)
+        await this.runFailingMethodsDuringActivation('AFTER_CREATE', expectedFetchError, PowerAuthErrorCode.MISSING_ACTIVATION)
         await expect(async () => await sdk.createActivation(activation)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
         
         // Key-exchange should be completed now, so activation Id and fingerprint is now available.
@@ -132,21 +148,19 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasValidActivation()).toBe(true)
     }
 
-    async runFailingMethodsDuringActivation(stage: string, expectedFetchError: PowerAuthErrorCode, expectedError: PowerAuthErrorCode, expectedHeaderError: PowerAuthErrorCode) {
+    async runFailingMethodsDuringActivation(stage: string, expectedFetchError: PowerAuthErrorCode, expectedError: PowerAuthErrorCode) {
         const sdk = this.sdk
         this.debugInfo(`Evaluating wrong API usage in ${stage}`)
-        // Fetch has a slighgtly different error handling, so it needs a different error code than other API function.
+        // Fetch has a slightly different error handling, so it needs a different error code than other API functions.
         // TODO: This should be unified in future versions
         await expect(async () => await sdk.fetchActivationStatus()).toThrow({errorCode: expectedFetchError})
         await expect(async () => await sdk.removeActivationWithAuthentication(this.credentials.invalidKnowledge)).toThrow({errorCode: expectedError})
-        if (Platform.OS === 'android') {
-            // PowerAuth Android 2.0 loses the original error code in an invalid deprecated header.
-            await expect(async () => await sdk.requestGetSignature(this.credentials.knowledge, '/some/uriid', null)).toThrow()
-            await expect(async () => await sdk.requestSignature(this.credentials.knowledge, 'POST', '/some/uriid', undefined)).toThrow()
-        } else {
-            await expect(async () => await sdk.requestGetSignature(this.credentials.knowledge, '/some/uriid', null)).toThrow({errorCode: expectedHeaderError})
-            await expect(async () => await sdk.requestSignature(this.credentials.knowledge, 'POST', '/some/uriid', undefined)).toThrow({errorCode: expectedHeaderError})
-        }
+        // Native SDKs use different error codes for invalid transitional activation states.
+        await expect(async () => await sdk.authenticationHeaderForRequestWithParams(this.credentials.knowledge, 'GET', '/some/uriid')).toThrow()
+        await expect(async () => await sdk.authenticationHeaderForRequestWithBody(this.credentials.knowledge, 'POST', '/some/uriid', undefined)).toThrow()
+        await expect(async () => await withTimeout(
+            sdk.offlineAuthenticationCode(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc4OWFiY2RlZg==', undefined)
+        )).toThrow()
         await expect(async () => await sdk.changePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.addBiometryFactor(this.credentials.validPassword, 'Auth title', 'Auth desc')).toThrow({errorCode: expectedError})
         await expect(async () => await sdk.fetchEncryptionKey(this.credentials.knowledge, 99)).toThrow({errorCode: expectedError})
@@ -157,7 +171,6 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBe(false)
         expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBe(false)
         await expect(async () => await sdk.removeBiometryFactor()).toThrow({errorCode: PowerAuthErrorCode.BIOMETRY_NOT_CONFIGURED })
-        //await expect(async () => await sdk.offlineSignature(this.credentials.knowledge, '/some/uriid', 'MDEyMzQ1Njc=', undefined)).toThrow({errorCode: PowerAuthErrorCode.MISSING_ACTIVATION})
     }
 
     // Actual tests starts here

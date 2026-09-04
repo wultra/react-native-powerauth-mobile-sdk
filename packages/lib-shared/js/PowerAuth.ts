@@ -19,6 +19,7 @@ import { buildClientConfiguration, PowerAuthClientConfigurationType } from './mo
 import { buildBiometryConfiguration, PowerAuthBiometryConfigurationType } from './model/PowerAuthBiometryConfiguration';
 import { buildKeychainConfiguration, PowerAuthKeychainConfigurationType } from './model/PowerAuthKeychainConfiguration';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
+import { PowerAuthHttpHeader } from './model/PowerAuthHttpHeader';
 import { PowerAuthActivationStatus } from './model/PowerAuthActivationStatus';
 import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/PowerAuthAuthentication';
 import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivationResult';
@@ -268,47 +269,74 @@ export class PowerAuth {
     }
 
     /**
-     * Compute the HTTP signature header for GET HTTP method, URI identifier and HTTP query parameters using provided authentication information.
+     * Computes an HTTP authentication header for a request with query parameters.
      * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
      * may take an undefined amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
+     * @param method HTTP method used for the authentication code computation.
      * @param uriId URI identifier.
      * @param params HTTP query params.
-     * @returns HTTP header with PowerAuth authorization signature
+     * @returns HTTP header with a PowerAuth authentication code.
      */
-    async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
-        return NativeWrapper.thisCall("requestGetSignature", this.instanceId, await this.authenticate(authentication), uriId, params ?? undefined);
+    async authenticationHeaderForRequestWithParams(authentication: PowerAuthAuthentication, method: string, uriId: string, params?: Record<string, string>): Promise<PowerAuthHttpHeader> {
+        return NativeWrapper.thisCall("authenticationHeaderForRequestWithParams", this.instanceId, await this.authenticate(authentication), method, uriId, params ?? undefined);
     }
 
     /**
-     * Compute the HTTP signature header for given HTTP method, URI identifier and HTTP request body using provided authentication information.
+     * Computes an HTTP authentication header for a request with a UTF-8 body.
      * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
      * may take an undefined amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
-     * @param method HTTP method used for the signature computation.
+     * @param method HTTP method used for the authentication code computation.
      * @param uriId URI identifier.
-     * @param body HTTP request body.
-     * @returns HTTP header with PowerAuth authorization signature.
+     * @param body Optional HTTP request body represented as a UTF-8 string.
+     * @returns HTTP header with a PowerAuth authentication code.
      */
-    async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return NativeWrapper.thisCall("requestSignature", this.instanceId, await this.authenticate(authentication), method, uriId, body);
+    async authenticationHeaderForRequestWithBody(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthHttpHeader> {
+        return NativeWrapper.thisCall("authenticationHeaderForRequestWithBody", this.instanceId, await this.authenticate(authentication), method, uriId, body);
     }
 
     /**
-     * Compute the offline signature for given HTTP method, URI identifier and HTTP request body using provided authentication information. Be aware that if
+     * Computes the HTTP authentication header for a GET request with query parameters.
+     * @deprecated Use `authenticationHeaderForRequestWithParams()` and provide the HTTP method explicitly.
+     */
+    async requestGetSignature(authentication: PowerAuthAuthentication, uriId: string, params?: any): Promise<PowerAuthAuthorizationHttpHeader> {
+        const header = await this.authenticationHeaderForRequestWithParams(authentication, "GET", uriId, params ?? undefined);
+        return { key: header.name, value: header.value };
+    }
+
+    /**
+     * Computes the HTTP authentication header for a request with a UTF-8 body.
+     * @deprecated Use `authenticationHeaderForRequestWithBody()`.
+     */
+    async requestSignature(authentication: PowerAuthAuthentication, method: string, uriId: string, body?: string): Promise<PowerAuthAuthorizationHttpHeader> {
+        const header = await this.authenticationHeaderForRequestWithBody(authentication, method, uriId, body);
+        return { key: header.name, value: header.value };
+    }
+
+    /**
+     * Computes an offline PowerAuth authentication code for the URI identifier and UTF-8 request body. Be aware that if
      * `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined
      * amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request. The possession and knowledge is recommended.
      * @param uriId URI identifier.
-     * @param body HTTP request body.
+     * @param body Optional HTTP request body represented as a UTF-8 string.
      * @param nonce NONCE in Base64 format.
-     * @returns String representing a calculated signature for all involved factors.
+     * @returns Offline authentication code calculated for all involved factors.
+     */
+    async offlineAuthenticationCode(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
+        return NativeWrapper.thisCall("offlineAuthenticationCode", this.instanceId, await this.authenticate(authentication), uriId, body, nonce);
+    }
+
+    /**
+     * Computes an offline PowerAuth authentication code.
+     * @deprecated Use `offlineAuthenticationCode()`.
      */
     async offlineSignature(authentication: PowerAuthAuthentication, uriId: string, nonce: string, body?: string): Promise<string> {
-        return NativeWrapper.thisCall("offlineSignature", this.instanceId, await this.authenticate(authentication), uriId, body, nonce);
+        return this.offlineAuthenticationCode(authentication, uriId, nonce, body);
     }
 
     /**
