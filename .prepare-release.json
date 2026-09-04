@@ -5,22 +5,36 @@
         "customBuildscript": "If needed, in the library object, set \"buildscript\": \"your-custom-build-command\" command if your build command is different than 'npm i && npm run build'"
     },
     "library": {
-        "name": "digital-onboarding-js",
+        "name": "react-native-powerauth-mobile-sdk",
         "type": "yarn",
         "artifacts": [
-            "packages/cordova-powerauth-mobile-sdk/build/cdv/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
-            "packages/react-native-powerauth-mobile-sdk/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
+            "packages/lib-cordova/build/cordova-powerauth-mobile-sdk-%VERSION%.tgz",
+            "packages/lib-rn/build/react-native-powerauth-mobile-sdk-%VERSION%.tgz"
         ],
-        "buildscript": "corepack enable && yarn install && yarn packReactNative && yarn build:cdv"
+        "buildscript": "corepack enable && yarn install && yarn packAll"
     },
     "scriptVersion": 2,
     "devVersion": "0.0.1-dev",
     "files": [
         {
             "description": "Package definition files.",
-            "paths": ["packages/react-native-powerauth-mobile-sdk/package.json", "package.json"],
+            "paths": ["packages/lib-rn/package.json", "package.json"],
             "type": "version_replace",
             "match": "\"version\": \"%VERSION%\",\n",
+            "devChange": true
+        },
+        {
+            "description": "Cordova package definition file.",
+            "path": "packages/lib-cordova/package.json",
+            "type": "version_replace",
+            "match": "\"version\": \"%VERSION%\",\n",
+            "devChange": true
+        },
+        {
+            "description": "Cordova plugin definition file.",
+            "path": "packages/lib-cordova/plugin.xml",
+            "type": "version_replace",
+            "match": "id=\"cordova-powerauth-mobile-sdk\" version=\"%VERSION%\"",
             "devChange": true
         },
         {

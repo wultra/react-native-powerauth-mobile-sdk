@@ -1,5 +1,6 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
+const layout = require('../scripts/build-layout.cjs');
 
 // Metro 0.83+ enforces package "exports" in `metro-config`, which means our hack import failed. We're filtering manually now.
 function escapeForMetroExclusionList(pattern) {
@@ -40,7 +41,11 @@ function exclusionList(additionalExclusions) {
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 const root = path.resolve(__dirname, '..');
-const sdk = path.resolve(root, 'packages', 'react-native-powerauth-mobile-sdk');
+const sdk = layout.rn.packageDir;
+const sharedSdkSource = layout.shared.jsDir;
+const sharedSdkEntry = path.join(sharedSdkSource, 'index.ts');
+const sharedSdkVersionImporter = path.join(sharedSdkSource, 'PowerAuthUtils.ts');
+const stagedSdkVersion = path.join(layout.rn.stageDir, 'src', 'internal', 'SDKVersion.ts');
 // TODO remove this watcher when/if the packages are fully separated
 const testInfraPackages = [
   path.resolve(root, 'packages', 'mobile-testbed'),
@@ -49,11 +54,25 @@ const testInfraPackages = [
 const singletons = ['react', 'react-native'];
 
 const config = {
-  watchFolders: [sdk, ...testInfraPackages],
+  watchFolders: [sdk, sharedSdkSource, ...testInfraPackages],
   resolver: {
     unstable_enableSymlinks: true,
     unstable_enablePackageExports: true,
     nodeModulesPaths: [path.resolve(__dirname, 'node_modules')],
+    resolveRequest: (context, moduleName, platform) => {
+      // Bundle editable shared sources directly; the staged package remains the native autolinking root.
+      if (moduleName === 'react-native-powerauth-mobile-sdk') {
+        return {filePath: sharedSdkEntry, type: 'sourceFile'};
+      }
+      // SDKVersion is generated during staging and intentionally has no canonical source file.
+      if (
+        context.originModulePath === sharedSdkVersionImporter &&
+        moduleName === './internal/SDKVersion'
+      ) {
+        return {filePath: stagedSdkVersion, type: 'sourceFile'};
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
     // Example: for singletons ['react'], we block "<root>/node_modules/react/**" so Metro resolves only the app copy.
     blockList: exclusionList(
       // Replace both "/" and "\\" so the regex works on all OS path separators.

@@ -1,0 +1,66 @@
+{
+  "name": "react-native-powerauth-mobile-sdk",
+  "title": "PowerAuth SDK for React Native Mobile Apps",
+  "version": "0.0.1-dev",
+  "description": "Wultra PowerAuth Mobile SDK React Native component for iOS and Android",
+  "packageManager": "yarn@4.3.1+sha512.af78262d7d125afbfeed740602ace8c5e4405cd7f4735c08feb327286b2fdb2390fbca01589bfd1f50b1240548b74806767f5a063c94b67e431aabd0d86f7774",
+  "main": "build/lib/commonjs/index.js",
+  "module": "build/lib/module/index.js",
+  "types": "build/lib/typescript/index.d.ts",
+  "react-native": "build/src/index",
+  "source": "build/src",
+  "scripts": {
+    "stage": "node ../../scripts/build.mjs rn --stage",
+    "build": "node ../../scripts/build.mjs rn",
+    "prepare": "yarn build",
+    "pack:tgz": "node ../../scripts/build.mjs rn --pack",
+    "typecheck": "node ../../scripts/build.mjs rn --typecheck"
+  },
+  "files": [
+    "README.md",
+    "src/**/*",
+    "android/generated/jni/CMakeLists.txt",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/java/com/wultra/android/powerauth/bridge/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/js/*.*",
+    "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
+    "android/build.gradle",
+    "lib/**/*",
+    "ios/PowerAuth.xcodeproj/project.pbxproj",
+    "ios/PowerAuth/*.m",
+    "ios/PowerAuth/*.c",
+    "ios/PowerAuth/*.h",
+    "react-native-powerauth-mobile-sdk.podspec"
+  ],
+  "homepage": "https://www.wultra.com/mobile-security-suite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wultra/react-native-powerauth-mobile-sdk.git"
+  },
+  "keywords": [
+    "react-native",
+    "powerauth",
+    "security"
+  ],
+  "author": {
+    "name": "Wultra s.r.o.",
+    "email": "support@wultra.com"
+  },
+  "license": "Apache 2.0",
+  "licenseFilename": "LICENSE",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "node-fetch": ">=2.6.1"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@react-native/typescript-config": "^0.78.0",
+    "@types/react": "^19.0.0",
+    "react": "19.0.0",
+    "react-native": "^0.78.1",
+    "typescript": "^5.4.0"
+  }
+}
