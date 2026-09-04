@@ -28,7 +28,10 @@ export class PowerAuthError {
     code?: PowerAuthErrorCode
     /** Message of the error. */
     message?: string
-    /** Additional error data. */
+    /**
+     * Additional error data. Server failures may include `httpStatusCode`, `serverResponseCode`,
+     * `serverResponseMessage`, and `responseBody`.
+     */
     errorData?: any
 
     constructor(exception: any, message: string | undefined = undefined, code: PowerAuthErrorCode | undefined = undefined, errorData: any = undefined) {
@@ -48,26 +51,14 @@ export enum PowerAuthErrorCode {
     /** Code returned, or reported, when operation succeeds. */
     SUCCEED = "SUCCEED",
 
-    /** Error code for error with network connectivity or download. */
+    /** Error code for network connectivity, transport, or server response failures. */
     NETWORK_ERROR = "NETWORK_ERROR",
   
-    /** 
-     * Failed to authenticate on the server. The code is reported when 401 HTTP status code from the server is received. 
-     * You can investigate more failure details in similar manner like in `RESPONSE_ERROR`.
-     */
-    AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR",
-  
-    /** 
-     * Non 200 HTTP status code received from the server. The `errorData` dictionary contains the following values:
-     * - `httpStatusCode` - Number with exact value of the HTTP status code.
-     * - `serverResponseCode` - Error code as defined in standard PowerAuth RESTful API error response. 
-     * - `serverResponseMessage` - Error message as defined in standard PowerAuth RESTful API error response.
-     * - `responseBody` - String with JSON response body.
-     */
-    RESPONSE_ERROR = "RESPONSE_ERROR",
-
     /** Error code for error in signature calculation. */
     SIGNATURE_ERROR = "SIGNATURE_ERROR",
+
+    /** Digital or JWS signature is not valid. */
+    WRONG_SIGNATURE = "WRONG_SIGNATURE",
 
     /** Error code for error that occurs when activation state is invalid. */
     INVALID_ACTIVATION_STATE = "INVALID_ACTIVATION_STATE",
@@ -109,6 +100,9 @@ export enum PowerAuthErrorCode {
 
     /** The requested function is not available during the protocol upgrade. You can retry the operation, after the upgrade is finished. */
     PENDING_PROTOCOL_UPGRADE = "PENDING_PROTOCOL_UPGRADE",
+
+    /** Local activation data was created by a newer PowerAuth SDK version. */
+    UPGRADE_SDK = "UPGRADE_SDK",
 
 
     /**
@@ -170,6 +164,9 @@ export enum PowerAuthErrorCode {
     /** Error in `correctTypedCharacter` */
     INVALID_CHARACTER = "INVALID_CHARACTER",
 
+    /** Error caused by an invalid native logging configuration. */
+    INVALID_LOG_LEVEL = "INVALID_LOG_LEVEL",
+
     /** Error when generating a token */
     CANNOT_GENERATE_TOKEN = "CANNOT_GENERATE_TOKEN",
 
@@ -188,14 +185,11 @@ export enum PowerAuthErrorCode {
      */
     EXTERNAL_PENDING_OPERATION = "EXTERNAL_PENDING_OPERATION",
 
-    /**
-     * When password is not set during activation persist.
-     * @deprecated "WRONG_PARAM" is returned in this case.
-     */
-    PASSWORD_NOT_SET = "PASSWORD_NOT_SET",
-
     /** Error when invalid activation object is provided during activation */
     INVALID_ACTIVATION_OBJECT = "INVALID_ACTIVATION_OBJECT",
+
+    /** An error not covered by a more specific PowerAuth error code. */
+    OTHER = "OTHER",
 
     /** Failed with unexpected error. */
     UNKNOWN_ERROR = "UNKNOWN_ERROR",
@@ -209,5 +203,5 @@ export enum PowerAuthErrorCode {
     /**
      * Indicates a problem with the time synchronization.
      */
-    EC_TIME_SYNCHRONIZATION = "TIME_SYNCHRONIZATION"
+    TIME_SYNCHRONIZATION = "TIME_SYNCHRONIZATION"
 }

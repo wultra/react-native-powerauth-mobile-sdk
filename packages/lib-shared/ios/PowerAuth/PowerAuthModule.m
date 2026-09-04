@@ -312,19 +312,20 @@ PAJS_METHOD_START(persistActivation,
                   PAJS_ARGUMENT(authentication, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authentication reject:reject forPersist:YES];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authentication reject:reject];
     if (!auth) {
         return;
     }
     
-    NSError* error = nil;
-    bool success = [powerAuth persistActivationWithAuthentication:auth error:&error];
-    
-    if (success) {
-        resolve(@YES);
-    } else {
-        ProcessError(error, reject);
-    }
+    [powerAuth persistActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
+        // Referencing auth keeps its sensitive data alive until the asynchronous operation finishes.
+        (void)auth;
+        if (error) {
+            ProcessError(error, reject);
+        } else {
+            resolve(nil);
+        }
+    }];
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -352,7 +353,7 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
                   PAJS_ARGUMENT(authDict, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
@@ -383,7 +384,7 @@ PAJS_METHOD_START(requestGetSignature,
                   PAJS_ARGUMENT(params, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSError* error = nil;
@@ -410,7 +411,7 @@ PAJS_METHOD_START(requestSignature,
                   PAJS_ARGUMENT(body, PAJS_NULLABLE_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSError* error = nil;
@@ -437,7 +438,7 @@ PAJS_METHOD_START(offlineSignature,
                   PAJS_ARGUMENT(nonce, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSError* error = nil;
@@ -621,7 +622,7 @@ PAJS_METHOD_START(fetchEncryptionKey,
                   PAJS_ARGUMENT(index, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(PowerAuthSecureData * encryptionKey, NSError * error) {
@@ -642,7 +643,7 @@ PAJS_METHOD_START(signDataWithDevicePrivateKey,
                   PAJS_ARGUMENT(dataFormat, NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
 
     DataFormat format = GetPowerAuthDataFormat(dataFormat, reject);
@@ -813,7 +814,7 @@ PAJS_METHOD_START(requestAccessToken,
                   PAJS_ARGUMENT(authDict, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthenticationFromDictionary:authDict reject:reject forPersist:NO];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
@@ -1066,16 +1067,20 @@ PAJS_METHOD_END
 
 /// Translate dictionary into `PowerAuthAuthentication` object.
 /// @param dict Dictionary with authentication data.
-/// @param persist Set YES if authentication is required for activation persist.
-- (PowerAuthAuthentication*) constructAuthenticationFromDictionary:(NSDictionary*)dict
-                                                            reject:(RCTPromiseRejectBlock)reject
-                                                        forPersist:(BOOL)persist
+- (PowerAuthAuthentication*) constructAuthentication:(NSDictionary*)dict
+                                              reject:(RCTPromiseRejectBlock)reject
 {
+    id persistValue = dict[@"isPersist"];
+    if (![persistValue isKindOfClass:[NSNumber class]]) {
+        reject(EC_WRONG_PARAMETER, @"Missing or invalid isPersist in authentication object.", nil);
+        return nil;
+    }
+    BOOL persist = [persistValue boolValue];
     BOOL useBiometry = [RCTConvert BOOL:dict[@"isBiometry"]];
     id userPassword = dict[@"password"];
     if (persist) {
         // Activation commit
-        PowerAuthCorePassword * password = UsePassword(userPassword, _objectRegister, reject);
+        PowerAuthCorePassword * password = [UsePassword(userPassword, _objectRegister, reject) copyToImmutable];
         if (!password) {
             return nil;
         }
@@ -1130,7 +1135,7 @@ PAJS_METHOD_END
         case PowerAuthActivationState_Blocked: return @"BLOCKED";
         case PowerAuthActivationState_Removed: return @"REMOVED";
         case PowerAuthActivationState_Deadlock: return @"DEADLOCK";
-        default: return [[NSString alloc] initWithFormat:@"STATE_UNKNOWN_%li", status];
+        default: return @"UNKNOWN";
     }
 }
 

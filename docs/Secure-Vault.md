@@ -30,4 +30,4 @@ try {
 
 ## Read Next
 
-- [Recovery Codes](Recovery-Codes.md)
+- [Token Based Authentication](Token-Based-Authentication.md)

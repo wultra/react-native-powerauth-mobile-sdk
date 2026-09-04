@@ -14,12 +14,17 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivation } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthActivationState } from "react-native-powerauth-mobile-sdk";
 import { expect, TestSuite } from "mobile-testbed";
 
 export class PowerAuthActivationTests extends TestSuite {
 
     readonly name = 'Test Name'
+
+    testActivationStates() {
+        expect(PowerAuthActivationState.UNKNOWN).toBe('UNKNOWN')
+        expect((PowerAuthActivationState as any).CREATED).toBeUndefined()
+    }
 
     testRegularActivation() {
         const a1 = PowerAuthActivation.createWithActivationCode('VVVVV-VVVVV-VVVVV-VTFVA', this.name)

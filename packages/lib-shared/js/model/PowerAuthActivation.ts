@@ -50,7 +50,8 @@ export class PowerAuthActivation {
 
     /**
      * Create an instance of `PowerAuthActivation` configured with the activation code. The activation code may contain
-     * an optional signature part, in case that it is scanned from QR code.
+     * a legacy signature suffix when scanned from a QR code. PowerAuth SDK 2.0 strips and ignores this suffix; it is not
+     * proof of authenticity.
      *  
      * The activation's `name` parameter is recommended to set to device name. The name of activation will be associated with
      * an activation record on PowerAuth Server.
