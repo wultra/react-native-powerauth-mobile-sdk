@@ -52,13 +52,16 @@ interface AlgorithmPass {
 type ActivationTestConstructor<T extends TestWithActivation = TestWithActivation> =
     new (suiteName?: string) => T
 
-const legacyPass: AlgorithmPass = {
-    name: "legacy",
-    algorithm: PowerAuthAlgorithm.LEGACY
-}
-
-const defaultPass: AlgorithmPass = {
-    name: "default"
+function getAlgorithmPasses(): [AlgorithmPass, AlgorithmPass] {
+    return [
+        {
+            name: "legacy",
+            algorithm: PowerAuthAlgorithm.LEGACY
+        },
+        {
+            name: "default"
+        }
+    ]
 }
 
 function suiteForPass<T extends TestWithActivation>(
@@ -88,6 +91,7 @@ function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
 }
 
 export function getLibraryTests(): TestSuite[] {
+    const [legacyPass, defaultPass] = getAlgorithmPasses()
     return [
         new ConfigurationObjectsTests(),
         new PowerAuth_ConfigureTests(),
@@ -106,6 +110,7 @@ export function getLibraryTests(): TestSuite[] {
 }
 
 export function getInteractiveLibraryTests(): TestSuite[] {
+    const [legacyPass, defaultPass] = getAlgorithmPasses()
     return [
         suiteForPass(PowerAuth_BiometryTests, legacyPass),
         suiteForPass(PowerAuth_BiometryInteractiveTests, legacyPass),
