@@ -17,6 +17,18 @@ runs:
       - name: Enable Yarn 
         shell: bash
         run: corepack enable
+      - name: Configure Yarn download cache
+        id: yarn-cache
+        shell: bash
+        run: |
+          echo "YARN_ENABLE_GLOBAL_CACHE=false" >> "$GITHUB_ENV"
+          echo "YARN_CACHE_FOLDER=$RUNNER_TEMP/yarn-cache" >> "$GITHUB_ENV"
+          echo "version=$(yarn --version)" >> "$GITHUB_OUTPUT"
+      - name: Restore Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/yarn-cache
+          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-yarn-${{ steps.yarn-cache.outputs.version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
       - name: Install dependencies (Yarn)
         shell: bash
         run: yarn install --immutable

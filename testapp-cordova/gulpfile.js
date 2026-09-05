@@ -18,7 +18,7 @@ const gulp = require("gulp");
 const replace = require('gulp-replace');
 const { build } = require("esbuild");
 const { rimraf } = require('rimraf'); // folder cleaner
-const exec = require('child_process').exec;
+const { exec, spawn } = require('child_process');
 const dotenv = require('dotenv');
 const fs = require('fs');
 
@@ -71,7 +71,7 @@ const compile = () =>
     })
 
 // to make sure all files are copied in the proper place
-const prepareIOS = () => exec("npx cordova prepare ios")
+const prepareIOS = () => spawn('npx', ['cordova', 'prepare', 'ios', '--verbose'], { stdio: 'inherit' })
 const prepareAndroid = () => exec("npx cordova prepare android")
 
 // patch testapp files

@@ -223,23 +223,6 @@ abort_with_logs() {
 }
 
 install_rn_pods() {
-  echo "[e2e] Installing RN iOS Ruby gems..."
-  if ! command -v bundle >/dev/null 2>&1; then
-    echo "[e2e] Installing Bundler..."
-    gem install bundler -v 2.6.2
-  fi
-
-  if ! (cd testapp && bundle check); then
-    (cd testapp && bundle install)
-  fi
-
-  # repository_dispatch currently restores Pods from the default branch cache,
-  # which can contain local podspecs generated for a different checkout.
-  if [ -d "testapp/ios/Pods" ]; then
-    echo "[e2e] Removing potentially stale cached RN iOS Pods..."
-    rm -rf -- "testapp/ios/Pods"
-  fi
-
   echo "[e2e] Installing RN iOS CocoaPods..."
   (
     cd testapp/ios
@@ -249,6 +232,9 @@ install_rn_pods() {
       bundle exec pod install --repo-update --verbose
   )
 }
+
+# shellcheck source=scripts/ci/ios-compiler-cache.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../ci/ios-compiler-cache.sh"
 
 install_and_launch_rn_app() {
   app_path="$1"
@@ -336,6 +322,7 @@ resolve_cordova_sim_target() {
     echo "[e2e] ERROR: No simulator matches the active iOS ${sdk_version} SDK."
     return 1
   fi
+  CORDOVA_SIM_TARGET="${CORDOVA_SIM_TARGET},${sdk_version}"
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
@@ -367,9 +354,6 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     echo "[e2e] ERROR: No iOS simulator UDID available for RN run."
     exit 1
   fi
-else
-  # ios-sim owns the target lifecycle; a global shutdown can hang on hosted runners.
-  echo "[e2e] Cordova will manage simulator startup."
 fi
 
 if [ "${MODE}" = "cordova" ] || [ "${MODE}" = "full" ]; then
@@ -388,8 +372,12 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
   yarn workspace testapp start:prepared &
   METRO_PID=$!
 
-  RN_DERIVED_DATA_PATH="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios.XXXXXX")"
+  # Keep compiler paths stable across fresh runners so ccache can reuse objects.
+  # DerivedData and built apps are never restored in CI.
+  RN_DERIVED_DATA_PATH="${E2E_RN_DERIVED_DATA_PATH:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios}"
   RN_SIMULATOR_ARCH="$(uname -m)"
+  RN_BUILD_SETTINGS=("ARCHS=${RN_SIMULATOR_ARCH}")
+  configure_rn_compiler_cache
   echo "[e2e] Building RN iOS app for a generic ${RN_SIMULATOR_ARCH} simulator destination..."
   if ! xcodebuild \
     -workspace testapp/ios/testapp.xcworkspace \
@@ -397,7 +385,8 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     -configuration Debug \
     -destination "generic/platform=iOS Simulator" \
     -derivedDataPath "${RN_DERIVED_DATA_PATH}" \
-    ARCHS="${RN_SIMULATOR_ARCH}" \
+    -showBuildTimingSummary \
+    "${RN_BUILD_SETTINGS[@]}" \
     build; then
     echo "[e2e] ERROR: Failed to build the RN iOS app."
     abort_with_logs
