@@ -106,11 +106,6 @@ jobs:
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
 
-      - &save-yarn
-        uses: ./.github/actions/cache-save
-        with:
-          family: yarn
-
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -187,8 +182,6 @@ jobs:
           emulator-boot-timeout: 900
           script: bash scripts/e2e/run-android-ci.sh
 
-      - *save-yarn
-
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -260,14 +253,13 @@ jobs:
           xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
 
       - name: Cache prepared CocoaPods (RN)
-        uses: ./.github/actions/cache
+        uses: actions/cache@v4
         with:
           path: |
             testapp/ios/Pods
             testapp/ios/build/generated/ios
-          family: pods-rn
-          # Exact snapshots only: native file membership and codegen inputs must match.
-          key: installed-v1-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('yarn.lock', '.yarnrc.yml', 'package.json', 'testapp/Gemfile*', 'testapp/ios/Podfile*', 'testapp/ios/testapp.xcodeproj/project.pbxproj', 'testapp/package.json', 'testapp/react-native.config.js', 'packages/lib-rn/package.json', 'packages/lib-rn/react-native.config.js', 'packages/lib-rn/*.podspec', 'packages/lib-rn/ios/**', 'packages/lib-shared/ios/**', 'scripts/build.mjs', 'scripts/build-layout.cjs', 'scripts/e2e/run-ios-ci.sh') }}
+          # Restore dependencies, then let pod install reconcile local sources and codegen.
+          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-pods-rn-installed-v1-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('yarn.lock', '.yarnrc.yml', 'package.json', 'testapp/Gemfile*', 'testapp/ios/Podfile*', 'testapp/package.json', 'testapp/react-native.config.js', 'packages/lib-rn/package.json', 'packages/lib-rn/react-native.config.js', 'packages/lib-rn/*.podspec') }}
 
       - name: Set up compiler cache
         working-directory: ${{ runner.temp }}
@@ -280,14 +272,13 @@ jobs:
           echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
 
       - name: Restore compiler cache (RN)
-        uses: ./.github/actions/cache
+        uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          family: ccache-rn
           # ccache validates native edits; stable keys avoid uploading for tiny SDK changes.
-          key: xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-${{ hashFiles('yarn.lock', 'testapp/ios/Podfile.lock', 'testapp/ios/Podfile', 'testapp/Gemfile.lock', 'scripts/ci/ios-compiler-cache.sh', 'scripts/e2e/run-ios-ci.sh', 'packages/lib-rn/*.podspec', 'testapp/ios/testapp.xcodeproj/project.pbxproj') }}
+          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-ccache-rn-xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-${{ hashFiles('yarn.lock', 'testapp/ios/Podfile.lock', 'testapp/ios/Podfile', 'testapp/Gemfile.lock', 'scripts/ci/ios-compiler-cache.sh', 'packages/lib-rn/*.podspec', 'testapp/ios/testapp.xcodeproj/project.pbxproj') }}
           # ccache versions can hash identical compiler inputs differently.
-          restore-keys: xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-
+          restore-keys: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-ccache-rn-xcode${{ env.XCODE_VERSION }}-ccache${{ env.CCACHE_VERSION }}-
 
       - name: Reset compiler cache statistics
         run: ccache --zero-stats
@@ -301,22 +292,11 @@ jobs:
       - name: Run E2E (iOS simulator, RN)
         env:
           E2E_MODE: rn
-          RN_PODS_CACHE_HIT: ${{ fromJSON(env['PA_CACHE_pods-rn']).hit }}
         run: bash scripts/e2e/run-ios-ci.sh
 
       - name: Report compiler cache statistics
         if: always()
         run: ccache --show-stats && ccache --show-compression
-
-      - *save-yarn
-
-      - uses: ./.github/actions/cache-save
-        with:
-          family: pods-rn
-
-      - uses: ./.github/actions/cache-save
-        with:
-          family: ccache-rn
 
       - name: Upload artifacts
         if: always()
@@ -379,12 +359,11 @@ jobs:
           xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
 
       - name: Cache CocoaPods downloads (Cordova)
-        uses: ./.github/actions/cache
+        uses: actions/cache@v4
         with:
           path: ~/Library/Caches/CocoaPods
-          family: pods-cordova
           # PowerAuth prepares native frameworks in the download cache.
-          key: xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/Gemfile.lock', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json', 'yarn.lock') }}
+          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-pods-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/Gemfile.lock', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json', 'yarn.lock') }}
 
       - name: Build test infra packages
         run: |
@@ -397,12 +376,6 @@ jobs:
           E2E_MODE: cordova
           BUNDLE_GEMFILE: ${{ github.workspace }}/testapp/Gemfile
         run: bundle exec bash scripts/e2e/run-ios-ci.sh
-
-      - *save-yarn
-
-      - uses: ./.github/actions/cache-save
-        with:
-          family: pods-cordova
 
       - name: Upload artifacts
         if: always()

@@ -25,11 +25,10 @@ runs:
           echo "YARN_CACHE_FOLDER=$RUNNER_TEMP/yarn-cache" >> "$GITHUB_ENV"
           echo "version=$(yarn --version)" >> "$GITHUB_OUTPUT"
       - name: Restore Yarn downloads
-        uses: ./.github/actions/cache
+        uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/yarn-cache
-          family: yarn
-          key: ${{ steps.yarn-cache.outputs.version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-yarn-${{ steps.yarn-cache.outputs.version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
       - name: Install dependencies (Yarn)
         shell: bash
         run: yarn install --immutable

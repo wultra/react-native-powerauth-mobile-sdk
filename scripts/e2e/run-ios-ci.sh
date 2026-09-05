@@ -223,17 +223,6 @@ abort_with_logs() {
 }
 
 install_rn_pods() {
-  if [ "${RN_PODS_CACHE_HIT:-}" = "true" ] && [ -d testapp/ios/build/generated/ios ] &&
-      cmp -s testapp/ios/Podfile.lock testapp/ios/Pods/Manifest.lock; then
-    echo "[e2e] Reusing matching prepared RN iOS CocoaPods."
-    return
-  fi
-
-  if [ -d "testapp/ios/Pods" ]; then
-    echo "[e2e] Removing potentially stale cached RN iOS Pods..."
-    rm -rf -- "testapp/ios/Pods"
-  fi
-
   echo "[e2e] Installing RN iOS CocoaPods..."
   (
     cd testapp/ios
