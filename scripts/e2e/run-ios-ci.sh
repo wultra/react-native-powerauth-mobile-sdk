@@ -311,7 +311,7 @@ resolve_cordova_sim_target() {
     return 0
   fi
 
-  local available_json sdk_version runtime_id boot_id
+  local available_json sdk_version runtime_id
   sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
   runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
 
@@ -327,19 +327,13 @@ resolve_cordova_sim_target() {
         const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
           devices.find(d => d.deviceTypeIdentifier.includes(".iPad-"));
         if (!device) process.exit(1);
-        process.stdout.write(device.deviceTypeIdentifier.split(".").pop() + " " +
-          (device.state === "Shutdown" ? device.udid : ""));
+        process.stdout.write(device.deviceTypeIdentifier.split(".").pop());
       '
   )"; then
     echo "[e2e] ERROR: No simulator matches the active iOS ${sdk_version} SDK."
     return 1
   fi
-  read -r CORDOVA_SIM_TARGET boot_id <<< "${CORDOVA_SIM_TARGET}"
   CORDOVA_SIM_TARGET="${CORDOVA_SIM_TARGET},${sdk_version}"
-  if [ -n "${boot_id}" ]; then
-    echo "[e2e] Booting Cordova simulator during preparation: ${boot_id}"
-    run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${boot_id}" || return 1
-  fi
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
