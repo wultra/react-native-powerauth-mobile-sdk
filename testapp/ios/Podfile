@@ -1,3 +1,4 @@
+# Temporary cache validation: PA_CI_CACHE_PROBE_20260905
 # Uncomment, if you want to build the app with the old architecture
 # ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 

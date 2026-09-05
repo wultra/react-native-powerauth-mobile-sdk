@@ -18,6 +18,8 @@
 
 @import PowerAuth2;
 
+__attribute__((used)) static const char PA_CI_CACHE_PROBE[] = "PA_CI_CACHE_PROBE_20260905"; // Temporary cache validation.
+
 // MARK: - Error constatns
 
 NSString * const EC_NETWORK_ERROR               = @"NETWORK_ERROR";

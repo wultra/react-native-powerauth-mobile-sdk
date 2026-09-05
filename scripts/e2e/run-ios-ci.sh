@@ -398,6 +398,9 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     abort_with_logs
   fi
 
+  grep -a -q 'PA_CI_CACHE_PROBE_20260905' "${RN_APP_PATH}/testapp.debug.dylib" || abort_with_logs
+  echo "[e2e] Cache validation: new native marker is present in the built app."
+
   if ! RN_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${RN_APP_PATH}/Info.plist")"; then
     echo "[e2e] ERROR: Failed to read the RN iOS bundle identifier."
     abort_with_logs
