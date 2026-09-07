@@ -45,7 +45,10 @@ remaining attempts or whether the activation is blocked.
 
 The one-step `changePassword()`, `validatePassword()`, `changePasswordUnsafe()`, and
 `unsafeChangePassword()` methods remain available for source compatibility but are deprecated.
-Use `beginPasswordChange()` and `finishPasswordChange()` for new code.
+Use `beginPasswordChange()` and `finishPasswordChange()` for password changes.
+
+`validatePassword()` has no direct replacement. If your application requires password validation here,
+that indicates a deeper architectural issue that may introduce security vulnerabilities.
 
 <!-- begin box warning -->
 The unsafe password-change methods do not verify the old password. Using an incorrect old
