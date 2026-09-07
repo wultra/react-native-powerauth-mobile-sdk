@@ -242,27 +242,6 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     }];
 }
 
-- (BOOL) processObjectWithId:(NSString*)objectId
-               expectedClass:(Class)expectedClass
-                       touch:(BOOL)touch
-                      action:(NS_NOESCAPE void(^)(id object))action
-{
-    return [[self synchronized:^id{
-        NSString * registeredId = [self translateObjectId:objectId];
-        PowerAuthManagedObject * managedObject = registeredId ? _register[registeredId] : nil;
-        if (!managedObject ||
-            ![managedObject isStillValid] ||
-            ![managedObject.object isKindOfClass:expectedClass]) {
-            return @NO;
-        }
-        action(managedObject.object);
-        if (touch) {
-            [managedObject touch];
-        }
-        return @YES;
-    }] boolValue];
-}
-
 - (id) findObjectWithId:(NSString *)objectId expectedClass:(Class)expectedClass
 {
     return [self synchronized:^id{

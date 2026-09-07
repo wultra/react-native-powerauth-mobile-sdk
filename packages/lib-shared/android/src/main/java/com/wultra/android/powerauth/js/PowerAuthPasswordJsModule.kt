@@ -205,12 +205,8 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     fun usePasswordCopy(anyPassword: Dynamic?): Password {
         if (anyPassword != null) {
             if (anyPassword.type === ReadableType.String) {
-                val password = Password(anyPassword.asString())
-                return try {
-                    password.copyToImmutable()
-                } finally {
-                    password.destroy()
-                }
+                // The string constructor already returns an immutable, exclusively owned password.
+                return Password(anyPassword.asString())
             }
             if (anyPassword.type === ReadableType.Map) {
                 val map = anyPassword.asMap()

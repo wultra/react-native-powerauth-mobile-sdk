@@ -86,15 +86,6 @@ PAJS_MODULE_BASIC(PowerAuthObjectRegister)
                       transform:(NS_NOESCAPE id _Nullable(^_Nonnull)(id _Nonnull object))transform;
 
 /**
- Execute an action with a valid object while holding the register lock. This prevents cleanup
- or release from invalidating a native object during a synchronous operation.
- */
-- (BOOL) processObjectWithId:(nonnull NSString*)objectId
-               expectedClass:(nonnull Class)expectedClass
-                       touch:(BOOL)touch
-                      action:(NS_NOESCAPE void(^_Nonnull)(id _Nonnull object))action;
-
-/**
  Returns true if object with given identifier is still valid. Unlike find method, this
  doesn't require Class to validate the object existence.
  */
