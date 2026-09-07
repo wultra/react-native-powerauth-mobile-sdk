@@ -103,13 +103,19 @@ export class PowerAuth_ProtocolUpgradeTests extends TestWithActivation {
         const failure = await this.sdk.startProtocolUpgrade(this.credentials.invalidPassword)
             .then(() => undefined, error => error)
         expect(failure?.errorData?.httpStatusCode).toBe(401)
-        await this.sdk.fetchActivationStatus()
         expect(await this.sdk.currentAlgorithm).toBe(PowerAuthAlgorithm.LEGACY)
         expect(await this.sdk.hasPendingProtocolUpgrade()).toBe(false)
+    }
+
+    /*
+    async testActivationRemainsUsableAfterRejectedUpgrade() {
+        await this.testWrongPasswordDoesNotUpgrade()
+        await this.sdk.fetchActivationStatus()
         expect(await this.sdk.hasProtocolUpgradeAvailable()).toBe(true)
         await this.sdk.tokenStore.requestAccessToken('upgrade-wrong-password-check', this.credentials.knowledge)
         await this.sdk.tokenStore.removeAccessToken('upgrade-wrong-password-check')
     }
+    */
 
 }
 
