@@ -117,13 +117,8 @@ class PowerAuthEncryptorJsModule(
 
     @JsApiMethod
     fun decryptResponse(encryptorId: String, responseBodyBase64: String, promise: Promise) {
-        val bodyData = try {
-            DataFormat.BASE64.decodeBytes(responseBodyBase64) ?: ByteArray(0)
-        } catch (t: Throwable) {
-            Errors.rejectPromise(promise, t)
-            return
-        }
         withEncryptor(encryptorId, promise, destroyAfter = true) { encryptor ->
+            val bodyData = DataFormat.BASE64.decodeBytes(responseBodyBase64) ?: ByteArray(0)
             DataFormat.BASE64.encodeBytes(
                 encryptor.decryptResponse(CoreEncryptedResponse(bodyData))
             )
@@ -149,7 +144,7 @@ class PowerAuthEncryptorJsModule(
             if (destroyAfter) {
                 // A native encryptor can decrypt only the matching response. Consume the handle
                 // after the attempt regardless of whether native decryption succeeds.
-                objectRegister.removeObject(encryptorId, CoreEncryptor::class.java)
+                objectRegister.releaseObject(encryptorId, CoreEncryptor::class.java)
             }
         }
     }

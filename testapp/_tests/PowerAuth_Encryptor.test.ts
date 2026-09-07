@@ -86,6 +86,25 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         }
     }
 
+    async testWrongTypeDecryptHandlePreservesOwner() {
+        const encryptor = await this.sdk.getEncryptorForActivationScope()
+        // Deliberately corrupt only the local handle to exercise native typed lookup. Do not
+        // use this implementation detail in an application; real callers cannot supply IDs.
+        const handle = (encryptor as unknown as { handle: { objectId: string } }).handle
+        const originalId = handle.objectId
+        try {
+            handle.objectId = this.sdk.instanceId
+            for (const body of ['**??==', btoa('{}')]) {
+                await expect(async () => await encryptor.decryptResponse(body))
+                    .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+                expect(await this.sdk.hasValidActivation()).toBe(true)
+            }
+        } finally {
+            handle.objectId = originalId
+            await encryptor.release()
+        }
+    }
+
     async testReleaseIsCachedAndIdempotent() {
         const encryptor = await this.sdk.getEncryptorForActivationScope()
         const firstRelease = encryptor.release()
@@ -130,6 +149,8 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             await encryptor.encryptRequest(btoa('{}'))
             await expect(async () => await encryptor.decryptResponse('**??=='))
                 .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+            await expect(async () => await encryptor.canDecryptResponse())
+                .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         } finally {
             await encryptor.release()
         }
