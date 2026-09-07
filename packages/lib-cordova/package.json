@@ -41,7 +41,6 @@
   "readmeFilename": "README.md",
   "scripts": {
     "build": "node ../../scripts/build.mjs cordova",
-    "cdv": "node ../../scripts/build.mjs cordova",
     "pack:tgz": "node ../../scripts/build.mjs cordova --pack"
   }
 }

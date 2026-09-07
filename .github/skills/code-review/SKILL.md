@@ -31,11 +31,19 @@ user-facing documentation and changelog coverage; internal refactors do not.
 
 This Yarn 4.3.1 monorepo publishes the React Native and Cordova wrappers:
 
-* `packages/react-native-powerauth-mobile-sdk/src/` is the TypeScript React
-  Native API, with Android in `android/src/main/java/com/wultra/android/powerauth/reactnative/`
-  and iOS in `ios/PowerAuth/`.
-* `packages/cordova-powerauth-mobile-sdk/src/` is the TypeScript Cordova API,
-  with the native plugin in its `android/` and `ios/PowerAuth/` trees.
+* `packages/lib-shared/js/` is the shared TypeScript API. Shared Android bridge
+  implementations live in `packages/lib-shared/android/src/main/java/com/wultra/android/powerauth/js/`,
+  and shared iOS code lives in `packages/lib-shared/ios/PowerAuth/`.
+* `packages/lib-rn/` contains the React Native manifest, native adapters,
+  platform header, and podspec. Its Yarn workspace name remains
+  `react-native-powerauth-mobile-sdk`.
+* `packages/lib-cordova/` contains the Cordova manifest, `plugin.xml` template,
+  native adapters, and TypeScript overrides in `src/internal/`. Its Yarn
+  workspace name remains `cordova-powerauth-mobile-sdk`.
+* `scripts/build.mjs` stages shared sources with platform-specific files and
+  invokes `rollup.config.js` to build both wrappers. `scripts/build-layout.cjs`
+  defines source and output paths; `scripts/verify-packages.mjs` checks the
+  packed archives.
 * `packages/mobile-testbed`, `packages/mobile-test-runner`, and
   `packages/mobile-test-reporter` implement the end-to-end protocol; do not
   confuse generated `dist/` and `build/` output with source.
@@ -46,10 +54,12 @@ The package version substituted at deployment is
 `%DEPLOY_VERSION%` in the package manifests. A release-to-`develop` change must
 declare `0.0.1-dev` wherever it declares a package version; do not accept a
 release number leaking back to development. Treat `packages/*/build`,
-`packages/*/dist`, `node_modules`, platform-generated files, and app build
-directories as generated unless the PR intentionally changes their generator.
+`packages/*/dist`, `packages/lib-cordova/.build`, `node_modules`,
+platform-generated files, and app build directories as generated unless the PR
+intentionally changes their generator.
 
-Relevant validation commands are `yarn build`, `yarn lint`, targeted workspace
+Relevant validation commands are `yarn build`, `yarn packAll` (build, pack, and
+verify both wrappers), `yarn lint`, targeted workspace
 commands (`yarn workspace react-native-powerauth-mobile-sdk build`), and the
 appropriate `yarn buildReactIos`, `yarn buildReactAndroid`,
 `yarn buildCordovaIos`, or `yarn buildCordovaAndroid`. E2E entry points are
@@ -57,9 +67,15 @@ appropriate `yarn buildReactIos`, `yarn buildReactAndroid`,
 
 ## API and native-boundary checks
 
-The published React Native entry point and declarations must agree with
-`packages/react-native-powerauth-mobile-sdk/src/index.ts` and `lib/index.d.ts`;
-the Cordova equivalent is its package source/build entry. Review changes to
+The shared API entry point is `packages/lib-shared/js/index.ts`. React Native
+stages it in `packages/lib-rn/build/src/index.ts` and publishes
+`lib/commonjs/index.js`, `lib/module/index.js`, and `lib/typescript/index.d.ts`
+from that staged package. Cordova overlays `packages/lib-cordova/src/` onto
+the shared sources in `packages/lib-cordova/.build/src/` and publishes
+`lib/index.js` and ambient declarations in `lib/index.d.ts` from
+`packages/lib-cordova/build/`. Check the staged manifests as well as the source
+manifests: the build rewrites React Native entry paths and generates Cordova
+compatibility shims and `plugin.xml` module entries. Review changes to
 `PowerAuth`, activation/configuration/authentication models, password,
 encryptor/decryptor, token store, secure vault, signature, biometry, and
 native-object registration as compatibility-sensitive.
@@ -67,7 +83,8 @@ native-object registration as compatibility-sensitive.
 For every JS/TypeScript-to-native operation, trace the complete bridge:
 
 1. public TypeScript method and its argument/result serialization;
-2. Android Java and iOS Objective-C implementation/export name;
+2. shared Android Java/Kotlin and iOS Objective-C implementation/export name,
+   including the React Native or Cordova adapter;
 3. matching error code, nullable-value representation, and promise/callback
    completion on every path; and
 4. native PowerAuth lifetime and explicit release/destroy semantics.
