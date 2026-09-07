@@ -78,7 +78,6 @@ function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
         suiteForPass(PowerAuth_PasswordTests, pass),
         suiteForPass(PowerAuth_SignatureTests, pass),
         ...(isLegacy ? [] : [
-            suiteForPass(PowerAuth_AdvancedSignatureTests, pass),
             suiteForPass(PowerAuth_SecureVaultTests, pass)
         ]),
         suiteForPass(PowerAuth_TokenTests, pass),
@@ -93,6 +92,8 @@ function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
 export function getLibraryTests(): TestSuite[] {
     const [legacyPass, defaultPass] = getAlgorithmPasses()
     return [
+        ...[PowerAuthAlgorithm.LEGACY, PowerAuthAlgorithm.P384, PowerAuthAlgorithm.P384_L3, PowerAuthAlgorithm.P384_L5]
+            .map(algorithm => new PowerAuth_AdvancedSignatureTests(`PowerAuth_AdvancedSignatureTests [${algorithm}]`, algorithm)),
         new ConfigurationObjectsTests(),
         new PowerAuth_ConfigureTests(),
         new PowerAuth_ProtocolUpgradeTests(),

@@ -14,7 +14,11 @@
 // limitations under the License.
 //
 
-import { NativeObjectCmdData, NativeObjectCmdResult, NativeObjectRegister, NativeObjectType } from "react-native-powerauth-mobile-sdk";
+import { NativeObjectRegister } from "react-native-powerauth-mobile-sdk";
+
+type NativeObjectCmdData = Parameters<typeof NativeObjectRegister.debugCommand>[1]
+type NativeObjectCmdResult = Awaited<ReturnType<typeof NativeObjectRegister.debugCommand>>
+type NativeObjectType = NonNullable<NativeObjectCmdData['objectType']>
 
 export interface ObjectsCount {
     valid: number

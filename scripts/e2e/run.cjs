@@ -16,6 +16,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const net = require('net');
+const childExits = new WeakMap();
+const processGroups = new WeakSet();
 const { spawn, spawnSync } = require('child_process');
 
 function resolveFromRepoRoot(p) {
@@ -83,6 +86,8 @@ function spawnLogged(command, args, options = {}) {
     ...options,
   });
 
+  if (options.detached && process.platform !== 'win32') processGroups.add(child);
+  waitForExit(child, command);
   return child;
 }
 
@@ -96,32 +101,64 @@ async function fetchJson(url) {
 }
 
 function waitForExit(child, name) {
-  return new Promise((resolve) => {
-    child.on('exit', (code, signal) => {
-      if (signal) {
-        resolve({ code: 128, signal });
-      } else {
-        resolve({ code: code ?? 1, signal: undefined });
-      }
-    });
-
-    child.on('error', (err) => {
+  if (childExits.has(child)) return childExits.get(child);
+  const result = (code, signal) => ({ code: signal ? 128 : code ?? 1, signal: signal || undefined });
+  const exited = new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve(result(child.exitCode, child.signalCode));
+      return;
+    }
+    child.once('exit', (code, signal) => resolve(result(code, signal)));
+    child.once('error', (err) => {
       // eslint-disable-next-line no-console
       console.error(`${name} failed to start: ${err?.message ?? String(err)}`);
-      resolve({ code: 1, signal: undefined });
+      resolve(result(1));
     });
   });
+  childExits.set(child, exited);
+  return exited;
 }
 
 function terminate(child, name) {
-  if (!child || child.killed) return;
-
+  if (!child?.pid) return;
   try {
-    child.kill('SIGINT');
+    // Yarn can exit before its Metro child. Signal only the group we created.
+    if (processGroups.has(child)) process.kill(-child.pid, 'SIGINT');
+    else if (!child.killed) child.kill('SIGINT');
   } catch (e) {
+    if (e.code === 'ESRCH') return;
     // eslint-disable-next-line no-console
     console.error(`Failed to terminate ${name}: ${e?.message ?? String(e)}`);
   }
+}
+
+function assertPortAvailable(port) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => server.close(resolve));
+  });
+}
+
+async function waitForMetro(child, port, timeoutMs = 30000) {
+  let exited = false;
+  const failure = waitForExit(child, 'Metro').then(({ code }) => {
+    exited = true;
+    throw new Error(`Metro exited before app launch (code ${code}).`);
+  });
+  await Promise.race([failure, (async () => {
+    const deadline = Date.now() + timeoutMs;
+    while (!exited && Date.now() < deadline) {
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/status`, {
+          signal: AbortSignal.timeout(1000),
+        });
+        if (response.ok && (await response.text()) === 'packager-status:running') return;
+      } catch { /* Metro is still starting. */ }
+      await sleep(100);
+    }
+    if (!exited) throw new Error('Metro did not become ready before the startup timeout.');
+  })()]);
 }
 
 function listAdbDevices() {
@@ -396,21 +433,30 @@ async function main() {
 
   // Start Metro for RN and skip it later.
   let metro = null;
-  if (includeRn && args.metro) {
-    const metroArgs = ['workspace', 'testapp', 'start:prepared', '--port', String(args.metroPort)];
+  try {
+    if (includeRn && args.metro) {
+      const metroArgs = ['workspace', 'testapp', 'start:prepared', '--port', String(args.metroPort)];
 
-    if (args.metroResetCache) {
-      metroArgs.push('--reset-cache');
+      if (args.metroResetCache) {
+        metroArgs.push('--reset-cache');
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(`[e2e] Starting Metro...`);
+      await assertPortAvailable(args.metroPort);
+      metro = spawnLogged('yarn', metroArgs, {
+        cwd: resolveFromRepoRoot('.'),
+        detached: process.platform !== 'win32',
+      });
+
+      children.push({ child: metro, name: 'metro' });
+
+      await waitForMetro(metro, args.metroPort);
     }
-
-    // eslint-disable-next-line no-console
-    console.log(`[e2e] Starting Metro...`);
-    metro = spawnLogged('yarn', metroArgs, { cwd: resolveFromRepoRoot('.') });
-
-    children.push({ child: metro, name: 'metro' });
-
-    // Allow Metro to start accepting connections before app launches.
-    await sleep(2500);
+  } catch (error) {
+    clearInterval(healthTimer);
+    shutdown();
+    throw error;
   }
 
   const runResults = [];
