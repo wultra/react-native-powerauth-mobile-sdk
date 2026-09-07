@@ -151,15 +151,14 @@ PAJS_METHOD_START(decryptResponse,
 {
     PowerAuthEncryptor * encryptor = [_objectRegister touchObjectWithId:encryptorId
                                                          expectedClass:[PowerAuthEncryptor class]];
-    NSData * bodyData = [[NSData alloc] initWithBase64EncodedString:responseBodyBase64 options:0];
-    if (!bodyData) {
-        [_objectRegister releaseObjectWithId:encryptorId];
-        reject(EC_WRONG_PARAMETER, @"Response body is not valid Base64", nil);
+    if (!encryptor) {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
         return;
     }
-    if (!encryptor) {
-        [_objectRegister releaseObjectWithId:encryptorId];
-        reject(EC_INVALID_NATIVE_OBJECT, @"Encryptor object is no longer valid", nil);
+    NSData * bodyData = [[NSData alloc] initWithBase64EncodedString:responseBodyBase64 options:0];
+    if (!bodyData) {
+        [_objectRegister releaseObjectWithId:encryptorId expectedClass:[PowerAuthEncryptor class]];
+        reject(EC_WRONG_PARAMETER, @"Response body is not valid Base64", nil);
         return;
     }
     NSError * decryptionError = nil;
@@ -169,7 +168,7 @@ PAJS_METHOD_START(decryptResponse,
         : nil;
     NSString * result = [clearResponse base64EncodedStringWithOptions:0];
 
-    [_objectRegister releaseObjectWithId:encryptorId];
+    [_objectRegister releaseObjectWithId:encryptorId expectedClass:[PowerAuthEncryptor class]];
 
     if (!result) {
         ProcessError(decryptionError, reject);
