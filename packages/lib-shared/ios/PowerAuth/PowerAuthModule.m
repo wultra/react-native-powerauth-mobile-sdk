@@ -335,15 +335,21 @@ PAJS_METHOD_START(finishPasswordChange,
         return;
     }
     PowerAuthCorePassword * immutableNewPassword = [coreNewPassword copyToImmutable];
-    [powerAuth finishPasswordChangeWithNewCorePassword:immutableNewPassword changeData:changeData callback:^(NSError * error) {
+    @try {
+        [powerAuth finishPasswordChangeWithNewCorePassword:immutableNewPassword changeData:changeData callback:^(NSError * error) {
+            [immutableNewPassword secureClear];
+            [handle clear];
+            if (error) {
+                ProcessError(error, reject);
+            } else {
+                resolve(nil);
+            }
+        }];
+    } @catch (NSException * exception) {
         [immutableNewPassword secureClear];
         [handle clear];
-        if (error) {
-            ProcessError(error, reject);
-        } else {
-            resolve(nil);
-        }
-    }];
+        @throw;
+    }
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -900,17 +906,23 @@ PAJS_METHOD_START(changePassword,
     if (!newCorePassword) {
         return;
     }
-    // Making copies of passwords to immutable form, as they will be used in `sdk.changePassword` call.
-    // This call is actually 2 http requests, so it may take some time and the original password could
-    // be released in the meantime by the object register.
-    // We depends on the ARC to deref the objects, which calls clean.
-    [powerAuth changeCorePasswordFrom:[coreOldPassword copyToImmutable] to:[newCorePassword copyToImmutable] callback:^(NSError * error) {
-        if (error) {
-            ProcessError(error, reject);
-        } else {
-            resolve(@YES);
-        }
-    }];
+    PowerAuthCorePassword * immutableOldPassword = [coreOldPassword copyToImmutable];
+    PowerAuthCorePassword * immutableNewPassword = [newCorePassword copyToImmutable];
+    @try {
+        [powerAuth changeCorePasswordFrom:immutableOldPassword to:immutableNewPassword callback:^(NSError * error) {
+            [immutableOldPassword secureClear];
+            [immutableNewPassword secureClear];
+            if (error) {
+                ProcessError(error, reject);
+            } else {
+                resolve(@YES);
+            }
+        }];
+    } @catch (NSException * exception) {
+        [immutableOldPassword secureClear];
+        [immutableNewPassword secureClear];
+        @throw;
+    }
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -1109,9 +1121,18 @@ PAJS_METHOD_START(validatePassword,
     if (!corePassword) {
         return;
     }
-    [powerAuth validateCorePassword:corePassword callback:^(NSError * error) {
+    PowerAuthCorePassword * immutablePassword = [corePassword copyToImmutable];
+    // Validation needs no registered handle; clear the native temporary data before returning.
+    [powerAuth beginPasswordChangeWithCorePassword:immutablePassword callback:^(PowerAuthPasswordChangeData * changeData, NSError * error) {
+        if (changeData) {
+            [changeData secureClear];
+        } else {
+            [immutablePassword secureClear];
+        }
         if (error) {
             ProcessError(error, reject);
+        } else if (!changeData) {
+            reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither password-change data nor an error.", nil);
         } else {
             resolve(nil);
         }

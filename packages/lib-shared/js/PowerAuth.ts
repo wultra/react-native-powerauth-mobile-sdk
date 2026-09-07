@@ -601,14 +601,14 @@ export class PowerAuth {
     /**
      * Validate a user password.
      *
-     * This method calls PowerAuth Standard RESTful API endpoint `/pa/signature/validate` to validate the signature value.
+     * This method validates the password on the server.
      *
      * @param password Password to be verified.
-     * @deprecated Use `beginPasswordChange()` and release the returned data if no password change follows.
+     * @deprecated Method has no direct replacement. If your application requires password validation here,
+     * it indicates a deeper architectural issue that may introduce security vulnerabilities.
      */
     async validatePassword(password: PasswordType): Promise<void> {
-        const changeData = await this.beginPasswordChange(password)
-        return changeData.release()
+        return NativeWrapper.thisCall("validatePassword", this.instanceId, await toPowerAuthRawPassword(password))
     }
 
     /**
