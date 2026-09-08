@@ -19,4 +19,4 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
       - name: Library build
-        run: yarn build
+        run: yarn packAll

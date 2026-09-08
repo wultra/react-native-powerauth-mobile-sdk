@@ -274,6 +274,16 @@ async function main() {
   const derivedExpected = platformsCount * (includeRn ? 1 : 0) + platformsCount * (includeCordova ? 1 : 0);
   const expectedRuns = args.expectedRuns ?? derivedExpected;
 
+  if (includeRn) {
+    const stage = spawnSync('yarn', ['workspace', 'testapp', 'prepare:powerauth'], {
+      cwd: resolveFromRepoRoot('.'),
+      stdio: 'inherit',
+    });
+    if (stage.status !== 0) {
+      throw stage.error ?? new Error('Failed to stage the React Native SDK.');
+    }
+  }
+
   const outDir = resolveFromRepoRoot(args.outDir);
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -379,7 +389,7 @@ async function main() {
   // Start Metro for RN and skip it later.
   let metro = null;
   if (includeRn && args.metro) {
-    const metroArgs = ['workspace', 'testapp', 'start'];
+    const metroArgs = ['workspace', 'testapp', 'start:prepared'];
 
     if (args.metroResetCache) {
       metroArgs.push('--reset-cache');
@@ -399,8 +409,8 @@ async function main() {
 
   const runRnAndroid = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'android'];
-    const argv = args.metro || args.ci ? base.concat(['--', '--no-packager']) : base;
+    const base = ['workspace', 'testapp', 'android:prepared'];
+    const argv = args.metro || args.ci ? base.concat(['--no-packager']) : base;
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN Android...`);
@@ -413,13 +423,12 @@ async function main() {
 
   const runRnIos = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'ios'];
+    const base = ['workspace', 'testapp', 'ios:prepared'];
     const extra = [];
 
-    if (args.metro || args.ci) extra.push('--', '--no-packager');
+    if (args.metro || args.ci) extra.push('--no-packager');
 
     if (args.iosSimulator) {
-      if (extra.length === 0) extra.push('--');
       extra.push('--simulator', args.iosSimulator);
     }
 
