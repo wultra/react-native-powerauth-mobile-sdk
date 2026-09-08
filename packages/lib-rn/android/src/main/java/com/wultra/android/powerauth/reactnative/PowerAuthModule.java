@@ -24,6 +24,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.wultra.android.powerauth.js.ActivityProvider;
@@ -203,6 +204,36 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void verifyServerSignedData(String instanceId, final String data, final String signature, final boolean masterKey, final Promise promise) {
         powerAuthJsModule.verifyServerSignedData(instanceId, data, signature, masterKey, promise);
+    }
+
+    @ReactMethod
+    public void verifyDigitalSignature(String instanceId, final String signature, final String data, final String signatureKeyId, final Promise promise) {
+        powerAuthJsModule.verifyDigitalSignature(instanceId, signature, data, signatureKeyId, promise);
+    }
+
+    @ReactMethod
+    public void calculateDigitalSignature(String instanceId, final ReadableMap authMap, final String data, final String signatureKeyId, final Promise promise) {
+        powerAuthJsModule.calculateDigitalSignature(instanceId, authMap, data, signatureKeyId, promise);
+    }
+
+    @ReactMethod
+    public void exportDevicePublicKeys(String instanceId, final String format, final Promise promise) {
+        powerAuthJsModule.exportDevicePublicKeys(instanceId, format, promise);
+    }
+
+    @ReactMethod
+    public void verifyJwsSignature(String instanceId, final String signature, final boolean compact, final boolean strict, final String signatureKeyId, final Promise promise) {
+        powerAuthJsModule.verifyJwsSignature(instanceId, signature, compact, strict, signatureKeyId, promise);
+    }
+
+    @ReactMethod
+    public void calculateJwsSignature(String instanceId, final ReadableMap authMap, final String data, @Nullable final String dataType, final boolean compact, final String signatureKeyId, final Promise promise) {
+        powerAuthJsModule.calculateJwsSignature(instanceId, authMap, data, dataType, compact, signatureKeyId, promise);
+    }
+
+    @ReactMethod
+    public void createCertificateSigningRequest(String instanceId, final ReadableMap authMap, final ReadableMap distinguishedNames, @Nullable final ReadableArray subjectAltNames, final String signatureKeyId, final Promise promise) {
+        powerAuthJsModule.createCertificateSigningRequest(instanceId, authMap, distinguishedNames, subjectAltNames, signatureKeyId, promise);
     }
 
     @ReactMethod

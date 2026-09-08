@@ -88,7 +88,7 @@ It is recommended that your application executes only one signed request at the 
 
 Asymmetric Private Key Signature uses a private key stored in the PowerAuth secure vault. In order to unlock the secure vault and retrieve the private key, the user has to first authenticate using the symmetric multi-factor signature with at least two factors. This mechanism protects the private key on the device - the server plays a role of a "doorkeeper" and holds the vault unlock key.
 
-You could either sign an UTF-8 string or a Base64 encoded data. Fill a proper `dataFormat` parameter to specify the data format.
+Binary inputs and outputs use Base64-encoded strings. Select the concrete signing key with `PowerAuthSignatureKeyId`; `DEVICE_EC` is available for all supported algorithms, while `DEVICE_ML_DSA` is available only for algorithms that include ML-DSA.
 
 This process is completely transparent on the SDK level. To compute an asymmetric private key signature, request user credentials (password, PIN) and use the following code:
 
@@ -99,13 +99,20 @@ const auth = PowerAuthAuthentication.password("1234");
 // Unlock the secure vault, fetch the private key and perform data signing
 try {
     const dataToSign = "N9yHkF5zSks="; // base64 encoded data to sign
-    const dataFormat = "BASE64"; // data format, UTF8 in case of plain string
-    const signature = await powerAuth.signDataWithDevicePrivateKey(auth, dataToSign, dataFormat);
+    const signature = await powerAuth.calculateDigitalSignature(
+        auth,
+        dataToSign,
+        PowerAuthSignatureKeyId.DEVICE_EC
+    );
     // Send data and signature to the server
 } catch(e) {
     // Authentication or network error
 }
 ```
+
+`signDataWithDevicePrivateKey()` remains available for compatibility but is deprecated.
+
+Use `calculateJwsSignature()` and `verifyJwsSignature()` for compact JWT or JSON JWS data. Device public keys can be obtained with `exportDevicePublicKeys()`. To create a PKCS #10 request, call `createCertificateSigningRequest()` with the distinguished names, optional subject alternative names, and a concrete device key identifier.
 
 ## Symmetric Offline Multi-Factor Signature
 
@@ -126,25 +133,33 @@ The application has to show that calculated signature to the user now, and the u
 
 ## Verify Server-Signed Data
 
-This task is useful whenever you need to receive arbitrary data from the server and you need to be able to verify that the server has issued the data. The PowerAuthSDK provides a high-level method for validating data and associated signature:  
+This task is useful whenever you need to receive arbitrary data from the server and you need to be able to verify that the server has issued the data. Both data and signature are Base64-encoded strings. Invalid signatures reject with `PowerAuthErrorCode.WRONG_SIGNATURE`.
 
 ```javascript
 // Validate data signed with the master server key
 try {
-    const isVerified = await powerAuth.verifyServerSignedData(data, signature, true);
-    console.log(`Verified: ${isVerified}`);
+    await powerAuth.verifyDigitalSignature(
+        signature,
+        data,
+        PowerAuthSignatureKeyId.MASTER_EC
+    );
 } catch (e) {
     // API error
 }
 
 // Validate data signed with the personalized server key
 try {
-    const isVerified = await powerAuth.verifyServerSignedData(data, signature, false);
-    console.log(`Verified: ${isVerified}`);
+    await powerAuth.verifyDigitalSignature(
+        signature,
+        data,
+        PowerAuthSignatureKeyId.SERVER_EC
+    );
 } catch (e) {
     // API error
 }
 ```
+
+`verifyServerSignedData()` remains available for compatibility but is deprecated.
 
 ## Read Next
 
