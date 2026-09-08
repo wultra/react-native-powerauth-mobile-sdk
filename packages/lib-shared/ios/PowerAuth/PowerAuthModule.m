@@ -452,6 +452,55 @@ PAJS_METHOD_START(fetchActivationStatus,
 }
 PAJS_METHOD_END
 
+PAJS_METHOD_START(hasProtocolUpgradeAvailable,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(@([powerAuth hasProtocolUpgradeAvailable]));
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(hasPendingProtocolUpgrade,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(@([powerAuth hasPendingProtocolUpgrade]));
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(startProtocolUpgrade,
+                  PAJS_ARGUMENT(instanceId, NSString*)
+                  PAJS_ARGUMENT(password, id)
+                  PAJS_BOOL_ARGUMENT(upgradeBiometry))
+{
+    PA_BLOCK_START
+    PowerAuthCorePassword * corePassword = [UsePassword(password, _objectRegister, reject) copyToImmutable];
+    if (!corePassword) {
+        return;
+    }
+    // Apple platforms preserve the biometric factor automatically.
+    (void)upgradeBiometry;
+    [powerAuth startProtocolUpgradeWithCorePassword:corePassword callback:^(PowerAuthProtocolUpgradeResult * result, NSError * error) {
+        // Keep the immutable password alive until the asynchronous operation completes.
+        (void)corePassword;
+        if (error) {
+            ProcessError(error, reject);
+        } else if (result) {
+            resolve(@{
+                @"activationStatusFetchRequired": @(result.activationStatusFetchRequired),
+                @"activationFingerprint": result.activationFingerprint ?: [NSNull null],
+                @"biometryFactorRemoved": @NO
+            });
+        } else {
+            reject(EC_REACT_NATIVE_ERROR, @"PowerAuth SDK returned neither a protocol upgrade result nor an error.", nil);
+        }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
 PAJS_METHOD_START(createActivation,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(activation, NSDictionary*))
