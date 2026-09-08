@@ -16,6 +16,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const net = require('net');
+const childExits = new WeakMap();
+const processGroups = new WeakSet();
 const { spawn, spawnSync } = require('child_process');
 
 function resolveFromRepoRoot(p) {
@@ -83,6 +86,8 @@ function spawnLogged(command, args, options = {}) {
     ...options,
   });
 
+  if (options.detached && process.platform !== 'win32') processGroups.add(child);
+  waitForExit(child, command);
   return child;
 }
 
@@ -96,32 +101,64 @@ async function fetchJson(url) {
 }
 
 function waitForExit(child, name) {
-  return new Promise((resolve) => {
-    child.on('exit', (code, signal) => {
-      if (signal) {
-        resolve({ code: 128, signal });
-      } else {
-        resolve({ code: code ?? 1, signal: undefined });
-      }
-    });
-
-    child.on('error', (err) => {
+  if (childExits.has(child)) return childExits.get(child);
+  const result = (code, signal) => ({ code: signal ? 128 : code ?? 1, signal: signal || undefined });
+  const exited = new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve(result(child.exitCode, child.signalCode));
+      return;
+    }
+    child.once('exit', (code, signal) => resolve(result(code, signal)));
+    child.once('error', (err) => {
       // eslint-disable-next-line no-console
       console.error(`${name} failed to start: ${err?.message ?? String(err)}`);
-      resolve({ code: 1, signal: undefined });
+      resolve(result(1));
     });
   });
+  childExits.set(child, exited);
+  return exited;
 }
 
 function terminate(child, name) {
-  if (!child || child.killed) return;
-
+  if (!child?.pid) return;
   try {
-    child.kill('SIGINT');
+    // Yarn can exit before its Metro child. Signal only the group we created.
+    if (processGroups.has(child)) process.kill(-child.pid, 'SIGINT');
+    else if (!child.killed) child.kill('SIGINT');
   } catch (e) {
+    if (e.code === 'ESRCH') return;
     // eslint-disable-next-line no-console
     console.error(`Failed to terminate ${name}: ${e?.message ?? String(e)}`);
   }
+}
+
+function assertPortAvailable(port) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => server.close(resolve));
+  });
+}
+
+async function waitForMetro(child, port, timeoutMs = 30000) {
+  let exited = false;
+  const failure = waitForExit(child, 'Metro').then(({ code }) => {
+    exited = true;
+    throw new Error(`Metro exited before app launch (code ${code}).`);
+  });
+  await Promise.race([failure, (async () => {
+    const deadline = Date.now() + timeoutMs;
+    while (!exited && Date.now() < deadline) {
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/status`, {
+          signal: AbortSignal.timeout(1000),
+        });
+        if (response.ok && (await response.text()) === 'packager-status:running') return;
+      } catch { /* Metro is still starting. */ }
+      await sleep(100);
+    }
+    if (!exited) throw new Error('Metro did not become ready before the startup timeout.');
+  })()]);
 }
 
 function listAdbDevices() {
@@ -171,6 +208,7 @@ function printHelp(exitCode) {
       '  --out artifacts/e2e            Output directory (default: artifacts/e2e)',
       '  --collector-host 127.0.0.1     Collector bind host (default: 127.0.0.1)',
       '  --collector-port 8137          Collector port (default: 8137)',
+      '  --metro-port 8081              Metro port (default: 8081)',
       '  --timeout 45m                  Collector timeout (default: 45m)',
       '  --expected-runs N              Override expected runs',
       '  --ios-simulator \"iPhone 15\"    iOS simulator name (optional)',
@@ -196,6 +234,7 @@ function parseArgs(argv) {
     outDir: 'artifacts/e2e',
     collectorHost: '127.0.0.1',
     collectorPort: 8137,
+    metroPort: 8081,
     timeout: '45m',
     expectedRuns: undefined,
     iosSimulator: undefined,
@@ -226,6 +265,9 @@ function parseArgs(argv) {
       i++;
     } else if (a === '--collector-port' && next) {
       args.collectorPort = Number(next);
+      i++;
+    } else if (a === '--metro-port' && next) {
+      args.metroPort = Number(next);
       i++;
     } else if (a === '--timeout' && next) {
       args.timeout = next;
@@ -265,6 +307,9 @@ async function main() {
 
   if (!Number.isFinite(args.collectorPort) || args.collectorPort <= 0) {
     throw new Error(`Invalid --collector-port value '${args.collectorPort}'.`);
+  }
+  if (!Number.isInteger(args.metroPort) || args.metroPort <= 0 || args.metroPort > 65535) {
+    throw new Error(`Invalid --metro-port value '${args.metroPort}'.`);
   }
 
   // Derive how many runs the collector should wait for.
@@ -359,7 +404,7 @@ async function main() {
   const healthUrl = `http://127.0.0.1:${args.collectorPort}/health`;
   let lastHealth = { runs: -1, completed: -1 };
 
-  const startTime = Date.now();
+  let startTime;
   const startDeadlineMs = parseDurationToMs(process.env.E2E_STARTUP_TIMEOUT || '2m');
 
   const healthTimer = setInterval(async () => {
@@ -374,7 +419,7 @@ async function main() {
         console.log(`[e2e] collector status: runs=${runs} completed=${completed}`);
       }
 
-      if (runs === 0 && Date.now() - startTime > startDeadlineMs) {
+      if (startTime && runs === 0 && Date.now() - startTime > startDeadlineMs) {
         // eslint-disable-next-line no-console
         console.error(`[e2e] No run started within the startup timeout. Verify HTTP access to TEST_COLLECTOR_URL from the apps.`);
 
@@ -388,34 +433,49 @@ async function main() {
 
   // Start Metro for RN and skip it later.
   let metro = null;
-  if (includeRn && args.metro) {
-    const metroArgs = ['workspace', 'testapp', 'start:prepared'];
+  try {
+    if (includeRn && args.metro) {
+      const metroArgs = ['workspace', 'testapp', 'start:prepared', '--port', String(args.metroPort)];
 
-    if (args.metroResetCache) {
-      metroArgs.push('--reset-cache');
+      if (args.metroResetCache) {
+        metroArgs.push('--reset-cache');
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(`[e2e] Starting Metro...`);
+      await assertPortAvailable(args.metroPort);
+      metro = spawnLogged('yarn', metroArgs, {
+        cwd: resolveFromRepoRoot('.'),
+        detached: process.platform !== 'win32',
+      });
+
+      children.push({ child: metro, name: 'metro' });
+
+      await waitForMetro(metro, args.metroPort);
     }
-
-    // eslint-disable-next-line no-console
-    console.log(`[e2e] Starting Metro...`);
-    metro = spawnLogged('yarn', metroArgs, { cwd: resolveFromRepoRoot('.') });
-
-    children.push({ child: metro, name: 'metro' });
-
-    // Allow Metro to start accepting connections before app launches.
-    await sleep(2500);
+  } catch (error) {
+    clearInterval(healthTimer);
+    shutdown();
+    throw error;
   }
 
   const runResults = [];
 
   const runRnAndroid = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'android:prepared'];
+    const base = ['workspace', 'testapp', 'android:prepared', '--port', String(args.metroPort)];
     const argv = args.metro || args.ci ? base.concat(['--no-packager']) : base;
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN Android...`);
 
-    const child = spawnLogged(cmd, argv, { cwd: resolveFromRepoRoot('.') });
+    const child = spawnLogged(cmd, argv, {
+      cwd: resolveFromRepoRoot('.'),
+      env: {
+        ...process.env,
+        RCT_METRO_PORT: String(args.metroPort),
+      },
+    });
     const r = await waitForExit(child, 'rn-android');
 
     runResults.push({ name: 'rn-android', ...r });
@@ -423,7 +483,7 @@ async function main() {
 
   const runRnIos = async () => {
     const cmd = 'yarn';
-    const base = ['workspace', 'testapp', 'ios:prepared'];
+    const base = ['workspace', 'testapp', 'ios:prepared', '--port', String(args.metroPort)];
     const extra = [];
 
     if (args.metro || args.ci) extra.push('--no-packager');
@@ -437,7 +497,13 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log(`[e2e] Launching RN iOS...`);
 
-    const child = spawnLogged(cmd, argv, { cwd: resolveFromRepoRoot('.') });
+    const child = spawnLogged(cmd, argv, {
+      cwd: resolveFromRepoRoot('.'),
+      env: {
+        ...process.env,
+        RCT_METRO_PORT: String(args.metroPort),
+      },
+    });
     const r = await waitForExit(child, 'rn-ios');
 
     runResults.push({ name: 'rn-ios', ...r });
@@ -476,6 +542,8 @@ async function main() {
         if (platform === 'ios') await runCordovaIos();
       }
     }
+
+    startTime = Date.now();
 
     // eslint-disable-next-line no-console
     console.log(`[e2e] Waiting for collector to finish...`);

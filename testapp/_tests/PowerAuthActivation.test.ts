@@ -73,9 +73,9 @@ export class PowerAuthActivationTests extends TestSuite {
 
         expect(a).toBeDefined();
         expect(a.activationName).toBe(this.name);
-        expect(a.oidcParameters.providerId).toBe("provider-123");
-        expect(a.oidcParameters.code).toBe("auth-code-xyz");
-        expect(a.oidcParameters.nonce).toBe("nonce-abc");
-        expect(a.oidcParameters.codeVerifier).toBe("verifier-optional");
+        expect(a.oidcParameters?.providerId).toBe("provider-123");
+        expect(a.oidcParameters?.code).toBe("auth-code-xyz");
+        expect(a.oidcParameters?.nonce).toBe("nonce-abc");
+        expect(a.oidcParameters?.codeVerifier).toBe("verifier-optional");
     }
 }

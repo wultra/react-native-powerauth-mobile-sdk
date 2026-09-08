@@ -32,11 +32,11 @@ export class PowerAuth_BiometryTests extends TestWithActivation {
     }
 
     shouldCreateActivationBeforeTest(): boolean {
-        return !this.context.testName.startsWith('androidTestCreateActivation')
+        return !this.context.testName?.startsWith('androidTestCreateActivation')
     }
 
     provideCustomConfig(): CustomConfig {
-        if (this.context.testName.startsWith('androidTestCreateActivation')) {
+        if (this.context.testName?.startsWith('androidTestCreateActivation')) {
             const biometryConfiguration = new PowerAuthBiometryConfiguration()
             biometryConfiguration.authenticateOnBiometricKeySetup =
                 this.context.testName === 'androidTestCreateActivationRequiresSetupPrompt'

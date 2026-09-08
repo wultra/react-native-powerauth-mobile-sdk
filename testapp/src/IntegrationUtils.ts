@@ -62,15 +62,11 @@ export async function isBiometryEnrolledForTests(sdk: PowerAuth): Promise<boolea
     return status.systemStatus === PowerAuthBiometryStatus.OK
 }
 
-/**
- * Most E2E tests still run PowerAuth protocol V3.3. Focused protocol-4 suites can
- * select another algorithm explicitly.
- */
 export function createE2ePowerAuthConfiguration(
     configuration: string,
     baseEndpointUrl: string,
     offlineAuthenticationCodeComponentLength: number = 8,
-    algorithm: PowerAuthAlgorithm = PowerAuthAlgorithm.LEGACY
+    algorithm?: PowerAuthAlgorithm
 ): PowerAuthConfiguration {
     return new PowerAuthConfiguration(
         configuration,
@@ -140,21 +136,26 @@ export class IntegrationHelper {
 
     /** Cleanup after the test is finished */
     async cleanup(): Promise<void> {
-        if (await this._sdk.isConfigured() == false) {
-            return
+        const isConfigured = await this._sdk.isConfigured()
+        let activationId = this._createdActivation?.registrationId
+
+        if (isConfigured) {
+            activationId = await this._sdk.getActivationIdentifier() ?? activationId
+
+            // REMOVE ACTIVATION LOCALLY
+            await this._sdk.removeActivationLocal()
         }
 
-        const activationId = await this._sdk.getActivationIdentifier()
-
-        // REMOVE ACTIVATION LOCALLY
-        await this._sdk.removeActivationLocal()
-
-        // REMOVE ACTIVATION ON THE SERVER
-        if (activationId != null) {
-            await this.removeRegistration(activationId)
+        try {
+            // REMOVE ACTIVATION ON THE SERVER
+            if (activationId != null) {
+                await this.removeRegistration(activationId)
+            }
+        } finally {
+            if (isConfigured) {
+                await this._sdk.deconfigure()
+            }
         }
-
-        await this._sdk.deconfigure()
     }
 
     // --- COMPLEX TASKS ---
@@ -241,7 +242,11 @@ export class IntegrationHelper {
     }
 
     async removeRegistration(registrationId?: string): Promise<void> {
-        await this.makeCall("", `${AppConfig.cloudServerUrl}/v2/registrations/${registrationId ?? this._createdActivation?.registrationId}`, "DELETE")
+        const id = registrationId ?? this._createdActivation?.registrationId
+        await this.makeCall("", `${AppConfig.cloudServerUrl}/v2/registrations/${id}`, "DELETE")
+        if (id === this._createdActivation?.registrationId) {
+            this._createdActivation = undefined
+        }
     }
 
     async getRegistrationDetail(registrationId?: string): Promise<RegistrationDetail> {
@@ -324,7 +329,7 @@ export class IntegrationHelper {
     // --- HELPER FUNCTIONS ---
 
     async callSDKEndpoint(endpoint: string, body: string, headers?: Headers, method: string = "POST"): Promise<any> {
-        const url = this.sdkEndpointUrl(endpoint)
+        const url = await this.sdkEndpointUrl(endpoint)
         const request: RequestInit = {
             body: body,
             headers: headers,
@@ -339,7 +344,7 @@ export class IntegrationHelper {
 
     /** Calls an SDK endpoint and returns the response body as Base64. */
     async callRawSDKEndpoint(endpoint: string, bodyBase64: string, headers?: Headers, method: string = "POST"): Promise<string> {
-        const url = this.sdkEndpointUrl(endpoint)
+        const url = await this.sdkEndpointUrl(endpoint)
         const bodyBytes = Buffer.from(bodyBase64, 'base64')
         // RN should accept Uint8Array and forward it as a native base64 body, but Android
         // fetch fails with "Network request failed" for typed-array bodies in e2e. A binary
@@ -355,8 +360,10 @@ export class IntegrationHelper {
         return Buffer.from(await response.arrayBuffer()).toString('base64')
     }
 
-    private sdkEndpointUrl(endpoint: string): string {
-        return `${AppConfig.enrollmentUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`
+    private async sdkEndpointUrl(endpoint: string): Promise<string> {
+        const configuration = await this._sdk.configuration
+        const apiVersion = await this._sdk.currentAlgorithm === PowerAuthAlgorithm.LEGACY ? 'pa/v3' : 'pa/v4'
+        return `${configuration.baseEndpointUrl.replace(/\/+$/, '')}/${apiVersion}/${endpoint.replace(/^\/+/, '')}`
     }
 
     private async makeCall(payload: string | undefined, url: string, method: string = "POST"): Promise<any> {
