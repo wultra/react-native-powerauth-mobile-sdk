@@ -18,7 +18,7 @@ const isValidBase64 = (b64: string): boolean => {
         // Buffer throws for invalid base64 in RN polyfill as well
         Buffer.from(b64, 'base64');
         return true;
-    } catch (_) {
+    } catch {
         return false;
     }
 }
@@ -55,7 +55,7 @@ export class PowerAuth_CryptoUtilsTest extends TestWithActivation {
 
         // 5) Padding boundaries: 1, 2, 3, 4, 5 bytes of input
         const testLengths = [1, 2, 3, 4, 5, 30, 31, 32, 33, 127, 128, 1024];
-        let previousHash: string | undefined = undefined;
+        let previousHash: string | undefined;
         for (const len of testLengths) {
             const bytes = Buffer.alloc(len);
             // Fill bytes deterministically so that tests are stable across runs

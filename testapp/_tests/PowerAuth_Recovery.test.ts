@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode, PowerAuthRecoveryActivationData } from "react-native-powerauth-mobile-sdk";
+import { PowerAuthActivation, PowerAuthActivationState, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -49,7 +49,7 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
         expect(newStatus.registrationStatus).toBe('ACTIVE')
 
         // Fetch status
-        let sdkStatus = await this.sdk.fetchActivationStatus()
+        const sdkStatus = await this.sdk.fetchActivationStatus()
         expect(sdkStatus.state).toBe(PowerAuthActivationState.ACTIVE)
     }
 
@@ -64,7 +64,7 @@ export class PowerAuth_RecoveryTests extends TestWithActivation {
         const rd = await this.sdk.activationRecoveryData(this.credentials.knowledge)
 
         // We can confirm already confirmed RC, so let's confirm RC created as a part of activation
-        let result = await this.sdk.confirmRecoveryCode(rd!.recoveryCode, this.credentials.knowledge)
+        const result = await this.sdk.confirmRecoveryCode(rd!.recoveryCode, this.credentials.knowledge)
         expect(result.alreadyConfirmed).toBe(true)
 
         await expect(async () => this.sdk.confirmRecoveryCode('AAAAA-AAAAA-AAAAA-AAAAA', this.credentials.knowledge)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})

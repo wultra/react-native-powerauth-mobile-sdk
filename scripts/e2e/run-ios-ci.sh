@@ -175,16 +175,6 @@ abort_with_logs() {
 }
 
 install_rn_pods() {
-  echo "[e2e] Installing RN iOS Ruby gems..."
-  if ! command -v bundle >/dev/null 2>&1; then
-    echo "[e2e] Installing Bundler..."
-    gem install bundler -v 2.6.2
-  fi
-
-  if ! (cd testapp && bundle check); then
-    (cd testapp && bundle install)
-  fi
-
   echo "[e2e] Installing RN iOS CocoaPods..."
   (
     cd testapp/ios
@@ -194,6 +184,9 @@ install_rn_pods() {
       bundle exec pod install --repo-update --verbose
   )
 }
+
+# shellcheck source=scripts/ci/ios-compiler-cache.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../ci/ios-compiler-cache.sh"
 
 install_and_launch_rn_app() {
   app_path="$1"
@@ -327,7 +320,10 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     abort_with_logs
   fi
 
-  RN_DERIVED_DATA_PATH="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios.XXXXXX")"
+  # Keep compiler paths stable across fresh runners; DerivedData is never cached.
+  RN_DERIVED_DATA_PATH="${E2E_RN_DERIVED_DATA_PATH:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/powerauth-rn-ios}"
+  RN_BUILD_SETTINGS=("ARCHS=$(uname -m)")
+  configure_rn_compiler_cache
   echo "[e2e] Building RN iOS app for simulator ${SIM_ID}..."
   if ! xcodebuild \
     -workspace testapp/ios/testapp.xcworkspace \
@@ -335,6 +331,8 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     -configuration Debug \
     -destination "id=${SIM_ID}" \
     -derivedDataPath "${RN_DERIVED_DATA_PATH}" \
+    -showBuildTimingSummary \
+    "${RN_BUILD_SETTINGS[@]}" \
     build; then
     echo "[e2e] ERROR: Failed to build the RN iOS app."
     abort_with_logs
