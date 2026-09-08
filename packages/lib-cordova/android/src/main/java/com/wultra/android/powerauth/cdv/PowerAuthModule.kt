@@ -91,16 +91,16 @@ class PowerAuthModule : CordovaPlugin() {
                 removeActivationLocal(args, promise)
                 return true
             }
-            "requestGetSignature" -> {
-                requestGetSignature(args, promise)
+            "authenticationHeaderForRequestWithParams" -> {
+                authenticationHeaderForRequestWithParams(args, promise)
                 return true
             }
-            "requestSignature" -> {
-                requestSignature(args, promise)
+            "authenticationHeaderForRequestWithBody" -> {
+                authenticationHeaderForRequestWithBody(args, promise)
                 return true
             }
-            "offlineSignature" -> {
-                offlineSignature(args, promise)
+            "offlineAuthenticationCode" -> {
+                offlineAuthenticationCode(args, promise)
                 return true
             }
             "verifyServerSignedData" -> {
@@ -172,8 +172,8 @@ class PowerAuthModule : CordovaPlugin() {
                 removeAllLocalTokens(args, promise)
                 return true
             }
-            "generateHeaderForToken" -> {
-                generateHeaderForToken(args, promise)
+            "generateAuthenticationHeaderForToken" -> {
+                generateAuthenticationHeaderForToken(args, promise)
                 return true
             }
             // ACTIVATION CODE UTIL METHODS
@@ -318,32 +318,33 @@ class PowerAuthModule : CordovaPlugin() {
         })
     }
 
-    private fun requestGetSignature(args: JSONArray, promise: Promise) {
+    private fun authenticationHeaderForRequestWithParams(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val authMap = args.getReadableMap(1)
-        val uriId = args.getOptString(2)
-        val params = args.getOptReadableMap(3)
-        powerAuthJsModule.requestGetSignature(instanceId, authMap, uriId, params, promise)
+        val method = args.getString(2)
+        val uriId = args.getString(3)
+        val params = args.getOptReadableMap(4)
+        powerAuthJsModule.authenticationHeaderForRequestWithParams(instanceId, authMap, method, uriId, params, promise)
     }
 
-    private fun requestSignature(args: JSONArray, promise: Promise) {
+    private fun authenticationHeaderForRequestWithBody(args: JSONArray, promise: Promise) {
         cordova.threadPool.execute(Runnable {
             val instanceId = args.getString(0)
             val authMap = args.getReadableMap(1)
-            val method = args.getOptString(2)
-            val uriId = args.getOptString(3)
+            val method = args.getString(2)
+            val uriId = args.getString(3)
             val body = args.getOptString(4)
-            powerAuthJsModule.requestSignature(instanceId, authMap, method, uriId, body, promise)
+            powerAuthJsModule.authenticationHeaderForRequestWithBody(instanceId, authMap, method, uriId, body, promise)
         })
     }
 
-    private fun offlineSignature(args: JSONArray, promise: Promise) {
+    private fun offlineAuthenticationCode(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val authMap = args.getReadableMap(1)
         val uriId = args.getString(2)
         val body = args.getOptString(3)
         val nonce = args.getString(4)
-        powerAuthJsModule.offlineSignature(instanceId, authMap, uriId, body, nonce, promise)
+        powerAuthJsModule.offlineAuthenticationCode(instanceId, authMap, uriId, body, nonce, promise)
     }
 
     private fun verifyServerSignedData(args: JSONArray, promise: Promise) {
@@ -464,10 +465,10 @@ class PowerAuthModule : CordovaPlugin() {
         powerAuthJsModule.removeAllLocalTokens(instanceId, promise)
     }
 
-    private fun generateHeaderForToken(args: JSONArray, promise: Promise) {
+    private fun generateAuthenticationHeaderForToken(args: JSONArray, promise: Promise) {
         val instanceId = args.getString(0)
         val tokenName = args.getString(1)
-        powerAuthJsModule.generateHeaderForToken(instanceId, tokenName, promise)
+        powerAuthJsModule.generateAuthenticationHeaderForToken(instanceId, tokenName, promise)
     }
 
     // ACTIVATION CODE UTIL METHODS
