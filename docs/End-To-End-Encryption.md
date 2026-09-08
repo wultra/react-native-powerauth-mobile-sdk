@@ -1,104 +1,67 @@
 # End-To-End Encryption
 
-The PowerAuth SDK supports two basic modes of end-to-end encryption, based on the ECIES scheme:
+PowerAuth SDK supports two end-to-end encryption scopes:
 
-- In an "application" scope, the encryptor can be acquired and used during the whole lifetime of the application.
-- In an "activation" scope, the encryptor can be acquired only if `PowerAuth` instance has a valid activation. The encryptor created for this mode is cryptographically bound to the parameters agreed during the activation process. You can combine this encryption with [PowerAuth Symmetric Multi-Factor Signature](Data-Signing.md#symmetric-multi-factor-signature) in "encrypt-then-sign" mode.
+- In the **application** scope, encryption is available without an activation.
+- In the **activation** scope, encryption requires a valid activation. You can combine this scope with a [PowerAuth Symmetric Multi-Factor Signature](Data-Signing.md#symmetric-multi-factor-signature) in encrypt-then-sign mode.
 
-For both scenarios, you need to acquire `PowerAuthEncryptor` object, which will then provide interface for the request encryption and the response decryption.
+Use one `PowerAuthEncryptor` for one request and response exchange. The same object encrypts the request and decrypts its response.
 
-The following steps are typically required for a full E2EE request and response processing:
+```typescript
+// Use getEncryptorForApplicationScope() when the endpoint does not require an activation.
+const encryptor = await powerAuth.getEncryptorForApplicationScope()
 
-1. Acquire the right encryptor from the `PowerAuth` instance. For example:
-   ```typescript
-   // Encryptor for "application" scope.
-   const encryptor = powerAuth.getEncryptorForApplicationScope()
-   // ...or similar, for an "activation" scope.
-   const encryptor = powerAuth.getEncryptorForActivationScope()
-   ```
+try {
+    // Serialize the request payload to Base64-encoded bytes.
+    const requestBodyBase64 = btoa(JSON.stringify({
+        message: "Hello World!",
+        code: "HELLO"
+    }))
+    const encryptedRequest = await encryptor.encryptRequest(requestBodyBase64)
 
-1. Encode the plaintext body into format that best fit your purpose. You can use plain string or Base64 encoded data:
-   ```typescript
-   let requestData: string;
-   let requestDataFormat: PowerAuthDataFormat;
-   if (binaryData) {
-       // If you need encrypt the binary data, such as image, then you can encode it as BASE64
-       requestFormat = 'BASE64';
-       requestData = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==';
-   } else {
-       // Reqular JSON request can be encrypted as a plain string
-       requestDataFormat = 'UTF8'
-       requestData = JSON.stringify({
-          message: "Hello World!",
-          code: "HELLO"
-       });
-   }
-   ```
+    // Add every encryption header returned by the native SDK.
+    const headers = new Headers()
+    encryptedRequest.requestHeaders.forEach(header => {
+        headers.set(header.name, header.value)
+    })
 
-1. Encrypt the plaintext request data:
-   ```typescript
-   // 2nd parameter is optional, if not provided, then 'UTF8' is applied.
-   const encryptedData = await encryptor.encryptRequest(requestData, requestDataFormat);
-   // Keep decryptor object for later to properly decrpyt response from the server.
-   // The decryptor is always unique for each request.
-   const decryptor = encryptedData.decryptor;
-   // Cryptogram contains encrypted data
-   const cryptogram = encryptedData.cryptogram;
-   // Content of HTTP header
-   const header = encryptedData.header;
-   ```
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: Uint8Array.from(atob(encryptedRequest.requestBody), c => c.charCodeAt(0))
+    })
 
-1. Construct and execute the HTTP request:
-   ```typescript
-   // Headers
-   const headers = new Headers([[header.key, header.value]]);
-   // Request body
-   // This may depend on the endpoint, but the cryptogram is typically serialized as-is, or it's embedded
-   // in another structure, such as:
-   // {
-   //     requestObject: cryptogram
-   // }
-   const body = JSON.stringify(cryptogram);
-   // Fetch data
-   const response = await fetch(serviceBaseUrl + '/hello/service', body, headers);
-   if (!response.ok) {
-      throw new Error(`HTTP status code ${response.status}`)
-   }
-   // The response object is typically also PowerAuthCryptogram
-   const responseObject = await response.json();
-   ```
+    const responseBytes = new Uint8Array(await response.arrayBuffer())
+    let responseBinary = ""
+    for (let i = 0; i < responseBytes.length; i++) {
+        responseBinary += String.fromCharCode(responseBytes[i])
+    }
+    const clearResponseBase64 = await encryptor.decryptResponse(btoa(responseBinary))
+    const responseObject = JSON.parse(atob(clearResponseBase64))
+} finally {
+    await encryptor.release()
+}
+```
 
-1. Now decrypt the response. Depending on what type of data you expect, you can specify `'UTF8'` or `'BASE64'` output data format:
-   ```typescript
-   const responseDataFormat = 'UTF8';
-   // 2nd parameter is optional, if not provided, then 'UTF8' is applied.
-   const decryptedData = await decryptor.decryptResponse(responseObject, responseDataFormat);
-   const responseObject = JSON.parse(decryptedData);
-   ```
+Acquire a new encryptor for each exchange. After `encryptRequest()`, the object cannot encrypt another request. After `decryptResponse()`, the object is no longer valid.
 
-## Sign encrypted request
+The JavaScript bridge represents request and response bytes as Base64 strings. Decode `encryptedRequest.requestBody` before sending it on the network, and pass the raw response bytes back as Base64. Do not JSON-encode the encrypted HTTP body.
 
-If the endpoint require also [PowerAuth Signature](Data-Signing.md#symmetric-multi-factor-signature), then you have to encrypt your request data first, construct the request body with using the cryptogram and then sign the whole body. In this case, the encryption header can be omitted, because the header from the signature calculation contains already enough information to process the request on the server.
+If the server returns a non-success HTTP status, process the PowerAuth REST error response. Do not pass an unencrypted error response to `decryptResponse()`.
 
-## Native object lifetime
+Implementing application-specific end-to-end encryption is a non-trivial task. Contact Wultra before deployment if you need guidance for your scenario.
 
-Both, `PowerAuthEncryptor` and `PowerAuthDecryptor` implementations use underlying native objects with the limited lifetime behind the scene. The following rules are applied:
+## Sign an Encrypted Request
 
-- `PowerAuthEncryptor`
-  - Releases its internal native object after 5 minutes of inactivity. If used again, then native object is re-created automatically.
-  - Object is released when its parent `PowerAuth` instance is deconfigured. After this, encryption is no loner available.
-  - If encryptor is activation scoped and parent `PowerAuth` instance has no activation, then encryption is not available.
-  - You can use `canEncryptRequest()` function to test whether the encryption is available.
+To use encrypt-then-sign mode, encrypt the request first and calculate the PowerAuth signature over the encrypted request body bytes.
 
-- `PowerAuthDecryptor`
-  - Decryption is always one-time operation, so by callling `decryptResponse()` is underlying native object released.
-  - Object is released when its parent `PowerAuth` instance is deconfigured.
-  - If decryptor is activation scoped and parent `PowerAuth` instance has no activation, then decryption is not available.
-  - Releases its internal native object after 5 minutes of inactivity.
-  - You can use `canDecryptResponse()` function to test whether the decryption is available.
+For an activation-scoped encryptor, the authentication header contains the information that the server needs to decrypt the request. In this case, do not also add `encryptedRequest.requestHeaders`.
 
-Both objects provide `release()` function to manually release the underlying native object.
+## Native Object Lifetime
 
-## Read Next
+The encryptor owns a native object:
 
-- [Secure Vault](Secure-Vault.md)
+- Call `release()` in a `finally` block.
+- Repeated calls to `release()` are safe.
+- Deconfiguration of the parent `PowerAuth` instance invalidates the encryptor.
+- A released, expired, or consumed encryptor reports `PowerAuthErrorCode.INVALID_NATIVE_OBJECT` if used again.

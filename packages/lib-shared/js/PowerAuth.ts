@@ -529,8 +529,8 @@ export class PowerAuth {
      * encryptor is cryptographically bounded to the PowerAuth configuration, so it can be used with or
      * without a valid activation.
      */
-    getEncryptorForApplicationScope(): PowerAuthEncryptor {
-        return new PowerAuthEncryptorImpl('APPLICATION', this.instanceId)
+    getEncryptorForApplicationScope(): Promise<PowerAuthEncryptor> {
+        return PowerAuthEncryptorImpl.acquire('APPLICATION', this.instanceId)
     }
 
     /**
@@ -538,8 +538,8 @@ export class PowerAuth {
      * encryptor is cryptographically bounded to a device's activation, so it can be used only when this
      * instance has a valid activation.
      */
-    getEncryptorForActivationScope(): PowerAuthEncryptor {
-        return new PowerAuthEncryptorImpl('ACTIVATION', this.instanceId)
+    getEncryptorForActivationScope(): Promise<PowerAuthEncryptor> {
+        return PowerAuthEncryptorImpl.acquire('ACTIVATION', this.instanceId)
     }
 
     /**

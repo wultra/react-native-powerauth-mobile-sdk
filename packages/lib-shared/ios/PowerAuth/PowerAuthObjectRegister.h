@@ -30,6 +30,15 @@ PAJS_MODULE_BASIC(PowerAuthObjectRegister)
 - (nonnull NSString*) registerObject:(nonnull id)object
                                  tag:(nullable NSString*)tag
                             policies:(NSArray<NSNumber*>*_Nonnull)policies;
+
+/**
+ Register a child object only if the expected owner is still registered under ownerId.
+ The identity check and insertion are atomic.
+ */
+- (nullable NSString*) registerObject:(nonnull id)object
+                       ifOwnerMatches:(nonnull id)expectedOwner
+                              ownerId:(nonnull NSString*)ownerId
+                             policies:(NSArray<NSNumber*>*_Nonnull)policies;
 /**
  Register object with application specific identifier. Returns NO if such object is already
  registered.
@@ -85,6 +94,12 @@ PAJS_MODULE_BASIC(PowerAuthObjectRegister)
  Return instance of just removed object or nil if no such object was found.
  */
 - (nullable id) removeObjectWithId:(nonnull NSString*)objectId expectedClass:(nonnull Class)expectedClass;
+
+/** Immediately release an object regardless of its type or expiration policy. */
+- (nullable id) releaseObjectWithId:(nonnull NSString*)objectId;
+
+/** Immediately release an object of the expected type, regardless of expiration policy. */
+- (nullable id) releaseObjectWithId:(nonnull NSString*)objectId expectedClass:(nonnull Class)expectedClass;
 
 /**
  Validate whether provided object is a valid application specific object identifier. The object ID can be invalid
