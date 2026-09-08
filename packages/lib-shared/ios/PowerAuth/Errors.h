@@ -47,7 +47,6 @@ PA_EXTERN_C NSString * __nonnull const EC_UNKNOWN_ERROR;
 PA_EXTERN_C NSString * __nonnull const EC_REACT_NATIVE_ERROR;
 PA_EXTERN_C NSString * __nonnull const EC_INVALID_ACTIVATION_OBJECT;
 PA_EXTERN_C NSString * __nonnull const EC_INVALID_ACTIVATION_CODE;
-PA_EXTERN_C NSString * __nonnull const EC_INVALID_RECOVERY_CODE;
 PA_EXTERN_C NSString * __nonnull const EC_INVALID_CHARACTER;
 PA_EXTERN_C NSString * __nonnull const EC_LOCAL_TOKEN_NOT_AVAILABLE;
 PA_EXTERN_C NSString * __nonnull const EC_CANNOT_GENERATE_TOKEN;

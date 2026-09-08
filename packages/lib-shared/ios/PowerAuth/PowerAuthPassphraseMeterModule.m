@@ -21,7 +21,7 @@
 
 #include "pin_tester.h"
 
-@import PowerAuthCore;
+@import PowerAuth2;
 
 @implementation PowerAuthPassphraseMeterModule
 {

@@ -16,6 +16,8 @@
 
 #import "Utilities.h"
 
+@class PowerAuthSecureData;
+
 /**
  Object that wrap NSData to JavaScript.
  */
@@ -27,7 +29,13 @@
 ///   - cleanup: Do data cleanup if possible.
 - (nonnull instancetype) initWithData:(nonnull NSData*)data cleanup:(BOOL)cleanup;
 
+/// Initialize object with data already protected by PowerAuth SDK.
+- (nonnull instancetype) initWithSecureData:(nonnull PowerAuthSecureData*)data;
+
 /// Contains managed data object.
 @property (nonatomic, readonly, strong, nonnull) NSData * data;
+
+/// Contains managed secure data when the object represents a cryptographic key.
+@property (nonatomic, readonly, strong, nullable) PowerAuthSecureData * secureData;
 
 @end

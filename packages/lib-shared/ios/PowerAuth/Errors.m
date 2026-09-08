@@ -48,7 +48,6 @@ NSString * const EC_UNKNOWN_ERROR               = @"UNKNOWN_ERROR";
 NSString * const EC_REACT_NATIVE_ERROR          = @"REACT_NATIVE_ERROR";
 NSString * const EC_INVALID_ACTIVATION_OBJECT   = @"INVALID_ACTIVATION_OBJECT";
 NSString * const EC_INVALID_ACTIVATION_CODE     = @"INVALID_ACTIVATION_CODE";
-NSString * const EC_INVALID_RECOVERY_CODE       = @"INVALID_RECOVERY_CODE";
 NSString * const EC_INVALID_CHARACTER           = @"INVALID_CHARACTER";
 NSString * const EC_LOCAL_TOKEN_NOT_AVAILABLE   = @"LOCAL_TOKEN_NOT_AVAILABLE";
 NSString * const EC_CANNOT_GENERATE_TOKEN       = @"CANNOT_GENERATE_TOKEN";
@@ -132,10 +131,6 @@ void ProcessError(NSError * error, RCTPromiseRejectBlock reject)
                     NSString * serverResponseMessage = responseObject.responseObject.message;
                     if (serverResponseMessage) {
                         newUserInfo[@"serverResponseMessage"] = serverResponseMessage;
-                    }
-                    NSInteger recoveryPukIndex = responseObject.responseObject.currentRecoveryPukIndex;
-                    if (recoveryPukIndex > 0) {
-                        newUserInfo[@"currentRecoveryPukIndex"] = @(recoveryPukIndex);
                     }
                 }
                 // Finally, build a new error

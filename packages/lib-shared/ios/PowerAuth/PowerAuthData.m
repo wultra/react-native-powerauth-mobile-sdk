@@ -17,9 +17,13 @@
 #import "PowerAuthData.h"
 #import "Utilities.h"
 
+#import <PowerAuth2/PowerAuthSecureData.h>
+
 @implementation PowerAuthData
 {
     BOOL _cleanup;
+    NSData * _data;
+    PowerAuthSecureData * _secureData;
 }
 
 - (instancetype) initWithData:(nonnull NSData*)data
@@ -31,6 +35,25 @@
         _cleanup = cleanup;
     }
     return self;
+}
+
+- (instancetype) initWithSecureData:(nonnull PowerAuthSecureData*)data
+{
+    self = [super init];
+    if (self) {
+        _secureData = data;
+    }
+    return self;
+}
+
+- (NSData*) data
+{
+    return _secureData ? _secureData.sensitiveData : _data;
+}
+
+- (PowerAuthSecureData*) secureData
+{
+    return _secureData;
 }
 
 - (void) dealloc
