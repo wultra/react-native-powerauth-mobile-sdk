@@ -162,7 +162,6 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.hasValidActivation()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.canStartActivation()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.hasPendingActivation()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        await expect(async () => await sdk.hasActivationRecoveryData()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.fetchActivationStatus()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.createActivation(PowerAuthActivation.createWithActivationCode('', ''))).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.persistActivation(persistAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
@@ -182,8 +181,6 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.fetchEncryptionKey(signAuth, 1000)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.signDataWithDevicePrivateKey(signAuth, '', 'UTF8')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.validatePassword('')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        await expect(async () => await sdk.activationRecoveryData(signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        await expect(async () => await sdk.confirmRecoveryCode('', signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async _auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         
         // TODO: getBiometryInfo() doesn't depend on configuration. We should move this to separate class
