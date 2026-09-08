@@ -31,6 +31,9 @@ export async function resolveAuthentication(instanceId: string, authentication: 
     // Force cast to private interface and patch possible legacy object.
     const correctAuth = authentication.convertLegacyObject(false)
     const privateAuth = (correctAuth as any as PowerAuthRawAuthentication)
+    if (correctAuth.isActivationPersist) {
+        return correctAuth
+    }
     // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
     // if underlying data object is no longer valid.
     if (privateAuth.isReusable && privateAuth.biometryKeyId !== undefined) {

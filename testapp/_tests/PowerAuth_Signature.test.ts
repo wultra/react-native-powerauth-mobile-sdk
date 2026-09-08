@@ -94,12 +94,21 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
         }
     }
 
+    async testAuthenticationPurpose() {
+        const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
+
+        await expect(async () => await this.sdk.fetchEncryptionKey(persistAuth, 0))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
+            .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+    }
+
     async testWrongPassword() {
         let status = await this.sdk.fetchActivationStatus()
         const maxFailCount = status.maxFailCount
         for (let i = 1; i <= maxFailCount; i++) {
             expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
-            await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
+            await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.NETWORK_ERROR})
             status = await this.sdk.fetchActivationStatus()
             expect(status.failCount).toBe(i)
             expect(status.remainingAttempts).toBe(maxFailCount - i)

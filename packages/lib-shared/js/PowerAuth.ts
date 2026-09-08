@@ -31,7 +31,6 @@ import { PowerAuthUserInfo } from "./model/PowerAuthUserInfo";
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { resolveAuthentication } from "./internal/AuthResolver";
 import { PasswordType, PowerAuthPassword } from './model/PowerAuthPassword';
-import { PowerAuthActivationCodeUtil } from './PowerAuthActivationCodeUtil';
 import { PowerAuthRawAuthentication, toPowerAuthRawPassword } from './model/PowerAuthNativeTypes';
 import { buildSharingConfiguration, PowerAuthSharingConfigurationType } from './model/PowerAuthSharingConfiguration';
 import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPendingOperation';
@@ -228,6 +227,9 @@ export class PowerAuth {
 
     /**
      * Persists activation that was created and store related data using provided authentication instance.
+     * On Android, biometric persistence requires a biometric prompt when
+     * `authenticateOnBiometricKeySetup` is enabled. If disabled, biometric key setup proceeds
+     * without displaying a prompt.
      * 
      * @param authentication An authentication instance specifying what factors should be stored.
      */
@@ -442,24 +444,6 @@ export class PowerAuth {
      */
     async validatePassword(password: PasswordType): Promise<void> {
         return NativeWrapper.thisCall("validatePassword", this.instanceId, await toPowerAuthRawPassword(password));
-    }
-
-    /**
-     * Function verify activation code scanned from QR code whethner it's formally valid and is issued by
-     * the PowerAuth Server.
-     * @param activationCode Activation code to scan.
-     * @returns true if activation code is valid and is issued by PowerAuth Server.
-     */
-    async verifyScannedActivationCode(activationCode: string): Promise<boolean> {
-        try {
-            const code = await PowerAuthActivationCodeUtil.parseActivationCode(activationCode)
-            if (!code.activationSignature) {
-                return false
-            }
-            return await this.verifyServerSignedData(code.activationCode, code.activationSignature, true)
-        } catch {
-            return false
-        }
     }
 
     /**
