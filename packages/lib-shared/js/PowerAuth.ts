@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PowerAuthConfiguration, PowerAuthConfigurationType, buildConfiguration } from './model/PowerAuthConfiguration';
+import { PowerAuthConfigurationType, buildConfiguration } from './model/PowerAuthConfiguration';
 import { buildClientConfiguration, PowerAuthClientConfigurationType } from './model/PowerAuthClientConfiguration';
 import { buildBiometryConfiguration, PowerAuthBiometryConfigurationType } from './model/PowerAuthBiometryConfiguration';
 import { buildKeychainConfiguration, PowerAuthKeychainConfigurationType } from './model/PowerAuthKeychainConfiguration';
@@ -39,35 +39,44 @@ import { PowerAuthExternalPendingOperation } from './model/PowerAuthExternalPend
 import { PowerAuthDataFormat } from "./model/PowerAuthDataFormat"
 import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizationService';
 import { PowerAuthUtils } from "./PowerAuthUtils";
+import { PowerAuthAlgorithm } from "./model/PowerAuthAlgorithm";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
  */
 export class PowerAuth {
 
-    /** Configuration used to configure this instance of class. */
-    get configuration(): PowerAuthConfigurationType | undefined {
-        return configRegister.get(this.instanceId)?.configuration
+    /** Effective native configuration used to configure this instance. */
+    get configuration(): Promise<PowerAuthConfigurationType> {
+        return NativeWrapper.thisCall("getConfiguration", this.instanceId)
     }
 
-    /** Client configuration used to configure this instance of class. */
-    get clientConfiguration(): PowerAuthClientConfigurationType | undefined {
-        return configRegister.get(this.instanceId)?.clientConfiguration
+    /** Algorithm currently used for communication with the PowerAuth Server. */
+    get currentAlgorithm(): Promise<PowerAuthAlgorithm> {
+        return NativeWrapper.thisCall("getCurrentAlgorithm", this.instanceId)
     }
 
-    /** Biometry configuration used to configure this instance of class. */
-    get biometryConfiguration(): PowerAuthBiometryConfigurationType | undefined {
-        return configRegister.get(this.instanceId)?.biometryConfiguration
+    /**
+     * Effective native client configuration used to configure this instance.
+     * Input-only HTTP headers and basic-auth credentials are not returned.
+     */
+    get clientConfiguration(): Promise<PowerAuthClientConfigurationType> {
+        return NativeWrapper.thisCall("getClientConfiguration", this.instanceId)
     }
 
-    /** Keychain configuration used to configure this instance of class. */
-    get keychainConfiguration(): PowerAuthKeychainConfigurationType | undefined {
-        return configRegister.get(this.instanceId)?.keychainConfiguration
+    /** Effective native biometry configuration used to configure this instance. */
+    get biometryConfiguration(): Promise<PowerAuthBiometryConfigurationType> {
+        return NativeWrapper.thisCall("getBiometryConfiguration", this.instanceId)
     }
 
-    /** Sharing configuration used to configure this instance of class. */
-    get sharingConfiguration(): PowerAuthSharingConfigurationType | undefined {
-        return configRegister.get(this.instanceId)?.sharingConfiguration
+    /** Effective Android keychain configuration, or `undefined` on Apple platforms. */
+    get keychainConfiguration(): Promise<PowerAuthKeychainConfigurationType | undefined> {
+        return NativeWrapper.thisCallNull("getKeychainConfiguration", this.instanceId)
+    }
+
+    /** Apple sharing configuration, or `undefined` when sharing is not configured or on Android. */
+    get sharingConfiguration(): Promise<PowerAuthSharingConfigurationType | undefined> {
+        return NativeWrapper.thisCallNull("getSharingConfiguration", this.instanceId)
     }
 
     /** Object for managing access tokens. */
@@ -86,6 +95,25 @@ export class PowerAuth {
     constructor(public readonly instanceId: string) {
         this.tokenStore = new PowerAuthTokenStore(instanceId);
         this.timeSynchronizationService = new PowerAuthTimeSynchronizationService(instanceId);
+    }
+
+    /**
+     * Removes local data for an instance that cannot be configured due to an incompatible data format.
+     * Use the same values that were used when configuration failed.
+     */
+    static cleanupInstanceData(
+        instanceId: string,
+        configuration: PowerAuthConfigurationType,
+        keychainConfiguration?: PowerAuthKeychainConfigurationType,
+        sharingConfiguration?: PowerAuthSharingConfigurationType
+    ): Promise<void> {
+        return NativeWrapper.staticCall(
+            "cleanupInstanceData",
+            instanceId,
+            buildConfiguration(configuration),
+            buildKeychainConfiguration(keychainConfiguration),
+            buildSharingConfiguration(sharingConfiguration)
+        )
     }
 
     /** If this PowerAuth instance was configured. */
@@ -125,7 +153,7 @@ export class PowerAuth {
         enableUnsecureTraffic: boolean
     ): Promise<boolean>;
 
-    configure(param1: PowerAuthConfiguration | string, ...args: Array<any>): Promise<boolean> {
+    configure(param1: PowerAuthConfigurationType | string, ...args: Array<any>): Promise<boolean> {
         let configuration: PowerAuthConfigurationType
         let clientConfiguration: PowerAuthClientConfigurationType
         let biometryConfiguration: PowerAuthBiometryConfigurationType
@@ -146,19 +174,11 @@ export class PowerAuth {
             keychainConfiguration = buildKeychainConfiguration(args[2])
             sharingConfiguration = buildSharingConfiguration(args[3])
         }
-        configRegister.set(this.instanceId, {
-            configuration: configuration,
-            clientConfiguration: clientConfiguration,
-            biometryConfiguration: biometryConfiguration,
-            keychainConfiguration: keychainConfiguration,
-            sharingConfiguration: sharingConfiguration
-        })
         return NativeWrapper.thisCallBool("configure", this.instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration)
     }
 
     /** Deconfigures the instance */
     deconfigure(): Promise<boolean> {
-        configRegister.delete(this.instanceId)
         return NativeWrapper.thisCallBool("deconfigure", this.instanceId);
     }
 
@@ -594,19 +614,3 @@ export class PowerAuth {
         return (await resolveAuthentication(this.instanceId, authentication, false)).toRawAuthentication()
     }
 }
-
-/**
- * Interface containing all configurations associated to `PowerAuth` instance.
- */
-interface InstanceConfigurations {
-    configuration: PowerAuthConfigurationType
-    clientConfiguration: PowerAuthClientConfigurationType
-    biometryConfiguration: PowerAuthBiometryConfigurationType
-    keychainConfiguration: PowerAuthKeychainConfigurationType
-    sharingConfiguration: PowerAuthSharingConfigurationType
-}
-
-/**
- * Configurations register.
- */
-const configRegister = new Map<string, InstanceConfigurations>()

@@ -29,6 +29,7 @@ export * from './PowerAuthStorageUtils';
 export * from './model/PowerAuthActivation';
 export * from './model/PowerAuthActivationState';
 export * from './model/PowerAuthActivationStatus';
+export * from './model/PowerAuthAlgorithm';
 export * from './model/PowerAuthAuthentication';
 export * from './model/PowerAuthAuthorizationHttpHeader';
 export * from './model/PowerAuthBiometryConfiguration';

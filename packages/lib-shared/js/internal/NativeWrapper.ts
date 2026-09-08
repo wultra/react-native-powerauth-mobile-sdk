@@ -290,24 +290,44 @@ export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T
  * @returns Pretty string created from arguments array.
  */
 function prettyArgs(fname: string, args: any[]): string {
-    // Format a copy: tracing must never alter the arguments sent to the native SDK.
-    args = [...args]
+    const sanitizedArgs = [...args]
     switch (fname) {
         case 'changePassword':
         case 'unsafeChangePassword': 
-            args[1] = args[2] = '***' 
+            sanitizedArgs[1] = sanitizedArgs[2] = '***'
             break
         case 'validatePassword':
         case 'addBiometryFactor':
-            args[1] = '***'
+            sanitizedArgs[1] = '***'
             break
+        case 'configure': {
+            const clientConfiguration = sanitizedArgs[2]
+            if (clientConfiguration) {
+                sanitizedArgs[2] = {
+                    ...clientConfiguration,
+                    customHttpHeaders: Array.isArray(clientConfiguration.customHttpHeaders)
+                        ? clientConfiguration.customHttpHeaders.map((header: any) => ({
+                            ...header,
+                            value: '***'
+                        }))
+                        : clientConfiguration.customHttpHeaders,
+                    basicHttpAuthentication: clientConfiguration.basicHttpAuthentication
+                        ? {
+                            username: '***',
+                            password: '***'
+                        }
+                        : clientConfiguration.basicHttpAuthentication
+                }
+            }
+            break
+        }
         default:
             break
     }
     // Authentication has already been converted to a plain (possibly frozen) bridge object.
     // Redact by field name so both current raw values and deprecated authentication objects
     // are covered, including passwords nested inside argument objects.
-    const v = JSON.stringify(args, (key, value) => {
+    const v = JSON.stringify(sanitizedArgs, (key, value) => {
         if (key === 'password' || key === 'userPassword' || key === 'biometryKeyId') {
             return value === undefined ? undefined : '***'
         }
