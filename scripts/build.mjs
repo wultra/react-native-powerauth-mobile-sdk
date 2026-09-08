@@ -188,6 +188,7 @@ function stageReactNative(version) {
   )
 
   for (const fileName of [
+    "Package.swift",
     "react-native-powerauth-mobile-sdk.podspec",
     "react-native.config.js",
     "tsconfig.json",

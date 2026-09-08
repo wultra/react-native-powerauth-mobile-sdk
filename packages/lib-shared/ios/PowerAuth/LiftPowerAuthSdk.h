@@ -15,7 +15,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <PowerAuth2/PowerAuthSDK.h>
+@import PowerAuth2;
 #import <React/RCTBridge.h>
 
 #ifdef __cplusplus

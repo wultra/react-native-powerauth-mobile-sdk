@@ -16,7 +16,7 @@
 
 #import "Errors.h"
 
-#import <PowerAuth2/PowerAuthRestApiErrorResponse.h>
+@import PowerAuth2;
 
 // MARK: - Error constatns
 
