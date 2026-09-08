@@ -450,10 +450,7 @@ class PowerAuthJsModule(
                         decodedBody
                     )
                 if (header.isValid) {
-                    val returnMap: WritableMap = Arguments.createMap()
-                    returnMap.putString("key", header.key)
-                    returnMap.putString("value", header.value)
-                    promise.resolve(returnMap)
+                    promise.resolve(getHttpHeaderObject(header.key, header.value))
                 } else {
                     promise.reject(
                         Errors.getErrorCodeFromError(header.powerAuthErrorCode),
@@ -1001,10 +998,7 @@ class PowerAuthJsModule(
             override fun run(sdk: PowerAuthSDK) {
                 sdk.tokenStore.generateAuthenticationHeader(context, tokenName, object: IGenerateTokenHeaderListener {
                     override fun onGenerateTokenHeaderSucceeded(header: PowerAuthHttpHeader) {
-                        val map: WritableMap = Arguments.createMap()
-                        map.putString("key", header.key)
-                        map.putString("value", header.value)
-                        promise.resolve(map)
+                        promise.resolve(getHttpHeaderObject(header.key, header.value))
                     }
 
                     override fun onGenerateTokenHeaderFailed(t: Throwable) {
@@ -1537,13 +1531,17 @@ class PowerAuthJsModule(
          */
         private fun getHttpHeaderObject(header: PowerAuthAuthorizationHttpHeader): ReadableMap? {
             if (header.isValid) {
-                val map: WritableMap = Arguments.createMap()
-                map.putString("key", header.key)
-                map.putString("value", header.value)
-                return map
+                return getHttpHeaderObject(header.key, header.value)
             } else {
                 return null
             }
+        }
+
+        private fun getHttpHeaderObject(key: String, value: String): ReadableMap {
+            val map: WritableMap = Arguments.createMap()
+            map.putString("key", key)
+            map.putString("value", value)
+            return map
         }
 
         /**

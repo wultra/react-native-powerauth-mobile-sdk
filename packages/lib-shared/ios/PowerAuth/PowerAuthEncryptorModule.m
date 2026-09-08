@@ -220,6 +220,11 @@ PAJS_METHOD_START(encryptRequest,
             return;
         }
         PowerAuthEncryptor * coreDecryptor = [encryptor takeCoreEncryptor];
+        if (!coreDecryptor) {
+            [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
+            reject(EC_INVALID_ENCRYPTOR, @"Encryptor is no longer available", nil);
+            return;
+        }
         PowerAuthJsEncryptor * jsDecryptor = [[PowerAuthJsEncryptor alloc] initWithEncryptor:coreDecryptor powerAuthInstanceId:encryptor.powerAuthInstanceId activationScoped:encryptor.activationScoped];
         [_objectRegister removeObjectWithId:encryptorId expectedClass:[PowerAuthJsEncryptor class]];
         NSArray * policies = @[ RP_AFTER_USE(1), RP_EXPIRE(DECRYPTOR_KEEP_ALIVE_TIME) ];
@@ -328,7 +333,7 @@ PAJS_METHOD_END
     return self;
 }
 
-- (PowerAuthEncryptor*) takeCoreEncryptor
+- (PowerAuthEncryptor * _Nullable) takeCoreEncryptor
 {
     PowerAuthEncryptor * encryptor = _coreEncryptor;
     _coreEncryptor = nil;

@@ -26,7 +26,7 @@
                        powerAuthInstanceId:(nonnull NSString*)powerAuthInstanceId
                           activationScoped:(BOOL)activationScoped;
 
-- (nonnull PowerAuthEncryptor*) takeCoreEncryptor;
+- (nullable PowerAuthEncryptor*) takeCoreEncryptor;
 
 @property (nonatomic, readonly) BOOL activationScoped;
 @property (nonatomic, readonly, strong, nullable) PowerAuthEncryptor * coreEncryptor;
