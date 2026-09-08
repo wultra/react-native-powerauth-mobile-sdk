@@ -342,5 +342,10 @@ function prettyArgs(fname: string, args: any[]): string {
 }
 
 function prettyResult(fname: string, result: any): string {
-    return fname === 'beginPasswordChange' ? '"***"' : JSON.stringify(result)
+    if (fname === 'beginPasswordChange' ||
+        fname === 'deriveSecureVaultKey' ||
+        fname === 'fetchEncryptionKey') {
+        return '"***"'
+    }
+    return JSON.stringify(result)
 }
