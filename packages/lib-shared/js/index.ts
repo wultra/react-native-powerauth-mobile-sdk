@@ -44,6 +44,7 @@ export * from './model/PowerAuthSharingConfiguration';
 export * from './model/PowerAuthExternalPendingOperation';
 export * from './model/PowerAuthHttpHeader';
 export * from './model/PowerAuthPassword';
+export { PowerAuthPasswordChangeData } from './model/PowerAuthPasswordChangeData';
 export * from './model/PowerAuthEncryptor';
 export * from './model/PowerAuthDataFormat';
 export * from './model/PowerAuthUserInfo';

@@ -42,6 +42,10 @@ class Constants {
      */
     static final int PASSWORD_KEY_KEEP_ALIVE_TIME   = 5 * 60 * 1_000;
     /**
+     * Maximum lifetime of password-change data if the operation is abandoned.
+     */
+    static final int PASSWORD_CHANGE_DATA_EXPIRE_TIME = 5 * 60 * 1_000;
+    /**
      * Time interval in milliseconds to keep encryptor object valid in memory.
      */
     static final int ENCRYPTOR_KEY_KEEP_ALIVE_TIME  = 5 * 60 * 1_000;

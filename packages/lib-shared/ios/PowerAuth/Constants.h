@@ -24,6 +24,9 @@
 /// in memory.
 #define PASSWORD_KEY_KEEP_ALIVE_TIME    (5 * 60 * 1000)
 
+/// Maximum lifetime of password-change data if the operation is abandoned.
+#define PASSWORD_CHANGE_DATA_EXPIRE_TIME (5 * 60 * 1000)
+
 /// Time interval in milliseconds to keep encryptor object alive in memory
 #define ENCRYPTOR_KEEP_ALIVE_TIME       (5 * 60 * 1000)
 
