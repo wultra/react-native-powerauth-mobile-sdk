@@ -135,18 +135,35 @@ PAJS_METHOD_START(configure,
     // Keychain specific
     keychainConfig.keychainAttribute_AccessGroup = CAST_TO(keychainConfiguration[@"accessGroupName"], NSString);
     keychainConfig.keychainAttribute_UserDefaultsSuiteName = CAST_TO(keychainConfiguration[@"userDefaultsSuiteName"], NSString);
-    // Biometry
-    keychainConfig.linkBiometricItemsToCurrentSet = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber).boolValue;
-    keychainConfig.allowBiometricAuthenticationFallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber).boolValue;
+
+    PowerAuthBiometricConfiguration * biometricConfig = [[PowerAuthBiometricConfiguration alloc] init];
+    NSNumber * invalidateAfterChange = CAST_TO(biometryConfiguration[@"invalidateBiometricFactorAfterChange"], NSNumber);
+    if (!invalidateAfterChange) {
+        invalidateAfterChange = CAST_TO(biometryConfiguration[@"linkItemsToCurrentSet"], NSNumber);
+    }
+    if (invalidateAfterChange) {
+        biometricConfig.invalidateBiometricFactorAfterChange = invalidateAfterChange.boolValue;
+    }
+    NSNumber * fallbackToDevicePasscode = CAST_TO(biometryConfiguration[@"fallbackToDevicePasscode"], NSNumber);
+    if (fallbackToDevicePasscode) {
+        biometricConfig.allowFallbackToDevicePasscode = fallbackToDevicePasscode.boolValue;
+    }
     
     // Now register the instance in the thread safe manner.
+    __block NSError * initializationError = nil;
     BOOL registered = [_objectRegister registerObjectWithId:instanceId tag:instanceId policies:@[RP_MANUAL()] objectFactory:^id {
-        return [[PowerAuthSDK alloc] initWithConfiguration:config keychainConfiguration:keychainConfig clientConfiguration:clientConfig];
+        return [[PowerAuthSDK alloc] initWithConfiguration:config
+                                    biometricConfiguration:biometricConfig
+                                       clientConfiguration:clientConfig
+                                     keychainConfiguration:keychainConfig
+                                                     error:&initializationError];
     }];
     
     if (registered) {
         // Resolve success
         resolve(@YES);
+    } else if (initializationError) {
+        ProcessError(initializationError, reject);
     } else {
         // Instance is already configured
         reject(EC_REACT_NATIVE_ERROR, @"PowerAuth object with this instanceId is already configured.", nil);
@@ -357,6 +374,8 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
     if (!auth) return;
     
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -543,21 +562,13 @@ PAJS_METHOD_START(addBiometryFactor,
                   PAJS_ARGUMENT(foo, id))
 {
     PA_BLOCK_START
-    // Workaround for native SDK. We're expectint MISSING or PEDNING_ACTIVATION
-    // but native SDK prioritize biometry-related error in this situation.
-    if (![powerAuth hasValidActivation]) {
-        reject(EC_MISSING_ACTIVATION, nil, nil);
-        return;
-    }
-    if ([powerAuth hasPendingActivation]) {
-        reject(EC_PENDING_ACTIVATION, nil, nil);
-        return;
-    }
-    PowerAuthCorePassword * corePassword = UsePassword(password, _objectRegister, reject);
+    PowerAuthCorePassword * corePassword = [UsePassword(password, _objectRegister, reject) copyToImmutable];
     if (!corePassword) {
         return;
     }
     [powerAuth addBiometryFactorWithCorePassword:corePassword callback:^(NSError * error) {
+        // Keep the immutable password alive until the asynchronous operation completes.
+        (void)corePassword;
         if (error) {
             ProcessError(error, reject);
         } else {
@@ -581,15 +592,53 @@ PAJS_METHOD_START(removeBiometryFactor,
                   PAJS_ARGUMENT(instanceId, NSString*))
 {
     PA_BLOCK_START
-    if ([powerAuth removeBiometryFactor]) {
-        resolve(nil);
-    } else {
-        if (![powerAuth hasBiometryFactor]) {
-            reject(EC_BIOMETRY_NOT_CONFIGURED, @"Biometry not configured in this PowerAuth instance", nil);
+    [powerAuth removeBiometryFactorWithCallback:^(NSError * error) {
+        if (error) {
+            ProcessError(error, reject);
         } else {
-            reject(EC_REACT_NATIVE_ERROR, @"Failed to remove biometry factor", nil);
+            resolve(nil);
         }
+    }];
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(getBiometricStatus,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    PowerAuthBiometricStatus * status = powerAuth.biometricStatus;
+    NSString * biometryType;
+    NSString * systemStatus;
+    switch (status.biometryType) {
+        case PowerAuthBiometricAuthenticationType_TouchID: biometryType = @"FINGERPRINT"; break;
+        case PowerAuthBiometricAuthenticationType_FaceID: biometryType = @"FACE"; break;
+        case PowerAuthBiometricAuthenticationType_None:
+        default: biometryType = @"NONE"; break;
     }
+    switch (status.systemStatus) {
+        case PowerAuthBiometricAuthenticationStatus_Available: systemStatus = @"OK"; break;
+        case PowerAuthBiometricAuthenticationStatus_NotEnrolled: systemStatus = @"NOT_ENROLLED"; break;
+        case PowerAuthBiometricAuthenticationStatus_NotAvailable: systemStatus = @"NOT_AVAILABLE"; break;
+        case PowerAuthBiometricAuthenticationStatus_NotSupported: systemStatus = @"NOT_SUPPORTED"; break;
+        case PowerAuthBiometricAuthenticationStatus_Lockout: systemStatus = @"LOCKOUT"; break;
+        default: systemStatus = @"NOT_AVAILABLE"; break;
+    }
+    resolve(@{
+        @"isAuthenticationWithBiometricsAvailable": @(status.isAuthenticationWithBiometricsAvailable),
+        @"isBiometricFactorConfigured": @(status.isBiometricFactorConfigured),
+        @"systemStatus": systemStatus,
+        @"biometryType": biometryType
+    });
+    PA_BLOCK_END
+}
+PAJS_METHOD_END
+
+PAJS_METHOD_START(isAuthenticationWithBiometricsAvailable,
+                  PAJS_ARGUMENT(instanceId, NSString*))
+{
+    PA_BLOCK_START
+    resolve(@(powerAuth.isAuthenticationWithBiometricsAvailable));
     PA_BLOCK_END
 }
 PAJS_METHOD_END
@@ -648,6 +697,8 @@ PAJS_METHOD_START(fetchEncryptionKey,
     if (!auth) return;
     
     [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(PowerAuthSecureData * encryptionKey, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (encryptionKey) {
             resolve([encryptionKey.sensitiveData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
         } else {
@@ -678,6 +729,8 @@ PAJS_METHOD_START(signDataWithDevicePrivateKey,
     }
     
     [powerAuth signDataWithDevicePrivateKey:auth data:decodedData callback:^(NSData * signature, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (signature) {
             resolve([RCTConvert NSString:[signature base64EncodedStringWithOptions:0]]);
         } else {
@@ -708,69 +761,39 @@ PAJS_METHOD_START(validatePassword,
 }
 PAJS_METHOD_END
 
-///// Function validate the status of biometry before the biometry is used. The function also
-///// validate whether activation is present, or whether biometry key is configured.
-///// - Parameters:
-/////   - sdk: PowerAuthSDK instance
-/////   - reject: Reject promise in case that biometry cannot be used.
-///// - Returns: YES in case biometry can be used.
-- (BOOL) validateBiometryStatusBeforeUse:(PowerAuthSDK*)sdk reject:(RCTPromiseRejectBlock)reject
-{
-    // Determine the biometry state in advance. This is due to fact that iOS impl.
-    // doesn't support all biometry related error codes such as Android.
-    // This will be fixed in 1.8.x release, so this code will be obsolete.
-    NSString * errorCode = nil;
-    NSString * errorMessage = nil;
-    switch ([PowerAuthKeychain biometricAuthenticationInfo].currentStatus) {
-        case PowerAuthBiometricAuthenticationStatus_Available:
-            if ([sdk hasValidActivation] && ![sdk hasBiometryFactor]) {
-                // Has activation, but biometry factor is not set
-                errorCode = EC_BIOMETRY_NOT_CONFIGURED; errorMessage = @"Biometry factor is not configured";
-            }
-            break;
-        case PowerAuthBiometricAuthenticationStatus_NotEnrolled:
-            errorCode = EC_BIOMETRY_NOT_ENROLLED; errorMessage = @"Biometry is not enrolled on device";
-            break;
-        case PowerAuthBiometricAuthenticationStatus_NotSupported:
-            errorCode = EC_BIOMETRY_NOT_SUPPORTED; errorMessage = @"Biometry is not supported";
-            break;
-        case PowerAuthBiometricAuthenticationStatus_NotAvailable:
-            errorCode = EC_BIOMETRY_NOT_AVAILABLE; errorMessage = @"Biometry is not available";
-            break;
-        case PowerAuthBiometricAuthenticationStatus_Lockout:
-            errorCode = EC_BIOMETRY_LOCKOUT; errorMessage = @"Biometry is locked out";
-            break;
-        default:
-            break;
-    }
-    if (errorCode) {
-        reject(errorCode, errorMessage, nil);
-        return NO;
-    } else {
-        return YES;
-    }
-}
-
 PAJS_METHOD_START(authenticateWithBiometry,
                   PAJS_ARGUMENT(instanceId, NSString*)
                   PAJS_ARGUMENT(prompt, PAJS_NONNULL_ARGUMENT NSDictionary*)
                   PAJS_BOOL_ARGUMENT(makeReusable))
 {
     PA_BLOCK_START
-    if (![self validateBiometryStatusBeforeUse:powerAuth reject:reject]) {
+    NSString * promptMessage = GetNSStringValueFromDict(prompt, @"promptMessage");
+    if (promptMessage.length == 0) {
+        reject(EC_WRONG_PARAMETER, @"Biometric prompt message is required on iOS.", nil);
         return;
     }
-    NSString * promptMessage = GetNSStringValueFromDict(prompt, @"promptMessage");
-    NSString * cancelButton = GetNSStringValueFromDict(prompt, @"cancelButton");
-    NSString * fallbackButton = GetNSStringValueFromDict(prompt, @"fallbackButton");
+    NSString * cancelButton = GetNSStringValueFromDict(prompt, @"cancelButtonTitle");
+    if (!cancelButton) {
+        cancelButton = GetNSStringValueFromDict(prompt, @"cancelButton");
+    }
+    NSString * fallbackButton = GetNSStringValueFromDict(prompt, @"fallbackButtonTitle");
+    if (!fallbackButton) {
+        fallbackButton = GetNSStringValueFromDict(prompt, @"fallbackButton");
+    }
     LAContext * context = [[LAContext alloc] init];
     context.localizedReason = promptMessage;
     context.localizedCancelTitle = cancelButton;
     context.localizedFallbackTitle = fallbackButton ? fallbackButton : @""; // empty string hides the button
     [powerAuth authenticateUsingBiometryWithContext:context callback:^(PowerAuthAuthentication * authentication, NSError * error) {
         if (authentication) {
-            // Allocate native object
-            PowerAuthData * managedData = [[PowerAuthData alloc] initWithSecureData:authentication.customBiometryKey];
+            PowerAuthSecureData * customBiometryKey = authentication.customBiometryKey;
+            if (!customBiometryKey) {
+                reject(EC_REACT_NATIVE_ERROR, @"Biometric key is missing after successful authentication.", nil);
+                return;
+            }
+            // Own an independent secure-data copy beyond the callback authentication lifetime.
+            PowerAuthSecureData * keyCopy = [[PowerAuthSecureData alloc] initWithData:customBiometryKey.sensitiveData];
+            PowerAuthData * managedData = [[PowerAuthData alloc] initWithSecureData:keyCopy];
             // If reusable authentication is going to be created, then "keep alive" release policy is applied.
             // Basically, the data will be available up to 10 seconds from the last access.
             // If authentication is not reusable, then dispose biometric key after its 1st use. We still need
@@ -779,10 +802,21 @@ PAJS_METHOD_START(authenticateWithBiometry,
                         ? @[ RP_KEEP_ALIVE(BIOMETRY_KEY_KEEP_ALIVE_TIME) ]
                         : @[ RP_AFTER_USE(1), RP_EXPIRE(BIOMETRY_KEY_KEEP_ALIVE_TIME) ];
             
-            NSString * managedId = [self->_objectRegister registerObject:managedData tag:instanceId policies:releasePolicy];
-            resolve(managedId);
+            NSString * managedId = [self->_objectRegister registerObject:managedData
+                                                          ifOwnerMatches:powerAuth
+                                                                 ownerId:instanceId
+                                                                policies:releasePolicy];
+            if (managedId) {
+                resolve(managedId);
+            } else {
+                reject(EC_INSTANCE_NOT_CONFIGURED, @"PowerAuth instance is no longer configured.", nil);
+            }
         } else {
-            ProcessError(error, reject);
+            if (error) {
+                ProcessError(error, reject);
+            } else {
+                reject(EC_REACT_NATIVE_ERROR, @"Biometric authentication returned no result.", nil);
+            }
         }
     }];
     PA_BLOCK_END
@@ -840,6 +874,8 @@ PAJS_METHOD_START(requestAccessToken,
     if (!auth) return;
     
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
+        // Keep authentication and its sensitive values alive until the asynchronous operation completes.
+        (void)auth;
         if (error || token == nil) {
             ProcessError(error, reject);
         } else {
@@ -1122,26 +1158,20 @@ PAJS_METHOD_END
             return [PowerAuthAuthentication possessionWithCorePassword:password];
         } else if (useBiometry) {
             NSString * biometryKeyId = GetNSStringValueFromDict(dict, @"biometryKeyId");
-            if (biometryKeyId) {
-                PowerAuthData * biometryKeyData = [_objectRegister useObjectWithId:biometryKeyId expectedClass:[PowerAuthData class]];
-                if (biometryKeyData) {
-                    PowerAuthSecureData * ownedBiometryKey = [[PowerAuthSecureData alloc] initWithData:biometryKeyData.secureData.sensitiveData];
-                    return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:ownedBiometryKey customPossessionKey:nil];
-                } else {
-                    reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
-                    return nil;
-                }
+            if (!biometryKeyId) {
+                reject(EC_WRONG_PARAMETER, @"Biometric signing requires a pre-authorized biometry key.", nil);
+                return nil;
             }
-            NSString * biometryPrompt = GetValueAtPathFromDict(dict, @"biometricPrompt.promptMessage", [NSString class]);
-            NSString * cancelButton   = GetValueAtPathFromDict(dict, @"biometricPrompt.promptTitle", [NSString class]);
-            if (biometryPrompt || cancelButton) {
-                LAContext * context = [[LAContext alloc] init];
-                context.localizedReason = biometryPrompt;
-                context.localizedCancelTitle = cancelButton;
-                return [PowerAuthAuthentication possessionWithBiometryContext:context];
-            } else {
-                return [PowerAuthAuthentication possessionWithBiometry];
+            PowerAuthSecureData * biometryKey = [_objectRegister useObjectWithId:biometryKeyId
+                                                                  expectedClass:[PowerAuthData class]
+                                                                      transform:^id(PowerAuthData * data) {
+                return [data.secureData copy];
+            }];
+            if (biometryKey) {
+                return [PowerAuthAuthentication possessionWithBiometryWithCustomBiometryKey:biometryKey];
             }
+            reject(EC_INVALID_NATIVE_OBJECT, @"Biometric key in PowerAuthAuthentication object is no longer valid.", nil);
+            return nil;
         } else {
             return [PowerAuthAuthentication possession];
         }

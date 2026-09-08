@@ -60,7 +60,8 @@ To sign data with biometry simply create different authentication object:
 const auth = PowerAuthAuthentication.biometry({
     promptMessage: 'Authenticate to process payment',   // Required on both platforms
     promptTitle: 'Authenticate',    // Android specific, not used on iOS
-    fallbackButton: 'Enter PIN'     // iOS specific, if provided, then the fallback button is displayed
+    promptSubtitle: 'Payment authorization', // Android specific, optional
+    fallbackButtonTitle: 'Enter PIN' // iOS specific, if provided, then the fallback button is displayed
 });
 
 // Sign POST call with provided data made to URI with custom identifier "/payment/create"
