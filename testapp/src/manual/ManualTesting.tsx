@@ -1,5 +1,5 @@
 // Copyright 2026 Wultra s.r.o. Licensed under the Apache License, Version 2.0.
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Button, Modal, Switch, Text, View } from 'react-native';
 import {
   PowerAuth,
@@ -11,7 +11,7 @@ import {
   PowerAuthUtils,
 } from 'react-native-powerauth-mobile-sdk';
 import { ManualAction, ManualState, actions, disabledReason } from './actions';
-import { Field, Page, Result, describe, styles } from './components';
+import { ConfigurationStatus, Dropdown, Field, Page, Result, describe, styles } from './components';
 import {
   initialEnrollmentUrl,
   initialSdkConfiguration,
@@ -28,16 +28,18 @@ const instances = ['dev', 'testID2', 'invalid-instance'];
 
 export function ManualTesting({ onBack }: { onBack(): void }) {
   const sdk = useRef(new PowerAuth('dev'));
-  const lock = useRef(false);
+  const lock = useRef(true);
   const alive = useRef(true);
   const [instance, setInstance] = useState('dev');
   const [algorithm, setAlgorithm] = useState<PowerAuthAlgorithm>();
   const [authenticateSetup, setAuthenticateSetup] = useState(true);
   const [sdkConfig, setSdkConfig] = useState(initialSdkConfiguration);
-  const [endpoint, setEndpoint] = useState(initialEnrollmentUrl);
+  const [loadedFromServer, setLoadedFromServer] = useState(false);
+  const endpoint = initialEnrollmentUrl;
+  const [configurationKnown, setConfigurationKnown] = useState(false);
   const [state, setState] = useState<Snapshot>({ configured: false });
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState('Initialize the SDK to begin manual testing.');
+  const [busy, setBusy] = useState(true);
+  const [result, setResult] = useState('');
   const [error, setError] = useState(false);
   const [statusErrors, setStatusErrors] = useState('');
   const [dialog, setDialog] = useState<ManualAction>();
@@ -45,15 +47,9 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
   const [actionRunning, setActionRunning] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
-
-  async function refresh() {
+  const refresh = useCallback(async (fetchStatus = true) => {
     const configured = await sdk.current.isConfigured();
+    setConfigurationKnown(true);
     if (!configured) {
       setState({ configured: false });
       setStatusErrors('');
@@ -70,7 +66,7 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
     }
     // A status fetch can discover or complete an upgrade; read local state afterwards.
     await read('hasValidActivation', () => sdk.current.hasValidActivation());
-    if (next.hasValidActivation) {
+    if (fetchStatus && next.hasValidActivation) {
       await read('activationStatus', () => sdk.current.fetchActivationStatus());
     }
     await Promise.all([
@@ -88,7 +84,25 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
       setState(next);
       setStatusErrors(errors.join('\n'));
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    alive.current = true;
+    refresh(false).catch((e) => {
+      if (alive.current) {
+        setError(true);
+        setResult(describe(e));
+      }
+    }).finally(() => {
+      lock.current = false;
+      if (alive.current) {
+        setBusy(false);
+      }
+    });
+    return () => {
+      alive.current = false;
+    };
+  }, [refresh]);
 
   async function run(label: string, operation: () => Promise<unknown>, refreshAfter = true) {
     if (lock.current) {
@@ -115,6 +129,7 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
         } catch (e) {
           setStatusErrors(describe(e));
           setState({ configured: false });
+          setConfigurationKnown(false);
         }
       }
       lock.current = false;
@@ -153,9 +168,9 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
         }
         sdk.current = new PowerAuth(next);
         setInstance(next);
-        setState({ configured: false });
-        setStatusErrors('');
-        return `Selected ${next}. Initialize SDK to load its stored activation.`;
+        setConfigurationKnown(false);
+        await refresh(false);
+        return `Selected ${next}.`;
       },
       false,
     );
@@ -238,17 +253,15 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
   const sections = [...new Set(actions.map((action) => action.section))];
   return (
     <Page title="PowerAuth Testing App" busy={busy || !!dialog || showResult} onBack={onBack}>
-      <Text style={styles.heading}>Manual testing</Text>
-      <Text style={styles.text}>Select PowerAuth Instance: {instance}</Text>
-      {instances.map((id) => (
-        <Button
-          key={id}
-          title={id === instance ? `${id} (selected)` : id}
-          disabled={busy || id === instance}
-          onPress={() => switchInstance(id)}
-        />
-      ))}
-      {!state.configured && (
+      <Dropdown
+        label="PowerAuth instance"
+        value={instance}
+        options={instances.map((id) => ({ value: id, label: id }))}
+        onChange={switchInstance}
+        disabled={busy}
+      />
+      <ConfigurationStatus loadedFromServer={loadedFromServer} available={!!sdkConfig.trim()} />
+      {configurationKnown && !state.configured && (
         <>
           <Button
             title="Get Configuration from Server"
@@ -257,30 +270,24 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
               run(
                 'Get Configuration from Server',
                 async () => {
-                  setSdkConfig(await loadServerConfiguration());
-                  return 'Configuration loaded. Review the enrollment URL, then Initialize SDK.';
+                  setSdkConfig(await loadServerConfiguration(sdk.current));
+                  setLoadedFromServer(true);
+                  return 'Configuration loaded.';
                 },
                 false,
               )
             }
           />
-          <Field
-            label="SDK configuration"
-            value={sdkConfig}
-            onChange={setSdkConfig}
-            multiline
+          <Dropdown
+            label="Communication algorithm"
+            value={algorithm ?? ''}
+            options={[
+              { value: '', label: 'Native default' },
+              ...Object.values(PowerAuthAlgorithm).map((item) => ({ value: item, label: item })),
+            ]}
             disabled={busy}
+            onChange={(value) => setAlgorithm(Object.values(PowerAuthAlgorithm).find((item) => item === value))}
           />
-          <Field label="Enrollment URL" value={endpoint} onChange={setEndpoint} disabled={busy} />
-          <Text style={styles.text}>Communication algorithm</Text>
-          {[undefined, ...Object.values(PowerAuthAlgorithm)].map((item) => (
-            <Button
-              key={item ?? 'default'}
-              title={`${item ?? 'Native default'}${algorithm === item ? ' (selected)' : ''}`}
-              disabled={busy}
-              onPress={() => setAlgorithm(item)}
-            />
-          ))}
           <View style={styles.row}>
             <Text style={styles.text}>Authenticate on biometric key setup</Text>
             <Switch
@@ -294,7 +301,7 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
         </>
       )}
       {busy && <ActivityIndicator accessibilityLabel="Operation in progress" />}
-      <Result text={result} error={error} />
+      {!!result && <Result text={result} error={error} />}
       {error && (
         <Button
           title="Dismiss error"
@@ -310,7 +317,7 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
       <Button
         title="Refresh Status"
         disabled={busy}
-        onPress={() => run('Refresh Status', refresh, false)}
+        onPress={() => run('Refresh Status', () => refresh(), false)}
       />
       {sections.map((section) => (
         <View key={section} style={styles.card}>
@@ -328,8 +335,6 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
                     disabled={busy || !!reason}
                     onPress={() => openAction(action)}
                   />
-                  {!!action.description && <Text style={styles.muted}>{action.description}</Text>}
-                  {!!reason && <Text style={styles.muted}>{reason}</Text>}
                 </View>
               );
             })}
@@ -372,6 +377,7 @@ export function ManualTesting({ onBack }: { onBack(): void }) {
                   key={field.key}
                   label={field.label}
                   secure={field.secure}
+                  numeric={field.numeric}
                   multiline={field.multiline}
                   value={values[field.key] ?? ''}
                   onChange={(value) => setValues((current) => ({ ...current, [field.key]: value }))}

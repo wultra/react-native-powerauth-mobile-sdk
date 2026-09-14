@@ -17,8 +17,11 @@ yarn e2e:infra:build
 Copy `.env-example` to `.env` here if needed. Set `ENROLLMENT_SERVER_URL` and either
 `SDK_CONFIG` or the existing `POWERAUTH_CLOUD_*` settings. **Get Configuration from
 Server** on both manual screens reads `/admin/applications/{appId}` exactly as the
-tests do, fills `mobileSdkConfig`, and leaves initialization to you. It does not
-create or remove activations. You can also enter the configuration and URL manually.
+tests do and shows a checkmark once the configuration is loaded. The SDK
+configuration string is never displayed. Initialization remains a separate action;
+loading configuration does not create or remove activations and is available only
+while the SDK instance is not configured. The enrollment URL comes from `.env`
+and is not displayed. Choose the instance and algorithm from dropdowns.
 
 Set `TESTAPP_MODE=manual` to open the home screen even when `TEST_COLLECTOR_URL` is
 set. Rebuild after changing `.env`.
@@ -42,8 +45,8 @@ The 39 actions cover activation creation/persistence/removal, protocol upgrades,
 biometry, password validation/change, secure vault, an activation-scoped encryption
 round trip, digital/JWS/server signatures, CSR, offline codes, request headers,
 time synchronization, and activation-code/character validation. Environment info
-and native activation/biometric state are also available. Actions show results,
-errors and missing prerequisites; input dialogs support cancellation.
+and native activation/biometric state are also available. Actions show results and
+errors; unavailable actions are disabled and input dialogs support cancellation.
 
 Start with a server-issued activation code, persist with a password or biometry,
 and exercise the actions. Test protocol upgrade with a legacy activation. Use a

@@ -4,9 +4,8 @@ import { Button } from 'react-native';
 import {
   PowerAuth,
   PowerAuthConfiguration,
-  PowerAuthConfigurationType,
 } from 'react-native-powerauth-mobile-sdk';
-import { Field, Page, Result, describe } from './components';
+import { ConfigurationStatus, Page, Result, describe } from './components';
 import {
   initialEnrollmentUrl,
   initialSdkConfiguration,
@@ -16,29 +15,33 @@ import {
 
 export function SimpleConfiguration({ onBack }: { onBack(): void }) {
   const sdk = useRef(new PowerAuth('config-instance')).current;
-  const lock = useRef(false);
-  const [busy, setBusy] = useState(false);
-  const [configuration, setConfiguration] = useState<PowerAuthConfigurationType>();
+  const lock = useRef(true);
+  const [busy, setBusy] = useState(true);
+  const [configured, setConfigured] = useState(false);
+  const [configurationKnown, setConfigurationKnown] = useState(false);
   const [sdkConfig, setSdkConfig] = useState(initialSdkConfiguration);
-  const [endpoint, setEndpoint] = useState(initialEnrollmentUrl);
+  const [loadedFromServer, setLoadedFromServer] = useState(false);
+  const endpoint = initialEnrollmentUrl;
   const [status, setStatus] = useState('Checking configuration…');
   const [error, setError] = useState(false);
   useEffect(() => {
     let active = true;
     (async () => {
-      if (await sdk.isConfigured()) {
-        const current = await sdk.configuration;
-        if (active) {
-          setConfiguration(current);
-          setStatus('Configuration loaded.');
-        }
-      } else if (active) {
-        setStatus('Instance is not configured.');
+      const current = await sdk.isConfigured();
+      if (active) {
+        setConfigured(current);
+        setConfigurationKnown(true);
+        setStatus(current ? 'SDK is configured.' : 'Instance is not configured.');
       }
     })().catch((e) => {
       if (active) {
         setError(true);
         setStatus(describe(e));
+      }
+    }).finally(() => {
+      lock.current = false;
+      if (active) {
+        setBusy(false);
       }
     });
     return () => {
@@ -53,8 +56,9 @@ export function SimpleConfiguration({ onBack }: { onBack(): void }) {
     setBusy(true);
     setError(false);
     try {
-      setSdkConfig(await loadServerConfiguration());
-      setStatus('Configuration loaded. Review the enrollment URL, then Initialize Configuration.');
+      setSdkConfig(await loadServerConfiguration(sdk));
+      setLoadedFromServer(true);
+      setStatus('Configuration loaded.');
     } catch (e) {
       setError(true);
       setStatus(describe(e));
@@ -73,7 +77,7 @@ export function SimpleConfiguration({ onBack }: { onBack(): void }) {
     try {
       if (deconfigure) {
         await sdk.deconfigure();
-        setConfiguration(undefined);
+        setConfigured(false);
         setStatus('Instance is not configured.');
       } else {
         if (!(await sdk.isConfigured())) {
@@ -82,7 +86,8 @@ export function SimpleConfiguration({ onBack }: { onBack(): void }) {
             connectionTimeout: 30,
           });
         }
-        setConfiguration(await sdk.configuration);
+        setConfigured(await sdk.isConfigured());
+        setConfigurationKnown(true);
         setStatus('Configuration loaded.');
       }
     } catch (e) {
@@ -95,26 +100,16 @@ export function SimpleConfiguration({ onBack }: { onBack(): void }) {
   }
   return (
     <Page title="Simple Configuration" busy={busy} onBack={onBack}>
-      {configuration ? (
-        <>
-          <Result
-            text={`baseEndpointUrl: ${configuration.baseEndpointUrl}\nconfiguration: ${configuration.configuration.slice(0, 50)}`}
-          />
+      <ConfigurationStatus loadedFromServer={loadedFromServer} available={!!sdkConfig.trim()} />
+      {configurationKnown && (
+        configured ? (
           <Button title="Deconfigure" disabled={busy} onPress={() => run(true)} />
-        </>
-      ) : (
-        <>
-          <Button title="Get Configuration from Server" disabled={busy} onPress={loadFromServer} />
-          <Field
-            label="SDK configuration"
-            value={sdkConfig}
-            onChange={setSdkConfig}
-            disabled={busy}
-            multiline
-          />
-          <Field label="Enrollment URL" value={endpoint} onChange={setEndpoint} disabled={busy} />
-          <Button title="Initialize Configuration" disabled={busy} onPress={() => run(false)} />
-        </>
+        ) : (
+          <>
+            <Button title="Get Configuration from Server" disabled={busy} onPress={loadFromServer} />
+            <Button title="Initialize Configuration" disabled={busy} onPress={() => run(false)} />
+          </>
+        )
       )}
       <Result text={busy ? 'Working…' : status} error={error} />
     </Page>

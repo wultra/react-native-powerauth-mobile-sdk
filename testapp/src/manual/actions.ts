@@ -30,6 +30,7 @@ export interface ManualField {
   key: string;
   label: string;
   secure?: boolean;
+  numeric?: boolean;
   multiline?: boolean;
   defaultValue?: string;
 }
@@ -49,7 +50,6 @@ export interface ManualAction {
   id: string;
   section: string;
   label: string;
-  description?: string;
   fields: ManualField[];
   requirement: ManualRequirement;
   confirmation?: string;
@@ -71,6 +71,9 @@ export function disabledReason(action: ManualAction, state: ManualState): string
     return undefined;
   }
   if (requirement === 'create') {
+    if (state.hasValidActivation) {
+      return 'Remove the existing activation first.';
+    }
     return state.hasPendingActivation
       ? 'Persist or remove the pending activation first.'
       : undefined;
@@ -99,7 +102,7 @@ export function disabledReason(action: ManualAction, state: ManualState): string
   return undefined;
 }
 
-const password: ManualField = { key: 'password', label: 'Password', secure: true };
+const password: ManualField = { key: 'password', label: 'Password', secure: true, numeric: true };
 const data: ManualField = {
   key: 'data',
   label: 'Data',
@@ -249,10 +252,14 @@ export const actions: ManualAction[] = [
     requirement: 'create',
     fields: [{ key: 'code', label: 'Activation Code' }],
     refreshState: true,
-    execute: (sdk, values) =>
-      sdk.createActivation(
+    execute: async (sdk, values) => {
+      if (await sdk.hasValidActivation()) {
+        throw new Error('Remove the existing activation first.');
+      }
+      return sdk.createActivation(
         PowerAuthActivation.createWithActivationCode(values.code, 'flutter-test'),
-      ),
+      );
+    },
   },
   ...[false, true].map(
     (bio): ManualAction => ({
@@ -287,9 +294,6 @@ export const actions: ManualAction[] = [
       requirement: bio ? 'upgradeBiometry' : 'upgrade',
       fields: [password],
       refreshState: true,
-      description: bio
-        ? 'Android migration requires Authenticate on Biometric Key Setup to be disabled in the SDK configuration. iOS preserves biometry automatically.'
-        : undefined,
       execute: (sdk, values) =>
         withPassword(sdk, values, (value) => sdk.startProtocolUpgrade(value, bio)),
     }),
@@ -327,7 +331,7 @@ export const actions: ManualAction[] = [
     fields: [],
     refreshState: true,
     confirmation:
-      'Are you sure you want to remove activation data locally? This cannot be undone and does not affect the server.',
+      'Remove local activation?',
     execute: async (sdk) => {
       await sdk.removeActivationLocal();
       return 'Local activation removed. The server activation is unchanged.';
@@ -356,7 +360,7 @@ export const actions: ManualAction[] = [
     requirement: 'biometry',
     fields: [],
     refreshState: true,
-    confirmation: 'Are you sure you want to remove the biometry factor? This cannot be undone.',
+    confirmation: 'Remove biometry factor?',
     execute: async (sdk) => {
       await sdk.removeBiometryFactor();
       return 'Biometry factor removed.';
@@ -368,8 +372,6 @@ export const actions: ManualAction[] = [
     label: 'Validate Password',
     requirement: 'active',
     fields: [password],
-    description:
-      'Validates on the server using beginPasswordChange, then releases the change data without changing the password. The Flutter reference leaves this handler unimplemented.',
     execute: (sdk, values) =>
       withPassword(sdk, values, async (value) => {
         const change = await sdk.beginPasswordChange(value);
@@ -408,8 +410,6 @@ export const actions: ManualAction[] = [
     label: 'Test Legacy Encryption Key (PWD)',
     requirement: 'active',
     fields: [password],
-    description:
-      'The legacy key API requires a legacy activation; modern activations should report UNSUPPORTED_OPERATION.',
     execute: (sdk, values) =>
       withPassword(sdk, values, async (value) => ({
         index: 1000,
@@ -426,8 +426,6 @@ export const actions: ManualAction[] = [
       label: `Test Secure Vault (${bio ? 'Bio' : 'PWD'})`,
       requirement: bio ? 'biometry' : 'active',
       fields: bio ? [] : [password],
-      description:
-        'Fetches a protocol-4 vault key, derives 32 bytes twice at index 1000, checks stable derivation and verifies release. Key bytes are never displayed.',
       execute: (sdk, values) =>
         bio
           ? secureVault(
@@ -563,8 +561,6 @@ export const actions: ManualAction[] = [
       requirement: bio ? 'biometry' : 'active',
       fields: [...(bio ? [] : [password]), uri, offlineData, nonce],
       initialValues: async () => ({ nonce: await PowerAuthCryptoUtils.randomBytes(16) }),
-      description:
-        'Data is signed as UTF-8 text, including the Base64-looking Flutter default. Literal \\n sequences become newlines.',
       execute: (sdk, values) => {
         if (!/^[A-Za-z0-9+/]{22}==$/.test(values.nonce)) {
           return Promise.reject(new Error('Nonce must encode exactly 16 bytes in Base64.'));

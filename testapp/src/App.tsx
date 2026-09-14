@@ -28,9 +28,6 @@ function Example() {
     <SafeAreaView style={styles.page}>
       <View style={styles.content}>
         <Text style={styles.title}>PowerAuth Example</Text>
-        <Text style={styles.text}>
-          Choose a manual screen to exercise the SDK one operation at a time.
-        </Text>
         <Button title="PowerAuth Testing" onPress={() => setScreen('manual')} />
         <Button title="Simple Configuration" onPress={() => setScreen('simple')} />
         <Button title="Automatic & Interactive Tests" onPress={() => setScreen('automatic')} />
@@ -42,7 +39,6 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#f5f7fa' },
   content: { flex: 1, justifyContent: 'center', padding: 24, gap: 20 },
   title: { fontSize: 28, fontWeight: '700', color: '#142438' },
-  text: { fontSize: 16, color: '#35465a' },
 });
 
 export default function App() {
