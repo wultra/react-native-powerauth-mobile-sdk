@@ -62,6 +62,11 @@ Native has no equivalent APIs. Unlike Flutter's unfinished password-validation
 handler, this app validates through `beginPasswordChange` and releases the result.
 Native object checks fail visibly when cleanup/derivation expectations are unmet.
 
+## Cordova
+
+The [Cordova testapp](../testapp-cordova/README.md) exposes the same manual actions
+through an HTML interface and shares this app’s environment configuration.
+
 ## Existing tests
 
 **Automatic & Interactive Tests** opens the existing runner and starts regular
