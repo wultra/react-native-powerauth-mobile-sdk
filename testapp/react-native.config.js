@@ -1,11 +1,9 @@
 const layout = require('../scripts/build-layout.cjs');
-const useSpm = process.env.POWERAUTH_TESTAPP_IOS_SPM === '1';
 
 module.exports = {
   project: {
     ios: {
-      sourceDir: useSpm ? './ios-spm' : './ios',
-      automaticPodsInstallation: !useSpm,
+      automaticPodsInstallation: true,
     },
   },
   dependencies: {

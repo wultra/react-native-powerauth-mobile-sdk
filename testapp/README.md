@@ -1,8 +1,8 @@
 # PowerAuth example and test app
 
 The existing testapp hosts the manual example and automatic/interactive suites,
-sharing SDK integration and configuration. The optional [SPM consumer](README-SPM.md)
-runs the same screens through Swift Package Manager.
+sharing SDK integration and configuration on Android and iOS. The iOS app uses
+CocoaPods.
 
 ## Run
 

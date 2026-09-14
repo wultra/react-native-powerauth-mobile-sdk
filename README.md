@@ -25,9 +25,7 @@ coverage.
 ## Manual example app
 
 The [React Native testapp](testapp/README.md) includes a Flutter-parity manual
-example for clicking through individual SDK operations. Use the same screens
-with the [Swift Package Manager iOS consumer](testapp/README-SPM.md) to exercise
-the SDK’s SPM integration.
+example for clicking through individual SDK operations on Android and iOS.
 
 ## License
 
