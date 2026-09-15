@@ -6,23 +6,22 @@
 - Added experimental Swift Package Manager support for iOS with React Native 0.87 or later. ([#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), [#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
 - Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
+- Updated the native PowerAuth SDK dependencies to 2.0.0. ([#447](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/447))
 - Changed end-to-end encryption to use an asynchronously acquired, single-use `PowerAuthEncryptor` for each request and response exchange. ([#466](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/466))
   - Removed the legacy cryptogram, separate decryptor, encryption data-format arguments, specialized encryption-header APIs, and `PowerAuthErrorCode.INVALID_ENCRYPTOR`.
-- Updated request and token authentication to use the native PowerAuth 2.0 APIs. ([#467](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/467))
+- Updated the JavaScript request and token authentication APIs. ([#467](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/467))
   - Added `PowerAuthHttpHeader`, request authentication header methods, asynchronous offline authentication codes, and `PowerAuthTokenStore.generateAuthenticationHeader()`.
   - Deprecated the legacy signature and token-header wrappers and changed token-header generation to propagate native errors directly.
-- Added instance-aware biometric status and availability APIs, biometric configuration and prompt options, asynchronous factor management, and reusable biometric authentication for native PowerAuth 2.0. ([#468](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/468))
+- Added instance-aware biometric status and availability APIs, biometric configuration and prompt options, asynchronous factor management, and reusable biometric authentication. ([#468](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/468))
 - Changed `groupedBiometricAuthentication()` to report all callback exceptions as `PowerAuthErrorCode.UNKNOWN_ERROR`, including `PowerAuthError` exceptions whose codes were previously preserved. ([#468](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/468))
 - Added algorithm selection, offline authentication-code component length, asynchronous native configuration getters, current algorithm reporting, and instance-data cleanup. ([#472](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/472))
-  - Changed the default algorithm to protocol-4 `PowerAuthAlgorithm.P384_L3`. Applications that need protocol 3.3 must explicitly select `PowerAuthAlgorithm.LEGACY`.
-- Added protocol-upgrade availability and pending-state checks, password-authorized upgrade execution, and upgrade result data. ([#474](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/474))
-  - Added optional biometric-factor migration on Android and automatic biometric-factor preservation on iOS.
+- Added `hasProtocolUpgradeAvailable()`, `hasPendingProtocolUpgrade()`, `startProtocolUpgrade()`, and `PowerAuthProtocolUpgradeResult`, including an option to request biometric-factor migration on Android. ([#474](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/474))
 - Added the native-backed two-step password-change API with `beginPasswordChange()`, `finishPasswordChange()`, and opaque `PowerAuthPasswordChangeData`. ([#476](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/476))
   - Deprecated the legacy one-step, validation, and unsafe password-change APIs and enforced the distinction between activation-persistence and ordinary authentication objects.
 - Added explicit-key digital signatures, JWS/JWT calculation and verification, device public-key export, and certificate signing request generation with Base64 strings for binary inputs and outputs. ([#479](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/479))
   - Deprecated the legacy server and device signature helpers.
-- Added native-backed protocol-4 Secure Vault base keys with purpose-specific derivation and explicit release. ([#480](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/480))
-  - Deprecated `fetchEncryptionKey()` while retaining support for protocol 3.3.
+- Added `fetchSecureVaultKey()` and the native-backed `PowerAuthSecureVaultKey` object with `deriveKey()` and `release()` methods. ([#480](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/480))
+  - Deprecated `fetchEncryptionKey()`.
 
 See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
 

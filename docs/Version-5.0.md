@@ -2,18 +2,20 @@
 
 This guide covers migration from PowerAuth Mobile JavaScript SDK `4.x.x` to `5.0.0` for React Native and Cordova. JavaScript SDK `5.0.0` uses native PowerAuth Mobile SDK `2.0.0` on Android and iOS, replacing native SDK `1.9.x`.
 
-Both wrappers use the same public API. JavaScript retains the deprecated compatibility APIs listed below, and binary values cross the bridge as Base64 strings. Some obsolete APIs have already been removed; source compatibility is not universal.
+Both wrappers use the same public API. The sections below describe JavaScript API changes and the application changes required by the native SDK upgrade. JavaScript retains the deprecated compatibility APIs listed below, and binary values cross the bridge as Base64 strings. Some obsolete APIs have been removed and require updates to calling code.
 
 ## Server and Algorithm Rollout
 
-| Algorithm | Protocol | Required PowerAuth Server | Cryptography |
-|---|---|---|---|
-| `PowerAuthAlgorithm.LEGACY` | 3.3 | 1.9.0 or later | P-256 |
-| `PowerAuthAlgorithm.P384` | 4.0 | 2.0.0 or later | P-384 |
-| `PowerAuthAlgorithm.P384_L3` (default) | 4.0 | 2.0.0 or later | P-384, ML-KEM-768, ML-DSA-65 |
-| `PowerAuthAlgorithm.P384_L5` | 4.0 | 2.0.0 or later | P-384, ML-KEM-1024, ML-DSA-87 |
+The new JavaScript `algorithm` option selects the algorithm used by the native SDK. Coordinate this setting with the server version and mobile SDK configuration:
 
-Omitting `algorithm`, including when using the basic `configure()` overload, now selects `P384_L3`. To keep an existing application on protocol 3.3 during rollout, select `LEGACY` explicitly:
+| Algorithm | Protocol | Required PowerAuth Server |
+|---|---|---|
+| `PowerAuthAlgorithm.LEGACY` | 3.3 | 1.9.0 or later |
+| `PowerAuthAlgorithm.P384` | 4.0 | 2.0.0 or later |
+| `PowerAuthAlgorithm.P384_L3` | 4.0 | 2.0.0 or later |
+| `PowerAuthAlgorithm.P384_L5` | 4.0 | 2.0.0 or later |
+
+When `algorithm` is omitted, including when using the basic `configure()` overload, the wrapper uses the native SDK's default. Native SDK 2.0 defaults to `P384_L3`. To keep an existing application on protocol 3.3 during rollout, select `LEGACY` explicitly:
 
 ```typescript
 await powerAuth.configure(new PowerAuthConfiguration(
@@ -29,11 +31,11 @@ If the application encrypts local data with the legacy Secure Vault key, complet
 
 Changing the configured algorithm does not immediately upgrade an existing activation. Fetch its status, check `hasProtocolUpgradeAvailable()`, then call `startProtocolUpgrade(password)`. Complete a required status fetch before using the upgraded activation. If `hasPendingProtocolUpgrade()` is true, fetch the activation status to finish the pending operation. See the [authenticated protocol upgrade flow](Requesting-Device-Activation-Status.md#authenticated-protocol-upgrade).
 
-On iOS, an existing biometric factor is preserved automatically. On Android, `startProtocolUpgrade(password, true)` requests biometric-factor migration and works only when `authenticateOnBiometricKeySetup` is `false`. Otherwise, re-enroll biometry when `biometryFactorRemoved` is true. Process the changed activation fingerprint after the upgrade.
+The native SDK preserves an existing biometric factor automatically on iOS. On Android, the wrapper's `startProtocolUpgrade(password, true)` option requests biometric-factor migration and works only when `authenticateOnBiometricKeySetup` is `false`. Re-enroll biometry when the returned `biometryFactorRemoved` is true, and process the changed activation fingerprint after the upgrade.
 
 ### Activation Data Sharing
 
-The native SDK uses a new activation-data format. For independently distributed iOS applications sharing one activation:
+Native SDK 2.0 introduces a new activation-data format. For independently distributed iOS applications sharing one activation:
 
 1. Update every participating application to the SDK backed by native 2.0 and explicitly select `LEGACY`.
 2. Allow users to update all participating applications before enabling protocol 4.
@@ -60,7 +62,9 @@ The effective client configuration omits input-only `customHttpHeaders` and `bas
 
 The deprecated `PowerAuthKeychainConfiguration.accessGroupName` and `userDefaultsSuiteName` remain input-only compatibility properties. Migrate sharing setup to `PowerAuthSharingConfiguration`; retain the original legacy values while still using them.
 
-`offlineAuthenticationCodeComponentLength` accepts integers from 4 through 8 and defaults to 8. Configuration cleanup is only for unusable instance data: use `PowerAuth.cleanupInstanceData()` with the same configuration and storage settings when handling `INVALID_ACTIVATION_DATA`. It removes local data. Do not use it to handle `UPGRADE_SDK` or as a routine upgrade step.
+Use the new `offlineAuthenticationCodeComponentLength` option to configure the length of each offline authentication-code component. It accepts integers from 4 through 8 and defaults to 8.
+
+The new `PowerAuth.cleanupInstanceData()` method removes unusable local instance data. Call it with the same configuration and storage settings when handling `INVALID_ACTIVATION_DATA`. Do not use it to handle `UPGRADE_SDK` or as a routine upgrade step.
 
 ## Request and Token Authentication
 
@@ -78,13 +82,13 @@ Token-header failures propagate native errors such as `INVALID_TOKEN`; stop rely
 
 ## Activation and Authentication Purpose
 
-Always await `persistActivation()`, which now resolves without a return value. Use `PowerAuthAuthentication.persistWithPassword()` or `persistWithPasswordAndBiometry()` for persistence, and `possession()`, `password()`, or `biometry()` for ordinary authentication. Mixing purposes rejects with `WRONG_PARAMETER`.
+`persistActivation()` now resolves without a return value; remove checks that expect a boolean result. Continue to await the operation. Native SDK 2.0 validates authentication purpose: use `PowerAuthAuthentication.persistWithPassword()` or `persistWithPasswordAndBiometry()` for persistence, and `possession()`, `password()`, or `biometry()` for ordinary authentication. Mixing purposes rejects with `WRONG_PARAMETER`.
 
-The deprecated `PowerAuthAuthentication` constructor and mutable properties (`usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle`) remain for compatibility. Replace them with the static factories instead of mutating authentication factors directly.
+The previously deprecated `PowerAuthAuthentication` constructor and mutable properties (`usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle`) remain for compatibility. If your application still uses them, switch to the static factories instead of mutating authentication factors directly.
 
-Recovery activation is no longer supported. Remove calls to `PowerAuthActivation.createWithRecoveryCode()`, `hasActivationRecoveryData()`, `activationRecoveryData()`, `confirmRecoveryCode()`, and the recovery code/PUK parsing and validation helpers. The recovery fields, `PowerAuthRecoveryActivationData`, and `PowerAuthConfirmRecoveryCodeDataResult` are removed. Use a supported [activation flow](Device-Activation.md); there is no equivalent recovery-code API.
+Native SDK 2.0 no longer supports recovery activation, and the corresponding JavaScript APIs are removed. Remove calls to `PowerAuthActivation.createWithRecoveryCode()`, `hasActivationRecoveryData()`, `activationRecoveryData()`, `confirmRecoveryCode()`, and the recovery code/PUK parsing and validation helpers. The recovery fields, `PowerAuthRecoveryActivationData`, and `PowerAuthConfirmRecoveryCodeDataResult` are also removed. Use a supported [activation flow](Device-Activation.md); there is no equivalent recovery-code API.
 
-Legacy activation QR signature suffixes are ignored. `PowerAuthActivationCodeUtil.parseActivationCode()` validates the code and strips the suffix; it does not establish the authenticity of the scanned code.
+The native SDK no longer verifies legacy activation QR signature suffixes. `PowerAuthActivationCodeUtil.parseActivationCode()` validates the code and strips the suffix; do not use its result as proof of the scanned code's authenticity.
 
 ## Password Change
 
@@ -115,7 +119,7 @@ Obtain and confirm the new password between the two steps. Release `changeData` 
 
 Use `isAuthenticationWithBiometricsAvailable()` for the combined system and activation availability check. Android prompts also support `promptSubtitle`. Always await biometric factor setup and removal; `removeBiometryFactor()` now resolves without a return value.
 
-Android uses HMAC-KDF protection for new biometric factors by default; existing factors continue to work. Set `useLegacySymmetricKey` only when new factors require legacy AES-KDF compatibility. `authenticateOnBiometricKeySetup` now defaults to `true`. Configuration changes apply to newly created factors, not existing ones.
+The native Android SDK now protects new biometric factors with HMAC-KDF; existing factors continue to work. Use the new JavaScript `useLegacySymmetricKey` option only when new factors require legacy AES-KDF compatibility. Check your setup flow: `authenticateOnBiometricKeySetup` now defaults to `true`, so adding a factor requires a biometric prompt. These settings apply to newly created factors, not existing ones.
 
 Use [grouped biometric authentication](Biometry-Setup.md#fetch-biometry-credentials-in-advance) for multiple operations after one prompt. Keep reusable credentials within the callback lifetime and execute requests sequentially.
 
@@ -130,7 +134,7 @@ Exceptions thrown inside the `groupedBiometricAuthentication()` callback now rea
 
 Encode binary inputs as Base64. `calculateDigitalSignature()` returns a Base64 signature. Unlike the legacy boolean verification result, `verifyDigitalSignature()` resolves without a value on success and rejects with `WRONG_SIGNATURE` for an invalid signature.
 
-Use a concrete key identifier for digital signatures and certificates. ML-DSA keys require `P384_L3` or `P384_L5`; generic hybrid identifiers belong to non-compact JWS. Compact JWT has a single signature and needs a concrete key. The SDK adds `calculateJwsSignature()`, `verifyJwsSignature()`, `createCertificateSigningRequest()`, and `exportDevicePublicKeys()`. See [data signing](Data-Signing.md).
+The wrapper also adds `calculateJwsSignature()`, `verifyJwsSignature()`, `createCertificateSigningRequest()`, and `exportDevicePublicKeys()`. Choose key identifiers supported by the native SDK: use concrete keys for digital signatures, certificates, and compact JWT, and generic hybrid identifiers for non-compact JWS. ML-DSA keys require `P384_L3` or `P384_L5`. See [data signing](Data-Signing.md).
 
 ## End-to-End Encryption
 
@@ -142,13 +146,13 @@ All clear and encrypted request/response bodies at the encryption bridge are Bas
 
 ## Secure Vault
 
-`fetchEncryptionKey(auth, index)` remains deprecated and works only with protocol 3.3. It returns a Base64 key. Protocol 4 uses `fetchSecureVaultKey()` to obtain a native-backed base key, followed by `deriveKey(index, size)` to produce a purpose-specific Base64 key. Release the base key in `finally`; do not use the base key itself as an encryption or MAC key. See [Secure Vault](Secure-Vault.md) for the complete flow.
+`fetchEncryptionKey(auth, index)` is now deprecated. Its result remains a Base64 key, and the underlying native operation works only with protocol 3.3. For protocol 4, replace it with `fetchSecureVaultKey()` and call `deriveKey(index, size)` on the returned `PowerAuthSecureVaultKey` to obtain a purpose-specific Base64 key. Release the base key in `finally`; do not use the base key itself as an encryption or MAC key. See [Secure Vault](Secure-Vault.md) for the complete flow.
 
 Plan local-data migration before upgrading an activation: the legacy key must be obtained and old data decrypted while protocol 3.3 is still available. After upgrading, re-encrypt with a newly derived protocol-4 key. Do not assume the new derivation produces the old key, persist derived keys, or reuse a key for multiple purposes. Design recovery from interruption before deploying the data migration.
 
 ## Activation State, Errors, and Object Lifetime
 
-- `PowerAuthActivationState.CREATED` is removed. Handle `UNKNOWN` for unrecognized server states.
+- `PowerAuthActivationState.CREATED` is removed because the native SDK no longer exposes it. Handle `UNKNOWN` for unrecognized server states.
 - `AUTHENTICATION_ERROR` and `RESPONSE_ERROR` are removed. Transport and server-response failures use `NETWORK_ERROR`; inspect `PowerAuthError.errorData` for `httpStatusCode`, `serverResponseCode`, `serverResponseMessage`, and `responseBody` when available. Recovery PUK details are no longer returned.
 - `INVALID_ENCRYPTOR` is removed. Invalid, expired, consumed, or released native handles report `INVALID_NATIVE_OBJECT`.
 - Handle new `WRONG_SIGNATURE`, `UPGRADE_SDK`, `INVALID_LOG_LEVEL`, `OTHER`, and `REACT_NATIVE_ERROR` categories where applicable.
