@@ -45,5 +45,4 @@ The derivation index must be a non-negative safe integer. The derived key size m
 
 ## Read Next
 
-- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#secure-vault)
 - [Token Based Authentication](Token-Based-Authentication.md)

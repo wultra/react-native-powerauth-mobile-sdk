@@ -157,5 +157,4 @@ await PowerAuth.cleanupInstanceData(
 
 ## Read Next
 
-- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#server-and-algorithm-rollout)
 - [Device Activation](./Device-Activation.md)

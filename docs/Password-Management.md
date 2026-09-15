@@ -43,5 +43,4 @@ remaining attempts or whether the activation is blocked.
 
 ## Read Next
 
-- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#password-change)
 - [Working with passwords securely](Secure-Password.md)

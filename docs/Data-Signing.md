@@ -159,5 +159,4 @@ try {
 
 ## Read Next
 
-- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#digital-signatures-jws-and-certificates)
 - [Password Management](Password-Management.md)
