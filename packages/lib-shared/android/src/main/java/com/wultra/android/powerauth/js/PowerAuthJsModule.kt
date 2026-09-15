@@ -327,9 +327,14 @@ class PowerAuthJsModule(
 
                         override fun onPersistActivationCancelled(userCancel: Boolean) {
                             authentication.destroy()
+                            val errorCode = if (userCancel) {
+                                PowerAuthErrorCodes.BIOMETRY_CANCEL
+                            } else {
+                                PowerAuthErrorCodes.OPERATION_CANCELED
+                            }
                             Errors.rejectPromise(
                                 promise,
-                                PowerAuthErrorException(PowerAuthErrorCodes.OPERATION_CANCELED)
+                                PowerAuthErrorException(errorCode)
                             )
                         }
                     }
