@@ -142,7 +142,7 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
             ['DNS: test.example.com', 'DNS: test2.example.com'],
             PowerAuthSignatureKeyId.DEVICE_ML_DSA
         )
-        const lines = csr.trim().split('\n')
+        const lines = csr.trim().split(/\r?\n/)
         expect(lines[0]).toBe('-----BEGIN CERTIFICATE REQUEST-----')
         expect(lines[lines.length - 1]).toBe('-----END CERTIFICATE REQUEST-----')
         const der = atob(lines.slice(1, -1).join(''))
