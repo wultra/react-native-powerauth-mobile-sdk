@@ -25,6 +25,8 @@ await powerAuth.configure(new PowerAuthConfiguration(
 
 Before selecting any protocol-4 algorithm, upgrade the server and obtain a new mobile SDK `configuration` string from it. A legacy configuration lacks the public keys required for protocol 4 and configuration will fail. Deploy the matching server configuration and client changes together.
 
+If the application encrypts local data with the legacy Secure Vault key, complete the [local-data migration preparation](#secure-vault) before upgrading the activation.
+
 Changing the configured algorithm does not immediately upgrade an existing activation. Fetch its status, check `hasProtocolUpgradeAvailable()`, then call `startProtocolUpgrade(password)`. Complete a required status fetch before using the upgraded activation. If `hasPendingProtocolUpgrade()` is true, fetch the activation status to finish the pending operation. See the [authenticated protocol upgrade flow](Requesting-Device-Activation-Status.md#authenticated-protocol-upgrade).
 
 On iOS, an existing biometric factor is preserved automatically. On Android, `startProtocolUpgrade(password, true)` requests biometric-factor migration and works only when `authenticateOnBiometricKeySetup` is `false`. Otherwise, re-enroll biometry when `biometryFactorRemoved` is true. Process the changed activation fingerprint after the upgrade.
@@ -91,6 +93,7 @@ The deprecated `changePassword()`, `changePasswordUnsafe()`, and `unsafeChangePa
 ```typescript
 const changeData = await powerAuth.beginPasswordChange(oldPassword);
 try {
+    // Obtain and confirm newPassword here before finishing the change.
     await powerAuth.finishPasswordChange(newPassword, changeData);
 } finally {
     await changeData.release(); // Safe even though finishPasswordChange() releases it.
@@ -116,12 +119,14 @@ Android uses HMAC-KDF protection for new biometric factors by default; existing 
 
 Use [grouped biometric authentication](Biometry-Setup.md#fetch-biometry-credentials-in-advance) for multiple operations after one prompt. Keep reusable credentials within the callback lifetime and execute requests sequentially.
 
+Exceptions thrown inside the `groupedBiometricAuthentication()` callback now reach the outer caller as `PowerAuthErrorCode.UNKNOWN_ERROR`, including `PowerAuthError` exceptions whose codes were previously preserved. Handle operation-specific errors inside the callback if you need their original codes. Errors raised before the callback starts retain their original codes.
+
 ## Digital Signatures, JWS, and Certificates
 
 | Deprecated API | Replacement |
 |---|---|
 | `signDataWithDevicePrivateKey(auth, data, format)` | `calculateDigitalSignature(auth, dataBase64, PowerAuthSignatureKeyId.DEVICE_EC)` |
-| `verifyServerSignedData(data, signature, masterKey)` | `verifyDigitalSignature(signatureBase64, dataBase64, keyId)` with `MASTER_EC` or `SERVER_EC` |
+| `verifyServerSignedData(data, signature, masterKey)` | `verifyDigitalSignature(signatureBase64, dataBase64, keyId)`: use `PowerAuthSignatureKeyId.MASTER_EC` when `masterKey === true`, otherwise `PowerAuthSignatureKeyId.SERVER_EC` |
 
 Encode binary inputs as Base64. `calculateDigitalSignature()` returns a Base64 signature. Unlike the legacy boolean verification result, `verifyDigitalSignature()` resolves without a value on success and rejects with `WRONG_SIGNATURE` for an invalid signature.
 
