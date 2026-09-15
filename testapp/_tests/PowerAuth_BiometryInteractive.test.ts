@@ -201,6 +201,26 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         })
     }
 
+    async testGroupedBiometricAuthenticationWrapsPowerAuthError() {
+        expect(await this.sdk.hasBiometryFactor()).toBe(true)
+        await this.showPrompt('Please authenticate for group operation.')
+
+        const originalError = new PowerAuthError(undefined, 'Request failed', PowerAuthErrorCode.NETWORK_ERROR)
+        let callbackError: PowerAuthError | undefined
+        try {
+            await this.sdk.groupedBiometricAuthentication(
+                this.credentials.biometry,
+                async () => { throw originalError }
+            )
+        } catch (error) {
+            expect(error instanceof PowerAuthError).toBe(true)
+            callbackError = error as PowerAuthError
+        }
+        expect(callbackError).toBeDefined()
+        expect(callbackError?.code).toBe(PowerAuthErrorCode.UNKNOWN_ERROR)
+        expect(callbackError?.message?.includes('groupedAuthenticationCalls')).toBe(true)
+    }
+
     async testGroupedBiometricAuthenticationWrapsCallbackError() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please authenticate for group operation.')
