@@ -41,20 +41,7 @@ password in the authenticated operation and then use `fetchActivationStatus()` t
 remaining attempts or whether the activation is blocked.
 <!-- end -->
 
-## Deprecated Compatibility APIs
-
-The one-step `changePassword()`, `validatePassword()`, `changePasswordUnsafe()`, and
-`unsafeChangePassword()` methods remain available for source compatibility but are deprecated.
-Use `beginPasswordChange()` and `finishPasswordChange()` for password changes.
-
-`validatePassword()` has no direct replacement. If your application requires password validation here,
-that indicates a deeper architectural issue that may introduce security vulnerabilities.
-
-<!-- begin box warning -->
-The unsafe password-change methods do not verify the old password. Using an incorrect old
-password corrupts the local activation data and makes it irreversibly unusable.
-<!-- end -->
-
 ## Read Next
 
+- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#password-change)
 - [Working with passwords securely](Secure-Password.md)

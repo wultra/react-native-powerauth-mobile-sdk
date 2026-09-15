@@ -176,7 +176,7 @@ try {
 }
 ```
 
-PowerAuth Mobile SDK versions older than 2.0 allowed applications to verify the signature suffix. This is no longer possible because post-quantum signatures are too large to embed in a QR code. If an activation code contains a signature suffix, the activation process ignores it. Use `PowerAuthActivationCodeUtil.parseActivationCode()` only to validate the scanned code and strip the suffix; do not treat the suffix as proof that the code is trusted.
+If an activation code contains a signature suffix, the activation process ignores it. Use `PowerAuthActivationCodeUtil.parseActivationCode()` to validate the scanned code and strip the suffix; do not treat the suffix as proof that the code is trusted.
 
 ### Validating Entered Activation Code
 

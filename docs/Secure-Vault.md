@@ -43,16 +43,7 @@ The derivation index must be a non-negative safe integer. The derived key size m
 - Derive different keys with different indices for separate data sets and purposes.
 - Maintain a registry of derivation indices if the application uses multiple keys, to prevent accidental key reuse.
 
-## Legacy Protocol 3.3 API
-
-`fetchEncryptionKey()` remains available for compatibility but is deprecated and works only with PowerAuth protocol 3.3. It returns the derived key as a Base64-encoded string.
-
-```javascript
-const keyBase64 = await powerAuth.fetchEncryptionKey(authentication, 1000);
-```
-
-Use this method only when accessing local data created by a legacy activation. Migrate the activation to protocol 4, decrypt the old data with the legacy key, and re-encrypt it with a key derived from `fetchSecureVaultKey()`.
-
 ## Read Next
 
+- [Migration to JavaScript SDK 5.0.0](Version-5.0.md#secure-vault)
 - [Token Based Authentication](Token-Based-Authentication.md)

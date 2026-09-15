@@ -5,7 +5,7 @@
 - Added experimental Swift Package Manager support for iOS in React Native 0.87+ (issue[#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), issue[#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
 - Added support for OIDC Activation (issue[#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed issue, when entered correct password was reported as invalid in some rare cases (issue[#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
-- Changed end-to-end encryption to use an asynchronously acquired, single-use `PowerAuthEncryptor` for each request and response exchange. Removed the legacy cryptogram, separate decryptor, data-format, specialized encryption-header APIs, and `PowerAuthErrorCode.INVALID_ENCRYPTOR`.
+- Changed end-to-end encryption to use an asynchronously acquired, single-use `PowerAuthEncryptor` for each request and response exchange. Removed the legacy cryptogram, separate decryptor, encryption data-format arguments, specialized encryption-header APIs, and `PowerAuthErrorCode.INVALID_ENCRYPTOR`.
 - Migrated request and token authentication to the native PowerAuth 2.0 APIs. Added `PowerAuthHttpHeader`, request authentication header methods, asynchronous offline authentication codes, and `PowerAuthTokenStore.generateAuthenticationHeader()`. Deprecated the legacy signature and token-header wrappers and now propagate native token-header errors directly.
 - Added instance-aware biometric status and availability APIs, final biometric configuration and prompt options, asynchronous factor management, and reusable biometric authentication compatible with the native PowerAuth 2.0 SDKs.
 - Changed `groupedBiometricAuthentication()` to report all callback exceptions as `PowerAuthErrorCode.UNKNOWN_ERROR`, including `PowerAuthError` exceptions whose codes were previously preserved (PR[#468](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/468))
@@ -14,6 +14,7 @@
 - Added the native-backed two-step password-change API with `beginPasswordChange()`, `finishPasswordChange()`, and opaque `PowerAuthPasswordChangeData`. Deprecated the legacy one-step, validation, and unsafe password-change APIs, and enforced activation-persistence authentication purpose.
 - Added explicit-key digital signatures, JWS/JWT calculation and verification, device public-key export, and certificate signing request generation. Binary inputs and outputs use Base64 strings, and the legacy server/device signature helpers are deprecated.
 - Added native-backed protocol-4 Secure Vault base keys with purpose-specific derivation and explicit release. The legacy `fetchEncryptionKey()` API remains available for protocol 3.3 but is deprecated.
+- For all breaking changes, see the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md).
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
