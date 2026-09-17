@@ -144,16 +144,27 @@ The effective client configuration does not contain `customHttpHeaders` or `basi
 
 The effective keychain configuration is returned only on Android. It is `undefined` on Apple platforms.
 
-If configuration fails with `INVALID_ACTIVATION_DATA`, use the same configuration values to remove unusable local instance data before retrying. This deletes local data. For `UPGRADE_SDK`, update the application instead; do not delete the activation:
+### Configuration failures
+
+If `configure()` fails with `INVALID_ACTIVATION_DATA`, the stored activation data is unusable. Call `PowerAuth.cleanupInstanceData()` with the original instance ID, configuration, and storage settings to delete that local data, then retry configuration:
 
 ```javascript
-await PowerAuth.cleanupInstanceData(
-    instanceId,
-    configuration,
-    keychainConfiguration,
-    sharingConfiguration
-);
+try {
+    await powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration);
+} catch (error) {
+    if (error.code !== PowerAuthErrorCode.INVALID_ACTIVATION_DATA) {
+        throw error;
+    }
+    await PowerAuth.cleanupInstanceData(
+        instanceId,
+        configuration,
+        keychainConfiguration,
+        sharingConfiguration
+    );
+}
 ```
+
+If `configure()` fails with `UPGRADE_SDK`, the stored activation data uses a newer format than the SDK supports. Update to a compatible SDK to preserve the activation.
 
 ## Read Next
 

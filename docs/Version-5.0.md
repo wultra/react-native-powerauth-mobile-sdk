@@ -41,7 +41,7 @@ Native SDK 2.0 introduces a new activation-data format. For independently distri
 2. Allow users to update all participating applications before enabling protocol 4.
 3. Deploy the selected protocol-4 algorithm and complete the authenticated upgrade.
 
-An older application may be unable to read data written by a newer SDK. Handle `UPGRADE_SDK` by requiring an application update; **do not delete shared activation data**. An application and its bundled extensions update together and do not need this separate staged rollout.
+An older application may report `UPGRADE_SDK` when shared activation data uses a newer format than its SDK supports. Update to a compatible SDK to preserve the activation. An application and its bundled extensions update together and do not need this separate staged rollout.
 
 Use `PowerAuthSharingConfiguration` for sharing. Keep matching instance and storage identifiers across participants, including `sharedMemoryIdentifier` when explicitly supplied. Moving an existing installation to shared storage also requires migrating its keychain and UserDefaults data before configuration. See [configuration](Configuration.md#advanced-configuration).
 
@@ -64,7 +64,9 @@ The deprecated `PowerAuthKeychainConfiguration.accessGroupName` and `userDefault
 
 Use the new `offlineAuthenticationCodeComponentLength` option to configure the length of each offline authentication-code component. It accepts integers from 4 through 8 and defaults to 8.
 
-The new `PowerAuth.cleanupInstanceData()` method removes unusable local instance data. Call it with the same configuration and storage settings when handling `INVALID_ACTIVATION_DATA`. Do not use it to handle `UPGRADE_SDK` or as a routine upgrade step.
+If configuration fails with `INVALID_ACTIVATION_DATA`, use the new `PowerAuth.cleanupInstanceData()` method with the original configuration and storage settings to remove unusable local data, then retry configuration.
+
+If configuration fails with `UPGRADE_SDK`, the stored activation data uses a newer format than the SDK supports. Update to a compatible SDK to preserve the activation. Cleanup discards the local activation data and requires a new activation; it is not an SDK upgrade step.
 
 ## Request and Token Authentication
 
