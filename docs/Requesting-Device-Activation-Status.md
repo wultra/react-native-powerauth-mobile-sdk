@@ -19,27 +19,33 @@ if (await powerAuth.hasValidActivation()) {
             case PowerAuthActivationState.PENDING_COMMIT:
                 // Activation is awaiting commit on the server.
                 console.log("Waiting for commit");
+                break;
             case PowerAuthActivationState.ACTIVE:
                 // Activation is valid and active.
                 console.log("Activation is active");
+                break;
             case PowerAuthActivationState.BLOCKED:
                 // Activation is blocked. You can display unblock
                 // instructions to the user.
                 console.log("Activation is blocked");
+                break;
             case PowerAuthActivationState.REMOVED:
                 // Activation is no longer valid on the server.
                 // You can inform user about this situation and remove
                 // activation locally via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is no longer valid");
+                break;
             case PowerAuthActivationState.DEADLOCK:
                 // Local activation is technically blocked and no longer
                 // can be used for the signature calculations. You can inform
                 // user about this situation and remove activation locally
                 // via "await powerAuth.removeActivationLocal()"
                 console.log("Activation is technically blocked");
+                break;
             case PowerAuthActivationState.UNKNOWN:
                 // The server returned a state unknown to this SDK version.
                 console.log("Unknown activation state");
+                break;
         }
 
         // Failed login attempts, remaining = max - current

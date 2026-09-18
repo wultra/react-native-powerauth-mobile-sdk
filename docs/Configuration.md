@@ -47,10 +47,6 @@ In case that you need an advanced configuration, then you can import and use the
   - `algorithm` - optional algorithm selected for communication with the server. The available values are `PowerAuthAlgorithm.LEGACY`, `P384`, `P384_L3`, and `P384_L5`. If omitted, the native SDK default (`P384_L3`) is used.
   - `offlineAuthenticationCodeComponentLength` - length of one offline authentication-code component, from `4` through `8`. The default is `8`.
 
-  > Upgrading applications that previously relied on the implicit legacy protocol must explicitly set `PowerAuthAlgorithm.LEGACY`. Omitting `algorithm` now enables the native protocol-4 default and requires a compatible PowerAuth Server.
-  >
-  > The selected algorithm can change in a later application version. If it does not match an activation already stored on the device, complete an [authenticated protocol upgrade](Requesting-Device-Activation-Status.md#authenticated-protocol-upgrade).
-
 - `PowerAuthClientConfiguration` class or `PowerAuthClientConfigurationType` interface － to configure internal HTTP client. You can alter the following parameters:
   - `enableUnsecureTraffic` - If HTTP or invalid HTTPS communication should be enabled (do not set `true` in production).
   - `connectionTimeout` - timeout in seconds. The default value is `20` seconds.
@@ -69,7 +65,6 @@ In case that you need an advanced configuration, then you can import and use the
   - `useLegacySymmetricKey` - Android specific, if set to `true`, newly configured factors use the legacy AES-KDF protection. The default is `false`.
 
 - `PowerAuthKeychainConfiguration` class or `PowerAuthKeychainConfigurationType` interface － to configure secure data storage on Android. You can alter the following parameters:
-  - `accessGroupName` and `userDefaultsSuiteName` remain as deprecated compatibility properties for existing Apple applications. Configure new activation sharing with `PowerAuthSharingConfiguration`.
   - `minimalRequiredKeychainProtection` - Android specific, defines minimal required keychain protection level that must be supported on the current device. The default value is `PowerAuthKeychainProtection.NONE`. See note<sup>3</sup> below.
 
 - `PowerAuthSharingConfiguration` class or `PowerAuthSharingConfigurationType` interface - to configure an activation data sharing on iOS platform. You can alter the following parameters:
@@ -147,18 +142,29 @@ const sharingConfiguration = await powerAuth.sharingConfiguration;   // iOS only
 
 The effective client configuration does not contain `customHttpHeaders` or `basicHttpAuthentication`. Native SDKs store those input-only values as request interceptors and cannot safely reconstruct them. Keep the original values if you need to configure another instance.
 
-The effective keychain configuration is returned only on Android. It is `undefined` on Apple platforms. The deprecated Apple `accessGroupName` and `userDefaultsSuiteName` properties are input-only, so applications that still use them must retain their original values for reconfiguration or cleanup.
+The effective keychain configuration is returned only on Android. It is `undefined` on Apple platforms.
 
-If configuration fails because stored instance data has an incompatible format, remove that data with the same configuration values before retrying:
+### Configuration failures
+
+If `configure()` fails with `INVALID_ACTIVATION_DATA`, the stored activation data is unusable. Call `PowerAuth.cleanupInstanceData()` with the original instance ID, configuration, and storage settings to delete that local data, then retry configuration:
 
 ```javascript
-await PowerAuth.cleanupInstanceData(
-    instanceId,
-    configuration,
-    keychainConfiguration,
-    sharingConfiguration
-);
+try {
+    await powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration);
+} catch (error) {
+    if (error.code !== PowerAuthErrorCode.INVALID_ACTIVATION_DATA) {
+        throw error;
+    }
+    await PowerAuth.cleanupInstanceData(
+        instanceId,
+        configuration,
+        keychainConfiguration,
+        sharingConfiguration
+    );
+}
 ```
+
+If `configure()` fails with `UPGRADE_SDK`, the stored activation data uses a newer format than the SDK supports. Update to a compatible SDK to preserve the activation.
 
 ## Read Next
 

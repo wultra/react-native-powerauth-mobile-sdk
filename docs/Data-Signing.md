@@ -110,8 +110,6 @@ try {
 }
 ```
 
-`signDataWithDevicePrivateKey()` remains available for compatibility but is deprecated.
-
 Use `calculateJwsSignature()` and `verifyJwsSignature()` for compact JWT or JSON JWS data. Device public keys can be obtained with `exportDevicePublicKeys()`. To create a PKCS #10 request, call `createCertificateSigningRequest()` with the distinguished names, optional subject alternative names, and a concrete device key identifier.
 
 ## Symmetric Offline Multi-Factor Signature
@@ -158,8 +156,6 @@ try {
     // API error
 }
 ```
-
-`verifyServerSignedData()` remains available for compatibility but is deprecated.
 
 ## Read Next
 

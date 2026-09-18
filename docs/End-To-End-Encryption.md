@@ -9,7 +9,11 @@ Use one `PowerAuthEncryptor` for one request and response exchange. The same obj
 
 The example URL below is a placeholder. Replace it with an endpoint implemented by your backend that supports application-scope PowerAuth end-to-end encryption without an activation.
 
+The examples use `Buffer` from the `buffer` npm package for UTF-8 and Base64 conversion. Add it to your application dependencies if it is not already installed. Convert text to UTF-8 bytes before Base64 encoding, and decode decrypted bytes as UTF-8 before parsing JSON.
+
 ```typescript
+import { Buffer } from "buffer"
+
 const endpoint = "https://api.example.com/encrypted-message"
 
 // Use getEncryptorForApplicationScope() when the endpoint does not require an activation.
@@ -17,10 +21,10 @@ const encryptor = await powerAuth.getEncryptorForApplicationScope()
 
 try {
     // Serialize the request payload to Base64-encoded bytes.
-    const requestBodyBase64 = btoa(JSON.stringify({
-        message: "Hello World!",
+    const requestBodyBase64 = Buffer.from(JSON.stringify({
+        message: "Hello",
         code: "HELLO"
-    }))
+    }), "utf8").toString("base64")
     const encryptedRequest = await encryptor.encryptRequest(requestBodyBase64)
 
     // Add every encryption header returned by the native SDK.
@@ -32,16 +36,17 @@ try {
     const response = await fetch(endpoint, {
         method: "POST",
         headers,
-        body: Uint8Array.from(atob(encryptedRequest.requestBody), c => c.charCodeAt(0))
+        body: Uint8Array.from(Buffer.from(encryptedRequest.requestBody, "base64"))
     })
 
-    const responseBytes = new Uint8Array(await response.arrayBuffer())
-    let responseBinary = ""
-    for (let i = 0; i < responseBytes.length; i++) {
-        responseBinary += String.fromCharCode(responseBytes[i])
+    if (!response.ok) {
+        // Handle the backend's unencrypted REST error response.
+        throw new Error(`Encrypted request failed: HTTP ${response.status}`)
     }
-    const clearResponseBase64 = await encryptor.decryptResponse(btoa(responseBinary))
-    const responseObject = JSON.parse(atob(clearResponseBase64))
+
+    const responseBodyBase64 = Buffer.from(await response.arrayBuffer()).toString("base64")
+    const clearResponseBase64 = await encryptor.decryptResponse(responseBodyBase64)
+    const responseObject = JSON.parse(Buffer.from(clearResponseBase64, "base64").toString("utf8"))
 } finally {
     await encryptor.release()
 }
@@ -62,7 +67,7 @@ To use sign-then-encrypt mode, calculate the PowerAuth signature over the origin
 For example, use the following steps inside the `try` block of the exchange above, with an encryptor acquired using `getEncryptorForActivationScope()`. Supply `auth` using the factors required by your backend and set `uriId` to the signature URI identifier configured for your endpoint, as described in [Data Signing](Data-Signing.md#symmetric-multi-factor-signature).
 
 ```typescript
-const requestBody = JSON.stringify({ message: "Hello World!", code: "HELLO" })
+const requestBody = JSON.stringify({ message: "Hello", code: "HELLO" })
 
 // Sign the original plaintext, before encrypting it.
 const authenticationHeader = await powerAuth.authenticationHeaderForRequestWithBody(
@@ -71,8 +76,9 @@ const authenticationHeader = await powerAuth.authenticationHeaderForRequestWithB
     uriId,
     requestBody
 )
-// This example payload contains only ASCII characters, so btoa preserves its UTF-8 bytes.
-const encryptedRequest = await encryptor.encryptRequest(btoa(requestBody))
+const encryptedRequest = await encryptor.encryptRequest(
+    Buffer.from(requestBody, "utf8").toString("base64")
+)
 
 const headers = new Headers()
 headers.set(authenticationHeader.name, authenticationHeader.value)
