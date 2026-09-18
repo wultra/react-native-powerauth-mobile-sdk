@@ -30,25 +30,9 @@ export class PowerAuthActivationTests extends TestSuite {
         expect(a1.customAttributes).toBeUndefined()
         expect(a1.extras).toBeUndefined()
         expect(a1.identityAttributes).toBeUndefined()
-        expect(a1.recoveryCode).toBeUndefined()
-        expect(a1.recoveryPuk).toBeUndefined()
-
         const a2 = PowerAuthActivation.createWithActivationCode('3PZ2Z-DOXSL-PSSQI-I5VBA#MEQCIHP3LQ7WLDEPe8WCgdQ8CSwyxbErroYlGO+K6pIX1JyhAiAn6wEnaNp1mDdKlWb16Ma8eTKycRcZ+75TYV/zn0yvFw==', this.name)
         expect(a2).toBeDefined()
         expect(a2.activationCode).toBe('3PZ2Z-DOXSL-PSSQI-I5VBA#MEQCIHP3LQ7WLDEPe8WCgdQ8CSwyxbErroYlGO+K6pIX1JyhAiAn6wEnaNp1mDdKlWb16Ma8eTKycRcZ+75TYV/zn0yvFw==')
-    }
-
-    testRecoveryActivation() {
-        const a1 = PowerAuthActivation.createWithRecoveryCode('VVVVV-VVVVV-VVVVV-VTFVA', '0123456789', this.name)
-        expect(a1).toBeDefined()
-        expect(a1.activationCode).toBeUndefined()
-        expect(a1.activationName).toBe(this.name)
-        expect(a1.additionalActivationOtp).toBeUndefined()
-        expect(a1.customAttributes).toBeUndefined()
-        expect(a1.extras).toBeUndefined()
-        expect(a1.identityAttributes).toBeUndefined()
-        expect(a1.recoveryCode).toBe('VVVVV-VVVVV-VVVVV-VTFVA')
-        expect(a1.recoveryPuk).toBe('0123456789')
     }
 
     testCustomActivation() {
@@ -67,8 +51,6 @@ export class PowerAuthActivationTests extends TestSuite {
         expect(a1.identityAttributes).toBeDefined()
         expect(a1.identityAttributes?.login).toBe('juraj')
         expect(a1.identityAttributes?.password).toBe('nbusr123')
-        expect(a1.recoveryCode).toBeUndefined()
-        expect(a1.recoveryPuk).toBeUndefined()
     }
 
     testOidcActivation() {

@@ -37,20 +37,4 @@ export class PowerAuth_ErrorDataTests extends TestWithActivation {
         }
         expect(errorThrown).toBe(true)
     }
-
-    async testResponseErrorContainsParsedData() {
-        let errorThrown = false
-        try {
-            await this.sdk.confirmRecoveryCode('AAAAA-AAAAA-AAAAA-AAAAA', this.credentials.knowledge)
-        } catch (e) {
-            errorThrown = true
-            expect(e instanceof PowerAuthError).toBe(true)
-            const error = e as PowerAuthError
-
-            expect(error.code === PowerAuthErrorCode.RESPONSE_ERROR || error.code === PowerAuthErrorCode.AUTHENTICATION_ERROR).toBe(true)
-            expect(error.errorData).toBeDefined()
-            expect(typeof error.errorData.httpStatusCode).toBe('number')
-        }
-        expect(errorThrown).toBe(true)
-    }
 }

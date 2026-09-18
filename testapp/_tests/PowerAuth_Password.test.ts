@@ -25,8 +25,7 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await this.sdk.validatePassword(this.credentials.validPassword)
         // Wrong password
         await expect(async () => await this.sdk.validatePassword(this.credentials.invalidPassword)).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-        // TODO: wrong param
-        await expect(async () => await this.sdk.validatePassword('12')).toThrow({errorCode: PowerAuthErrorCode.SIGNATURE_ERROR})
+        await expect(async () => await this.sdk.validatePassword('12')).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
     async testValidateSecurePassword() {
@@ -34,8 +33,7 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         await this.sdk.validatePassword(await importPassword(this.credentials.validPassword))
         // Wrong password
         await expect(async () => await this.sdk.validatePassword(await importPassword(this.credentials.invalidPassword))).toThrow({errorCode: PowerAuthErrorCode.AUTHENTICATION_ERROR})
-        // TODO: wrong param
-        await expect(async () => await this.sdk.validatePassword(await importPassword('12'))).toThrow({errorCode: PowerAuthErrorCode.SIGNATURE_ERROR})
+        await expect(async () => await this.sdk.validatePassword(await importPassword('12'))).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
     async testChangePassword() {
