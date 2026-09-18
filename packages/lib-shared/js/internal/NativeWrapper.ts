@@ -292,6 +292,23 @@ export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T
 function prettyArgs(fname: string, args: any[]): string {
     const sanitizedArgs = [...args]
     switch (fname) {
+        // Payloads may contain personal data even when Base64-encoded. JWS/JWT and
+        // CSR values also carry the payload or subject identity in their output.
+        case 'verifyDigitalSignature':
+        case 'verifyServerSignedData':
+            sanitizedArgs[1] = sanitizedArgs[2] = '***'
+            break
+        case 'calculateDigitalSignature':
+        case 'calculateJwsSignature':
+        case 'signDataWithDevicePrivateKey':
+            sanitizedArgs[2] = '***'
+            break
+        case 'verifyJwsSignature':
+            sanitizedArgs[1] = '***'
+            break
+        case 'createCertificateSigningRequest':
+            sanitizedArgs[2] = sanitizedArgs[3] = '***'
+            break
         case 'changePassword':
         case 'unsafeChangePassword': 
             sanitizedArgs[1] = sanitizedArgs[2] = '***'
@@ -342,5 +359,14 @@ function prettyArgs(fname: string, args: any[]): string {
 }
 
 function prettyResult(fname: string, result: any): string {
-    return fname === 'beginPasswordChange' ? '"***"' : JSON.stringify(result)
+    switch (fname) {
+        case 'beginPasswordChange':
+        case 'calculateDigitalSignature':
+        case 'calculateJwsSignature':
+        case 'signDataWithDevicePrivateKey':
+        case 'createCertificateSigningRequest':
+            return '"***"'
+        default:
+            return JSON.stringify(result)
+    }
 }

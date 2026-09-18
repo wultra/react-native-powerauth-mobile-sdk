@@ -14,7 +14,13 @@
 // limitations under the License.
 //
 
-import { PowerAuthActivationState, PowerAuthAuthentication, PowerAuthErrorCode, PowerAuthHttpHeader } from "react-native-powerauth-mobile-sdk";
+import {
+    PowerAuthActivationState,
+    PowerAuthAuthentication,
+    PowerAuthErrorCode,
+    PowerAuthHttpHeader,
+    PowerAuthSignatureKeyId
+} from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
@@ -112,11 +118,30 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 
     async testAuthenticationPurpose() {
         const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
+        const data = btoa('test')
 
         await expect(async () => await this.sdk.fetchEncryptionKey(persistAuth, 0))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, btoa('test'), 'BASE64'))
+        await expect(async () => await this.sdk.signDataWithDevicePrivateKey(persistAuth, data, 'BASE64'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.calculateDigitalSignature(
+            persistAuth,
+            data,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.calculateJwsSignature(
+            persistAuth,
+            data,
+            'JWT',
+            true,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => await this.sdk.createCertificateSigningRequest(
+            persistAuth,
+            { CN: 'PowerAuth Integration Test' },
+            undefined,
+            PowerAuthSignatureKeyId.DEVICE_EC
+        )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.authenticationHeaderForRequestWithParams(persistAuth, 'GET', '/wrong-purpose'))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(persistAuth, 'POST', '/wrong-purpose', '{}'))

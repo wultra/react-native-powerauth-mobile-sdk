@@ -42,6 +42,9 @@ import { PowerAuthTimeSynchronizationService } from './PowerAuthTimeSynchronizat
 import { PowerAuthUtils } from "./PowerAuthUtils";
 import { PowerAuthAlgorithm } from "./model/PowerAuthAlgorithm";
 import { PowerAuthProtocolUpgradeResult } from "./model/PowerAuthProtocolUpgradeResult";
+import type { Base64String } from "./PowerAuthCryptoUtils";
+import { PowerAuthSignatureKeyId } from "./model/PowerAuthSignatureKeyId";
+import { type PowerAuthDevicePublicKeyData, PowerAuthDevicePublicKeyFormat } from "./model/PowerAuthDevicePublicKey";
 
 /**
  * Class used for the main interaction with the PowerAuth SDK components.
@@ -412,9 +415,112 @@ export class PowerAuth {
      * @param data An arbitrary data
      * @param signature A signature calculated for data, in Base64 format
      * @param masterKey If `true`, then master server public key is used for validation, otherwise personalized server's public key.
+     * @deprecated Use `verifyDigitalSignature()` with `PowerAuthSignatureKeyId.MASTER_EC` or `PowerAuthSignatureKeyId.SERVER_EC`.
      */
     verifyServerSignedData(data: string, signature: string, masterKey: boolean): Promise<boolean> {
         return NativeWrapper.thisCallBool("verifyServerSignedData", this.instanceId, data, signature, masterKey);
+    }
+
+    /**
+     * Verifies a digital signature for the supplied Base64-encoded data.
+     *
+     * @throws `PowerAuthErrorCode.WRONG_SIGNATURE` if the signature is invalid.
+     */
+    verifyDigitalSignature(
+        signature: Base64String,
+        data: Base64String,
+        signatureKeyId: PowerAuthSignatureKeyId
+    ): Promise<void> {
+        return NativeWrapper.thisCall("verifyDigitalSignature", this.instanceId, signature, data, signatureKeyId);
+    }
+
+    /**
+     * Calculates a digital signature for the supplied Base64-encoded data.
+     *
+     * The key identifier must select a specific device key, such as
+     * `PowerAuthSignatureKeyId.DEVICE_EC` or `PowerAuthSignatureKeyId.DEVICE_ML_DSA`.
+     */
+    async calculateDigitalSignature(
+        authentication: PowerAuthAuthentication,
+        data: Base64String,
+        signatureKeyId: PowerAuthSignatureKeyId
+    ): Promise<Base64String> {
+        return NativeWrapper.thisCall(
+            "calculateDigitalSignature",
+            this.instanceId,
+            await this.authenticate(authentication),
+            data,
+            signatureKeyId
+        );
+    }
+
+    /** Exports device public keys in the requested format. */
+    exportDevicePublicKeys(format: PowerAuthDevicePublicKeyFormat): Promise<PowerAuthDevicePublicKeyData[]> {
+        return NativeWrapper.thisCall("exportDevicePublicKeys", this.instanceId, format);
+    }
+
+    /**
+     * Verifies JWS or JWT signed data using the selected key.
+     *
+     * @param compact Whether the signature uses compact JWT serialization.
+     * @param strict Whether every selected key must verify its corresponding signature.
+     * @throws `PowerAuthErrorCode.WRONG_SIGNATURE` if verification fails.
+     */
+    verifyJwsSignature(
+        signature: string,
+        compact: boolean,
+        strict: boolean,
+        signatureKeyId: PowerAuthSignatureKeyId
+    ): Promise<void> {
+        return NativeWrapper.thisCall(
+            "verifyJwsSignature",
+            this.instanceId,
+            signature,
+            compact,
+            strict,
+            signatureKeyId
+        );
+    }
+
+    /**
+     * Calculates a JWS signature for the supplied Base64-encoded data.
+     *
+     * @param dataType Optional value for the protected JOSE `typ` header.
+     * @param compact Whether to return compact JWT or full JWS serialization.
+     */
+    async calculateJwsSignature(
+        authentication: PowerAuthAuthentication,
+        data: Base64String,
+        dataType: string | undefined,
+        compact: boolean,
+        signatureKeyId: PowerAuthSignatureKeyId
+    ): Promise<string> {
+        return NativeWrapper.thisCall(
+            "calculateJwsSignature",
+            this.instanceId,
+            await this.authenticate(authentication),
+            data,
+            dataType,
+            compact,
+            signatureKeyId
+        );
+    }
+
+    /** Creates an X.509 Certificate Signing Request in PEM format. */
+    async createCertificateSigningRequest(
+        authentication: PowerAuthAuthentication,
+        distinguishedNames: Record<string, string>,
+        subjectAltNames: string[] | undefined,
+        signatureKeyId: PowerAuthSignatureKeyId
+    ): Promise<string> {
+        return NativeWrapper.thisCall(
+            "createCertificateSigningRequest",
+            this.instanceId,
+            await this.authenticate(authentication),
+            distinguishedNames,
+            subjectAltNames,
+            signatureKeyId
+        );
     }
 
     /**
@@ -593,6 +699,7 @@ export class PowerAuth {
      * @param authentication Authentication used for vault unlocking call.
      * @param data Data to be signed with the private key.
      * @param dataFormat Data format of the input data.
+     * @deprecated Use `calculateDigitalSignature()` with `PowerAuthSignatureKeyId.DEVICE_EC`.
      */
     async signDataWithDevicePrivateKey(authentication: PowerAuthAuthentication, data: string, dataFormat: PowerAuthDataFormat): Promise<string> {
         return NativeWrapper.thisCall("signDataWithDevicePrivateKey", this.instanceId, await this.authenticate(authentication), data, dataFormat);
