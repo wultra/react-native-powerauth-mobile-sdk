@@ -71,6 +71,41 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void cleanupInstanceData(final String instanceId, final ReadableMap configuration, final ReadableMap keychainConfiguration, final ReadableMap sharingConfiguration, final Promise promise) {
+        powerAuthJsModule.cleanupInstanceData(instanceId, configuration, keychainConfiguration, sharingConfiguration, promise);
+    }
+
+    @ReactMethod
+    public void getConfiguration(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getConfiguration(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getCurrentAlgorithm(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getCurrentAlgorithm(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getClientConfiguration(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getClientConfiguration(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getBiometryConfiguration(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getBiometryConfiguration(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getKeychainConfiguration(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getKeychainConfiguration(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void getSharingConfiguration(final String instanceId, final Promise promise) {
+        powerAuthJsModule.getSharingConfiguration(instanceId, promise);
+    }
+
+    @ReactMethod
     public void configure(final String instanceId, final ReadableMap configuration, final ReadableMap clientConfiguration, final ReadableMap biometryConfiguration, final ReadableMap keychainConfiguration, final ReadableMap sharingConfiguration, Promise promise) {
         powerAuthJsModule.configure(instanceId, configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration, promise);
     }

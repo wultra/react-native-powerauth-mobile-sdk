@@ -15,7 +15,7 @@
 //
 
 import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
-    PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthConfiguration,
+    PowerAuthAlgorithm, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthConfiguration,
     PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
 } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
@@ -58,6 +58,23 @@ export function createNonInteractiveBiometryConfiguration(): PowerAuthBiometryCo
 export async function isBiometryEnrolledForTests(sdk: PowerAuth): Promise<boolean> {
     const status = await sdk.getBiometricStatus()
     return status.systemStatus === PowerAuthBiometryStatus.OK
+}
+
+/**
+ * E2E infrastructure still runs PowerAuth protocol V3.3. Native SDK 2.0 defaults to
+ * EC_P384_ML_L3 when algorithm is omitted, so integration tests must opt into legacy.
+ */
+export function createE2ePowerAuthConfiguration(
+    configuration: string,
+    baseEndpointUrl: string,
+    offlineAuthenticationCodeComponentLength: number = 8
+): PowerAuthConfiguration {
+    return new PowerAuthConfiguration(
+        configuration,
+        baseEndpointUrl,
+        PowerAuthAlgorithm.LEGACY,
+        offlineAuthenticationCodeComponentLength
+    )
 }
 
 export class IntegrationHelper {
@@ -167,7 +184,7 @@ export class IntegrationHelper {
 
         // CONFIGURE SDK
         await this._sdk.configure(
-            config?.configuration ?? new PowerAuthConfiguration(appDetail.mobileSdkConfig, AppConfig.enrollmentUrl),
+            config?.configuration ?? createE2ePowerAuthConfiguration(appDetail.mobileSdkConfig, AppConfig.enrollmentUrl),
             config?.clientConfiguration,
             config?.biometryConfiguration ?? createNonInteractiveBiometryConfiguration(),
             config?.keychainConfiguration,
