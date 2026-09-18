@@ -97,14 +97,14 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         const validAuth = PowerAuthAuthentication.password(pValid)
         const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
-        let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
+        let header = await this.sdk.authenticationHeaderForRequestWithBody(validAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
-        header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
+        header = await this.sdk.authenticationHeaderForRequestWithBody(validAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
 
-        header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
+        header = await this.sdk.authenticationHeaderForRequestWithBody(invalidAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
-        header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
+        header = await this.sdk.authenticationHeaderForRequestWithBody(invalidAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
     }
 
@@ -115,12 +115,12 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
         const validAuth = PowerAuthAuthentication.password(pValid)
         const invalidAuth = PowerAuthAuthentication.password(pInvalid)
 
-        let header = await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')
+        let header = await this.sdk.authenticationHeaderForRequestWithBody(validAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(true)
-        await expect(async () => await this.sdk.requestSignature(validAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(validAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
-        header = await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')
+        header = await this.sdk.authenticationHeaderForRequestWithBody(invalidAuth, 'POST', '/some/uriId', '{}')
         expect((await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid).toBe(false)
-        await expect(async () => await this.sdk.requestSignature(invalidAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => await this.sdk.authenticationHeaderForRequestWithBody(invalidAuth, 'POST', '/some/uriId', '{}')).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }
 }

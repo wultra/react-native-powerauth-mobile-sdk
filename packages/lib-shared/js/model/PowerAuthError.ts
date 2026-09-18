@@ -164,7 +164,7 @@ export enum PowerAuthErrorCode {
     /** Error caused by an invalid native logging configuration. */
     INVALID_LOG_LEVEL = "INVALID_LOG_LEVEL",
 
-    /** Error when generating a token */
+    /** @deprecated Token header generation now propagates the native SDK error, such as `INVALID_TOKEN`. */
     CANNOT_GENERATE_TOKEN = "CANNOT_GENERATE_TOKEN",
 
     /** Error when requesting local token */

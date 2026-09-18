@@ -16,6 +16,7 @@
 
 import { PowerAuthAuthentication } from './model/PowerAuthAuthentication';
 import { PowerAuthAuthorizationHttpHeader } from './model/PowerAuthAuthorizationHttpHeader';
+import { PowerAuthHttpHeader } from './model/PowerAuthHttpHeader';
 import { NativeWrapper } from "./internal/NativeWrapper";
 import { resolveAuthentication } from './internal/AuthResolver';
 
@@ -98,15 +99,24 @@ export class PowerAuthTokenStore {
     }
 
     /**
-     * Generates a http header for the token in local storage.
+     * Generates an authentication HTTP header for the token in local storage.
      * 
      * If needed, the method automatically performs time synchronization (via additional HTTP request).
      * 
      * @param tokenName Name of token in the local storage that will be used for generating
      * @returns header or throws
      */
-    generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader> {
-        return NativeWrapper.thisCall("generateHeaderForToken", this.instanceId, tokenName ?? "");
+    generateAuthenticationHeader(tokenName: string): Promise<PowerAuthHttpHeader> {
+        return NativeWrapper.thisCall("generateAuthenticationHeaderForToken", this.instanceId, tokenName ?? "");
+    }
+
+    /**
+     * Generates an authentication HTTP header for the token in local storage.
+     * @deprecated Use `generateAuthenticationHeader()`, which returns `PowerAuthHttpHeader`.
+     */
+    async generateHeaderForToken(tokenName: string): Promise<PowerAuthAuthorizationHttpHeader> {
+        const header = await this.generateAuthenticationHeader(tokenName);
+        return { key: header.name, value: header.value };
     }
 }
 

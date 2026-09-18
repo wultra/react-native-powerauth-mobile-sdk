@@ -136,18 +136,18 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void requestGetSignature(String instanceId, final ReadableMap authMap, final String uriId, @Nullable final ReadableMap params, final Promise promise) {
-        powerAuthJsModule.requestGetSignature(instanceId, authMap, uriId, params, promise);
+    public void authenticationHeaderForRequestWithParams(String instanceId, final ReadableMap authMap, final String method, final String uriId, @Nullable final ReadableMap params, final Promise promise) {
+        powerAuthJsModule.authenticationHeaderForRequestWithParams(instanceId, authMap, method, uriId, params, promise);
     }
 
     @ReactMethod
-    public void requestSignature(String instanceId, final ReadableMap authMap, final String method, final String uriId, final  @Nullable String body, final Promise promise) {
-        powerAuthJsModule.requestSignature(instanceId, authMap, method, uriId, body, promise);
+    public void authenticationHeaderForRequestWithBody(String instanceId, final ReadableMap authMap, final String method, final String uriId, final  @Nullable String body, final Promise promise) {
+        powerAuthJsModule.authenticationHeaderForRequestWithBody(instanceId, authMap, method, uriId, body, promise);
     }
 
     @ReactMethod
-    public void offlineSignature(String instanceId, final ReadableMap authMap, final String uriId, final  @Nullable String body, final String nonce, final Promise promise) {
-        powerAuthJsModule.offlineSignature(instanceId, authMap, uriId, body, nonce, promise);
+    public void offlineAuthenticationCode(String instanceId, final ReadableMap authMap, final String uriId, final  @Nullable String body, final String nonce, final Promise promise) {
+        powerAuthJsModule.offlineAuthenticationCode(instanceId, authMap, uriId, body, nonce, promise);
     }
 
     @ReactMethod
@@ -238,8 +238,8 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void generateHeaderForToken(String instanceId, final String tokenName, final Promise promise) {
-        powerAuthJsModule.generateHeaderForToken(instanceId, tokenName, promise);
+    public void generateAuthenticationHeaderForToken(String instanceId, final String tokenName, final Promise promise) {
+        powerAuthJsModule.generateAuthenticationHeaderForToken(instanceId, tokenName, promise);
     }
 
     // ACTIVATION CODE UTIL METHODS

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type { PowerAuthHttpHeader } from './PowerAuthHttpHeader'
+
 /**
  * Interface that contains configuration for RESTful API client used internally by SDK.
  */
@@ -39,16 +41,6 @@ export interface PowerAuthClientConfigurationType {
      * Basic HTTP Authentication that will be added to each HTTP request produced by this library.
      */
     readonly basicHttpAuthentication?: PowerAuthBasicHttpAuthentication | null;
-}
-
-/**
- * Custom HTTP header data.
- */
-export interface PowerAuthHttpHeader {
-    /** Name of the HTTP header. */
-    name: string
-    /** Value of the HTTP header. */
-    value: string
 }
 
 /**

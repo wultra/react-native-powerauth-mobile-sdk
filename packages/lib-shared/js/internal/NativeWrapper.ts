@@ -16,7 +16,6 @@
 
 import { PowerAuthError } from '../model/PowerAuthError';
 import { PowerAuthDebug } from '../debug/PowerAuthDebug';
-import { PowerAuthAuthentication } from '../index';
 import { Utils } from "../internal/Utils";
 import { NativeModulesProvider } from './NativeModulesProvider';
 
@@ -291,6 +290,8 @@ export function patchNull<T>(originalPromise: Promise<T | undefined>): Promise<T
  * @returns Pretty string created from arguments array.
  */
 function prettyArgs(fname: string, args: any[]): string {
+    // Format a copy: tracing must never alter the arguments sent to the native SDK.
+    args = [...args]
     switch (fname) {
         case 'changePassword':
         case 'unsafeChangePassword': 
@@ -303,29 +304,14 @@ function prettyArgs(fname: string, args: any[]): string {
         default:
             break
     }
-    let authIndex = 0
-    if (args[1] instanceof PowerAuthAuthentication) {
-        authIndex = 1
-    } else if (args[2] instanceof PowerAuthAuthentication) {
-        authIndex = 2
-    }
-    if (authIndex > 0) {
-        const auth = args[authIndex]
-        args[authIndex] = {
-            password: auth.password ? '***' : undefined,
-            biometricPrompt: auth.biometricPrompt,
-            isPersist: auth.isPersist,
-            isBiometry: auth.isBiometry,
-            biometryKeyId: auth.biometryKeyId,
-            // deprecated
-            usePossession: auth.usePossession,
-            useBiometry: auth.useBiometry,
-            userPassword: auth.userPassword ? '***' : undefined,
-            biometryMessage: auth.biometryMessage,
-            biometryTitle: auth.biometryTitle
+    // Authentication has already been converted to a plain (possibly frozen) bridge object.
+    // Redact by field name so both current raw values and deprecated authentication objects
+    // are covered, including passwords nested inside argument objects.
+    const v = JSON.stringify(args, (key, value) => {
+        if (key === 'password' || key === 'userPassword' || key === 'biometryKeyId') {
+            return value === undefined ? undefined : '***'
         }
-    }
-
-    const v = JSON.stringify(args)
+        return value
+    })
     return v.slice(1, v.length - 1)
 }

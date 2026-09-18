@@ -169,6 +169,8 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.getActivationIdentifier()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.removeActivationWithAuthentication(signAuth)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.removeActivationLocal()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.authenticationHeaderForRequestWithParams(signAuth, 'GET', '', undefined)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.authenticationHeaderForRequestWithBody(signAuth, 'POST', '', undefined)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.requestGetSignature(signAuth, '', undefined)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.requestSignature(signAuth, '', '')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.offlineSignature(signAuth, '', '', undefined)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
