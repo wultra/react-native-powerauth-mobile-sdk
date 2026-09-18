@@ -17,7 +17,7 @@
 #import "PowerAuthData.h"
 #import "Utilities.h"
 
-#import <PowerAuth2/PowerAuthSecureData.h>
+@import PowerAuth2;
 
 @implementation PowerAuthData
 {

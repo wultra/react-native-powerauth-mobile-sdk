@@ -15,7 +15,7 @@
  */
 
 #import "PAJS.h"
-#import <PowerAuth2/PowerAuthPassword.h>
+@import PowerAuth2;
 
 #ifdef __cplusplus
     // C++

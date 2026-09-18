@@ -18,7 +18,6 @@
 #import "PowerAuthObjectRegister.h"
 #import "PAJS.h"
 
-#import <PowerAuth2/PowerAuthSDK.h>
 @import PowerAuth2;
 
 id CastObjectTo(id instance, Class desiredClass) {
