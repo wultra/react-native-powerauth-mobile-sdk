@@ -25,6 +25,7 @@ import { PowerAuthAuthentication, PowerAuthBiometricPrompt } from './model/Power
 import { PowerAuthCreateActivationResult } from './model/PowerAuthCreateActivationResult';
 import { PowerAuthActivation } from './model/PowerAuthActivation';
 import { PowerAuthBiometryInfo } from './model/PowerAuthBiometryInfo';
+import { PowerAuthBiometricStatus } from './model/PowerAuthBiometricStatus';
 import { PowerAuthError, PowerAuthErrorCode } from './model/PowerAuthError';
 import { PowerAuthTokenStore } from "./PowerAuthTokenStore";
 import { PowerAuthEncryptor, PowerAuthEncryptorImpl } from './model/PowerAuthEncryptor';
@@ -431,9 +432,24 @@ export class PowerAuth {
      * Returns biometry info data.
      *
      * @returns object with information data about biometry
+     * @deprecated Use the instance-aware `getBiometricStatus()` method.
      */
     getBiometryInfo(): Promise<PowerAuthBiometryInfo> {
         return NativeWrapper.thisCall("getBiometryInfo", this.instanceId);
+    }
+
+    /**
+     * Returns the biometric authentication status for this configured `PowerAuth` instance.
+     */
+    getBiometricStatus(): Promise<PowerAuthBiometricStatus> {
+        return NativeWrapper.thisCall("getBiometricStatus", this.instanceId);
+    }
+
+    /**
+     * Returns whether biometric authentication is available for the current activation.
+     */
+    isAuthenticationWithBiometricsAvailable(): Promise<boolean> {
+        return NativeWrapper.thisCallBool("isAuthenticationWithBiometricsAvailable", this.instanceId);
     }
 
     /**
@@ -490,21 +506,19 @@ export class PowerAuth {
         if (!await this.isConfigured()) {
             throw new PowerAuthError(undefined, "Instance is not configured", PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED);
         }
-        if (authentication.isBiometricAuthentication == false) {
+        const reusable = await resolveAuthentication(this.instanceId, authentication, true);
+        if (reusable.isBiometricAuthentication == false) {
             throw new PowerAuthError(undefined, "Authentication object is not configured for biometric factor", PowerAuthErrorCode.WRONG_PARAMETER);
         }
         try {
-            const reusable = await resolveAuthentication(this.instanceId, authentication, true);
-            try {
-                // integrator defined chain of authorization calls with reusable authentication
-                await groupedAuthenticationCalls(reusable);
-            } catch (e) {
-                // rethrow the error with information that the integrator should handle errors by himself
-                throw new PowerAuthError(e, "Your 'groupedAuthenticationCalls' function threw an exception. Please make sure that you catch errors yourself.");
-            }
+            // Integrator-defined chain of authorization calls with reusable authentication.
+            await groupedAuthenticationCalls(reusable);
         } catch (e) {
-            // catching biometry authentication error and rethrowing it as PowerAuthError
-            throw NativeWrapper.processException(e);
+            throw new PowerAuthError(
+                e,
+                "Your 'groupedAuthenticationCalls' function threw an exception. Please make sure that you catch errors yourself.",
+                PowerAuthErrorCode.UNKNOWN_ERROR
+            );
         }
     }
 

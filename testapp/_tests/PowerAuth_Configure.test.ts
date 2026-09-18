@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
+import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication, PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthErrorCode, PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration } from "react-native-powerauth-mobile-sdk"
 import { expect } from "mobile-testbed"
 import { TestWithActivation } from "./helpers/TestWithActivation"
-import { IntegrationHelper } from "../src/IntegrationUtils"
+import { IntegrationHelper, isBiometryEnrolledForTests } from "../src/IntegrationUtils"
 
 export class PowerAuth_ConfigureTests extends TestWithActivation {
 
@@ -56,6 +56,10 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
 
         expect(await sdk1.isConfigured()).toBe(true)
         expect(await sdk2.isConfigured()).toBe(true)
+        const biometricStatus = await sdk1.getBiometricStatus()
+        expect(biometricStatus.isBiometricFactorConfigured).toBe(false)
+        expect(biometricStatus.isAuthenticationWithBiometricsAvailable).toBe(false)
+        expect(await sdk1.isAuthenticationWithBiometricsAvailable()).toBe(false)
         // Instances created from helper also should have configuration objects set
         expect(sdk1.configuration).toBeDefined()
         expect(sdk2.configuration).toBeDefined()
@@ -83,6 +87,17 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         expect(pa2.biometryConfiguration).toBeDefined()
         expect(pa1.sharingConfiguration).toBeDefined()
         expect(pa2.sharingConfiguration).toBeDefined()
+    }
+
+    async testGroupedBiometricAuthenticationRejectsNonBiometricAuthentication() {
+        const sdk = (await this.getHelper1()).sdk
+        let callbackInvoked = false
+
+        await expect(async () => await sdk.groupedBiometricAuthentication(
+            PowerAuthAuthentication.possession(),
+            async () => { callbackInvoked = true }
+        )).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        expect(callbackInvoked).toBe(false)
     }
 
     async testReconfigureWhileActive() {
@@ -180,13 +195,12 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         await expect(async () => await sdk.addBiometryFactor('', '', '')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.hasBiometryFactor()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.removeBiometryFactor()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.getBiometricStatus()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
+        await expect(async () => await sdk.isAuthenticationWithBiometricsAvailable()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.fetchEncryptionKey(signAuth, 1000)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.signDataWithDevicePrivateKey(signAuth, '', 'UTF8')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.validatePassword('')).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
         await expect(async () => await sdk.groupedBiometricAuthentication(signAuth, async _auth => {})).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
-        
-        // TODO: getBiometryInfo() doesn't depend on configuration. We should move this to separate class
-        // await expect(async () => await sdk.getBiometryInfo()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED})
     }
 
     async testConfigurationWithBiometry() {
@@ -195,11 +209,10 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
         const helper2 = await this.getHelper2()
         const sdk2 = helper2.sdk
 
-        // TODO This is because of Android on CI.
-        // We can revisit this once we settle on a reliable emulator on CI with enrollable biometry
-        const biometryInfo = await sdk1.getBiometryInfo()
-        if (biometryInfo.canAuthenticate !== PowerAuthBiometryStatus.OK) {
-            this.reportSkip(`Biometric status is ${biometryInfo.canAuthenticate}`)
+        // Skip on CI emulators without enrolled biometry. Calling addBiometryFactor on Android
+        // with no enrolled templates opens the system fingerprint enrollment screen.
+        if (!(await isBiometryEnrolledForTests(sdk1))) {
+            this.reportSkip(`Biometric status is ${(await sdk1.getBiometricStatus()).systemStatus}`)
             return
         }
 
@@ -295,10 +308,6 @@ export class PowerAuth_ConfigureTests extends TestWithActivation {
                 "fake.accessGroup", // This will work only in simulator
                 "tst1"
             )
-        }
-        if (this.currentTestName === 'testConfigurationWithBiometry') {
-            biometryConfig = new PowerAuthBiometryConfiguration()
-            biometryConfig.authenticateOnBiometricKeySetup = false
         }
         await helper.configure({
             clientConfiguration: clientConfig,

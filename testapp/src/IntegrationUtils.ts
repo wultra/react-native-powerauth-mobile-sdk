@@ -15,7 +15,7 @@
 //
 
 import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
-    PowerAuthBiometryConfiguration, PowerAuthClientConfiguration, PowerAuthConfiguration,
+    PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthConfiguration,
     PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
 } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
@@ -42,6 +42,22 @@ export interface CustomConfig {
     biometryConfiguration?: PowerAuthBiometryConfiguration,
     keychainConfiguration?: PowerAuthKeychainConfiguration,
     sharingConfiguration?: PowerAuthSharingConfiguration
+}
+
+/**
+ * Biometry configuration for automated tests that must not display biometric prompts on Android.
+ * Interactive biometry suites override this when they intentionally test prompt behavior.
+ */
+export function createNonInteractiveBiometryConfiguration(): PowerAuthBiometryConfiguration {
+    const biometryConfiguration = new PowerAuthBiometryConfiguration()
+    biometryConfiguration.authenticateOnBiometricKeySetup = false
+    return biometryConfiguration
+}
+
+/** Whether the device has biometry enrolled and can run addBiometryFactor without system enrollment UI. */
+export async function isBiometryEnrolledForTests(sdk: PowerAuth): Promise<boolean> {
+    const status = await sdk.getBiometricStatus()
+    return status.systemStatus === PowerAuthBiometryStatus.OK
 }
 
 export class IntegrationHelper {
@@ -134,7 +150,10 @@ export class IntegrationHelper {
 
         // PERSIST ACTIVATION LOCALLY
 
-        await this._sdk.persistActivation(setupBiometry ? PowerAuthAuthentication.persistWithPasswordAndBiometry(password, { promptMessage: biometryPrompt }) : PowerAuthAuthentication.persistWithPassword(password))
+        await this._sdk.persistActivation(setupBiometry ? PowerAuthAuthentication.persistWithPasswordAndBiometry(password, {
+            promptTitle: "test",
+            promptMessage: biometryPrompt
+        }) : PowerAuthAuthentication.persistWithPassword(password))
 
         // COMMIT ACTIVATION ON THE SERVER
 
@@ -150,7 +169,7 @@ export class IntegrationHelper {
         await this._sdk.configure(
             config?.configuration ?? new PowerAuthConfiguration(appDetail.mobileSdkConfig, AppConfig.enrollmentUrl),
             config?.clientConfiguration,
-            config?.biometryConfiguration,
+            config?.biometryConfiguration ?? createNonInteractiveBiometryConfiguration(),
             config?.keychainConfiguration,
             config?.sharingConfiguration
         )

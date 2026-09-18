@@ -186,6 +186,16 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void getBiometricStatus(String instanceId, final Promise promise) {
+        powerAuthJsModule.getBiometricStatus(instanceId, promise);
+    }
+
+    @ReactMethod
+    public void isAuthenticationWithBiometricsAvailable(String instanceId, final Promise promise) {
+        powerAuthJsModule.isAuthenticationWithBiometricsAvailable(instanceId, promise);
+    }
+
+    @ReactMethod
     public void fetchEncryptionKey(String instanceId, final ReadableMap authMap, final int index, final Promise promise) {
         powerAuthJsModule.fetchEncryptionKey(instanceId, authMap, index, promise);
     }

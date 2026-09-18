@@ -224,6 +224,24 @@ RCT_EXPORT_MODULE(PowerAuthObjectRegister);
     }];
 }
 
+- (id) useObjectWithId:(NSString*)objectId
+          expectedClass:(Class)expectedClass
+              transform:(NS_NOESCAPE id(^)(id object))transform
+{
+    return [self synchronized:^id{
+        NSString * registeredId = [self translateObjectId:objectId];
+        PowerAuthManagedObject * managedObject = registeredId ? _register[registeredId] : nil;
+        if (!managedObject ||
+            ![managedObject isStillValid] ||
+            ![managedObject.object isKindOfClass:expectedClass]) {
+            return nil;
+        }
+        id result = transform(managedObject.object);
+        [managedObject setUsed];
+        return result;
+    }];
+}
+
 - (id) findObjectWithId:(NSString *)objectId expectedClass:(Class)expectedClass
 {
     return [self synchronized:^id{

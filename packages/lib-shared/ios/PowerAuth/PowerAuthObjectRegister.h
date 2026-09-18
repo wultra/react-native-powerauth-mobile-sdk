@@ -78,6 +78,14 @@ PAJS_MODULE_BASIC(PowerAuthObjectRegister)
                   expectedClass:(nonnull Class)expectedClass;
 
 /**
+ Transform a valid object while holding the register lock, then increase its usage counter.
+ This allows an owned copy of sensitive single-use data to be created before cleanup is eligible.
+ */
+- (nullable id) useObjectWithId:(nonnull NSString*)objectId
+                  expectedClass:(nonnull Class)expectedClass
+                      transform:(NS_NOESCAPE id _Nullable(^_Nonnull)(id _Nonnull object))transform;
+
+/**
  Returns true if object with given identifier is still valid. Unlike find method, this
  doesn't require Class to validate the object existence.
  */
