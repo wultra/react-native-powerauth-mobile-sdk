@@ -2,7 +2,7 @@
   "name": "powerauth-mobile-sdk-js-monorepo",
   "title": "PowerAuth Mobile SDK",
   "description": "Wultra PowerAuth Mobile SDK for React Native and Cordova",
-  "version": "5.0.0-beta-1",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "homepage": "https://www.wultra.com/mobile-security-suite",
