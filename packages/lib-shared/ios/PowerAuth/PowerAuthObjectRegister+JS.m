@@ -19,7 +19,7 @@
 #import "PAJS.h"
 #import "PowerAuthEncryptorModule.h"
 
-@import PowerAuthCore;
+@import PowerAuth2;
 
 /*
  This class category exports several debug methods to JavaScript.
