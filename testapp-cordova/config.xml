@@ -52,13 +52,13 @@
     <preference name="AndroidInsecureFileModeEnabled" value="true" />
 
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="android-compileSdkVersion" value="34" />
+    <preference name="android-compileSdkVersion" value="36" />
     <preference name="android-buildToolsVersion" value="36.0.0" />
-    <preference name="GradleVersion" value="8.1.1" />
+    <preference name="GradleVersion" value="8.11.1" />
     <preference name="GradlePluginKotlinEnabled" value="true" />
     <preference name="GradlePluginKotlinCodeStyle" value="official" />
-    <preference name="GradlePluginKotlinVersion" value="1.9.22" />
-    <preference name="AndroidGradlePluginVersion" value="8.1.4" />
+    <preference name="GradlePluginKotlinVersion" value="2.1.20" />
+    <preference name="AndroidGradlePluginVersion" value="8.9.1" />
     <preference name="AndroidXEnabled" value="true" />
     <preference name="AndroidKotlinJVMTarget" value="17" />
     <preference name="AndroidJavaSourceCompatibility" value="17" />
