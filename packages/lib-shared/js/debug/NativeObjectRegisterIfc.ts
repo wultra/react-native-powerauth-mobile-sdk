@@ -39,18 +39,25 @@ export interface NativeObjectInfo {
 /**
  * Command type.
  */
-export type NativeObjectCmd = 'create' | 'release' | 'releaseAll' | 'use' | 'find' | 'touch' | 'setPeriod'
+export type NativeObjectCmd =
+    | 'create'
+    | 'release'
+    | 'releaseAll'
+    | 'use'
+    | 'find'
+    | 'touch'
+    | 'setPeriod'
 /**
  * Native object types.
  */
-export type NativeObjectType = 'data' | 'secure-data' | 'number' | 'password'
+export type NativeObjectType = 'data' | 'secure-data' | 'number' | 'password' | 'encryptor'
 /**
  * Data accepted in debugCommand() function. 
  */
 export interface NativeObjectCmdData {
-    objectId?: string               // object id, accepted in 'release', 'use', 'find', 'touch'
+    objectId?: string               // object id, accepted in 'use', 'find', 'touch', 'release'
     objectTag?: string              // object tag, accepted in 'create', 'releaseAll'
-    objectType?: NativeObjectType   // object type accepted in 'create', 'release', 'use', 'find', 'touch'
+    objectType?: NativeObjectType   // object type accepted in 'create', 'use', 'find', 'touch', 'release'
     releasePolicy?: string[]        // use 'manual', 'after_use N', 'keep_alive T', 'expore T', accepted in 'create'
     cleanupPeriod?: number          // cleanup period in milliseconds <100, 60000>, accepted in 'setPeriod'
 }

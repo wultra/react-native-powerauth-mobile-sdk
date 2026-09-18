@@ -79,6 +79,11 @@ public class ObjectRegister extends BaseJavaModule {
     }
 
     @ReactMethod
+    void releaseNativeObject(String objectId, Promise promise) {
+        objectRegisterJs.releaseNativeObject(objectId, promise);
+    }
+
+    @ReactMethod
     void debugDump(String instanceId, Promise promise) {
         objectRegisterJs.debugDump(instanceId, promise);
     }

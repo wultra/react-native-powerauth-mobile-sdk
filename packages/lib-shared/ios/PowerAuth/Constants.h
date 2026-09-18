@@ -26,8 +26,6 @@
 
 /// Time interval in milliseconds to keep encryptor object alive in memory
 #define ENCRYPTOR_KEEP_ALIVE_TIME       (5 * 60 * 1000)
-/// Time interval in milliseconds to keep decryptor object alive in memory
-#define DECRYPTOR_KEEP_ALIVE_TIME       (5 * 60 * 1000)
 
 /// Upper limit for Unicode Code Point
 #define CODEPOINT_MAX                    0x10FFFF

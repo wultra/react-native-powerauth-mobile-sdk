@@ -28,8 +28,6 @@ PA_EXTERN_C NSString * __nonnull const EC_MISSING_ACTIVATION;
 PA_EXTERN_C NSString * __nonnull const EC_PENDING_ACTIVATION;
 PA_EXTERN_C NSString * __nonnull const EC_OPERATION_CANCELED;
 PA_EXTERN_C NSString * __nonnull const EC_INVALID_TOKEN;
-/// Retained internally until the legacy E2EE surface is replaced in pqa/encryptor.
-PA_EXTERN_C NSString * __nonnull const EC_INVALID_ENCRYPTOR;
 PA_EXTERN_C NSString * __nonnull const EC_ENCRYPTION_ERROR;
 PA_EXTERN_C NSString * __nonnull const EC_WRONG_PARAMETER;
 PA_EXTERN_C NSString * __nonnull const EC_PROTOCOL_UPGRADE;
