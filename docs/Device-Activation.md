@@ -17,14 +17,12 @@ const activation = PowerAuthActivation.createWithActivationCode(activationCode, 
 try {
     const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation
-    // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
-    // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
+    // The 'result' contains 'activationFingerprint', representing the combination of device and server public keys.
+    // It may be used as visual confirmation.
 } catch (e) {
     // Error occurred, report it to the user
 }
 ```
-
-If the received activation result also contains recovery data, then you should display that values to the user. To do that, please read the [Recovery Code](Recovery-Codes.md) document, which describes how to treat that sensitive information. This is relevant for all types of activation you use.
 
 ### Additional Activation OTP
 
@@ -66,40 +64,14 @@ const activation = PowerAuthActivation.createWithIdentityAttributes(credentials,
 try {
     const result = await powerAuth.createActivation(activation);
     // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation
-    // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
-    // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
+    // The 'result' contains 'activationFingerprint', representing the combination of device and server public keys.
+    // It may be used as visual confirmation.
 } catch (e) {
     // Error occurred, report it to the user
 }
 ```
 
 Note that by using weak identity attributes to create an activation, the resulting activation is confirming a "blurry identity". This may greatly limit the legal weight and usability of a signature. We recommend using a strong identity verification before activation can actually be created.
-
-
-## Activation via Recovery Code
-
-If PowerAuth Server is configured to support [Recovery Codes](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Recovery.md), then also you can create an activation via the recovery code and PUK.
-
-Use the following code to create an activation using recovery code:
-
-```javascript
-const deviceName = "John Tramonta"; // users phone name
-const recoveryCode = "55555-55555-55555-55YMA"; // User's input
-const puk = "0123456789"; // User's input. You should validate RC & PUK with using PowerAuthOtpUtil
-
-// Create activation object with recovery code and PUK
-const activation = PowerAuthActivation.createWithRecoveryCode(recoveryCode, puk, deviceName);
-
-// Create a new activation with just created activation object
-try {
-    const result = await powerAuth.createActivation(activation);
-    // No error occurred, proceed to credentials entry (PIN prompt, Enable Biometry, ...) and persist the activation.
-    // The 'result' contains 'activationFingerprint' property, representing the device public key - it may be used as visual confirmation
-    // If server supports recovery codes for activations, then `activationRecovery` property contains object with information about activation recovery.
-} catch (e) {
-    // Error occurred, report it to the user
-}
-```
 
 ## Activation via OpenID Connect
 
@@ -174,9 +146,11 @@ const auth = PowerAuthAuthentication.persistWithPasswordAndBiometry("1234", {
 try {
   await powerAuth.persistActivation(auth);
 } catch (e) {
-    // happens only in case SDK was not configured or activation is not in state to be persisted
+    // Handle biometric cancellation, invalid activation state, or another persistence failure.
 }
 ```
+
+On Android, omitting the prompt while `authenticateOnBiometricKeySetup` is `true` fails with `PowerAuthErrorCode.WRONG_PARAMETER`. When the option is `false`, the SDK configures the biometric key without displaying a prompt.
 
 
 ## Validating User Inputs
@@ -185,44 +159,24 @@ The mobile SDK is providing a couple of functions in `PowerAuthActivationCodeUti
 
 - Parse activation code when it's scanned from QR code
 - Validate a whole code at once
-- Validate recovery code or PUK
 - Auto-correct characters typed on the fly
 
 ### Validating Scanned QR Code
 
-To validate an activation code scanned from QR code, you can use `PowerAuthActivationCodeUtil.parseActivationCode(code)` function. You have to provide the code with or without the signature part. For example:
+To parse an activation code scanned from a QR code, use `PowerAuthActivationCodeUtil.parseActivationCode(code)`. You can provide the code with or without a legacy signature suffix. The function validates the activation-code format and returns the activation code without the suffix:
 
 ```javascript
 const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
 try {
-  const otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
-  if (otp.activationSignature == null) {
-     // QR code should contain a signature
-     return
-  }
+  const parsed = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
+  const activationCode = parsed.activationCode;
+  // Use activationCode to create the activation.
 } catch(e) {
-  // not valid
+  // The activation code is not valid.
 }
 ```
 
-Note that the signature is only formally validated in the function above. The actual signature verification is performed in the activation process, or you can do it on your own:
-
-```javascript
-const scannedCode = "VVVVV-VVVVV-VVVVV-VTFVA#aGVsbG8......gd29ybGQ=";
-try {
-  const otp = await PowerAuthActivationCodeUtil.parseActivationCode(scannedCode);
-  if (otp.activationSignature) {
-     await powerAuth.verifyServerSignedData(otp.activationCode, otp.activationSignature, true);
-     // valid
-  }
-} catch(e) {
-  // not valid
-}
-
-// You can also do both tests at once
-const codeIsValidAndVerified = await powerAuth.verifyScannedActivationCode(scannedCode);
-console.log(`Activation code is valid and verified = ${codeIsValidAndVerified}`);
-```
+PowerAuth Mobile SDK versions older than 2.0 allowed applications to verify the signature suffix. This is no longer possible because post-quantum signatures are too large to embed in a QR code. If an activation code contains a signature suffix, the activation process ignores it. Use `PowerAuthActivationCodeUtil.parseActivationCode()` only to validate the scanned code and strip the suffix; do not treat the suffix as proof that the code is trusted.
 
 ### Validating Entered Activation Code
 
@@ -235,24 +189,9 @@ const isInvalid = await PowerAuthActivationCodeUtil.validateActivationCode("VVVV
 
 If your application is using your own validation, then you should switch to functions provided by SDK. All activation codes contain a checksum, so it's possible to detect mistyped characters before you start the activation. Check our [Activation Code](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation-Code.md) documentation for more details.
 
-### Validating Recovery Code and PUK
-
-To validate a recovery code at once, you can call `PowerAuthActivationCodeUtil.validateRecoveryCode()` function. You can provide the whole code, which may or may not contain `"R:"` prefix. So, you can validate manually entered codes, but also codes scanned from QR. For example:
-
-```javascript
-const isValid1 = await PowerAuthActivationCodeUtil.validateRecoveryCode("VVVVV-VVVVV-VVVVV-VTFVA");
-const isValid2 = await PowerAuthActivationCodeUtil.validateRecoveryCode("R:VVVVV-VVVVV-VVVVV-VTFVA");
-```
-
-To validate PUK at once, you can call `PowerAuthActivationCodeUtil.validateRecoveryPuk()` function:
-
-```javascript
-const isValid = await PowerAuthActivationCodeUtil.validateRecoveryPuk("0123456789");
-```
-
 ### Auto-Correcting Typed Characters
 
-You can implement auto-correcting of typed characters with using `PowerAuthActivationCodeUtil.correctTypedCharacter()` function in screens, where user is supposed to enter an activation or recovery code. This technique is possible due to the fact that Base32 is constructed so that it doesn't contain visually confusing characters. For example, `1` (number one) and `I` (capital I) are confusing, so only `I` is allowed. The benefit is that the provided function can correct typed `1` and translate it to `I`.
+You can implement auto-correcting of typed characters with using `PowerAuthActivationCodeUtil.correctTypedCharacter()` function in screens, where user is supposed to enter an activation code. This technique is possible due to the fact that Base32 is constructed so that it doesn't contain visually confusing characters. For example, `1` (number one) and `I` (capital I) are confusing, so only `I` is allowed. The benefit is that the provided function can correct typed `1` and translate it to `I`.
 
 Here's an example how to iterate over the string and validate it character by character:
 

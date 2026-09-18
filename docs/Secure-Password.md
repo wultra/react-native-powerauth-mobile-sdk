@@ -155,7 +155,7 @@ try {
         console.warn(`PIN is weak. Issues = ${JSON.stringify(result.issues)}`);
     }
 } catch (e) {
-    if (e.code === PowerAuthErrorCode.WRONG_PARAM) {
+    if (e.code === PowerAuthErrorCode.WRONG_PARAMETER) {
         // PIN is too short, or passowrd object contains other than digit characters.
     }
 }

@@ -21,10 +21,6 @@
  */
 export enum PowerAuthActivationState {
     /**
-     * The activation is just created.
-     */
-    CREATED = "CREATED",
-    /**
      * The activation is not completed yet on the server.
      */
     PENDING_COMMIT = "PENDING_COMMIT",
@@ -44,5 +40,9 @@ export enum PowerAuthActivationState {
      * The activation is technically blocked. You cannot use it anymore
      * for the signature calculations.
      */
-    DEADLOCK = "DEADLOCK"
+    DEADLOCK = "DEADLOCK",
+    /**
+     * An activation state not recognized by this SDK version.
+     */
+    UNKNOWN = "UNKNOWN"
 }
