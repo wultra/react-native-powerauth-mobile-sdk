@@ -50,6 +50,10 @@ class Constants {
      */
     static final int ENCRYPTOR_KEY_KEEP_ALIVE_TIME  = 5 * 60 * 1_000;
     /**
+     * Time interval in milliseconds to keep a Secure Vault base key valid in memory.
+     */
+    static final int SECURE_VAULT_KEY_KEEP_ALIVE_TIME = 5 * 60 * 1_000;
+    /**
      * Upper limit for Unicode Code Point.
      */
     static final int CODEPOINT_MAX                  = 0x10FFFF;

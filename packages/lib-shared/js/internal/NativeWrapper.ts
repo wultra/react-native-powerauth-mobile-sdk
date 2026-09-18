@@ -361,6 +361,8 @@ function prettyArgs(fname: string, args: any[]): string {
 function prettyResult(fname: string, result: any): string {
     switch (fname) {
         case 'beginPasswordChange':
+        case 'deriveSecureVaultKey':
+        case 'fetchEncryptionKey':
         case 'calculateDigitalSignature':
         case 'calculateJwsSignature':
         case 'signDataWithDevicePrivateKey':

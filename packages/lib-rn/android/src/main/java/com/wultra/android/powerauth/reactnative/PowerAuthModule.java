@@ -292,6 +292,16 @@ public class PowerAuthModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void fetchSecureVaultKey(String instanceId, final ReadableMap authMap, final String keyIdentifier, final Promise promise) {
+        powerAuthJsModule.fetchSecureVaultKey(instanceId, authMap, keyIdentifier, promise);
+    }
+
+    @ReactMethod
+    public void deriveSecureVaultKey(final String objectId, final double index, final int keySize, final Promise promise) {
+        powerAuthJsModule.deriveSecureVaultKey(objectId, index, keySize, promise);
+    }
+
+    @ReactMethod
     public void signDataWithDevicePrivateKey(String instanceId, final ReadableMap authMap, final String data, final String dataFormat, final Promise promise) {
         powerAuthJsModule.signDataWithDevicePrivateKey(instanceId, authMap, data, dataFormat, promise);
     }

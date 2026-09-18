@@ -53,6 +53,7 @@ export * from './model/PowerAuthOIDCParameters';
 export * from './model/PowerAuthProtocolUpgradeResult';
 export * from './model/PowerAuthSignatureKeyId';
 export * from './model/PowerAuthDevicePublicKey';
+export * from './model/PowerAuthSecureVaultKey';
 
 // Debug features
 
