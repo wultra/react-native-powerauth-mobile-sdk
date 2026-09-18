@@ -265,6 +265,70 @@ class PowerAuthJsModule(
     }
 
     @JsApiMethod
+    fun hasProtocolUpgradeAvailable(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            promise.resolve(sdk.hasProtocolUpgradeAvailable())
+        })
+    }
+
+    @JsApiMethod
+    fun hasPendingProtocolUpgrade(instanceId: String, promise: Promise) {
+        this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            promise.resolve(sdk.hasPendingProtocolUpgrade())
+        })
+    }
+
+    @JsApiMethod
+    fun startProtocolUpgrade(
+        instanceId: String,
+        password: Dynamic?,
+        upgradeBiometry: Boolean,
+        promise: Promise
+    ) {
+        val context = this.context
+        this.usePowerAuthOnMainThread(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
+            val biometricPrompt = if (upgradeBiometry) {
+                val fragmentActivity = getCurrentActivity() as FragmentActivity?
+                    ?: throw IllegalStateException("Current fragment activity is not available")
+                PowerAuthBiometricPrompt.noPromptForBiometricKeySetup(fragmentActivity)
+            } else {
+                null
+            }
+            val corePassword = passwordModule.usePasswordCopy(password)
+            val listener = object : IProtocolUpgradeListener {
+                override fun onProtocolUpgradeSucceed(result: ProtocolUpgradeResult) {
+                    corePassword.destroy()
+                    val map = Arguments.createMap()
+                    map.putBoolean(
+                        "activationStatusFetchRequired",
+                        result.isActivationStatusFetchRequired
+                    )
+                    result.activationFingerprint?.let {
+                        map.putString("activationFingerprint", it)
+                    } ?: map.putNull("activationFingerprint")
+                    map.putBoolean("biometryFactorRemoved", result.isBiometryFactorRemoved)
+                    promise.resolve(map)
+                }
+
+                override fun onProtocolUpgradeFailed(throwable: Throwable) {
+                    corePassword.destroy()
+                    Errors.rejectPromise(promise, throwable)
+                }
+            }
+            try {
+                if (biometricPrompt != null) {
+                    sdk.startProtocolUpgrade(context, corePassword, biometricPrompt, listener)
+                } else {
+                    sdk.startProtocolUpgrade(context, corePassword, listener)
+                }
+            } catch (t: Throwable) {
+                corePassword.destroy()
+                throw t
+            }
+        })
+    }
+
+    @JsApiMethod
     fun createActivation(instanceId: String, activation: ReadableMap, promise: Promise) {
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             override fun run(sdk: PowerAuthSDK) {
