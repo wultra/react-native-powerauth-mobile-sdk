@@ -68,7 +68,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
                 const headers = new Headers()
                 encrypted.requestHeaders.forEach(header => headers.set(header.name, header.value))
                 const responseBody = await this.helper.callRawSDKEndpoint(
-                    'pa/v3/user/info',
+                    'user/info',
                     encrypted.requestBody,
                     headers
                 )

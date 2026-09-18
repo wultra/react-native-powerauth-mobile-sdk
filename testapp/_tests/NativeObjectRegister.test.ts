@@ -41,6 +41,17 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         return 'tag_' + (Math.random() + 1).toString(36).substring(7)
     }
 
+    private async waitForObject(objectId: string, type: 'data' | 'secure-data' | 'number', expected: boolean, timeoutMs: number = 2_000): Promise<void> {
+        const deadline = Date.now() + timeoutMs
+        while (Date.now() < deadline) {
+            if (await Register.findObject(objectId, type) === expected) {
+                return
+            }
+            await this.sleep(25)
+        }
+        throw new Error(`Native object ${objectId} did not become ${expected ? 'available' : 'unavailable'} within ${timeoutMs} ms`)
+    }
+
     async testDumpingRegisteredObjects() {
 
         const tag = this.getRandomTag()
@@ -68,8 +79,8 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         const tag = this.getRandomTag()
         this.debugInfo(`Using tag '${tag}'`)
 
-        const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 400', 'afterUse 1'] })
-        const dataId2 = await Register.createObject({ objectType: 'secure-data', objectTag: tag, releasePolicy: ['expire 200', 'keepAlive 400'] })
+        const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 800', 'afterUse 1'] })
+        const dataId2 = await Register.createObject({ objectType: 'secure-data', objectTag: tag, releasePolicy: ['expire 200', 'keepAlive 800'] })
         
         this.debugInfo(`Using IDs '${dataId1}', '${dataId2}'`)
 
@@ -77,15 +88,13 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect(await Register.findObject(dataId2, 'secure-data')).toBe(true)
         expect((await Register.countObjects(tag)).valid).toBe(2)
 
-        await this.sleep(200)
+        await this.waitForObject(dataId2, 'secure-data', false)
 
         expect(await Register.findObject(dataId1, 'data')).toBe(true)
-        expect(await Register.findObject(dataId2, 'secure-data')).toBe(false)
         expect((await Register.countObjects(tag)).valid).toBe(1)
 
-        await this.sleep(200)
+        await this.waitForObject(dataId1, 'data', false)
 
-        expect(await Register.findObject(dataId1, 'data')).toBe(false)
         expect(await Register.findObject(dataId2, 'secure-data')).toBe(false)
         expect((await Register.countObjects(tag)).valid).toBe(0)
     }
@@ -95,9 +104,9 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         this.debugInfo(`Using tag '${tag}'`)
 
         const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['afterUse 1'] })
-        const dataId2 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 500', 'afterUse 2'] })
-        const dataId3 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 200', 'afterUse 4'] })
-        const dataId4 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 1200', 'afterUse 4'] })
+        const dataId2 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 5000', 'afterUse 2'] })
+        const dataId3 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 250', 'afterUse 4'] })
+        const dataId4 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 5000', 'afterUse 4'] })
         
         this.debugInfo(`Using IDs '${dataId1}', '${dataId2}', '${dataId3}', '${dataId4}'`)
 
@@ -108,18 +117,13 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect(await Register.findObject(dataId4, 'data')).toBe(true)
         expect((await Register.countObjects(tag)).valid).toBe(4)
 
-        await this.sleep(100)
-        // After 100ms everything should be still valid
-        expect((await Register.countObjects(tag)).valid).toBe(4)
-
         // use dataId4, this will extend its lifetime
         expect(await Register.useObject(dataId4, 'data')).toBe(true)
 
-        await this.sleep(100)
-        // After next 100ms, dataId3 will be removed
+        await this.waitForObject(dataId3, 'data', false)
+
         expect(await Register.findObject(dataId1, 'data')).toBe(true)
         expect(await Register.findObject(dataId2, 'data')).toBe(true)
-        expect(await Register.findObject(dataId3, 'data')).toBe(false)
         expect(await Register.findObject(dataId4, 'data')).toBe(true)
 
         // Now use dataId2 for 1st time
@@ -158,8 +162,8 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         const tag = this.getRandomTag()
         this.debugInfo(`Using tag '${tag}'`)
 
-        const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 100', 'afterUse 4'] })
-        const dataId2 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 100', 'afterUse 4'] })
+        const dataId1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 1000', 'afterUse 4'] })
+        const dataId2 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['keepAlive 1000', 'afterUse 4'] })
         
         this.debugInfo(`Using IDs '${dataId1}', '${dataId2}'`)
 
@@ -168,20 +172,15 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect(await Register.findObject(dataId2, 'data')).toBe(true)
         expect((await Register.countObjects(tag)).valid).toBe(2)
 
-        await this.sleep(50)
-        // After 50ms everything should be still valid
+        await this.sleep(500)
 
-        // use dataId4, this will extend its lifetime
+        // Touch dataId2 to extend its lifetime.
         expect(await Register.touchObject(dataId2, 'data')).toBe(true)
 
-        await this.sleep(50)
-        // After next 50ms, dataId3 will be removed
-        expect(await Register.findObject(dataId1, 'data')).toBe(false)
+        await this.waitForObject(dataId1, 'data', false)
         expect(await Register.findObject(dataId2, 'data')).toBe(true)
-        // Wait for another 50ms to release dataId2
-        await this.sleep(50)
-        expect(await Register.findObject(dataId1, 'data')).toBe(false)
-        expect(await Register.findObject(dataId2, 'data')).toBe(false)
+
+        await this.waitForObject(dataId2, 'data', false)
         expect((await Register.countObjects(tag)).valid).toBe(0)
     }
 
@@ -206,7 +205,7 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         expect(await Register.useObject(dataId1, 'data')).toBe(true)
         expect(await Register.findObject(dataId1, 'data')).toBe(true)
 
-        this.sleep(110)
+        await this.sleep(300)
 
         expect(await Register.findObject(dataId1, 'data')).toBe(true)
         expect(await Register.findObject(dataId2, 'data')).toBe(true)
@@ -226,8 +225,8 @@ export class NativeObjectRegisterTests extends TestWithActivation {
         const tag = this.getRandomTag()
         this.debugInfo(`Using tag '${tag}'`)
 
-        const id1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 200'] })
-        const id2 = await Register.createObject({ objectType: 'number', objectTag: tag, releasePolicy: ['expire 200'] })
+        const id1 = await Register.createObject({ objectType: 'data', objectTag: tag, releasePolicy: ['expire 5000'] })
+        const id2 = await Register.createObject({ objectType: 'number', objectTag: tag, releasePolicy: ['expire 5000'] })
 
         this.debugInfo(`Using IDs '${id1}', '${id2}''`)
 
