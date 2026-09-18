@@ -1,6 +1,6 @@
 # Changelog
 
-## TBA
+## 5.0.0-beta-1
 
 See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
 
