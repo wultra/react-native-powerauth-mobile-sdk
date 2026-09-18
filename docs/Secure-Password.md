@@ -38,26 +38,32 @@ In both ways you can alter the following parameters:
 
 ## Using password
 
-PowerAuth Mobile JS SDK allows you to use both strings and special password objects at input, so it’s up to you which way fits best for your purposes. For simplicity, this documentation is using strings for the passwords, but all code examples can be changed to utilize `PowerAuthPassword` object as well. For example, this is the modified code for [Password Management](Password-Management.md#change-with-an-automatic-validation):
+PowerAuth Mobile JS SDK allows you to use both strings and special password objects at input, so it’s up to you which way fits best for your purposes. For simplicity, this documentation is using strings for the passwords, but all code examples can be changed to utilize `PowerAuthPassword` object as well. For example, this is the modified code for the [two-step password change](Password-Management.md#two-step-password-change):
 
 ```javascript
 // Change password from "0123" to "3210".
+let changeData;
 try {
     const oldPassword = new PowerAuthPassword();
     await oldPassword.addCharacter('0');
     await oldPassword.addCharacter('1');
     await oldPassword.addCharacter('2');
     await oldPassword.addCharacter('3');
-    
+
+    changeData = await powerAuth.beginPasswordChange(oldPassword);
+
     const newPassword = new PowerAuthPassword();
     await newPassword.addCharacter(51);
     await newPassword.addCharacter(50);
     await newPassword.addCharacter(49);
     await newPassword.addCharacter(48);
-    
-    await powerAuth.changePassword(oldPassword, newPassword);
+
+    await powerAuth.finishPasswordChange(newPassword, changeData);
 } catch (e) {
     console.log(`Change failed: ${e.code}`);
+} finally {
+    // Safe after finishPasswordChange(), which already consumes the data.
+    await changeData?.release();
 }
 ```
 

@@ -65,6 +65,8 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.hasPendingProtocolUpgrade()).toBe(false)
 
         await this.runFailingMethodsDuringActivation('BEGIN', PowerAuthErrorCode.MISSING_ACTIVATION, PowerAuthErrorCode.MISSING_ACTIVATION)
+        await expect(async () => await sdk.persistActivation(this.credentials.invalidKnowledge))
+            .toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         await expect(async () => await sdk.persistActivation(invalidPersistence)).toThrow({errorCode: PowerAuthErrorCode.INVALID_ACTIVATION_STATE})
 
         // [ 1 ] Prepare activation on the server
@@ -182,6 +184,19 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
         expect(await sdk.verifyServerSignedData('c2lnbmF0dXJl', 'c2lnbmF0dXJl', false)).toBe(false)
         expect(await sdk.unsafeChangePassword(this.credentials.validPassword, this.credentials.invalidPassword)).toBe(false)
         await expect(async () => await sdk.removeBiometryFactor()).toThrow({errorCode: expectedError})
+    }
+
+    async testPersistenceAuthenticationCannotAuthorizeRequests() {
+        const expectedError = { errorCode: PowerAuthErrorCode.WRONG_PARAMETER }
+        await expect(async () =>
+            await this.sdk.removeActivationWithAuthentication(this.credentials.persistence)
+        ).toThrow(expectedError)
+        await expect(async () =>
+            await this.sdk.fetchEncryptionKey(this.credentials.persistence, 1)
+        ).toThrow(expectedError)
+        await expect(async () =>
+            await this.sdk.signDataWithDevicePrivateKey(this.credentials.persistence, 'Data', 'UTF8')
+        ).toThrow(expectedError)
     }
 
     // Actual tests starts here
