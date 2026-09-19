@@ -8087,7 +8087,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-jest: "npm:^29.0.1"
-    prettier: "npm:^3.8.3"
+    prettier: "npm:^3.9.7"
     rollup: "npm:^4.59.0"
     rollup-plugin-dts: "npm:^6.2.3"
     rollup-plugin-typescript2: "npm:^0.36.0"
@@ -8102,21 +8102,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.3.3":
-  version: 3.8.0
-  resolution: "prettier@npm:3.8.0"
+"prettier@npm:3.9.7, prettier@npm:^3.9.7":
+  version: 3.9.7
+  resolution: "prettier@npm:3.9.7"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/8926e9c9941a293b76c2d799089d038e9f6d84fb37702fc370bedd03b3c70d7fcf507e2e3c4f151f222d81820a3b74cac5e692c955cfafe34dd0d02616ce8327
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^3.8.3":
-  version: 3.8.3
-  resolution: "prettier@npm:3.8.3"
-  bin:
-    prettier: bin/prettier.cjs
-  checksum: 10c0/754816fd7593eb80f6376d7476d463e832c38a12f32775a82683adb6e35b772b1f484d65f19401507b983a8c8a7cd5a4a9f12006bd56491e8f35503473f77473
+  checksum: 10c0/3bb72e3fd0292695fe1b808a7a3b67a0d68842c780f01ebca7ff1cf2fe05055478dccb513a8d022be59b3494497b4a3b6dc059baee116c1debe69bded535567b
   languageName: node
   linkType: hard
 
@@ -9661,7 +9652,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     mobile-test-reporter: "workspace:*"
     mobile-testbed: "workspace:*"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.9.7"
     react: "npm:19.2.3"
     react-native: "npm:0.87.0"
     react-native-config: "npm:1.5.5"
