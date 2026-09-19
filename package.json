@@ -89,7 +89,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jest": "^29.0.1",
     "prettier": "^3.8.3",
-    "rollup": "^4.59.0",
+    "rollup": "^4.63.3",
     "rollup-plugin-dts": "^6.2.3",
     "rollup-plugin-typescript2": "^0.36.0",
     "typescript": "^6.0.3"
