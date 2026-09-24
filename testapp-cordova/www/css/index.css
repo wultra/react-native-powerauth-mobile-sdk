@@ -16,111 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- * {
-    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
-}
-
+* { box-sizing: border-box; }
 body {
-    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
-    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
-    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
-    background-color:#E4E4E4;
-    background-image:linear-gradient(to bottom, #A7A7A7 0%, #E4E4E4 51%) !important;
-    font-family: system-ui, -apple-system, -apple-system-font, 'Segoe UI', 'Roboto', sans-serif;
-    font-size:12px;
-    height:100vh;
-    margin:0px;
-    padding:0px;
-    /* Padding to avoid the "unsafe" areas behind notches in the screen */
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-    text-transform:uppercase;
-    width:100%;
+  margin: 0;
+  background: #f5f7fa;
+  color: #142438;
+  font: 16px system-ui, -apple-system, sans-serif;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
-
-/* Portrait layout (default) */
-.app {
-    background:url(../img/logo.png) no-repeat center top; /* 170px x 200px */
-    position:absolute;             /* position in the center of the screen */
-    left:50%;
-    top:50%;
-    height:50px;                   /* text area height */
-    width:225px;                   /* text area width */
-    text-align:center;
-    padding:180px 0px 0px 0px;     /* image height is 200px (bottom 20px are overlapped with text) */
-    margin:-200px 0px 0px -112px;  /* offset vertical: half of image height and text area height */
-                                   /* offset horizontal: half of text area width */
+.app { max-width: 680px; margin: auto; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+h1 { font-size: 26px; margin: 8px 0; }
+h2 { font-size: 20px; margin: 16px 0 4px; }
+label { display: grid; gap: 8px; }
+button, select, input, textarea {
+  font: inherit;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid #8c9fb2;
+  border-radius: 6px;
+  background: #fff;
+  color: #142438;
+  width: 100%;
+  min-width: 0;
 }
-
-/* Landscape layout (with min-width) */
-@media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
-    .app {
-        background-position:left center;
-        padding:75px 0px 75px 170px;  /* padding-top + padding-bottom + text area = image height */
-        margin:-170px 0px 0px -198px;  /* offset vertical: half of image height */
-                                      /* offset horizontal: half of image width and text area width */
-    }
-}
-
-h1 {
-    font-size:22px;
-    font-weight:bold;
-    margin:0px;
-    overflow:visible;
-    padding:0px;
-    text-align:center;
-    color: #021b28;
-}
-
-.event {
-    border-radius:4px;
-    color:#FFFFFF;
-    font-size:12px;
-    margin:0px 30px;
-    padding:2px 0px;
-}
-
-.event.listening {
-    background-color:#333333;
-    display:block;
-}
-
-.event.received {
-    background-color:#4B946A;
-    display:none;
-}
-
-#deviceready.ready .event.listening { display: none; }
-#deviceready.ready .event.received { display: block; }
-
-@keyframes fade {
-    from { opacity: 1.0; }
-    50% { opacity: 0.4; }
-    to { opacity: 1.0; }
-}
-
-.blink {
-    animation:fade 3000ms infinite;
-    -webkit-animation:fade 3000ms infinite;
-}
-
-
-@media screen and (prefers-color-scheme: dark) {
-    body {
-        background-image:linear-gradient(to bottom, #585858 0%, #1B1B1B 51%);
-    }
-}
-
-.button {
-    font-size: 15px;
-    padding: 8px !important;
-    margin-bottom: 4px;
-    margin-top: 2px;
-}
-
-#test-message {
-    text-align: center;
-    padding: 20px 30px;
-    font-size: 16px;
-    font-weight: bold;
-    color: red;
-}
+button { cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
+button:disabled, select:disabled { opacity: .45; cursor: default; }
+input[type=checkbox] { width: 24px; min-height: 24px; margin: 0; }
+label.checkbox { grid-template-columns: 24px 1fr; align-items: center; }
+textarea { min-height: 100px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; border-radius: 6px; background: #e6eef6; margin: 0; }
+.success { color: #176b3a; }
+.error { color: #8c1515; background: #fce7e7; }
+.modal { position: fixed; inset: 0; z-index: 10; overflow: auto; background: #f5f7fa; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
+.modal form { display: grid; gap: 16px; max-width: 580px; margin: auto; }
+.modal h2 { max-width: 580px; margin: 0 auto 20px; }
+:focus-visible { outline: 3px solid #2670b7; outline-offset: 2px; }

@@ -42,21 +42,23 @@ class Platform {
 
 // parse environment configuration
 const envConfig = dotenv.parse(fs.readFileSync(`${rnTestAppDir}/.env`))
-console.log(`Reading env config env with PA Cloud server ${envConfig.POWERAUTH_CLOUD_URL} and enrollment server ${envConfig.ENROLLMENT_SERVER_URL}`)
+console.log("Reading shared testapp environment.")
 const envConfigStr = `const EnvConfig = ${JSON.stringify(envConfig)};`
 
 const copyTestFiles = () =>
     gulp
-        .src([`${rnTestAppDir}/src/IntegrationUtils.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
-        .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk";/g, ''))
-        .pipe(replace(/import {[a-zA-Z }\n,]+from "react-native-powerauth-mobile-sdk"/g, ''))
+        .src([`${rnTestAppDir}/src/IntegrationUtils.ts`, `${rnTestAppDir}/src/TestExecutor.ts`, `${rnTestAppDir}/src/manual/actions.ts`, `${rnTestAppDir}/src/manual/configuration.ts`, `${rnTestAppDir}/src/manual/serverConfiguration.ts`, `${rnTestAppDir}/_tests/**/**.ts`], { base: rnTestAppDir })
+        .pipe(replace(/import\s+(?:type\s+)?\{[^}]+\}\s+from\s*['"]react-native-powerauth-mobile-sdk['"];?/g, ''))
         .pipe(replace(/import \{ Platform \} from ["']react-native["'];?/g, platformClass))
         .pipe(replace('import { Config as EnvConfig } from "react-native-config"', envConfigStr))
+        .pipe(replace("import Config from 'react-native-config';", `const Config = ${JSON.stringify(envConfig)};`))
         .pipe(gulp.dest(tempDir));
 
 const copyAppFiles = () =>
     gulp
-        .src(["src/App.tsx"], { base: "." })
+        .src(["src/**/*.ts", "src/**/*.tsx"], { base: "." })
+        .pipe(replace(/import\s+(?:type\s+)?\{[^}]+\}\s+from\s*['"]react-native-powerauth-mobile-sdk['"];?/g, ''))
+        .pipe(replace("import Config from 'react-native-config';", `const Config = ${JSON.stringify(envConfig)};`))
         .pipe(gulp.dest(tempDir));
 
 const compile = () => 
@@ -128,12 +130,10 @@ const patchIOSPlists = () => {
 }
 
 
+gulp.task("bundle", gulp.series(cleanTemp, copyTestFiles, copyAppFiles, compile, cleanTemp));
+
 gulp.task("default", gulp.series(
-    cleanTemp,
-    copyTestFiles,
-    copyAppFiles,
-    compile,
-    cleanTemp,
+    "bundle",
     prepareIOS,
     prepareAndroid,
     patchNativeFiles,

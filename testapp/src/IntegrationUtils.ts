@@ -263,7 +263,7 @@ export class IntegrationHelper {
             method,
             uriId,
             authHeader,
-            requestBody: requestUsesParams ? null : btoa(body),
+            requestBody: requestUsesParams ? null : Buffer.from(body, 'utf8').toString('base64'),
             queryParams: requestUsesParams ? queryParams ?? null : null
         })
         return await this.makeCall(payload, `${AppConfig.cloudServerUrl}/v2/signature/verify`)
@@ -370,7 +370,7 @@ export class IntegrationHelper {
         const request: RequestInit = {
             body: payload,
             headers: {
-                "authorization": `Basic ${btoa(this.credentialsForUrl(url))}`,
+                "authorization": `Basic ${Buffer.from(this.credentialsForUrl(url), 'utf8').toString('base64')}`,
                 "content-type": this.jsonMediaType
             },
             method: method
