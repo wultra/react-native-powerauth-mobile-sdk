@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Buffer } from "buffer"
 import {
     PowerAuthAlgorithm,
     PowerAuthDevicePublicKeyFormat,
@@ -40,10 +41,10 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
     }
 
     async testEcDigitalSignature() {
-        const data = btoa('EC algorithm matrix payload')
+        const data = toBase64('EC algorithm matrix payload')
         const signature = await this.sdk.calculateDigitalSignature(this.credentials.knowledge, data, PowerAuthSignatureKeyId.DEVICE_EC)
         await this.sdk.verifyDigitalSignature(signature, data, PowerAuthSignatureKeyId.DEVICE_EC)
-        await expect(async () => this.sdk.verifyDigitalSignature(signature, btoa('different payload'), PowerAuthSignatureKeyId.DEVICE_EC))
+        await expect(async () => this.sdk.verifyDigitalSignature(signature, toBase64('different payload'), PowerAuthSignatureKeyId.DEVICE_EC))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_SIGNATURE })
     }
 
@@ -76,7 +77,7 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
     }
 
     async testMlDsaDigitalSignature() {
-        const data = btoa('signed payload')
+        const data = toBase64('signed payload')
         if (!this.supportsMlDsa) {
             await expect(async () => this.sdk.calculateDigitalSignature(this.credentials.knowledge, data, PowerAuthSignatureKeyId.DEVICE_ML_DSA))
                 .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
@@ -93,20 +94,18 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
             PowerAuthSignatureKeyId.DEVICE_ML_DSA
         )).toSucceed()
 
-        const decodedData = atob(data)
-        const tamperedData = btoa(
-            String.fromCharCode((decodedData.charCodeAt(0) + 1) % 256) + decodedData.slice(1)
-        )
+        const tamperedDataBytes = Buffer.from(data, 'base64')
+        tamperedDataBytes[0] = (tamperedDataBytes[0] + 1) % 256
+        const tamperedData = tamperedDataBytes.toString('base64')
         await expect(async () => await this.sdk.verifyDigitalSignature(
             signature,
             tamperedData,
             PowerAuthSignatureKeyId.DEVICE_ML_DSA
         )).toThrow({ errorCode: PowerAuthErrorCode.WRONG_SIGNATURE })
 
-        const decodedSignature = atob(signature)
-        const tamperedSignature = btoa(
-            String.fromCharCode((decodedSignature.charCodeAt(0) + 1) % 256) + decodedSignature.slice(1)
-        )
+        const tamperedSignatureBytes = Buffer.from(signature, 'base64')
+        tamperedSignatureBytes[0] = (tamperedSignatureBytes[0] + 1) % 256
+        const tamperedSignature = tamperedSignatureBytes.toString('base64')
         await expect(async () => await this.sdk.verifyDigitalSignature(
             tamperedSignature,
             data,
@@ -116,11 +115,11 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
 
     async testJwsSignature() {
         if (!this.supportsMlDsa) {
-            await expect(async () => this.sdk.calculateJwsSignature(this.credentials.knowledge, btoa('payload'), 'JWT', true, PowerAuthSignatureKeyId.DEVICE_ML_DSA))
+            await expect(async () => this.sdk.calculateJwsSignature(this.credentials.knowledge, toBase64('payload'), 'JWT', true, PowerAuthSignatureKeyId.DEVICE_ML_DSA))
                 .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
         }
         const data = 'signed payload'
-        const dataBase64 = btoa(data)
+        const dataBase64 = toBase64(data)
         for (const keyId of [PowerAuthSignatureKeyId.DEVICE_EC, ...(this.supportsMlDsa ? [PowerAuthSignatureKeyId.DEVICE_ML_DSA] : [])]) {
             const compact = await this.sdk.calculateJwsSignature(
                 this.credentials.knowledge,
@@ -180,15 +179,19 @@ export class PowerAuth_AdvancedSignatureTests extends TestWithActivation {
             const lines = csr.trim().split(/\r?\n/)
             expect(lines[0]).toBe('-----BEGIN CERTIFICATE REQUEST-----')
             expect(lines[lines.length - 1]).toBe('-----END CERTIFICATE REQUEST-----')
-            const der = atob(lines.slice(1, -1).join(''))
+            const der = Buffer.from(lines.slice(1, -1).join(''), 'base64')
             expect(der.length > (keyId === PowerAuthSignatureKeyId.DEVICE_EC ? 128 : 256)).toBe(true)
-            expect(der.charCodeAt(0)).toBe(0x30)
+            expect(der[0]).toBe(0x30)
         }
     }
 }
 
+function toBase64(value: string): string {
+    return Buffer.from(value, 'utf8').toString('base64')
+}
+
 function encodeBase64Url(value: string): string {
-    return btoa(value)
+    return toBase64(value)
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/[=]+$/, '')
@@ -196,5 +199,5 @@ function encodeBase64Url(value: string): string {
 
 function decodeBase64Url(value: string): string {
     const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
-    return atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='))
+    return Buffer.from(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='), 'base64').toString('utf8')
 }

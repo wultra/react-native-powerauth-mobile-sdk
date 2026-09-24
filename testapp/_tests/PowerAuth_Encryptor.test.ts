@@ -14,9 +14,12 @@
 // limitations under the License.
 //
 
+import { Buffer } from "buffer";
 import { expect } from "mobile-testbed";
 import { PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
 import { TestWithActivation } from "./helpers/TestWithActivation";
+
+const toBase64 = (value: string): string => Buffer.from(value, 'utf8').toString('base64')
 
 export class PowerAuth_EncryptorTests extends TestWithActivation {
 
@@ -35,7 +38,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
             expect(await encryptor.canEncryptRequest()).toBe(true)
             expect(await encryptor.canDecryptResponse()).toBe(false)
 
-            const encrypted = await encryptor.encryptRequest(btoa('{}'))
+            const encrypted = await encryptor.encryptRequest(toBase64('{}'))
             expect(encrypted.requestBody.length > 0).toBe(true)
             expect(encrypted.requestHeaders.length > 0).toBe(true)
             expect(await encryptor.canEncryptRequest()).toBe(false)
@@ -59,7 +62,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
                 expect(await encryptor.canEncryptRequest()).toBe(true)
                 expect(await encryptor.canDecryptResponse()).toBe(false)
 
-                const encrypted = await encryptor.encryptRequest(btoa('{}'))
+                const encrypted = await encryptor.encryptRequest(toBase64('{}'))
                 expect(encrypted.requestBody.length > 0).toBe(true)
                 expect(encrypted.requestHeaders.length > 0).toBe(true)
                 expect(await encryptor.canEncryptRequest()).toBe(false)
@@ -73,7 +76,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
                     headers
                 )
                 const clearResponseBase64 = await encryptor.decryptResponse(responseBody)
-                const userInfo = JSON.parse(atob(clearResponseBase64))
+                const userInfo = JSON.parse(Buffer.from(clearResponseBase64, 'base64').toString('utf8'))
                 expect(userInfo.sub).toEqual(expectedUserInfo.subject)
 
                 await expect(async () => await encryptor.canEncryptRequest())
@@ -94,7 +97,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         const originalId = handle.objectId
         try {
             handle.objectId = this.sdk.instanceId
-            for (const body of ['**??==', btoa('{}')]) {
+            for (const body of ['**??==', toBase64('{}')]) {
                 await expect(async () => await encryptor.decryptResponse(body))
                     .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
                 expect(await this.sdk.hasValidActivation()).toBe(true)
@@ -118,7 +121,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         await Promise.all([firstRelease, secondRelease])
         expect(encryptor.release() === firstRelease).toBe(true)
 
-        await expect(async () => await encryptor.encryptRequest(btoa('{}')))
+        await expect(async () => await encryptor.encryptRequest(toBase64('{}')))
             .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }
 
@@ -138,7 +141,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
         try {
             await expect(async () => await encryptor.encryptRequest('not base64'))
                 .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-            await expect(async () => await encryptor.decryptResponse(btoa('x')))
+            await expect(async () => await encryptor.decryptResponse(toBase64('x')))
                 .toThrow()
         } finally {
             await encryptor.release()
@@ -146,7 +149,7 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
 
         encryptor = await this.sdk.getEncryptorForActivationScope()
         try {
-            await encryptor.encryptRequest(btoa('{}'))
+            await encryptor.encryptRequest(toBase64('{}'))
             await expect(async () => await encryptor.decryptResponse('**??=='))
                 .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
             await expect(async () => await encryptor.canDecryptResponse())
@@ -157,8 +160,8 @@ export class PowerAuth_EncryptorTests extends TestWithActivation {
 
         encryptor = await this.sdk.getEncryptorForActivationScope()
         try {
-            await encryptor.encryptRequest(btoa('{}'))
-            await expect(async () => await encryptor.decryptResponse(btoa('not encrypted')))
+            await encryptor.encryptRequest(toBase64('{}'))
+            await expect(async () => await encryptor.decryptResponse(toBase64('not encrypted')))
                 .toThrow()
             await expect(async () => await encryptor.canEncryptRequest())
                 .toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
