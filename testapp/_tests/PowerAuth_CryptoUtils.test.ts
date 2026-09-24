@@ -11,7 +11,7 @@ const b64DecodeLength = (b64: string): number =>
     Buffer.from(b64, 'base64').length
 
 const b64ToUintArray = (b64: string): Uint8Array =>
-    Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    Uint8Array.from(Buffer.from(b64, 'base64'));
 
 const isValidBase64 = (b64: string): boolean => {
     try {
