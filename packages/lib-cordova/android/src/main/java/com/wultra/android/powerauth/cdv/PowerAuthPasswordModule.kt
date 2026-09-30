@@ -29,10 +29,6 @@ class PowerAuthPasswordModule : CordovaPlugin() {
                 initialize(args, promise)
                 return true
             }
-            "release" -> {
-                release(args, promise)
-                return true
-            }
             "clear" -> {
                 clear(args, promise)
                 return true
@@ -70,11 +66,6 @@ class PowerAuthPasswordModule : CordovaPlugin() {
         val ownerId = args.getOptString(1)
         val autoreleaseTime = args.getInt(2)
         powerAuthPasswordJsModule.initialize(destroyOnUse, ownerId, autoreleaseTime, promise);
-    }
-
-    private fun release(args: JSONArray, promise: Promise) {
-        val objectId = args.getOptString(0)
-        powerAuthPasswordJsModule.release(objectId, promise);
     }
 
     private fun clear(args: JSONArray, promise: Promise) {

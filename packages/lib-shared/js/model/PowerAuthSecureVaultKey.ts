@@ -17,7 +17,6 @@
 import type { Base64String } from "../PowerAuthCryptoUtils"
 import { NativeObjectHandle } from "../internal/NativeObjectHandle"
 import { NativeWrapper } from "../internal/NativeWrapper"
-import { BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthError, PowerAuthErrorCode } from "./PowerAuthError"
 
 /** Identifies a base key available from the protocol-4 Secure Vault. */
@@ -34,7 +33,7 @@ export enum PowerAuthSecureVaultKeyId {
  * The sensitive base key remains on the native side. Call `release()` as soon as
  * all required keys have been derived.
  */
-export class PowerAuthSecureVaultKey implements BaseReleasableObject {
+export class PowerAuthSecureVaultKey {
     private readonly handle: NativeObjectHandle
 
     private constructor(
@@ -42,7 +41,7 @@ export class PowerAuthSecureVaultKey implements BaseReleasableObject {
         public readonly keyIdentifier: PowerAuthSecureVaultKeyId,
         objectId: string
     ) {
-        this.handle = new NativeObjectHandle(objectId)
+        this.handle = NativeObjectHandle.fromNative(objectId)
     }
 
     /** @internal Creates a wrapper for an already-fetched native Secure Vault key. */

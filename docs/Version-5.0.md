@@ -110,6 +110,23 @@ Obtain and confirm the new password between the two steps. Release `changeData` 
 
 `validatePassword()` remains deprecated and has no direct replacement. Do not validate a password before another authenticated operation. Handle that operation's authentication failure and fetch the activation status to check remaining attempts. The unsafe password-change methods do not validate the old password; an incorrect old password corrupts local activation data irreversibly.
 
+## Secure Password
+
+`PowerAuthPassword` now owns its native password the same way as other native-backed objects. The native password is still created on first use, but it's never restored after it's released, used with `destroyOnUse`, expired after 5 minutes of inactivity, or destroyed by deconfiguration of the owning `PowerAuth` instance. Any later use reports `INVALID_NATIVE_OBJECT`, so create a new password object instead. Calling `release()` before the first use still does nothing.
+
+The constructor and `fromString()` accept an options object. The `onAutomaticCleanup` callback is removed. Passing the old positional arguments, or any additional argument after the options object, throws `PowerAuthError` with `WRONG_PARAMETER`.
+
+| 4.x | 5.0 |
+| --- | --- |
+| `new PowerAuthPassword(destroyOnUse)` | `new PowerAuthPassword({ destroyOnUse })` |
+| `new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, powerAuthInstanceId)` | `new PowerAuthPassword({ destroyOnUse, powerAuthInstanceId })` |
+| `PowerAuthPassword.fromString(password, destroyOnUse, onAutomaticCleanup, powerAuthInstanceId)` | `PowerAuthPassword.fromString(password, { destroyOnUse, powerAuthInstanceId })` |
+| `new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, powerAuthInstanceId, autoreleaseTime)` | `new PowerAuthPassword({ destroyOnUse, powerAuthInstanceId, autoReleaseTimeMillis })`. The timeout is still used only in debug builds of the library. |
+| `powerAuth.createPassword(destroyOnUse, onAutomaticCleanup)` | `powerAuth.createPassword(destroyOnUse)` |
+| `onAutomaticCleanup` callback | Handle `INVALID_NATIVE_OBJECT` and create a new password object. |
+
+The `BaseNativeObject` class and `BaseReleasableObject` interface are removed. Each native-backed object declares its own `release()` method.
+
 ## Biometry
 
 | Deprecated API or option | Replacement |

@@ -31,12 +31,6 @@ export interface PowerAuthPasswordIfc {
     initialize(destroyOnUse: boolean, ownerId: string | undefined, autoreleaseTime: number): Promise<string>
 
     /**
-     * Release native password object.
-     * @param objectId Underlying object identifier.
-     */
-    release(objectId: string): Promise<void>
-
-    /**
      * Clear password content.
      * @param objectId Underlying object identifier.
      */

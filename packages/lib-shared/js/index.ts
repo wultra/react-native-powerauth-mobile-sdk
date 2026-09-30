@@ -48,7 +48,6 @@ export { PowerAuthPasswordChangeData } from './model/PowerAuthPasswordChangeData
 export * from './model/PowerAuthEncryptor';
 export * from './model/PowerAuthDataFormat';
 export * from './model/PowerAuthUserInfo';
-export * from './model/BaseNativeObject';
 export * from './model/PowerAuthOIDCParameters';
 export * from './model/PowerAuthProtocolUpgradeResult';
 export * from './model/PowerAuthSignatureKeyId';

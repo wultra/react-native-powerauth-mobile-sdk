@@ -212,6 +212,8 @@ export class PowerAuth_PasswordTests extends TestWithActivation {
 
         await this.sdk.unsafeChangePassword(pValid, pInvalid)
         await expect(async () => await this.sdk.validatePassword(pInvalid)).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+        await expect(async () => await pValid.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
+        await expect(async () => await pInvalid.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
     }
 
     async testReusePasswordObjectInAuth() {
