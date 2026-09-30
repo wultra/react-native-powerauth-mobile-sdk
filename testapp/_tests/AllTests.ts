@@ -32,7 +32,7 @@ import { PowerAuth_KDFTests } from "./PowerAuth_KDF.test";
 import { PowerAuth_ConfigureTests } from "./PowerAuth_Configure.test";
 import { NativeObjectRegisterTests } from "./NativeObjectRegister.test";
 import { PowerAuthPasswordTests } from "./PowerAuthPassword.test";
-import { PowerAuth_LegacyAuthBiometryTests, PowerAuth_LegacyAuthTests } from "./PowerAuth_LegacyAuth.test";
+import { PowerAuthAuthenticationTests } from "./PowerAuthAuthentication.test";
 import { PowerAuthPassphraseMeterTests } from "./PowerAuthPassphraseMeter.test";
 import { ConfigurationObjectsTests } from "./ConfigurationObjects.test";
 import { PowerAuth_EncryptorTests } from "./PowerAuth_Encryptor.test";
@@ -84,7 +84,6 @@ function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
         ...(isLegacy ? [suiteForPass(PowerAuth_KDFTests, pass)] : []),
         suiteForPass(PowerAuth_EncryptorTests, pass),
         suiteForPass(PowerAuth_UserInfoTest, pass),
-        suiteForPass(PowerAuth_LegacyAuthTests, pass),
         suiteForPass(PowerAuth_ErrorDataTests, pass)
     ]
 }
@@ -101,6 +100,7 @@ export function getLibraryTests(): TestSuite[] {
         ...getAlgorithmPassTests(legacyPass),
         ...getAlgorithmPassTests(defaultPass),
         new PowerAuthActivationTests(),
+        new PowerAuthAuthenticationTests(),
         new PowerAuthActivationCodeUtilTests(),
         new PowerAuthUtilsTests(),
         new PowerAuthPasswordTests(),
@@ -116,10 +116,8 @@ export function getInteractiveLibraryTests(): TestSuite[] {
         new PowerAuth_ProtocolUpgradeBiometryTests(),
         suiteForPass(PowerAuth_BiometryTests, legacyPass),
         suiteForPass(PowerAuth_BiometryInteractiveTests, legacyPass),
-        suiteForPass(PowerAuth_LegacyAuthBiometryTests, legacyPass),
         suiteForPass(PowerAuth_BiometryTests, defaultPass),
-        suiteForPass(PowerAuth_BiometryInteractiveTests, defaultPass),
-        suiteForPass(PowerAuth_LegacyAuthBiometryTests, defaultPass)
+        suiteForPass(PowerAuth_BiometryInteractiveTests, defaultPass)
     ]
 }
 

@@ -29,11 +29,10 @@ import { PowerAuthError, PowerAuthErrorCode } from '../model/PowerAuthError';
  * @returns configured authorization object
  */
 export async function resolveAuthentication(instanceId: string, authentication: PowerAuthAuthentication, makeReusable: boolean = false): Promise<PowerAuthAuthentication> {
-    // Force cast to private interface and patch possible legacy object.
-    const correctAuth = authentication.convertLegacyObject(false)
-    const privateAuth = (correctAuth as any as PowerAuthRawAuthentication)
-    if (correctAuth.isActivationPersist) {
-        return correctAuth
+    // Force cast to private interface.
+    const privateAuth = (authentication as any as PowerAuthRawAuthentication)
+    if (authentication.isActivationPersist) {
+        return authentication
     }
     // Test whether previously fetched biometryKeyId is invalid. Reset biometry key's identifier
     // if underlying data object is no longer valid.
@@ -52,7 +51,7 @@ export async function resolveAuthentication(instanceId: string, authentication: 
             const biometryKeyId = await NativeWrapper.thisCallNull<string>(
                 'authenticateWithBiometry',
                 instanceId,
-                correctAuth.biometricPrompt,
+                authentication.biometricPrompt,
                 isReusable
             )
             if (!biometryKeyId) {
@@ -68,5 +67,5 @@ export async function resolveAuthentication(instanceId: string, authentication: 
         }
     }
     // no other processing is required
-    return correctAuth;
+    return authentication;
 }

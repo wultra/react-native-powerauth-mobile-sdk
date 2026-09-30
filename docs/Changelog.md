@@ -24,6 +24,7 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
   - Deprecated the legacy server and device signature helpers.
 - Added `fetchSecureVaultKey()` and the native-backed `PowerAuthSecureVaultKey` object with `deriveKey()` and `release()` methods. ([#480](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/480))
   - Deprecated `fetchEncryptionKey()`.
+- Removed the deprecated `PowerAuthAuthentication` constructor, the mutable `usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle` properties, and `convertLegacyObject()`. Use the static factories instead. This also removes an issue where constructor arguments were ignored, so signing used possession only. ([#509](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/509))
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
