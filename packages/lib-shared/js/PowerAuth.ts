@@ -306,7 +306,7 @@ export class PowerAuth {
      * @param authentication An authentication instance specifying what factors should be stored.
      */
     async persistActivation(authentication: PowerAuthAuthentication): Promise<void> {
-        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.convertLegacyObject(true).toRawAuthentication());
+        return NativeWrapper.thisCall("persistActivation", this.instanceId, await authentication.toRawAuthentication());
     }
 
     /** Activation identifier or undefined if object has no valid activation. */
@@ -341,7 +341,7 @@ export class PowerAuth {
 
     /**
      * Computes an HTTP authentication header for a request with query parameters.
-     * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
+     * Be aware that if `PowerAuthAuthentication.isBiometricAuthentication` is true, then the system biometric authentication dialog is displayed, so the operation
      * may take an undefined amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
@@ -356,7 +356,7 @@ export class PowerAuth {
 
     /**
      * Computes an HTTP authentication header for a request with a UTF-8 body.
-     * Be aware that if `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation
+     * Be aware that if `PowerAuthAuthentication.isBiometricAuthentication` is true, then the system biometric authentication dialog is displayed, so the operation
      * may take an undefined amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request.
@@ -389,7 +389,7 @@ export class PowerAuth {
 
     /**
      * Computes an offline PowerAuth authentication code for the URI identifier and UTF-8 request body. Be aware that if
-     * `PowerAuthAuthentication.useBiometry` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined
+     * `PowerAuthAuthentication.isBiometricAuthentication` is true, then the system biometric authentication dialog is displayed, so the operation may take an undefined
      * amount of time to complete.
      *
      * @param authentication An authentication instance specifying what factors should be used to sign the request. The possession and knowledge is recommended.
