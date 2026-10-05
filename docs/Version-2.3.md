@@ -21,6 +21,10 @@ The previous imports still works but we cannot guarantee that paths remain the s
 
 ## New `PowerAuthAuthentication` instantiation
 
+<!-- begin box warning -->
+The deprecated constructor and properties described in this section were removed in version 5.0.0. See the [5.0 migration guide](Version-5.0.md#activation-and-authentication-purpose).
+<!-- end -->
+
 The `PowerAuthAuthentication` has now its constructor and all public properties marked as deprecated. The object now provide a new static functions to its proper instantiation. Here's the example for data signing: 
 
 ```javascript
