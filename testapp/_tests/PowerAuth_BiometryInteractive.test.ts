@@ -120,30 +120,6 @@ export class PowerAuth_BiometryInteractiveTests extends TestWithActivation {
         await expect(async () => await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT})
     }
 
-    async testLegacyBiometricSignature() {
-        expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        await this.showPrompt('Please authenticate with biometry to request access token')
-        const auth = new PowerAuthAuthentication()
-        auth.usePossession = true
-        auth.useBiometry = true
-        auth.biometryTitle = 'Authenticate (Legacy)'
-        auth.biometryMessage = 'Please authenticate with biometry to request access token'
-
-        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
-        await this.sdk.tokenStore.removeAccessToken('biometric-token')
-    }
-
-    async testLegacyBiometricSignature_NoPrompt() {
-        expect(await this.sdk.hasBiometryFactor()).toBe(true)
-        const auth = new PowerAuthAuthentication()
-        auth.usePossession = true
-        auth.useBiometry = true
-
-        await this.showPrompt('Please authenticate - Dialog without strings')
-        await this.sdk.tokenStore.requestAccessToken('biometric-token', auth)
-        await this.sdk.tokenStore.removeAccessToken('biometric-token')
-    }
-
     async testGroupedBiometricAuthentication() {
         expect(await this.sdk.hasBiometryFactor()).toBe(true)
         await this.showPrompt('Please authenticate for group operation.')

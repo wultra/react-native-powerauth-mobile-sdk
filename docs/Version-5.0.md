@@ -86,7 +86,16 @@ Token-header failures propagate native errors such as `INVALID_TOKEN`; stop rely
 
 `persistActivation()` now resolves without a return value; remove checks that expect a boolean result. Continue to await the operation. Native SDK 2.0 validates authentication purpose: use `PowerAuthAuthentication.persistWithPassword()` or `persistWithPasswordAndBiometry()` for persistence, and `possession()`, `password()`, or `biometry()` for ordinary authentication. Mixing purposes rejects with `WRONG_PARAMETER`.
 
-The previously deprecated `PowerAuthAuthentication` constructor and mutable properties (`usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle`) remain for compatibility. If your application still uses them, switch to the static factories instead of mutating authentication factors directly.
+The deprecated `PowerAuthAuthentication` constructor and mutable properties (`usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle`) are removed, together with `convertLegacyObject()`. Create authentication objects only with the static factories. TypeScript reports the constructor as private; calling it from JavaScript throws `PowerAuthError` with `WRONG_PARAMETER`.
+
+| Removed usage | Replacement |
+|---|---|
+| `new PowerAuthAuthentication()` with `usePossession = true` | `PowerAuthAuthentication.possession()` |
+| `userPassword = password` | `PowerAuthAuthentication.password(password)` |
+| `useBiometry = true` with `biometryTitle` and `biometryMessage` | `PowerAuthAuthentication.biometry({ promptTitle, promptMessage })` |
+| Constructed object passed to `persistActivation()` with `userPassword` | `PowerAuthAuthentication.persistWithPassword(password)` |
+| Constructed object passed to `persistActivation()` with `userPassword` and `useBiometry` | `PowerAuthAuthentication.persistWithPasswordAndBiometry(password, prompt)` |
+| `new PowerAuthAuthentication(password, prompt)` | One of the factories above. Previously, the constructor arguments were ignored: signing used possession only and activation persistence failed. |
 
 Native SDK 2.0 no longer supports recovery activation, and the corresponding JavaScript APIs are removed. Remove calls to `PowerAuthActivation.createWithRecoveryCode()`, `hasActivationRecoveryData()`, `activationRecoveryData()`, `confirmRecoveryCode()`, and the recovery code/PUK parsing and validation helpers. The recovery fields, `PowerAuthRecoveryActivationData`, and `PowerAuthConfirmRecoveryCodeDataResult` are also removed. Use a supported [activation flow](Device-Activation.md); there is no equivalent recovery-code API.
 
