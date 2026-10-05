@@ -28,6 +28,7 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
   - `PowerAuthPassword` is no longer restored after its native password is released, used, expired, or destroyed by deconfiguration, and reports `INVALID_NATIVE_OBJECT` instead.
   - Changed the `PowerAuthPassword` constructor and `fromString()` to accept an options object, and removed the `onAutomaticCleanup` callback and its `createPassword()` parameter.
   - Removed `BaseNativeObject` and `BaseReleasableObject`.
+- Removed the deprecated `PowerAuthAuthentication` constructor, the mutable `usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle` properties, and `convertLegacyObject()`. Use the static factories instead. This also removes an issue where constructor arguments were ignored, so signing used possession only. ([#509](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/509))
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
