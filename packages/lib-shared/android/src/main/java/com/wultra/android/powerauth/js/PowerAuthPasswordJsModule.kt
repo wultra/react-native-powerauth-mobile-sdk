@@ -64,12 +64,6 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
     }
 
     @JsApiMethod
-    fun release(objectId: String?, promise: Promise) {
-        objectRegister.removeObject(objectId, Password::class.java)
-        promise.resolve(null)
-    }
-
-    @JsApiMethod
     fun clear(objectId: String, promise: Promise) {
         withPassword(objectId, promise, action { password: Password ->
             password.clear()

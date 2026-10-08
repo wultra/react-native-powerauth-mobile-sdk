@@ -101,10 +101,6 @@ class PowerAuthPasswordImpl extends NativeCordovaModule implements PowerAuthPass
         return await this.callNative("initialize", [destroyOnUse, ownerId, autoreleaseTime]);
     }
 
-    async release(objectId: string): Promise<void> {
-        return await this.callNative("release", [objectId]);
-    }
-
     async clear(objectId: string): Promise<void> {
         return await this.callNative("clear", [objectId]);
     }

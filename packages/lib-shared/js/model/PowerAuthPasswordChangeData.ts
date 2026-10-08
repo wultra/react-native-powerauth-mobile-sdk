@@ -16,7 +16,6 @@
 
 import { NativeObjectHandle } from "../internal/NativeObjectHandle"
 import { NativeWrapper } from "../internal/NativeWrapper"
-import { BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthRawPasswordType } from "./PowerAuthNativeTypes"
 
 /**
@@ -25,11 +24,11 @@ import { PowerAuthRawPasswordType } from "./PowerAuthNativeTypes"
  * The old password remains only on the native side. This object is consumed automatically by
  * `PowerAuth.finishPasswordChange()`. Call `release()` when abandoning the operation.
  */
-export class PowerAuthPasswordChangeData implements BaseReleasableObject {
+export class PowerAuthPasswordChangeData {
     private readonly handle: NativeObjectHandle
 
     private constructor(objectId: string) {
-        this.handle = new NativeObjectHandle(objectId)
+        this.handle = NativeObjectHandle.fromNative(objectId)
     }
 
     /** @internal */

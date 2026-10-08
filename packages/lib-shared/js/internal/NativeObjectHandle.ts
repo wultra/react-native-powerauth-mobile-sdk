@@ -19,47 +19,99 @@ import { PowerAuthNativeObject } from "../model/PowerAuthNativeObject"
 import { NativeWrapper } from "./NativeWrapper"
 
 /**
- * Owns one already-created native object identifier.
+ * Owns the lifecycle of one object stored in the native object register.
  *
- * Unlike `BaseNativeObject`, this handle never recreates an expired, released, or consumed
- * native object. It is intended for stateful and sensitive objects with an explicit lifetime.
+ * The handle never recreates an expired, released, or consumed native object. After the
+ * handle is released, every subsequent use reports `INVALID_NATIVE_OBJECT`.
  */
 export class NativeObjectHandle {
     private objectId: string | undefined
+    private initialization: Promise<string> | undefined
     private releasePromise: Promise<void> | undefined
+    private releaseRequested = false
 
-    constructor(objectId: string) {
+    private constructor(
+        objectId: string | undefined,
+        private readonly initializer: (() => Promise<string>) | undefined
+    ) {
         this.objectId = objectId
     }
 
+    /** Creates a handle for an already-created native object. */
+    static fromNative(objectId: string): NativeObjectHandle {
+        return new NativeObjectHandle(objectId, undefined)
+    }
+
+    /**
+     * Creates a handle whose native object is created on first use. Concurrent first uses
+     * share one initialization. A failed initialization is retried on the next use.
+     */
+    static lazy(initializer: () => Promise<string>): NativeObjectHandle {
+        return new NativeObjectHandle(undefined, initializer)
+    }
+
     async withObjectId<T>(action: (objectId: string) => Promise<T>): Promise<T> {
-        const objectId = this.objectId
-        if (!objectId) {
-            throw new PowerAuthError(
-                undefined,
-                "Native object is no longer valid",
-                PowerAuthErrorCode.INVALID_NATIVE_OBJECT
-            )
-        }
         try {
-            return await action(objectId)
+            return await action(await this.getObjectId())
         } catch (error: any) {
             throw NativeWrapper.processException(error)
         }
     }
 
-    /** Invalidates this handle and releases its native object at most once. */
+    /**
+     * Invalidates this handle and releases its native object at most once. If the native
+     * object is still being created, the release waits for the creation and then releases
+     * the created object.
+     */
     release(): Promise<void> {
+        // A lazy handle owns no native object before its initialization starts.
+        if (!this.releaseRequested && this.objectId === undefined && this.initialization === undefined) {
+            return Promise.resolve()
+        }
         if (!this.releasePromise) {
+            this.releaseRequested = true
             this.releasePromise = this.releaseNativeObject()
         }
         return this.releasePromise
     }
 
+    private async getObjectId(): Promise<string> {
+        if (this.releaseRequested) {
+            throw invalidNativeObjectError()
+        }
+        if (this.objectId !== undefined) {
+            return this.objectId
+        }
+        if (!this.initializer) {
+            throw invalidNativeObjectError()
+        }
+        const initialization = this.initialization ??= this.initializer()
+        try {
+            const objectId = await initialization
+            if (this.releaseRequested) {
+                throw invalidNativeObjectError()
+            }
+            this.objectId = objectId
+            return objectId
+        } catch (error) {
+            if (this.initialization === initialization && !this.releaseRequested) {
+                this.initialization = undefined
+            }
+            throw error
+        }
+    }
+
     private async releaseNativeObject(): Promise<void> {
-        const objectId = this.objectId
+        let objectId = this.objectId
+        if (objectId === undefined && this.initialization) {
+            try {
+                objectId = await this.initialization
+            } catch {
+                return
+            }
+        }
         this.objectId = undefined
-        if (objectId) {
+        if (objectId !== undefined) {
             try {
                 await PowerAuthNativeObject.releaseNativeObject(objectId)
             } catch {
@@ -67,4 +119,12 @@ export class NativeObjectHandle {
             }
         }
     }
+}
+
+function invalidNativeObjectError(): PowerAuthError {
+    return new PowerAuthError(
+        undefined,
+        "Native object is no longer valid",
+        PowerAuthErrorCode.INVALID_NATIVE_OBJECT
+    )
 }
