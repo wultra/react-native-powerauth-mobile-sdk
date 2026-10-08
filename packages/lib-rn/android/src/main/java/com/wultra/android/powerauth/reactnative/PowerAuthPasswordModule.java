@@ -58,11 +58,6 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
     }
 
     @ReactMethod
-    public void release(String objectId, Promise promise) {
-        powerAuthPasswordJsModule.release(objectId, promise);
-    }
-
-    @ReactMethod
     public void clear(String objectId, Promise promise) {
         powerAuthPasswordJsModule.clear(objectId, promise);
     }
