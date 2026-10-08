@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 
+import { Buffer } from "buffer";
 import {
     PowerAuthActivationState,
     PowerAuthAuthentication,
@@ -118,7 +119,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 
     async testAuthenticationPurpose() {
         const persistAuth = PowerAuthAuthentication.persistWithPassword(this.credentials.validPassword)
-        const data = btoa('test')
+        const data = Buffer.from('test', 'utf8').toString('base64')
 
         await expect(async () => await this.sdk.fetchEncryptionKey(persistAuth, 0))
             .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
@@ -196,7 +197,7 @@ export class PowerAuth_SignatureTests extends TestWithActivation {
 
     async testDeviceSignedDataBase64() {
         const dataToSign = 'This is a very sensitive information and must be signed.'
-        const dataToSignBase64 = btoa(dataToSign)
+        const dataToSignBase64 = Buffer.from(dataToSign, 'utf8').toString('base64')
         expect(await this.sdk.signDataWithDevicePrivateKey(this.credentials.knowledge, dataToSignBase64, 'BASE64')).toSucceed()
         // Now verify signature on the server.
         // We provide plain data, as the test server library will encode it to Base64 internally.

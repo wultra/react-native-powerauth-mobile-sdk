@@ -9658,6 +9658,7 @@ __metadata:
     "@types/react-test-renderer": "npm:^19.1.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.59.2"
     "@typescript-eslint/parser": "npm:^8.59.2"
+    buffer: "npm:^6.0.3"
     eslint: "npm:^8.57.0"
     mobile-test-reporter: "workspace:*"
     mobile-testbed: "workspace:*"

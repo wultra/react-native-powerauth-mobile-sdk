@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "rootDirs": ["src", "../testapp/src"],
+    "paths": {
+      "react-native-powerauth-mobile-sdk": ["../packages/lib-rn"],
+      "react-native-config": ["../testapp/node_modules/react-native-config"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

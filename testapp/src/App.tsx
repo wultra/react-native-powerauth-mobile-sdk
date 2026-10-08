@@ -1,152 +1,50 @@
-//
-// Copyright 2025 Wultra s.r.o.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+// Copyright 2026 Wultra s.r.o. Licensed under the Apache License, Version 2.0.
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import Config from 'react-native-config';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import AutomatedTests from './AutomatedTests';
+import { ManualTesting } from './manual/ManualTesting';
+import { SimpleConfiguration } from './manual/SimpleConfiguration';
 
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  SafeAreaView,
-  Button,
-  Appearance,
-  NativeEventSubscription,
-} from 'react-native';
-import { TestExecutor } from './TestExecutor';
+type Screen = 'home' | 'manual' | 'simple' | 'automatic';
 
-const Separator = (): React.ReactNode => (
-  <View style={styles.separator} />
-);
-
-const App: React.FC = () => {
-  const [isDark, setIsDark] = useState(Appearance.getColorScheme() === 'dark');
-  const [inProgress, setInProgress] = useState(false);
-  const [promptMessage, setPromptMessage] = useState<string | undefined>(undefined);
-  const [testsDone, setTestsDone] = useState(0);
-  const [testsSkipped, setTestsSkipped] = useState(0);
-  const [testsFailed, setTestsFailed] = useState(0);
-  const [testsCount, setTestsCount] = useState(0);
-
-  const subscription = useRef<NativeEventSubscription | null>(null);
-  const executor = useRef<TestExecutor | null>(null);
-
-  const onPressNotInteractive = () => {
-    executor.current?.runTests(false);
-  };
-
-  const onPressInteractive = () => {
-    executor.current?.runTests(true);
-  };
-
-  const onPressCancel = () => {
-    executor.current?.cancelTests();
-  };
-
-  useEffect(() => {
-    subscription.current = Appearance.addChangeListener(() => {
-      setIsDark(Appearance.getColorScheme() === 'dark');
-    });
-
-    executor.current = new TestExecutor(
-      async (_context, message, duration) => {
-        setPromptMessage(message);
-        await new Promise<void>(resolve => setTimeout(resolve, duration));
-        setPromptMessage(' ');
-      },
-      (progress) => {
-        setTestsCount(progress.total);
-        setTestsDone(progress.succeeded);
-        setTestsSkipped(progress.skipped);
-        setTestsFailed(progress.failed);
-      },
-      (progress) => {
-        setInProgress(progress);
-      }
-    );
-
-    // Cleanup on unmount
-    return () => {
-      subscription.current?.remove();
-      executor.current?.cancelTests();
-      executor.current = null;
-    };
-  }, []);
-
+function Example() {
+  // The local E2E collector still launches the existing suite without UI input.
+  const [screen, setScreen] = useState<Screen>(
+    Config.TESTAPP_MODE !== 'manual' && Config.TEST_COLLECTOR_URL ? 'automatic' : 'home',
+  );
+  const home = () => setScreen('home');
+  if (screen === 'automatic') {
+    return <AutomatedTests onBack={home} />;
+  }
+  if (screen === 'manual') {
+    return <ManualTesting onBack={home} />;
+  }
+  if (screen === 'simple') {
+    return <SimpleConfiguration onBack={home} />;
+  }
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.promptContainer}>
-        <Text style={styles.promptText}>
-          {promptMessage ?? ' '}
-        </Text>
+    <SafeAreaView style={styles.page}>
+      <View style={styles.content}>
+        <Text style={styles.title}>PowerAuth Example</Text>
+        <Button title="PowerAuth Testing" onPress={() => setScreen('manual')} />
+        <Button title="Simple Configuration" onPress={() => setScreen('simple')} />
+        <Button title="Automatic & Interactive Tests" onPress={() => setScreen('automatic')} />
       </View>
-      <View style={styles.progressContainer}>
-        <Text style={isDark ? styles.progressTextDark : styles.progressTextLight}>
-          {testsDone + testsFailed + testsSkipped} / {testsCount}
-        </Text>
-      </View>
-      <Separator />
-      { !inProgress ? (
-          <View style={styles.fixToText}>
-            <Button title="Run regular" onPress={onPressNotInteractive} />
-            <Button title="Run interactive" onPress={onPressInteractive} />
-          </View>
-        ) : (
-          <View style={styles.fixToText}>
-            <Button title="Cancel" onPress={onPressCancel} />
-          </View>
-        )
-      }
     </SafeAreaView>
   );
-};
-
+}
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    marginHorizontal: 16
-  },
-  separator: {
-    marginVertical: 8,
-    borderBottomColor: '#737373',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  fixToText: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  promptText: {
-    marginVertical: 16,
-    fontSize: 20,
-    textAlign: 'center',
-    color: '#FF0000'
-  },
-  promptContainer: {
-    height: 120
-  },
-  progressContainer: {
-    height: 40
-  },
-  progressTextDark: {
-    textAlign: 'center',
-    color: '#FFFFFF'
-  },
-  progressTextLight: {
-    textAlign: 'center',
-    color: '#000000'
-  }
+  page: { flex: 1, backgroundColor: '#f5f7fa' },
+  content: { flex: 1, justifyContent: 'center', padding: 24, gap: 20 },
+  title: { fontSize: 28, fontWeight: '700', color: '#142438' },
 });
 
-export default App;
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Example />
+    </SafeAreaProvider>
+  );
+}

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Buffer } from "buffer"
 import {
     PowerAuthAlgorithm,
     PowerAuthErrorCode,
@@ -47,11 +48,13 @@ export class PowerAuth_SecureVaultTests extends TestWithActivation {
             const repeated = await vaultKey.deriveKey(7, 16)
             const different = await vaultKey.deriveKey(8, 16)
             const extended = await vaultKey.deriveKey(7, 32)
-            expect(atob(first).length).toBe(16)
+            const firstBytes = Buffer.from(first, 'base64')
+            const extendedBytes = Buffer.from(extended, 'base64')
+            expect(firstBytes.length).toBe(16)
             expect(repeated).toBe(first)
             expect(different).toNotBe(first)
-            expect(atob(extended).length).toBe(32)
-            expect(atob(extended).slice(0, 16)).toNotBe(atob(first))
+            expect(extendedBytes.length).toBe(32)
+            expect(Buffer.from(extendedBytes.subarray(0, 16)).toString('hex')).toNotBe(firstBytes.toString('hex'))
 
             if (keyIdentifier === PowerAuthSecureVaultKeyId.KNOWLEDGE) {
                 knowledgeDerived = first

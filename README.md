@@ -22,6 +22,11 @@ The Mobile CI workflow builds and runs the React Native and Cordova test
 applications on Android and iOS, providing both integration-build and E2E
 coverage.
 
+## Manual example app
+
+The [React Native testapp](testapp/README.md) includes a Flutter-parity manual
+example for clicking through individual SDK operations on Android and iOS.
+
 ## License
 
 All sources are licensed using Apache 2.0 license, you can use them with no restriction. If you are using PowerAuth 2.0, please let us know. We will be happy to share and promote your project.

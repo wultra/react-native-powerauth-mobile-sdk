@@ -28,37 +28,12 @@
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
-        <meta name="color-scheme" content="light dark">
+        <meta name="color-scheme" content="light">
         <link rel="stylesheet" href="css/index.css">
         <title>PowerAuth Tests</title>
     </head>
     <body>
-        <div id="test-message"></div>
-        <div class="app">
-            <h1>PowerAuth Tests</h1>
-            <div id="deviceready">
-                <p class="event listening">Loading javascript...</p>
-                <p class="event received">Javascript loaded</p>
-
-                <div>
-                    <br>
-                    <button class="button" id="tests-simple">Run tests non-interactive</button>
-                    <br>
-                    <button class="button" id="tests-full">Run tests interactive</button>
-                    <br>
-                    <button class="button" id="tests-stop">Stop tests</button>
-                </div>
-
-                <div id="tests-status" style="font-weight: bold; font-size: 15px; color: black; margin-top: 20px">
-
-                </div>
-
-                <div id="tests-progress" style="font-weight: bold; font-size: 15px; color: black; margin-top: 20px;">
-
-                </div>
-
-            </div>
-        </div>
+        <main id="app" class="app" aria-live="polite"><h1>PowerAuth Example</h1></main>
         <script src="cordova.js"></script>
         <script src="js/index.js"></script>
     </body>

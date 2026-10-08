@@ -19,6 +19,7 @@
     "format": "prettier -w ."
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "mobile-test-reporter": "workspace:*",
     "mobile-testbed": "workspace:*",
     "react": "19.2.3",
