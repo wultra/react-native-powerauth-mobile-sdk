@@ -15,7 +15,7 @@
  */
 
 import { PinTestResult, PowerAuthError, PowerAuthErrorCode } from "../index"
-import { BaseNativeObject } from "./BaseNativeObject"
+import { NativeObjectHandle } from "../internal/NativeObjectHandle"
 import { NativePassphraseMeter } from "../internal/NativePassphraseMeter"
 import { NativePassword } from "../internal/NativePassword"
 import { PowerAuthRawPassword } from "./PowerAuthNativeTypes"
@@ -35,27 +35,51 @@ export type PasswordType = PowerAuthPassword | string
 export type CharacterType = string | number
 
 /**
+ * Options for creating a `PowerAuthPassword` object.
+ */
+export interface PowerAuthPasswordOptions {
+    /**
+     * If `true`, then the native password is destroyed after it's used for the cryptographic operation.
+     * Default is `true`.
+     */
+    destroyOnUse?: boolean
+    /**
+     * If specified, then the native password is destroyed together with the `PowerAuth` instance
+     * with the same identifier.
+     */
+    powerAuthInstanceId?: string
+    /**
+     * Autorelease timeout in milliseconds. The value is used only for the testing purposes. The release
+     * build of the library ignores it, and the debug build caps it to the default 5 minutes.
+     */
+    autoReleaseTimeMillis?: number
+}
+
+/**
  * The `PowerAuthPassword` class implements safe storage for users' passwords.
  * The class is using an underlying native object to store the user's password securely
  * in the memory. The goal is to keep the user's password in the memory for as short 
  * as possible time. To achieve this, the native object implements the following
  * precautions: 
  * 
- * - If it's constructed with `destroyOnUse` parameter set to `true` then the native
+ * - The native password is created when you first use the object.
+ * 
+ * - If it's constructed with `destroyOnUse` option set to `true` then the native
  *   password is automatically destroyed after it's used for the cryptographic operation.
+ *   This is the default setting.
  * 
  * - If it's constructed with `powerAuthInstanceId` then the native object will be
  *   destroyed after the `PowerAuth` class with the same identifier is deconfigured.
  * 
- * - If you leave the instance of `PowerAuthPassword` class as it is, then the native 
- *   password is removed from the memory after 5 minutes of inactivity. The JavaScript
- *   object is still functional, so if you use any API function, then the native
- *   password is re-initialized, but the previous passphrase is lost. You can provide
- *   an optional `onAutomaticCleanup` function to the object's constructor to detect 
- *   the such situation.
+ * - The native password is removed from the memory after 5 minutes of inactivity. If you
+ *   call any `PowerAuthPassword` method except `release()`, then the auto-cleanup timer
+ *   is reset, so the native password will live for another 5 minutes.
  * 
- * - If you call any `PowerAuthPassword` method except `release()`, then the auto-cleanup
- *   timer is reset, so the native password will live for another 5 minutes.
+ * - A call to `release()` destroys the native password immediately.
+ * 
+ * After the native password is destroyed or released, any other use of the object reports
+ * `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. Create a new `PowerAuthPassword` object when
+ * you need the password again.
  * 
  * Be aware that this class is effective only if you're using a numeric PIN for the passphrase
  * although its API accepts full Unicode code point at the input. This is because it's quite
@@ -67,25 +91,40 @@ export type CharacterType = string | number
  * the memory, then you can follow the [Working with passwords securely](https://developers.wultra.com/components/powerauth-mobile-sdk/1.7.x/documentation/PowerAuth-SDK-for-iOS#working-with-passwords-securely)
  * chapter from the PowerAuth mobile SDK.
  */
-export class PowerAuthPassword extends BaseNativeObject {
+export class PowerAuthPassword {
+    /**
+     * If true, then the underlying native password will be destroyed immediately after is used
+     * for the cryptographic operation.
+     */
+    readonly destroyOnUse: boolean
+    /**
+     * InstanceId of PowerAuth object that owns this password.
+     */
+    readonly powerAuthInstanceId?: string
+    /**
+     * Autorelease timeout in milliseconds. The value is used only for testing purposes, and is ignored in release build of library.
+     */
+    readonly autoReleaseTimeMillis?: number
+
+    private readonly handle: NativeObjectHandle
+
     /**
      * Construct password object and specify whether it's re-usable and/or should be destroyed 
-     * together with the owning PowerAuth class instance.
-     * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptographic operation. Default is `true`.
-     * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
-     * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
-     * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
+     * together with the owning PowerAuth class instance. The underlying native password is
+     * created when the object is first used.
+     * @param options Optional password options.
      */
-    constructor(
-        destroyOnUse: boolean = true,
-        onAutomaticCleanup: (() => void) | undefined = undefined,
-        powerAuthInstanceId: string | undefined = undefined,
-        autoreleaseTime: number = 0) {
-        super()
-        this.destroyOnUse = destroyOnUse
-        this.powerAuthInstanceId = powerAuthInstanceId
-        this.autoreleaseTime = autoreleaseTime
-        this.automaticCleanupCallback = onAutomaticCleanup
+    constructor(options: PowerAuthPasswordOptions = {}) {
+        // Reject legacy positional arguments, including a trailing owner after an undefined first argument.
+        validateOptions(options, arguments.length > 1)
+        this.destroyOnUse = options.destroyOnUse ?? true
+        this.powerAuthInstanceId = options.powerAuthInstanceId
+        this.autoReleaseTimeMillis = options.autoReleaseTimeMillis
+        this.handle = NativeObjectHandle.lazy(() => NativePassword.initialize(
+            this.destroyOnUse,
+            this.powerAuthInstanceId,
+            this.autoReleaseTimeMillis ?? 0
+        ))
     }
 
     /**
@@ -93,18 +132,12 @@ export class PowerAuthPassword extends BaseNativeObject {
      * 
      * Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
      * 
-     * @param destroyOnUse If `true` then the native password is destroyed after is used for the cryptographic operation. Default is `true`.
-     * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
-     * @param powerAuthInstanceId If specified, then the native password will be destroyed together with PowerAuth instance.
-     * @param autoreleaseTime Autorelease timeout in milliseconds. The value is used only for the testing purposes, and is ignored in the release build of library.
+     * @param password Password string.
+     * @param options Optional password options.
      */
-    static async fromString(
-        password: string,
-        destroyOnUse: boolean = true,
-        onAutomaticCleanup: (() => void) | undefined = undefined,
-        powerAuthInstanceId: string | undefined = undefined,
-        autoreleaseTime: number = 0): Promise<PowerAuthPassword> {
-        const pwd = new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, powerAuthInstanceId, autoreleaseTime)
+    static async fromString(password: string, options: PowerAuthPasswordOptions = {}): Promise<PowerAuthPassword> {
+        validateOptions(options, arguments.length > 2)
+        const pwd = new PowerAuthPassword(options)
         for (const c of password) {
             await pwd.addCharacter(c)
         }
@@ -118,14 +151,23 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Number of characters stored in the password.
      */
     length(): Promise<number> {
-        return this.withObjectId(id => NativePassword.length(id))
+        return this.handle.withObjectId(id => NativePassword.length(id))
     }
 
     /**
      * Clear content of the password.
      */
     clear(): Promise<void> {
-        return this.withObjectId(id => NativePassword.clear(id))
+        return this.handle.withObjectId(id => NativePassword.clear(id))
+    }
+
+    /**
+     * Release the underlying native password. Any subsequent use of this object reports
+     * `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. Releasing an object that was never used
+     * does nothing.
+     */
+    release(): Promise<void> {
+        return this.handle.release()
     }
 
     /**
@@ -146,7 +188,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Number of characters stored in the password.
      */
     addCharacter(character: CharacterType): Promise<number> {
-        return this.withObjectId(id => NativePassword.addCharacter(id, this.getCodePoint(character)))
+        return this.handle.withObjectId(id => NativePassword.addCharacter(id, this.getCodePoint(character)))
     }
 
     /**
@@ -158,7 +200,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Number of characters stored in the password.
      */
     insertCharacter(character: CharacterType, at: number): Promise<number> {
-        return this.withObjectId(id => NativePassword.insertCharacter(id, this.getCodePoint(character), at))
+        return this.handle.withObjectId(id => NativePassword.insertCharacter(id, this.getCodePoint(character), at))
     }
 
     /**
@@ -169,7 +211,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Remaining number of characters stored in the password.
      */
     removeCharacterAt(position: number): Promise<number> {
-        return this.withObjectId(id => NativePassword.removeCharacter(id, position))
+        return this.handle.withObjectId(id => NativePassword.removeCharacter(id, position))
     }
 
     /**
@@ -179,7 +221,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Remaining number of characters stored in the password.
      */
     removeLastCharacter(): Promise<number> {
-        return this.withObjectId(id => NativePassword.removeLastCharacter(id))
+        return this.handle.withObjectId(id => NativePassword.removeLastCharacter(id))
     }
 
     /**
@@ -190,7 +232,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns true if both passwords contains an equal passphrase.
      */
     isEqualTo(password: PowerAuthPassword): Promise<boolean> {
-        return this.withObjectId(id1 => password.withObjectId(id2 => NativePassword.isEqual(id1, id2)))
+        return this.handle.withObjectId(id1 => password.handle.withObjectId(id2 => NativePassword.isEqual(id1, id2)))
     }
 
     /**
@@ -199,8 +241,8 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns `PinTestResult` object.
      * @throws `PowerAuthErrorCode.WRONG_PARAM` if PIN contains other characters than digits or its length is less than 4. 
      */
-    async testPinStrength(): Promise<PinTestResult> {
-        return this.withObjectId(_ => NativePassphraseMeter.testPin(this.toRawObject()))
+    testPinStrength(): Promise<PinTestResult> {
+        return this.handle.withObjectId(id => NativePassphraseMeter.testPin(toRawPasswordObject(id)))
     }
 
     /**
@@ -208,41 +250,7 @@ export class PowerAuthPassword extends BaseNativeObject {
      * @returns Frozen RawPassword object.
      */
     toRawPassword(): Promise<PowerAuthRawPassword> {
-        return this.resolveRawObject()
-    }
-
-    /**
-     * If true, then the underlying native password will be destroyed immediately after is used
-     * for the cryptographic operation.
-     */
-    private readonly destroyOnUse: boolean
-    /**
-     * InstanceId of PowerAuth object that created this password.
-     */
-    private readonly powerAuthInstanceId?: string
-    /**
-     * Autorelease timeout in milliseconds. The value is used only for testing purposes, and is ignored in release build of library.
-     */
-    private readonly autoreleaseTime: number
-    /**
-     * Closure called when native object is restored and the content of previously stored password is lost.
-     */
-    private readonly automaticCleanupCallback?: () => void
-
-    // BaseNativeObject impl.
-
-    protected override onCreate(): Promise<string> {
-        return NativePassword.initialize(this.destroyOnUse, this.powerAuthInstanceId, this.autoreleaseTime)
-    }
-
-    protected override onRelease(objectId: string): Promise<void> {
-        return NativePassword.release(objectId)
-    }
-
-    protected override onAutomaticCleanup(): void {
-        if (this.automaticCleanupCallback != undefined) {
-            this.automaticCleanupCallback()
-        }
+        return this.handle.withObjectId(id => Promise.resolve(toRawPasswordObject(id)))
     }
 
     /**
@@ -267,4 +275,14 @@ export class PowerAuthPassword extends BaseNativeObject {
         }
         return c
     }
+}
+
+function validateOptions(options: unknown, hasExtraArguments: boolean) {
+    if (hasExtraArguments || typeof options !== 'object' || options === null || Array.isArray(options)) {
+        throw new PowerAuthError(undefined, "PowerAuthPassword options must be a single object", PowerAuthErrorCode.WRONG_PARAMETER)
+    }
+}
+
+function toRawPasswordObject(objectId: string): PowerAuthRawPassword {
+    return Object.freeze({ objectId: objectId })
 }

@@ -67,14 +67,6 @@ PAJS_METHOD_START(initialize,
 }
 PAJS_METHOD_END
 
-PAJS_METHOD_START(release,
-                  PAJS_ARGUMENT(objectId, NSString*))
-{
-    [_objectRegister removeObjectWithId:objectId expectedClass:[PowerAuthCoreMutablePassword class]];
-    resolve(nil);
-}
-PAJS_METHOD_END
-
 PAJS_METHOD_START(clear,
                   PAJS_ARGUMENT(objectId, NSString*))
 {

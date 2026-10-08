@@ -17,7 +17,6 @@
 import { NativeEncryptor } from "../internal/NativeEncryptor"
 import { NativeObjectHandle } from "../internal/NativeObjectHandle"
 import { NativeWrapper } from "../internal/NativeWrapper"
-import { BaseReleasableObject } from "./BaseNativeObject"
 import { PowerAuthHttpHeader } from "./PowerAuthHttpHeader"
 
 /** Scope of an end-to-end encryptor. */
@@ -37,7 +36,7 @@ export interface PowerAuthEncryptedRequest {
  * The same instance encrypts one request and decrypts its response. Acquire a fresh encryptor
  * for every additional HTTP exchange and call `release()` in a `finally` block.
  */
-export interface PowerAuthEncryptor extends BaseReleasableObject {
+export interface PowerAuthEncryptor {
     /** Scope used to acquire this encryptor. */
     readonly scope: PowerAuthEncryptorScope
 
@@ -59,6 +58,9 @@ export interface PowerAuthEncryptor extends BaseReleasableObject {
      * @returns Clear response body encoded as a Base64 string.
      */
     decryptResponse(responseBodyBase64: string): Promise<string>
+
+    /** Releases the underlying native encryptor. */
+    release(): Promise<void>
 }
 
 /** Internal platform-backed implementation of `PowerAuthEncryptor`. */
@@ -69,7 +71,7 @@ export class PowerAuthEncryptorImpl implements PowerAuthEncryptor {
         public readonly scope: PowerAuthEncryptorScope,
         objectId: string
     ) {
-        this.handle = new NativeObjectHandle(objectId)
+        this.handle = NativeObjectHandle.fromNative(objectId)
     }
 
     static async acquire(

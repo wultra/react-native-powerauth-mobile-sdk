@@ -1,14 +1,20 @@
 # Working with passwords securely
 
 The `PowerAuthPassword` class implements safe storage for users' passwords. The class is using an underlying native object to store the user's password securely in the memory. The goal is to keep the user's password in the memory for as short as possible time. To achieve this, the native object implements the following precautions: 
- 
-- If it's constructed with `destroyOnUse` parameter set to `true` then the native password is automatically destroyed after it's used for the cryptographic operation.
+
+- The native password is created when you first use the object. Concurrent calls share the same native password.
+
+- If it's constructed with `destroyOnUse` option set to `true` then the native password is automatically destroyed after it's used for the cryptographic operation. This is the default setting.
  
 - If it's constructed with `powerAuthInstanceId` then the native object will be destroyed after the `PowerAuth` class with the same identifier is deconfigured.
  
-- If you leave the instance of `PowerAuthPassword` class as it is, then the native password is removed from the memory after 5 minutes of inactivity. The JavaScript object is still functional, so if you use any API function, then the native password is re-initialized, but the previous passphrase is lost. You can provide an optional `onAutomaticCleanup` function to the object's constructor to detect this situation.
+- If you leave the instance of `PowerAuthPassword` class as it is, then the native password is removed from the memory after 5 minutes of inactivity.
  
 - If you call any `PowerAuthPassword` method except `release()`, then the auto-cleanup timer is reset, so the native password will live for another 5 minutes.
+
+- A call to `release()` destroys the native password immediately.
+
+After the native password is destroyed or released, any other use of the object reports `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. The object is not restored, so create a new `PowerAuthPassword` object when you need the password again.
  
 Be aware that this class is effective only if you're using a numeric PIN for the passphrase although its API accepts full Unicode code point at the input. This is because it's quite simple to re-implement the PIN keyboard with your custom UI components. On opposite to that, for the full alphanumeric input, you need to use the system keyboard, which already leaves traces of the user's password in memory.
 
@@ -30,11 +36,13 @@ You have two options how to instantiate the password object:
    ```
    Such password will be destroyed after the `PowerAuth` instance is deconfigured.
 
-In both ways you can alter the following parameters:
+In both ways you can alter the `destroyOnUse` option. It's by default `true` and the native password is destroyed automatically after it's used for the cryptographic operation. If you set `false`, then it's recommended to use `release()` method once the password is no longer needed.
 
-- `destroyOnUse` is by default `true` and the native password is destroyed automatically after it's used for the cryptographic operation. If you set `false`, then it's recommended to use `release()` method once the password is no longer needed.
-
-- `onAutomaticCleanup` function is called when the password object detects that the native password was destroyed due to object's inactivity. See [Automatic cleanup](#automatic-cleanup) chapter for more details.
+```javascript
+const password1 = new PowerAuthPassword({ destroyOnUse: false });
+const password2 = new PowerAuthPassword({ destroyOnUse: false, powerAuthInstanceId: powerAuth.instanceId });
+const password3 = powerAuth.createPassword(false);
+```
 
 ## Using password
 
@@ -75,6 +83,8 @@ Note that this is not recommended. Do this only when you retrieve the whole stri
 
 ```javascript
 const password = await PowerAuthPassword.fromString("1234")
+// You can also pass the same options as to the constructor
+const reusablePassword = await PowerAuthPassword.fromString("1234", { destroyOnUse: false })
 ```
 
 ## Adding or removing characters
@@ -120,33 +130,28 @@ console.log(`p1 == p2 is ${p1p2equal}`);    // p1 == p2 is true
 console.log(`p2 == p3 is ${p2p3equal}`);    // p2 == p3 is false
 ```
 
-## Automatic cleanup
+## Releasing password
 
-The following code explains how the automatic cleanup works:
+The following code explains how the native password lifetime works:
 
 ```javascript
-// Construct password and setup callback to print the cleanup event to the log.
-const password = new PowerAuthPassword(false, () => {
-    console.log('Automatic cleanup');
-});
+const password = new PowerAuthPassword({ destroyOnUse: false });
 
 let length = await password.addCharacter(48);
 console.log(`Length is ${length}`);         // prints 'Length is 1'
 
-// Now release internal native object. Note that the callback is not called.
-await password.release();                       
+// Release the native password.
+await password.release();
 
-// By calling another API function the native password is restored, but the callback
-// is not called, because we released the password manually.
-password.addCharacter('💣');
-let empty = await password.isEmpty();              
-console.log(`empty is ${empty}`);           // prints 'empty is false'
-
-// ... now sleep for 5+ minutes :)
-
-empty = await password.isEmpty();           // prints 'Automatic cleanup'  
-console.log(`empty is ${empty}`);           // prints 'empty is true'
+try {
+    // Released password is not restored.
+    await password.isEmpty();
+} catch (e) {
+    console.log(e.code);                    // prints 'INVALID_NATIVE_OBJECT'
+}
 ```
+
+The same `INVALID_NATIVE_OBJECT` error is reported when the native password was destroyed after its use for the cryptographic operation, after 5 minutes of inactivity, or after the owning `PowerAuth` instance was deconfigured.
 
 ## Testing PIN strength
 

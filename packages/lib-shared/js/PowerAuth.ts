@@ -777,11 +777,10 @@ export class PowerAuth {
     /**
      * Create a new PowerAuthPassword object that will be destroyed automatically when this PowerAuth instance is deconfigured.
      * @param destroyOnUse If `true` then the underlying native password is destroyed immediately after it's used for a cryptographic operation.
-     * @param onAutomaticCleanup If provided, then the closure is called when the native password is restored and the previous content is lost.
      * @returns new instance of PowerAuthPassword class that's owned by this PowerAuth instance.
      */
-    createPassword(destroyOnUse: boolean = true, onAutomaticCleanup: (() => void) | undefined = undefined): PowerAuthPassword {
-        return new PowerAuthPassword(destroyOnUse, onAutomaticCleanup, this.instanceId)
+    createPassword(destroyOnUse: boolean = true): PowerAuthPassword {
+        return new PowerAuthPassword({ destroyOnUse, powerAuthInstanceId: this.instanceId })
     }
 
     /**

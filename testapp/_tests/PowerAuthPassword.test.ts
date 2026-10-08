@@ -20,6 +20,10 @@ import { createE2ePowerAuthConfiguration } from "../src/IntegrationUtils";
 import { Register } from "./helpers/NativeObjectRegister";
 import { importPassword } from "./helpers/PasswordHelper";
 
+async function objectIdOf(password: PowerAuthPassword): Promise<string> {
+    return (await password.toRawPassword()).objectId!
+}
+
 export class PowerAuthPasswordTests extends TestSuite {
 
     cleanup = new Array<any>()
@@ -167,134 +171,94 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p4.isEqualTo(p1)).toBe(true)
     }
 
-    async testAutomaticCleanup() {
-        let p1CleanupCalled = 0
-        let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(false, () => { p1CleanupCalled += 1 }, undefined, 100)
-        const p2 = new PowerAuthPassword(false, () => { p2CleanupCalled += 1 }, undefined, 100)
+    async testAutomaticCleanupInvalidatesPassword() {
+        const p1 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: 100 })
+        const p2 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: 100 })
         this.cleanup.push(p1, p2)
 
-        // Right after construct the identifier is not set
-        const id1AfterCreate = ((p1 as any).objectId)
-        const id2AfterCreate = ((p2 as any).objectId)
-        expect(id1AfterCreate).toBeUndefined()
-        expect(id2AfterCreate).toBeUndefined()
         // We have to call at least some function to create underlying native object
         expect(await p1.isEmpty()).toBe(true)
         expect(await p2.length()).toBe(0)
-        // Now identifiers are available, but no cleanup was called
-        const id1AfterAccess = ((p1 as any).objectId)!
-        const id2AfterAccess = ((p2 as any).objectId)!
-        expect(id1AfterAccess).toBeDefined()
-        expect(id2AfterAccess).toBeDefined()
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
+        const id1 = await objectIdOf(p1)
+        const id2 = await objectIdOf(p2)
 
         // Wait for 50ms
         await this.sleep(50)
         // Both passwords should exist now
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(true)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(true)
+        expect(await Register.findObject(id1, 'password')).toBe(true)
+        expect(await Register.findObject(id2, 'password')).toBe(true)
         // Access 1st password, to extend it's lifetime
         await p1.addCharacter(48)
         // Wait for another 50ms, p2 should be released now
         await this.sleep(50)
 
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(true)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
-        // native p2 is no longer valid, but its identifier is still set in JS object
-        expect(((p2 as any).objectId)).toBeDefined()
-        // Now extend p1 again
-        expect(await p1.isEmpty()).toBe(false)
-        // And access p2 again. The callback function should be called now
-        expect(await p2.isEmpty()).toBe(true)
-        expect(p2CleanupCalled).toBe(1)
+        expect(await Register.findObject(id1, 'password')).toBe(true)
+        expect(await Register.findObject(id2, 'password')).toBe(false)
+        // Expired password is not recreated
+        await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.addCharacter(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        expect(await objectIdOf(p2)).toBe(id2)
+        await expect(async () => p1.isEqualTo(p2)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        // p1 is still valid
+        expect(await p1.length()).toBe(1)
 
-        const id2AfterRestore = ((p2 as any).objectId)!
-        expect(id2AfterRestore).toNotBe(id2AfterAccess)
-        // Now sleep for another 100ms, so both passwords will be released
-        await this.sleep(100)
-        // Touch both objects
-        expect(await p1.isEqualTo(p2)).toBe(true)
-        expect(await p1.isEmpty()).toBe(true)
-        expect(p1CleanupCalled).toBe(1)
-        expect(p2CleanupCalled).toBe(2)
-        expect(((p1 as any).objectId)).toNotBe(id1AfterAccess)
-        expect(((p2 as any).objectId)).toNotBe(id2AfterRestore)
+        // Now sleep for another 150ms, so p1 will be released too
+        await this.sleep(150)
+        expect(await Register.findObject(id1, 'password')).toBe(false)
+        await expect(async () => p1.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
     }
 
     async testReleaseAfterUse() {
-        let p1CleanupCalled = 0
-        let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(true, () => { p1CleanupCalled += 1 }, undefined, 100)
-        const p2 = new PowerAuthPassword(true, () => { p2CleanupCalled += 1 }, undefined, 100)
+        const p1 = new PowerAuthPassword({ destroyOnUse: true, autoReleaseTimeMillis: 100 })
+        const p2 = new PowerAuthPassword({ autoReleaseTimeMillis: 100 })
         this.cleanup.push(p1, p2)
 
         await p1.addCharacter(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
 
-        const id1AfterAccess = ((p1 as any).objectId)!
-        const id2AfterAccess = ((p2 as any).objectId)!
+        const id1 = await objectIdOf(p1)
+        const id2 = await objectIdOf(p2)
 
-        expect(await Register.useObject(id1AfterAccess, 'password')).toBe(true)
-        expect(await Register.useObject(id2AfterAccess, 'password')).toBe(true)
+        expect(await Register.useObject(id1, 'password')).toBe(true)
+        expect(await Register.useObject(id2, 'password')).toBe(true)
 
-        expect(await p1.isEmpty()).toBe(true)
-        expect(await p2.isEmpty()).toBe(true)
+        // Used passwords are not recreated
+        await expect(async () => p1.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
-        expect(p1CleanupCalled).toBe(1)
-        expect(p2CleanupCalled).toBe(1)
-
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(false)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
+        expect(await Register.findObject(id1, 'password')).toBe(false)
+        expect(await Register.findObject(id2, 'password')).toBe(false)
     }
     
     async testManualRelease() {
-        let p1CleanupCalled = 0
-        let p2CleanupCalled = 0
-        const p1 = new PowerAuthPassword(false, () => { p1CleanupCalled += 1 }, undefined, 100)
-        const p2 = new PowerAuthPassword(true, () => { p2CleanupCalled += 1 }, undefined, 100)
+        const p1 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: 100 })
+        const p2 = new PowerAuthPassword({ destroyOnUse: true, autoReleaseTimeMillis: 100 })
         this.cleanup.push(p1, p2)
 
-        // Native objects are no created yet
+        // Native objects are not created yet, so release does nothing and objects remain usable
         await p1.release()
         await p2.release()
-
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
 
         await p1.addCharacter(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
 
-        const id1AfterAccess = ((p1 as any).objectId)!
-        const id2AfterAccess = ((p2 as any).objectId)!
-        expect(id1AfterAccess).toBeDefined()
-        expect(id2AfterAccess).toBeDefined()
-
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
+        const id1 = await objectIdOf(p1)
+        const id2 = await objectIdOf(p2)
 
         // Now manually release passwords
         await p1.release()
         await p2.release()
 
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(false)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
+        expect(await Register.findObject(id1, 'password')).toBe(false)
+        expect(await Register.findObject(id2, 'password')).toBe(false)
 
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
-
-        // Instantiate again, this should not call onAutomaticCleanup, because 
-        // release was initiated by application
-        await p1.addCharacter(48)
-        expect(await p1.isEmpty()).toBe(false)
-        expect(await p2.isEmpty()).toBe(true)
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
+        // Released passwords are not recreated
+        await expect(async () => p1.addCharacter(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p1.toRawPassword()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.testPinStrength()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
         // Now release for multiple times, to make sure that function doesn't fail
         await p1.release()
@@ -303,18 +267,85 @@ export class PowerAuthPasswordTests extends TestSuite {
         await p2.release()
     }
 
+    async testConcurrentFirstUseCreatesOnePassword() {
+        const powerAuth = await this.createConfiguredPowerAuth()
+        const baseline = await Register.countObjects(powerAuth.instanceId)
+
+        const p = powerAuth.createPassword(false)
+        this.cleanup.push(p)
+        const characters = [...'0123456789']
+        const lengths = await Promise.all(characters.map(c => p.addCharacter(c)))
+
+        expect(lengths.join(',')).toBe('1,2,3,4,5,6,7,8,9,10')
+        expect(await p.length()).toBe(characters.length)
+        expect((await Register.countObjects(powerAuth.instanceId)).valid).toBe(baseline.valid + 1)
+
+        const expected = await importPassword('0123456789', false)
+        this.cleanup.push(expected)
+        expect(await p.isEqualTo(expected)).toBe(true)
+
+        await p.release()
+        expect((await Register.countObjects(powerAuth.instanceId)).valid).toBe(baseline.valid)
+    }
+
+    async testReleaseDuringFirstUseReleasesPassword() {
+        const powerAuth = await this.createConfiguredPowerAuth()
+        const baseline = await Register.countObjects(powerAuth.instanceId)
+
+        const p = powerAuth.createPassword(false)
+        this.cleanup.push(p)
+        // The first use starts native password creation and release is requested before it completes
+        const add = p.addCharacter('1')
+        const release = p.release()
+
+        await expect(async () => add).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await release
+        expect((await Register.countObjects(powerAuth.instanceId)).valid).toBe(baseline.valid)
+        await expect(async () => p.length()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        expect((await Register.countObjects(powerAuth.instanceId)).valid).toBe(baseline.valid)
+    }
+
+    async testLegacyConstructorArgumentsAreRejected() {
+        const LegacyPassword = PowerAuthPassword as any
+        await expect(async () => new LegacyPassword(false)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => new LegacyPassword(null)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => PowerAuthPassword.fromString('1234', false as any)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        // Legacy calls with an undefined first argument must not silently drop the trailing owner
+        const LegacyFromString = PowerAuthPassword.fromString as any
+        await expect(async () => new LegacyPassword(undefined, undefined, 'owner')).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => new LegacyPassword({}, 'owner')).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => LegacyFromString.call(PowerAuthPassword, '1234', undefined, undefined, 'owner')).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        // Explicitly passing undefined options is still allowed
+        const p1 = new PowerAuthPassword(undefined)
+        const p2 = await PowerAuthPassword.fromString('1', undefined)
+        this.cleanup.push(p1, p2)
+        expect(await p1.isEmpty()).toBe(true)
+        expect(await p2.length()).toBe(1)
+    }
+
     getRandomId(): string {
         return 'instanceId_' + (Math.random() + 1).toString(36).substring(7)
     }
 
-    async testGlobalRelease() {
+    getDummyConfiguration() {
         // Dummy values for PA configuration
-        const config = createE2ePowerAuthConfiguration(
+        return createE2ePowerAuthConfiguration(
             'ARAVst+fkgOOT/U1gBr1qLMDEOTfEduuLUvbpOmTq7cI+skBAUEEVjKe+8yFg62GvhwU8eE3iEZZCOeNqtEyz2AXXs/yZewnmdETC8J2sNcw5NnIApYDUmBh2n+XRHize4EiVdetjQ==',
             'http://localhost/wrong',
             8,
             PowerAuthAlgorithm.LEGACY
         )
+    }
+
+    async createConfiguredPowerAuth(): Promise<PowerAuth> {
+        const powerAuth = new PowerAuth(this.getRandomId())
+        this.cleanup.push(powerAuth)
+        await powerAuth.configure(this.getDummyConfiguration())
+        return powerAuth
+    }
+
+    async testGlobalRelease() {
+        const config = this.getDummyConfiguration()
 
         // Owner object represents an instance of PowerAuth class that typically owns various object types
         const powerAuthInstanceId = this.getRandomId()
@@ -322,13 +353,13 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(powerAuth)
 
         // We can create passwords even in PA instance is not configured, but every call to password API will fail
-        let p1CleanupCalled = 0
-        let p2CleanupCalled = 0
-        const p1 = powerAuth.createPassword(false, () => { p1CleanupCalled += 1 })
-        const p2 = powerAuth.createPassword(true, () => { p2CleanupCalled += 1 })
+        const p1 = powerAuth.createPassword(false)
+        const p2 = powerAuth.createPassword(true)
         this.cleanup.push(p1, p2)
-        expect((p1 as any).powerAuthInstanceId).toBe(powerAuthInstanceId)
-        expect((p2 as any).powerAuthInstanceId).toBe(powerAuthInstanceId)
+        expect(p1.powerAuthInstanceId).toBe(powerAuthInstanceId)
+        expect(p2.powerAuthInstanceId).toBe(powerAuthInstanceId)
+        expect(p1.destroyOnUse).toBe(false)
+        expect(p2.destroyOnUse).toBe(true)
 
         // PA instance is not configured yet, so the underlying password cannot be created.
         await expect(async () => p1.addCharacter(48)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
@@ -337,34 +368,35 @@ export class PowerAuthPasswordTests extends TestSuite {
         // Configure PA instance
         await powerAuth.configure(config)
 
-        // Now everything should work as expected
+        // Failed creation is retried, so everything should work as expected now
         await p1.addCharacter(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
-        expect(p1CleanupCalled).toBe(0)
-        expect(p2CleanupCalled).toBe(0)
 
-        const id1AfterAccess = ((p1 as any).objectId)!
-        const id2AfterAccess = ((p2 as any).objectId)!
+        const id1 = await objectIdOf(p1)
+        const id2 = await objectIdOf(p2)
         
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(true)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(true)
+        expect(await Register.findObject(id1, 'password')).toBe(true)
+        expect(await Register.findObject(id2, 'password')).toBe(true)
 
         // Now deconfigure PA instance
         await powerAuth.deconfigure()
         // Both passwords should be released
-        expect(await Register.findObject(id1AfterAccess, 'password')).toBe(false)
-        expect(await Register.findObject(id2AfterAccess, 'password')).toBe(false)
+        expect(await Register.findObject(id1, 'password')).toBe(false)
+        expect(await Register.findObject(id2, 'password')).toBe(false)
 
-        // Now any access to password leads to the error, because parent object is not in the register
-        await expect(async () => p1.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
-        await expect(async () => p2.length()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        // Now any access to password leads to the error, because the native password no longer exists
+        await expect(async () => p1.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.length()).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
         // Configure PA instance again
         await powerAuth.configure(config)
 
-        expect(await p1.isEmpty()).toBe(true)
-        expect(await p2.isEmpty()).toBe(true)
+        // Old passwords are not recreated, but new password can be created
+        await expect(async () => p1.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        const p3 = powerAuth.createPassword()
+        this.cleanup.push(p3)
+        expect(await p3.isEmpty()).toBe(true)
     }
 
     async testFromString() {
