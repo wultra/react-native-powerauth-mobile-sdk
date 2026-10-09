@@ -66,7 +66,7 @@ const compile = () =>
         bundle: true,
         // Resolve workspace packages from source to build the e2e infra packages always
         mainFields: ['source', 'module', 'main'],
-        target: "ios13",
+        target: "ios15",
         // minify: true // do not minify for easier debug, also, it doesn't work :)
     })
 

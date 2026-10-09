@@ -48,7 +48,7 @@ Use `PowerAuthSharingConfiguration` for sharing. Keep matching instance and stor
 ## Platform Requirements
 
 - React Native 0.87 or later, Android 7.0 (API 24) or later, and iOS 15.1 or later.
-- Cordova 12 or later, cordova-android 12 or later, and cordova-ios 7 or later. iOS 13.0 or later is required.
+- Cordova 12 or later, cordova-android 12 or later, and cordova-ios 7 or later. iOS 15.0 or later is required.
 - Android builds require Java 17 compatibility.
 - CocoaPods supplies the native `PowerAuth2` dependency. React Native's opt-in SwiftPM integration is experimental; Cordova continues to use CocoaPods.
 
