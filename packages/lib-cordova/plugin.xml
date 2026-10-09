@@ -109,7 +109,7 @@
             <feature name="PowerAuthStorageUtilsModule">
                 <param name="ios-package" value="PowerAuthStorageUtilsModule"/>
             </feature>
-            <preference name="deployment-target" value="13.0" />
+            <preference name="deployment-target" value="15.0" />
             <preference name="UseSwiftLanguageVersion" value="5" />
         </config-file>
 
