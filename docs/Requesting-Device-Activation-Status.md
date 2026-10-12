@@ -96,6 +96,8 @@ When `activationStatusFetchRequired` is `false`, `result.activationFingerprint` 
 
 If `hasPendingProtocolUpgrade()` returns `true`, call `fetchActivationStatus()` to finish the upgrade. Some SDK operations are not available while an upgrade is pending.
 
+To decide when and how to upgrade existing activations, for example with a dedicated upgrade screen or in the background, see the native SDK's [Upgrading to Post-Quantum Cryptography](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/Upgrading-to-Post-Quantum-Cryptography.md) tutorial.
+
 To get more information about activation states, check the [Activation States](https://github.com/wultra/powerauth-crypto/blob/develop/docs/Activation.md#activation-states) chapter available in our [powerauth-crypto](https://github.com/wultra/powerauth-crypto) repository.
 
 ## Read Next
