@@ -6,6 +6,10 @@ Both wrappers use the same public API. The sections below describe JavaScript AP
 
 ## Server and Algorithm Rollout
 
+<!-- begin box info -->
+Before you start the migration, decide how your existing users should transition to the new protocol. The native SDK's [Upgrading to Post-Quantum Cryptography](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/Upgrading-to-Post-Quantum-Cryptography.md) tutorial describes the available strategies and helps you choose the right one. Its examples use the native APIs; in JavaScript, use the `algorithm` configuration option, `hasProtocolUpgradeAvailable()`, `startProtocolUpgrade()`, and `hasPendingProtocolUpgrade()` described below.
+<!-- end -->
+
 The new JavaScript `algorithm` option selects the algorithm used by the native SDK. Coordinate this setting with the server version and mobile SDK configuration:
 
 | Algorithm | Protocol | Required PowerAuth Server |
@@ -189,3 +193,5 @@ Plan local-data migration before upgrading an activation: the legacy key must be
 ## References
 
 See the [native SDK 2.0 migration guide](https://github.com/wultra/powerauth-mobile-sdk/blob/2.0.0/docs/Migration-from-1.9-to-2.0.md) for details about the underlying native SDK changes.
+
+See the native SDK's [Upgrading to Post-Quantum Cryptography](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/Upgrading-to-Post-Quantum-Cryptography.md) tutorial for guidance on choosing a protocol migration strategy for existing users.
