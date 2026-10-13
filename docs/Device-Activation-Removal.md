@@ -49,6 +49,9 @@ try {
 }
 ```
 
+<!-- begin box info -->
+Depending on server support and configuration, it's possible to remove the activation with 1FA authentication (e.g. using `PowerAuthAuthentication.possession()`).
+<!-- end -->
 
 ## Read Next
 
