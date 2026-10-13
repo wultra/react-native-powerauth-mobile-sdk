@@ -5,6 +5,7 @@
 See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
 
 - Updated the minimum supported React Native version to 0.87, Android version to 7.0 (API 24), and iOS version to 15.1. ([#440](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/440))
+- Updated the minimum supported iOS version for Cordova to 15.0. ([#518](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/518))
 - Added experimental Swift Package Manager support for iOS with React Native 0.87 or later. ([#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), [#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
 - Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
