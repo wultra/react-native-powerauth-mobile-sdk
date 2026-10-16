@@ -76,6 +76,18 @@ export function createE2ePowerAuthConfiguration(
     )
 }
 
+/**
+ * Client configuration for automated tests. On hosted CI runners, iOS simulators intermittently stall
+ * new HTTPS connections for up to about 100 seconds. In-flight requests complete once the stall clears,
+ * so the default 20 second timeout would fail tests that only need to wait.
+ */
+function createE2eClientConfiguration(): PowerAuthClientConfiguration {
+    const clientConfiguration = new PowerAuthClientConfiguration()
+    clientConfiguration.connectionTimeout = 120
+    clientConfiguration.readTimeout = 120
+    return clientConfiguration
+}
+
 export class IntegrationHelper {
 
     private jsonMediaType = "application/json; charset=UTF-8"
@@ -194,7 +206,7 @@ export class IntegrationHelper {
                 8,
                 config?.algorithm
             ),
-            config?.clientConfiguration,
+            config?.clientConfiguration ?? createE2eClientConfiguration(),
             config?.biometryConfiguration ?? createNonInteractiveBiometryConfiguration(),
             config?.keychainConfiguration,
             config?.sharingConfiguration
@@ -375,7 +387,11 @@ export class IntegrationHelper {
             },
             method: method
         }
-        return await fetch(url, request)
+        const send = () => fetch(url, request)
+        // RN fetch gives up after 60 seconds, sooner than the stalls described at createE2eClientConfiguration,
+        // so retry a failed GET once. Other methods are not retried because they may not be idempotent.
+        return await send()
+            .catch(error => method === "GET" ? send() : Promise.reject(error))
             .then(response => response.text())
             .then(stringResp => {
                 return JSON.parse(stringResp)
