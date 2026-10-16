@@ -223,27 +223,8 @@ configure_simulator_biometrics() {
   fi
 }
 
-E2E_START_EPOCH="$(date +%s)"
-
-# Diagnostics for #529: capture only TLS, trust evaluation, and networking logs from the simulator.
-capture_simulator_network_logs() {
-  local target="${SIM_ID:-booted}"
-  local minutes="$(( ($(date +%s) - E2E_START_EPOCH) / 60 + 2 ))"
-  local out="artifacts/e2e/ios-simulator-network.log"
-  echo "[e2e] Capturing filtered iOS simulator network logs (last ${minutes}m)..."
-  if run_with_timeout 300 xcrun simctl spawn "${target}" log show --style syslog --info --debug --last "${minutes}m" \
-    --predicate 'process == "trustd" OR process == "nsurlsessiond" OR process == "mDNSResponder" OR subsystem IN {"com.apple.network", "com.apple.CFNetwork", "com.apple.securityd", "com.apple.trustd", "com.apple.boringssl"}' \
-    > "${out}" 2>&1; then
-    gzip -f "${out}" || true
-  else
-    echo "[e2e] WARNING: Failed to capture iOS simulator network logs."
-    gzip -f "${out}" 2>/dev/null || true
-  fi
-}
-
 abort_with_logs() {
   echo "[e2e] Aborting due to missing collector completion."
-  capture_simulator_network_logs
   if [ -n "${CDV_PID:-}" ]; then
     kill "${CDV_PID}" || true
   fi
@@ -484,6 +465,7 @@ if [ -n "${METRO_PID:-}" ]; then
   kill "${METRO_PID}" || true
 fi
 
-capture_simulator_network_logs
+echo "[e2e] iOS simulator log capture disabled (logs can be very large)."
+# xcrun simctl spawn booted log show --style syslog --last 10m > artifacts/e2e/ios-simulator.log || true
 
 exit "${COLLECTOR_EXIT}"
