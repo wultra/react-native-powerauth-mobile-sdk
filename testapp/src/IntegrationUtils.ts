@@ -16,6 +16,7 @@
 
 import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
     PowerAuthAlgorithm, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthConfiguration,
+    PowerAuthError, PowerAuthErrorCode,
     PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
 } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
@@ -76,8 +77,23 @@ export function createE2ePowerAuthConfiguration(
     )
 }
 
+/**
+ * Client configuration for automated tests. On hosted CI runners, iOS simulators intermittently stall
+ * new HTTPS connections for up to about 2 minutes. In-flight requests complete once the stall clears,
+ * so the default 20 second timeout would fail tests that only need to wait. The test server closes
+ * connections that stay silent for 60 seconds, so longer stalls are handled by retrying activation creation
+ * in prepareActiveActivation.
+ */
+function createE2eClientConfiguration(): PowerAuthClientConfiguration {
+    const clientConfiguration = new PowerAuthClientConfiguration()
+    clientConfiguration.connectionTimeout = 120
+    clientConfiguration.readTimeout = 120
+    return clientConfiguration
+}
+
 export class IntegrationHelper {
 
+    private static readonly createActivationAttempts = 3
     private jsonMediaType = "application/json; charset=UTF-8"
     private applicationDetail?: ApplicationDetail
 
@@ -163,11 +179,24 @@ export class IntegrationHelper {
     /// Creates a new activation on the server and locally.
     async prepareActiveActivation(password: string, userId: string | undefined = undefined, setupBiometry: boolean = false, biometryPrompt: string = "Create activation with biometrics"): Promise<void> {
 
-        const resp = await this.createActivation(userId, true)
+        // CREATE ACTIVATION ON THE SERVER AND LOCALLY
 
-        // CREATE ACTIVATION LOCALLY
-
-        await this._sdk.createActivation(PowerAuthActivation.createWithActivationCode(resp.activationCode, "tests"))
+        for (let attempt = 1; ; attempt++) {
+            const resp = await this.createActivation(userId, true)
+            try {
+                await this._sdk.createActivation(PowerAuthActivation.createWithActivationCode(resp.activationCode, "tests"))
+                break
+            } catch (error) {
+                if (attempt >= IntegrationHelper.createActivationAttempts || (error as PowerAuthError)?.code !== PowerAuthErrorCode.NETWORK_ERROR) {
+                    throw error
+                }
+                // The test server drops connections that stall for 60 seconds (see createE2eClientConfiguration).
+                // Retry with a new registration, so a request that already reached the server is never replayed.
+                console.warn(`createActivation failed with a network error (attempt ${attempt}/${IntegrationHelper.createActivationAttempts}), retrying.`)
+                await this._sdk.removeActivationLocal()
+                await this.removeRegistration(resp.registrationId).catch(() => undefined)
+            }
+        }
 
         // PERSIST ACTIVATION LOCALLY
 
@@ -194,7 +223,7 @@ export class IntegrationHelper {
                 8,
                 config?.algorithm
             ),
-            config?.clientConfiguration,
+            config?.clientConfiguration ?? createE2eClientConfiguration(),
             config?.biometryConfiguration ?? createNonInteractiveBiometryConfiguration(),
             config?.keychainConfiguration,
             config?.sharingConfiguration
@@ -375,7 +404,11 @@ export class IntegrationHelper {
             },
             method: method
         }
-        return await fetch(url, request)
+        const send = () => fetch(url, request)
+        // RN fetch gives up after 60 seconds, sooner than the stalls described at createE2eClientConfiguration,
+        // so retry a failed GET once. Other methods are not retried because they may not be idempotent.
+        return await send()
+            .catch(error => method === "GET" ? send() : Promise.reject(error))
             .then(response => response.text())
             .then(stringResp => {
                 return JSON.parse(stringResp)
