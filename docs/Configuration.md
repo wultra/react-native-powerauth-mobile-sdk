@@ -106,8 +106,21 @@ class AppMyApplication {
                     PowerAuthAlgorithm.P384_L3,
                     8
               )
-              const clientConfiguration = { enableUnsecureTraffic: false };
-              const biometryConfiguration = { invalidateBiometricFactorAfterChange: true };
+              const clientConfiguration = {
+                    enableUnsecureTraffic: false,
+                    connectionTimeout: 20,
+                    readTimeout: 20, // Android only
+                    customHttpHeaders: [ { name: "X-Custom-Header", value: "your-header-value" } ],
+                    basicHttpAuthentication: { username: "your-http-username", password: "your-http-password" }
+              };
+              const biometryConfiguration = {
+                    invalidateBiometricFactorAfterChange: true,
+                    fallbackToDevicePasscode: false, // iOS only
+                    confirmBiometricAuthentication: false, // Android only
+                    authenticateOnBiometricKeySetup: true, // Android only
+                    fallbackToSharedBiometryKey: true, // Android only
+                    useLegacySymmetricKey: false // Android only
+              };
               const keychainConfiguration = { minimalRequiredKeychainProtection: PowerAuthKeychainProtection.SOFTWARE };
               const sharingConfiguration = {
                     // This is iOS specific. All values will be ignored on Android platform.
@@ -115,7 +128,8 @@ class AppMyApplication {
                     // about activation data sharing that explains how to prepare parameters in detail.
                     appGroup: "group.your.app.group",
                     appIdentifier: "some.identifier",
-                    keychainAccessGroup: "keychain.access.group"
+                    keychainAccessGroup: "keychain.access.group",
+                    sharedMemoryIdentifier: "pa01" // optional
               };
               await this.powerAuth.configure(configuration, clientConfiguration, biometryConfiguration, keychainConfiguration, sharingConfiguration);
               console.log("PowerAuth configuration successfull.");
