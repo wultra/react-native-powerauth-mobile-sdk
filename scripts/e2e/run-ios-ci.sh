@@ -67,6 +67,7 @@ SIM_BOOT_TIMEOUT_SEC="${E2E_SIM_BOOT_TIMEOUT_SEC:-900}"
 SIM_BOOTSTATUS_GRACE_SEC="${E2E_SIM_BOOTSTATUS_GRACE_SEC:-30}"
 SIMCTL_COMMAND_TIMEOUT_SEC="${E2E_SIMCTL_COMMAND_TIMEOUT_SEC:-30}"
 SIMCTL_LIST_TIMEOUT_SEC="${E2E_SIMCTL_LIST_TIMEOUT_SEC:-120}"
+SIMCTL_LIST_ATTEMPTS="${E2E_SIMCTL_LIST_ATTEMPTS:-3}"
 RN_LAUNCH_ATTEMPTS="${E2E_RN_LAUNCH_ATTEMPTS:-3}"
 COLLECTOR_TIMEOUT="${E2E_COLLECTOR_TIMEOUT:-90m}"
 
@@ -182,6 +183,20 @@ run_with_timeout() {
     status=$?
     return "${status}"
   fi
+}
+
+# The first simctl call on a fresh runner can hang for over 120 seconds, so retry it.
+simctl_list() {
+  local attempt=1 output
+  while [ "${attempt}" -le "${SIMCTL_LIST_ATTEMPTS}" ]; do
+    if output="$(run_with_timeout "${SIMCTL_LIST_TIMEOUT_SEC}" xcrun simctl list "$@")"; then
+      printf '%s\n' "${output}"
+      return 0
+    fi
+    echo "[e2e] WARNING: simctl list attempt ${attempt}/${SIMCTL_LIST_ATTEMPTS} failed." >&2
+    attempt=$((attempt + 1))
+  done
+  return 1
 }
 
 wait_for_simulator_ready() {
@@ -304,7 +319,7 @@ resolve_cordova_sim_target() {
   sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
   runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
 
-  if ! available_json="$(run_with_timeout "${SIMCTL_LIST_TIMEOUT_SEC}" xcrun simctl list devices available --json)"; then
+  if ! available_json="$(simctl_list devices available --json)"; then
     echo "[e2e] ERROR: Failed to list available iOS simulators."
     return 1
   fi
@@ -325,7 +340,7 @@ resolve_cordova_sim_target() {
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
-  if ! booted_list="$(run_with_timeout "${SIMCTL_LIST_TIMEOUT_SEC}" xcrun simctl list devices booted)"; then
+  if ! booted_list="$(simctl_list devices booted)"; then
     echo "[e2e] ERROR: Failed to list booted iOS simulators."
     exit 1
   fi
@@ -333,7 +348,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
     echo "[e2e] Using booted simulator: ${SIM_LINE}"
     SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
   else
-    if ! available_list="$(run_with_timeout "${SIMCTL_LIST_TIMEOUT_SEC}" xcrun simctl list devices available)"; then
+    if ! available_list="$(simctl_list devices available)"; then
       echo "[e2e] ERROR: Failed to list available iOS simulators."
       exit 1
     fi
