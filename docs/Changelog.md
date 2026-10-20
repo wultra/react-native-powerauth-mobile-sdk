@@ -1,11 +1,21 @@
 # Changelog
 
+## 5.0.0-beta-2
+
+See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
+
+- Updated the minimum supported iOS version for Cordova to 15.0. ([#518](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/518))
+- Fixed `PowerAuthPassword` losing characters and leaking native passwords when used concurrently before the native password was created, or released during its creation. ([#511](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/511))
+  - `PowerAuthPassword` is no longer restored after its native password is released, used, expired, or destroyed by deconfiguration, and reports `INVALID_NATIVE_OBJECT` instead.
+  - Changed the `PowerAuthPassword` constructor and `fromString()` to accept an options object, and removed the `onAutomaticCleanup` callback and its `createPassword()` parameter.
+  - Removed `BaseNativeObject` and `BaseReleasableObject`.
+- Removed the deprecated `PowerAuthAuthentication` constructor, the mutable `usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle` properties, and `convertLegacyObject()`. Use the static factories instead. This also removes an issue where constructor arguments were ignored, so signing used possession only. ([#509](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/509))
+
 ## 5.0.0-beta-1
 
 See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
 
 - Updated the minimum supported React Native version to 0.87, Android version to 7.0 (API 24), and iOS version to 15.1. ([#440](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/440))
-- Updated the minimum supported iOS version for Cordova to 15.0. ([#518](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/518))
 - Added experimental Swift Package Manager support for iOS with React Native 0.87 or later. ([#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), [#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
 - Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
@@ -25,11 +35,6 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
   - Deprecated the legacy server and device signature helpers.
 - Added `fetchSecureVaultKey()` and the native-backed `PowerAuthSecureVaultKey` object with `deriveKey()` and `release()` methods. ([#480](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/480))
   - Deprecated `fetchEncryptionKey()`.
-- Fixed `PowerAuthPassword` losing characters and leaking native passwords when used concurrently before the native password was created, or released during its creation. ([#511](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/511))
-  - `PowerAuthPassword` is no longer restored after its native password is released, used, expired, or destroyed by deconfiguration, and reports `INVALID_NATIVE_OBJECT` instead.
-  - Changed the `PowerAuthPassword` constructor and `fromString()` to accept an options object, and removed the `onAutomaticCleanup` callback and its `createPassword()` parameter.
-  - Removed `BaseNativeObject` and `BaseReleasableObject`.
-- Removed the deprecated `PowerAuthAuthentication` constructor, the mutable `usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle` properties, and `convertLegacyObject()`. Use the static factories instead. This also removes an issue where constructor arguments were ignored, so signing used possession only. ([#509](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/509))
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
