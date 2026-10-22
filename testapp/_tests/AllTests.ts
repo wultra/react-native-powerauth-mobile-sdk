@@ -23,6 +23,7 @@ import { PowerAuthUtilsTests } from "./PowerAuthUtils.test";
 import { PowerAuthActivationTests } from "./PowerAuthActivation.test";
 import { PowerAuth_ActivationTests } from "./PowerAuth_Activation.test";
 import { PowerAuth_PasswordTests } from "./PowerAuth_Password.test";
+import { PowerAuth_PasswordEncodingTests } from "./PowerAuth_PasswordEncoding.test";
 import { PowerAuth_BiometryTests } from "./PowerAuth_Biometry.test";
 import { PowerAuth_BiometryInteractiveTests } from "./PowerAuth_BiometryInteractive.test";
 import { PowerAuth_SignatureTests } from "./PowerAuth_Signature.test";
@@ -76,6 +77,7 @@ function getAlgorithmPassTests(pass: AlgorithmPass): TestSuite[] {
     return [
         suiteForPass(PowerAuth_ActivationTests, pass),
         suiteForPass(PowerAuth_PasswordTests, pass),
+        suiteForPass(PowerAuth_PasswordEncodingTests, pass),
         suiteForPass(PowerAuth_SignatureTests, pass),
         ...(isLegacy ? [] : [
             suiteForPass(PowerAuth_SecureVaultTests, pass)

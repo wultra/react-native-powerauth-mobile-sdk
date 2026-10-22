@@ -69,9 +69,11 @@
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Constants.java" target-dir="com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/DataFormat.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/Errors.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/GroupedPassword.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/IManagedObject.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ManagedAny.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/ObjectRegisterJs.kt" target-dir="java/com/wultra/android/powerauth/js" />
+        <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PasswordEncoding.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PinTester.java" target-dir="com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthEncryptorJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
         <source-file src="android/src/main/java/com/wultra/android/powerauth/js/PowerAuthJsModule.kt" target-dir="java/com/wultra/android/powerauth/js" />
@@ -120,6 +122,8 @@
         <source-file src="ios/PowerAuth/PowerAuthData.m" />
         <header-file src="ios/PowerAuth/PowerAuthEncryptorModule.h" />
         <source-file src="ios/PowerAuth/PowerAuthEncryptorModule.m" />
+        <header-file src="ios/PowerAuth/PowerAuthGroupedPassword.h" />
+        <source-file src="ios/PowerAuth/PowerAuthGroupedPassword.m" />
         <header-file src="ios/PowerAuth/PowerAuthModule.h" />
         <source-file src="ios/PowerAuth/PowerAuthModule.m" />
         <source-file src="ios/PowerAuth/PowerAuthObjectRegister+JS.m" />
@@ -127,6 +131,8 @@
         <source-file src="ios/PowerAuth/PowerAuthObjectRegister.m" />
         <header-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.h" />
         <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.m" />
+        <header-file src="ios/PowerAuth/PowerAuthPasswordEncoding.h" />
+        <source-file src="ios/PowerAuth/PowerAuthPasswordEncoding.m" />
         <header-file src="ios/PowerAuth/PowerAuthPasswordModule.h" />
         <source-file src="ios/PowerAuth/PowerAuthPasswordModule.m" />
         <header-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.h" />

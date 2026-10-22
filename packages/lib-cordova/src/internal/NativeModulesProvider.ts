@@ -113,12 +113,12 @@ class PowerAuthPasswordImpl extends NativeCordovaModule implements PowerAuthPass
         return await this.callNative("isEqual", [objectId1, objectId2]);
     }
 
-    async addCharacter(objectId: string, character: number): Promise<number> {
-        return await this.callNative("addCharacter", [objectId, character]);
+    async addCharacter(objectId: string, codePoints: number[]): Promise<number> {
+        return await this.callNative("addCharacter", [objectId, codePoints]);
     }
     
-    async insertCharacter(objectId: string, character: number, position: number): Promise<number> {
-        return await this.callNative("insertCharacter", [objectId, character, position]);
+    async insertCharacter(objectId: string, codePoints: number[], position: number): Promise<number> {
+        return await this.callNative("insertCharacter", [objectId, codePoints, position]);
     }
 
     async removeCharacter(objectId: string, position: number): Promise<number> {

@@ -47,6 +47,7 @@ export type NativeObjectCmd =
     | 'find'
     | 'touch'
     | 'setPeriod'
+    | 'resetPasswordEncoding'
 /**
  * Native object types.
  */
@@ -55,7 +56,7 @@ export type NativeObjectType = 'data' | 'secure-data' | 'number' | 'password' | 
  * Data accepted in debugCommand() function. 
  */
 export interface NativeObjectCmdData {
-    objectId?: string               // object id, accepted in 'use', 'find', 'touch', 'release'
+    objectId?: string               // object id, accepted in 'use', 'find', 'touch', 'release', and PowerAuth instance id in 'resetPasswordEncoding'
     objectTag?: string              // object tag, accepted in 'create', 'releaseAll'
     objectType?: NativeObjectType   // object type accepted in 'create', 'use', 'find', 'touch', 'release'
     releasePolicy?: string[]        // use 'manual', 'after_use N', 'keep_alive T', 'expore T', accepted in 'create'

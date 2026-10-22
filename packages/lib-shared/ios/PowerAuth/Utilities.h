@@ -92,21 +92,23 @@ PA_EXTERN_C NSString * EncodeNSDataValue(NSData * dataValue, DataFormat dataForm
 
 @class PowerAuthObjectRegister, PowerAuthSDK;
 
-/// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
-/// report an error. The password object is marked as used if found in register.
+/// Function translate object into an immutable PowerAuthCorePassword, encoded as required by the activation in
+/// the provided PowerAuthSDK instance. If such conversion is not possible then use reject promise to report an error.
+/// The password object is marked as used if found in register.
 /// @param anyPassword Object to convert into PowerAuthCorePassword.
+/// @param sdk PowerAuthSDK instance that will use the password.
 /// @param objectRegister Object register instance.
 /// @param reject Reject function to call in case of failure
 /// @return PowerAuthCorePassword or nil if no such conversion is possible.
-PA_EXTERN_C PowerAuthCorePassword * UsePassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
+PA_EXTERN_C PowerAuthCorePassword * UsePasswordCopy(id anyPassword, PowerAuthSDK * sdk, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
 
-/// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
-/// report an error.
+/// Function translate object into an immutable PowerAuthCorePassword with all code points. If such conversion is not
+/// possible then use reject promise to report an error.
 /// @param anyPassword Object to convert into PowerAuthCorePassword.
 /// @param objectRegister Object register instance.
 /// @param reject Reject function to call in case of failure
 /// @return PowerAuthCorePassword or nil if no such conversion is possible.
-PA_EXTERN_C PowerAuthCorePassword * TouchPassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
+PA_EXTERN_C PowerAuthCorePassword * TouchPasswordCopy(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject);
 
 /// Function translate object identifier into PowerAuthSDK instance. If such conversion is not possible, then use reject promise
 /// to report an error.
