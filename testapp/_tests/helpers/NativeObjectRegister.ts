@@ -79,6 +79,19 @@ export class Register {
         }
     }
 
+    /**
+     * Remove the password encoding marker of PowerAuth instance, so its activation uses the legacy
+     * password encoding, as if it was created by an older version of the library.
+     */
+    static async resetPasswordEncoding(instanceId: string): Promise<boolean> {
+        const r = await NativeObjectRegister.debugCommand('resetPasswordEncoding', { objectId: instanceId })
+        if (typeof r === 'boolean') {
+            return r
+        } else {
+            throw new Error('Unexpected result')
+        }
+    }
+
     static setCleanupPeriod(periodInMs: number): Promise<NativeObjectCmdResult> {
         return NativeObjectRegister.debugCommand('setPeriod', { cleanupPeriod: periodInMs })
     }

@@ -31,8 +31,8 @@ import android.text.TextUtils
 import android.util.Base64
 import com.wultra.android.powerauth.js.ObjectRegisterJs.RemoveFilter
 import com.wultra.android.powerauth.js.ObjectRegisterJs.ThreadSafeAction
-import io.getlime.security.powerauth.core.Password
 import io.getlime.security.powerauth.core.CoreEncryptor
+import io.getlime.security.powerauth.sdk.PowerAuthSDK
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.util.Timer
@@ -865,7 +865,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                     objectClass = Integer::class.java
                 }
                 "password" -> {
-                    objectClass = Password::class.java
+                    objectClass = GroupedPassword::class.java
                 }
                 "encryptor" -> {
                     objectClass = CoreEncryptor::class.java
@@ -911,11 +911,7 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                             instance = ManagedAny.wrap(42)
                         }
                         "password" -> {
-                            instance = ManagedAny.wrap(Password(), object: ManagedAny.Cleanup<Password> {
-                                override fun cleanup(instance: Password) {
-                                    instance.destroy()
-                                }
-                            })
+                            instance = PowerAuthPasswordJsModule.createManagedPassword()
                         }
                     }
                     if (instance != null) {
@@ -951,6 +947,15 @@ class ObjectRegisterJs(private val appContext: Context) : BaseJavaJsModule {
                 // The "touch" command extends object's lifetime in the register and returns true / false if is still in register.
                 if (objectClass != null && objectId != null) {
                     promise.resolve(touchObject(objectId, objectClass) != null)
+                    return
+                }
+            } else if ("resetPasswordEncoding" == command) {
+                // The "resetPasswordEncoding" command removes the password encoding marker of PowerAuth instance
+                // with given identifier, so its activation uses the legacy password encoding.
+                val sdk = findObject(objectId, PowerAuthSDK::class.java)
+                if (sdk != null) {
+                    PasswordEncoding(appContext).removeMarker(sdk)
+                    promise.resolve(true)
                     return
                 }
             } else if ("setPeriod" == command) {

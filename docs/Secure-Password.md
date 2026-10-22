@@ -16,7 +16,7 @@ The `PowerAuthPassword` class implements safe storage for users' passwords. The 
 
 After the native password is destroyed or released, any other use of the object reports `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. The object is not restored, so create a new `PowerAuthPassword` object when you need the password again.
  
-Be aware that this class is effective only if you're using a numeric PIN for the passphrase although its API accepts full Unicode code point at the input. This is because it's quite simple to re-implement the PIN keyboard with your custom UI components. On opposite to that, for the full alphanumeric input, you need to use the system keyboard, which already leaves traces of the user's password in memory.
+Be aware that this class is effective only if you're using a numeric PIN for the passphrase although its API accepts any Unicode character at the input. This is because it's quite simple to re-implement the PIN keyboard with your custom UI components. On opposite to that, for the full alphanumeric input, you need to use the system keyboard, which already leaves traces of the user's password in memory.
 
 If you're interested in more detail about why the passwords should be protected in the memory, then you can follow the [Working with passwords securely](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/PowerAuth-SDK-for-iOS.md#working-with-passwords-securely) chapter from the PowerAuth mobile SDK.
 
@@ -110,6 +110,17 @@ await password.clear();
 let empty = await password.isEmpty();
 console.log(`empty = ${empty}`);            // empty = true
 ```
+
+A character is either a number with one Unicode code point or a non-empty string. All code points of the string are stored as one character, so you can add a character composed of multiple code points, such as an emoji with a skin tone modifier, with a single call. The password length and character positions count such characters, and removing a character removes all its code points. Numbers must be integers in the range from 0 to 0x10FFFF, otherwise the call fails with `WRONG_PARAMETER`.
+
+```javascript
+const password = new PowerAuthPassword();
+let length = await password.addCharacter('👍🏽');
+console.log(`length = ${length}`);          // length = 1
+```
+
+> [!NOTE]
+> Versions before 5.0 used only the first code point of the string, so `'👍🏽'` was stored as `'👍'`. To keep activations persisted by these versions working, the library continues to use only the first code point of each character added by `addCharacter()` or `insertCharacter()` when the password is used with such activation, including the new password set by a password change. Activations persisted by this version use all code points.
 
 ## Compare two passwords
 

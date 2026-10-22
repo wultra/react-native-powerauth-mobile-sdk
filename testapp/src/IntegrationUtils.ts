@@ -17,7 +17,7 @@
 import { PowerAuth, PowerAuthActivation, PowerAuthAuthentication,
     PowerAuthAlgorithm, PowerAuthBiometryConfiguration, PowerAuthBiometryStatus, PowerAuthClientConfiguration, PowerAuthConfiguration,
     PowerAuthError, PowerAuthErrorCode,
-    PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo
+    PowerAuthKeychainConfiguration, PowerAuthSharingConfiguration, PowerAuthUserInfo, PasswordType
 } from "react-native-powerauth-mobile-sdk"
 import { Config as EnvConfig } from "react-native-config"
 import { Buffer } from "buffer"
@@ -177,7 +177,7 @@ export class IntegrationHelper {
     // --- COMPLEX TASKS ---
 
     /// Creates a new activation on the server and locally.
-    async prepareActiveActivation(password: string, userId: string | undefined = undefined, setupBiometry: boolean = false, biometryPrompt: string = "Create activation with biometrics"): Promise<void> {
+    async prepareActiveActivation(password: PasswordType, userId: string | undefined = undefined, setupBiometry: boolean = false, biometryPrompt: string = "Create activation with biometrics"): Promise<void> {
 
         // CREATE ACTIVATION ON THE SERVER AND LOCALLY
 
