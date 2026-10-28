@@ -13,7 +13,7 @@ PODS:
   - hermes-engine (250829098.0.16):
     - hermes-engine/Pre-built (= 250829098.0.16)
   - hermes-engine/Pre-built (250829098.0.16)
-  - PowerAuth2 (2.0.0)
+  - PowerAuth2 (2.0.1)
   - RCT-Folly (2024.11.18.00):
     - RCT-Folly/Default (= 2024.11.18.00)
     - ReactNativeDependencies
@@ -2144,7 +2144,7 @@ SPEC CHECKSUMS:
   fmt: ba0886e864ebb21d14c98b2e12e164b8002f5b93
   glog: 3cf7cb46f743c4bc758ae3e6d9c15bd1b4cfd6d4
   hermes-engine: 6a26e94b4a974cbadc751eed9caa12624c38f226
-  PowerAuth2: 436c53290746bb22742b6cba65aaf92d495ede75
+  PowerAuth2: d9c3423ce440a85c20461a530bbc59ceaa27693a
   RCT-Folly: 82921e585c0400eda46fac1068297aa9dfb035e4
   RCTDeprecation: cac9521ce0b8092a1fb13d32a768c5ba2752b55f
   RCTRequired: cfc25ba224a2a3dbb1b3368a7d19b0fb6ec5ed1e

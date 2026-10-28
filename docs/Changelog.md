@@ -10,6 +10,7 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
 - Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 - Updated the native PowerAuth SDK dependencies to 2.0.0. ([#447](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/447))
+  - Android now resolves the latest native `2.0.x` patch release, matching the existing iOS CocoaPods and Swift Package Manager ranges. ([#546](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/546))
 - Changed end-to-end encryption to use an asynchronously acquired, single-use `PowerAuthEncryptor` for each request and response exchange. ([#466](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/466))
   - Removed the legacy cryptogram, separate decryptor, encryption data-format arguments, specialized encryption-header APIs, and `PowerAuthErrorCode.INVALID_ENCRYPTOR`.
 - Updated the JavaScript request and token authentication APIs. ([#467](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/467))
