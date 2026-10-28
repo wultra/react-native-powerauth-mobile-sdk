@@ -140,6 +140,8 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 
 The `BaseNativeObject` class and `BaseReleasableObject` interface are removed. Each native-backed object declares its own `release()` method.
 
+`addCharacter()` and `insertCharacter()` now store all code points of a string as one character. Previously, only the first code point was used, so a character such as `'👍🏽'` was stored as `'👍'`. Activations persisted by previous versions keep the previous behavior, so no migration is needed. Numeric characters must be integers in the range from 0 to 0x10FFFF; other numbers, which were previously truncated, are now rejected with `WRONG_PARAMETER`.
+
 ## Biometry
 
 | Deprecated API or option | Replacement |

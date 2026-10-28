@@ -52,17 +52,17 @@ export interface PowerAuthPasswordIfc {
     /**
      * Add character at the end of password and return the number of stored characters.
      * @param objectId Underlying object identifier.
-     * @param character Character to add
+     * @param codePoints Unicode code points of the character to add.
      */
-    addCharacter(objectId: string, character: number): Promise<number>
+    addCharacter(objectId: string, codePoints: number[]): Promise<number>
     
     /**
      * Insert character at the specified position and return the number of stored characters.
      * @param objectId Underlying object identifier.
-     * @param character Character to add.
+     * @param codePoints Unicode code points of the character to add.
      * @param position Position where character will be added.
      */
-    insertCharacter(objectId: string, character: number, position: number): Promise<number>
+    insertCharacter(objectId: string, codePoints: number[], position: number): Promise<number>
 
     /**
      * Remove character at given position.

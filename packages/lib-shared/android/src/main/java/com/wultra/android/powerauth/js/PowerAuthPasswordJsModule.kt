@@ -18,9 +18,9 @@ package com.wultra.android.powerauth.js
 import com.wultra.android.powerauth.bridge.Dynamic
 import com.wultra.android.powerauth.bridge.Promise
 import com.wultra.android.powerauth.bridge.JsApiMethod
+import com.wultra.android.powerauth.bridge.ReadableArray
 import com.wultra.android.powerauth.bridge.ReadableMap
 import com.wultra.android.powerauth.bridge.ReadableType
-import com.wultra.android.powerauth.bridge.BuildConfig
 
 import io.getlime.security.powerauth.core.Password
 import java.util.Arrays
@@ -56,7 +56,7 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
                     .toInt()
             }
         }
-        val instance = ManagedAny.wrap(Password(), cleanup { obj: Password -> obj.destroy() })
+        val instance = createManagedPassword()
         val releasePolicies = if (destroyOnUse
         ) Arrays.asList(ReleasePolicy.afterUse(1), ReleasePolicy.keepAlive(releaseTime))
         else listOf(ReleasePolicy.keepAlive(releaseTime))
@@ -65,145 +65,103 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
 
     @JsApiMethod
     fun clear(objectId: String, promise: Promise) {
-        withPassword(objectId, promise, action { password: Password ->
+        withPassword(objectId, promise) { password ->
             password.clear()
-            promise.resolve(null)
-        })
+            null
+        }
     }
 
     @JsApiMethod
     fun length(objectId: String, promise: Promise) {
-        withPassword(objectId, promise, action { password: Password ->
-            promise.resolve(password.length())
-        })
+        withPassword(objectId, promise) { password -> password.length() }
     }
 
     @JsApiMethod
     fun isEqual(id1: String, id2: String, promise: Promise) {
-        withPassword(id1, promise, action { p1: Password ->
-            withPassword(id2, promise, action { p2: Password? ->
-                promise.resolve(p1.isEqualToPassword(p2))
-            })
-        })
+        withPassword(id1, promise) { p1 ->
+            val p2 = objectRegister.touchObject(id2, GroupedPassword::class.java)
+                ?: throw invalidPasswordObject()
+            p1.isEqualTo(p2)
+        }
     }
 
     @JsApiMethod
-    fun addCharacter(objectId: String, character: Int, promise: Promise) {
-        withPassword(
-            objectId,
-            character,
-            promise,
-            characterAction { password: Password, codePoint: Int ->
-                password.addCharacter(codePoint)
-                promise.resolve(password.length())
-            })
+    fun addCharacter(objectId: String, codePoints: ReadableArray?, promise: Promise) {
+        withPassword(objectId, promise) { password ->
+            password.addCharacter(toCodePoints(codePoints))
+        }
     }
 
     @JsApiMethod
-    fun insertCharacter(objectId: String, character: Int, position: Int, promise: Promise) {
-        withPassword(
-            objectId,
-            character,
-            promise,
-            characterAction { password: Password, codePoint: Int ->
-                if (position >= 0 && position <= password.length()) {
-                    password.insertCharacter(codePoint, position)
-                    promise.resolve(password.length())
-                } else {
-                    promise.reject(Errors.EC_WRONG_PARAMETER, "Position is out of range")
-                }
-            })
+    fun insertCharacter(objectId: String, codePoints: ReadableArray?, position: Int, promise: Promise) {
+        withPassword(objectId, promise) { password ->
+            password.insertCharacter(toCodePoints(codePoints), position)
+        }
     }
 
     @JsApiMethod
     fun removeCharacter(objectId: String, position: Int, promise: Promise) {
-        withPassword(objectId, promise, action { password: Password ->
-            if (position >= 0 && position < password.length()) {
-                password.removeCharacter(position)
-                promise.resolve(password.length())
-            } else {
-                promise.reject(Errors.EC_WRONG_PARAMETER, "Position is out of range")
-            }
-        })
+        withPassword(objectId, promise) { password -> password.removeCharacter(position) }
     }
 
     @JsApiMethod
     fun removeLastCharacter(objectId: String, promise: Promise) {
-        withPassword(objectId, promise, action { password: Password ->
-            password.removeLastCharacter()
-            promise.resolve(password.length())
-        })
+        withPassword(objectId, promise) { password -> password.removeLastCharacter() }
     }
 
     // Native methods
+
     /**
-     * Function translate dynamic object type into core Password object. The password object is
-     * marked as used or touched depending on required action.
+     * Return an immutable password owned by the caller. The password object is marked as used
+     * in the object register.
      * @param anyPassword Dynamic object representing a password.
-     * @param use If true then password is marked as used, otherwise just is touched.
-     * @return Resolved core password.
+     * @param useLegacyEncoding Evaluated only when the password's full and legacy encodings
+     * differ. Return `true` to get the password in the legacy encoding.
+     * @return Resolved core password. The caller is responsible for destroying it.
      * @throws WrapperException In case that Password cannot be created.
      */
     @Throws(WrapperException::class)
-    private fun findPassword(anyPassword: Dynamic?, use: Boolean): Password {
+    fun usePasswordCopy(anyPassword: Dynamic?, useLegacyEncoding: () -> Boolean = { false }): Password {
+        return resolvePassword(anyPassword) { passwordObjectId ->
+            val copies = objectRegister.useObjectAndTransform(
+                passwordObjectId,
+                GroupedPassword::class.java
+            ) { it.copies() } ?: throw invalidPasswordObject()
+            copies.select(useLegacyEncoding)
+        }
+    }
+
+    /**
+     * Return an immutable password with all code points, owned by the caller. The password
+     * object's lifetime is extended in the object register.
+     * @param anyPassword Dynamic object representing a password.
+     * @return Resolved core password. The caller is responsible for destroying it.
+     * @throws WrapperException In case that Password cannot be created.
+     */
+    @Throws(WrapperException::class)
+    fun touchPasswordCopy(anyPassword: Dynamic?): Password {
+        return resolvePassword(anyPassword) { passwordObjectId ->
+            val password = objectRegister.touchObject(passwordObjectId, GroupedPassword::class.java)
+                ?: throw invalidPasswordObject()
+            password.copyFull()
+        }
+    }
+
+    // Private methods
+
+    /**
+     * Create password from a string, or from a password object using the provided function.
+     */
+    @Throws(WrapperException::class)
+    private fun resolvePassword(anyPassword: Dynamic?, fromObject: (String) -> Password): Password {
         if (anyPassword != null) {
             if (anyPassword.type === ReadableType.String) {
-                // Direct string was provided
+                // Direct string was provided. The string constructor returns an immutable, exclusively owned password.
                 return Password(anyPassword.asString())
             }
             if (anyPassword.type === ReadableType.Map) {
-                // Object is provided
-
                 // RN 0.80+ added nullable annotations to most of these types - this is a backward compatible fix as it shouldnt even happen
                 val map: ReadableMap = anyPassword.asMap()
-                    ?: throw WrapperException(
-                        Errors.EC_WRONG_PARAMETER,
-                        "PowerAuthPassword map is required"
-                    )
-                val passwordObjectId: String = map.getString("objectId")
-                    ?: throw WrapperException(
-                        Errors.EC_INVALID_NATIVE_OBJECT,
-                        "PowerAuthPassword is not initialized"
-                    )
-                val password = if (use
-                ) objectRegister.useObject(passwordObjectId, Password::class.java)
-                else objectRegister.touchObject(passwordObjectId, Password::class.java)
-                if (password == null) {
-                    throw WrapperException(
-                        Errors.EC_INVALID_NATIVE_OBJECT,
-                        "PowerAuthPassword object is no longer valid"
-                    )
-                }
-                return password
-            }
-        }
-        throw WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required")
-    }
-
-    /**
-     * Function translate dynamic object type into core Password object. The password object is
-     * marked as used in the object register if exists.
-     * @param anyPassword Dynamic object representing a password.
-     * @return Resolved core password.
-     * @throws WrapperException In case that Password cannot be created.
-     */
-    @Throws(WrapperException::class)
-    fun usePassword(anyPassword: Dynamic?): Password {
-        return findPassword(anyPassword, true)
-    }
-
-    /**
-     * Return an immutable password owned by an asynchronous native operation.
-     */
-    @Throws(WrapperException::class)
-    fun usePasswordCopy(anyPassword: Dynamic?): Password {
-        if (anyPassword != null) {
-            if (anyPassword.type === ReadableType.String) {
-                // The string constructor already returns an immutable, exclusively owned password.
-                return Password(anyPassword.asString())
-            }
-            if (anyPassword.type === ReadableType.Map) {
-                val map = anyPassword.asMap()
                     ?: throw WrapperException(
                         Errors.EC_WRONG_PARAMETER,
                         "PowerAuthPassword map is required"
@@ -213,100 +171,53 @@ class PowerAuthPasswordJsModule(private val objectRegister: ObjectRegisterJs) : 
                         Errors.EC_INVALID_NATIVE_OBJECT,
                         "PowerAuthPassword is not initialized"
                     )
-                return objectRegister.useObjectAndTransform(
-                    passwordObjectId,
-                    Password::class.java
-                ) { it.copyToImmutable() }
-                    ?: throw WrapperException(
-                        Errors.EC_INVALID_NATIVE_OBJECT,
-                        "PowerAuthPassword object is no longer valid"
-                    )
+                return fromObject(passwordObjectId)
             }
         }
         throw WrapperException(Errors.EC_WRONG_PARAMETER, "PowerAuthPassword or string is required")
     }
 
+    private fun invalidPasswordObject(): WrapperException {
+        return WrapperException(Errors.EC_INVALID_NATIVE_OBJECT, "PowerAuthPassword object is no longer valid")
+    }
+
     /**
-     * Function translate dynamic object type into core Password object. The password object is
-     * marked as touched in the object register if exists.
-     * @param anyPassword Dynamic object representing a password.
-     * @return Resolved core password.
-     * @throws WrapperException In case that Password cannot be created.
+     * Execute action when password is found in object register and resolve promise with its result.
+     */
+    private fun withPassword(objectId: String, promise: Promise, action: (GroupedPassword) -> Any?) {
+        try {
+            val password = objectRegister.touchObject(objectId, GroupedPassword::class.java)
+                ?: throw invalidPasswordObject()
+            promise.resolve(action(password))
+        } catch (t: Throwable) {
+            Errors.rejectPromise(promise, t)
+        }
+    }
+
+    /**
+     * Convert array with one character's Unicode code points into validated integers.
      */
     @Throws(WrapperException::class)
-    fun touchPassword(anyPassword: Dynamic?): Password {
-        return findPassword(anyPassword, false)
-    }
-
-    // Private methods
-
-    /**
-     * Action to execute when password object is found in object register.
-     */
-    private interface Action {
-        fun action(password: Password)
-    }
-
-    private fun action(fce: (Password) -> Unit): Action {
-        return object: Action {
-            override fun action(password: Password) {
-                fce(password)
+    private fun toCodePoints(array: ReadableArray?): IntArray {
+        val size = array?.size() ?: 0
+        if (size == 0) {
+            throw WrapperException(Errors.EC_WRONG_PARAMETER, "Empty or invalid character object")
+        }
+        return IntArray(size) { index ->
+            val value = if (array!!.getType(index) == ReadableType.Number) array.getDouble(index) else -1.0
+            if (value < 0 || value > Constants.CODEPOINT_MAX || value != Math.floor(value)) {
+                throw WrapperException(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
             }
+            value.toInt()
         }
     }
 
-    /**
-     * Execute action when Password is found in object register.
-     * @param objectId Password object identifier.
-     * @param promise Promise to reject or resolve.
-     * @param action Action to execute.
-     */
-    private fun withPassword(objectId: String, promise: Promise, action: Action) {
-        val password = objectRegister.touchObject(objectId, Password::class.java)
-        if (password != null) {
-            action.action(password)
-        } else {
-            promise.reject(Errors.EC_INVALID_NATIVE_OBJECT, "Password object is no longer valid")
-        }
-    }
-
-    /**
-     * Action to execute with valid code point, when password object is found in object register.
-     */
-    private interface CharacterAction {
-        fun action(password: Password, codePoint: Int)
-    }
-
-    private fun characterAction(fce: (Password, Int) -> Unit): CharacterAction {
-        return object: CharacterAction {
-            override fun action(password: Password, codePoint: Int) {
-                fce(password, codePoint)
-            }
-        }
-    }
-
-    /**
-     * Execute action when Password is found in object register.
-     * @param objectId Password object identifier.
-     * @param character Character that represents an unicode code point.
-     * @param promise Promise to reject or resolve.
-     * @param action Action to execute.
-     */
-    private fun withPassword(
-        objectId: String,
-        character: Int,
-        promise: Promise,
-        action: CharacterAction
-    ) {
-        if (character < 0 || character > Constants.CODEPOINT_MAX) {
-            promise.reject(Errors.EC_WRONG_PARAMETER, "Invalid CodePoint")
-            return
-        }
-        val password = objectRegister.touchObject(objectId, Password::class.java)
-        if (password != null) {
-            action.action(password, character)
-        } else {
-            promise.reject(Errors.EC_INVALID_NATIVE_OBJECT, "Password object is no longer valid")
+    companion object {
+        /**
+         * Create a new password managed by the object register.
+         */
+        internal fun createManagedPassword(): IManagedObject<GroupedPassword> {
+            return ManagedAny.wrap(GroupedPassword(), cleanup { obj: GroupedPassword -> obj.destroy() })
         }
     }
 }

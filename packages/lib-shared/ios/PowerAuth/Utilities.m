@@ -17,6 +17,8 @@
 #import "Errors.h"
 #import "PowerAuthObjectRegister.h"
 #import "PAJS.h"
+#import "PowerAuthGroupedPassword.h"
+#import "PowerAuthPasswordEncoding.h"
 
 @import PowerAuth2;
 
@@ -130,14 +132,15 @@ NSString * EncodeNSDataValue(NSData * dataValue, DataFormat dataFormat, RCTPromi
     }
 }
 
-/// Function translate object into PowerAuthCorePassword. If such conversion is not possible then use reject promise to
-/// report an error. The password object is marked as used or touched if found in register.
+/// Function translate object into an immutable PowerAuthCorePassword. If such conversion is not possible then use
+/// reject promise to report an error. The password object is marked as used or touched if found in register.
 /// - Parameters:
 ///   - anyPassword: Object to convert into PowerAuthCorePassword.
+///   - sdk: If provided, then the password is encoded as required by its activation. Otherwise all code points are used.
 ///   - objectRegister: Object register instance.
 ///   - reject: Reject function to call in case of failure
 ///   - use: If YES then object is marked as used, otherwise touched.
-static PowerAuthCorePassword * FindPasswordImpl(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject, BOOL use)
+static PowerAuthCorePassword * FindPasswordCopyImpl(id anyPassword, PowerAuthSDK * sdk, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject, BOOL use)
 {
     if ([anyPassword isKindOfClass:[NSString class]]) {
         // Password is in form of string
@@ -152,27 +155,47 @@ static PowerAuthCorePassword * FindPasswordImpl(id anyPassword, PowerAuthObjectR
             reject(EC_WRONG_PARAMETER, @"PowerAuthPassword is not initialized", nil);
             return nil;
         }
-        PowerAuthCorePassword * password = use
-            ? [objectRegister useObjectWithId:passwordObjectId expectedClass:[PowerAuthCorePassword class]]
-            : [objectRegister touchObjectWithId:passwordObjectId expectedClass:[PowerAuthCorePassword class]];
+        PowerAuthGroupedPassword * password = use
+            ? [objectRegister useObjectWithId:passwordObjectId expectedClass:[PowerAuthGroupedPassword class]]
+            : [objectRegister touchObjectWithId:passwordObjectId expectedClass:[PowerAuthGroupedPassword class]];
         if (!password) {
             reject(EC_INVALID_NATIVE_OBJECT, @"PowerAuthPassword object is no longer valid", nil);
             return nil;
         }
-        return password;
+        if (!sdk) {
+            return [password immutablePassword];
+        }
+        PowerAuthCorePassword * legacyPassword = nil;
+        PowerAuthCorePassword * fullPassword = [password immutablePasswordWithLegacy:&legacyPassword];
+        if (!legacyPassword) {
+            return fullPassword;
+        }
+        BOOL useLegacyEncoding = NO;
+        if (![PowerAuthPasswordEncoding resolveLegacyEncoding:&useLegacyEncoding forSdk:sdk]) {
+            [fullPassword secureClear];
+            [legacyPassword secureClear];
+            reject(EC_UNKNOWN_ERROR, @"Failed to determine password encoding", nil);
+            return nil;
+        }
+        if (useLegacyEncoding) {
+            [fullPassword secureClear];
+            return legacyPassword;
+        }
+        [legacyPassword secureClear];
+        return fullPassword;
     }
     reject(EC_WRONG_PARAMETER, @"PowerAuthPassword or string is required", nil);
     return nil;
 }
 
-PowerAuthCorePassword * UsePassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject)
+PowerAuthCorePassword * UsePasswordCopy(id anyPassword, PowerAuthSDK * sdk, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject)
 {
-    return FindPasswordImpl(anyPassword, objectRegister, reject, YES);
+    return FindPasswordCopyImpl(anyPassword, sdk, objectRegister, reject, YES);
 }
 
-PowerAuthCorePassword * TouchPassword(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject)
+PowerAuthCorePassword * TouchPasswordCopy(id anyPassword, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject)
 {
-    return FindPasswordImpl(anyPassword, objectRegister, reject, NO);
+    return FindPasswordCopyImpl(anyPassword, nil, objectRegister, reject, NO);
 }
 
 PowerAuthSDK * GetPowerAuthSdk(id anyId, PowerAuthObjectRegister * objectRegister, RCTPromiseRejectBlock reject)

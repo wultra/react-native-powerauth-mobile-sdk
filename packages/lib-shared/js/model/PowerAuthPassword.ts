@@ -29,8 +29,13 @@ export type PasswordType = PowerAuthPassword | string
 
 /**
  * Type representing an one character passed to the `PowerAuthPassword` functions.
- * If value is number type, then it representing an Unicode Code Point.  If you use 
- * string, then only the first code point from the string will be processed.
+ * If value is number type, then it representing an Unicode Code Point. If you use
+ * string, then all its code points are stored as one character. This allows you to pass
+ * a character composed of multiple code points, such as an emoji with a skin tone modifier.
+ *
+ * Previous versions of the library processed only the first code point of such string. To keep
+ * activations persisted by these versions working, the library continues to use only the first
+ * code point of each character when the password is used with such activation.
  */
 export type CharacterType = string | number
 
@@ -188,7 +193,7 @@ export class PowerAuthPassword {
      * @returns Number of characters stored in the password.
      */
     addCharacter(character: CharacterType): Promise<number> {
-        return this.handle.withObjectId(id => NativePassword.addCharacter(id, this.getCodePoint(character)))
+        return this.handle.withObjectId(id => NativePassword.addCharacter(id, getCodePoints(character)))
     }
 
     /**
@@ -200,7 +205,7 @@ export class PowerAuthPassword {
      * @returns Number of characters stored in the password.
      */
     insertCharacter(character: CharacterType, at: number): Promise<number> {
-        return this.handle.withObjectId(id => NativePassword.insertCharacter(id, this.getCodePoint(character), at))
+        return this.handle.withObjectId(id => NativePassword.insertCharacter(id, getCodePoints(character), at))
     }
 
     /**
@@ -252,29 +257,25 @@ export class PowerAuthPassword {
     toRawPassword(): Promise<PowerAuthRawPassword> {
         return this.handle.withObjectId(id => Promise.resolve(toRawPasswordObject(id)))
     }
+}
 
-    /**
-     * Function translate string or number into unicode code point. If string parameter is provided,
-     * then the `codePointAt(0)` is returned.
-     * @param character CharacterType to translate. 
-     * @returns number with Unicode Code Point.
-     */
-    private getCodePoint(character: CharacterType): number {
-        let c: number
-        if (typeof character === 'string') {
-            if (character.length === 0) {
-                throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
-            }
-            const cp = character.codePointAt(0)
-            if (cp === undefined) {
-                throw new PowerAuthError(undefined, "Failed to extract 1st. code point", PowerAuthErrorCode.WRONG_PARAMETER)
-            }
-            c = cp
-        } else {
-            c = character
-        }
-        return c
+/**
+ * Translate string or number into Unicode code points of one character.
+ * @param character CharacterType to translate.
+ * @returns Array with Unicode code points.
+ */
+function getCodePoints(character: CharacterType): number[] {
+    if (typeof character !== 'string') {
+        return [character]
     }
+    const codePoints: number[] = []
+    for (const c of character) {
+        codePoints.push(c.codePointAt(0) as number)
+    }
+    if (codePoints.length === 0) {
+        throw new PowerAuthError(undefined, "String is empty", PowerAuthErrorCode.WRONG_PARAMETER)
+    }
+    return codePoints
 }
 
 function validateOptions(options: unknown, hasExtraArguments: boolean) {

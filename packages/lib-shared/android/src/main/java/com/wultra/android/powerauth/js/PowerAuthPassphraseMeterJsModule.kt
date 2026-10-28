@@ -30,12 +30,15 @@ class PowerAuthPassphraseMeterJsModule(private val passwordJsModule: PowerAuthPa
     fun testPin(password: Dynamic?, promise: Promise) {
         try {
             // Resolve password object into core password object.
-            val corePassword = passwordJsModule.touchPassword(password)
-            val resultAndLength =
+            val corePassword = passwordJsModule.touchPasswordCopy(password)
+            val resultAndLength = try {
                 corePassword.validatePasswordComplexity { passwordBytes: ByteArray ->
                     val result = PinTester().testPin(passwordBytes)
                     result or ((passwordBytes.size and 0xFFF) shl 16)
                 }
+            } finally {
+                corePassword.destroy()
+            }
             // Process result
             val result = resultAndLength and 0xFFFF
             val pinLength = resultAndLength shr 16

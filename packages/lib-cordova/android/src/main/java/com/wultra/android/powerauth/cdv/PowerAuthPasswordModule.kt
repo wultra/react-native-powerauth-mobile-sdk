@@ -1,6 +1,7 @@
 
 package com.wultra.android.powerauth.cordova.plugin
 
+import com.wultra.android.powerauth.bridge.getOptReadableArray
 import com.wultra.android.powerauth.bridge.getOptString
 import com.wultra.android.powerauth.js.PowerAuthPasswordJsModule
 import com.wultra.android.powerauth.cdv.util.Promise
@@ -86,15 +87,15 @@ class PowerAuthPasswordModule : CordovaPlugin() {
 
     private fun addCharacter(args: JSONArray, promise: Promise) {
         val objectId = args.getString(0)
-        val character = args.getInt(1)
-        powerAuthPasswordJsModule.addCharacter(objectId, character, promise);
+        val codePoints = args.getOptReadableArray(1)
+        powerAuthPasswordJsModule.addCharacter(objectId, codePoints, promise);
     }
 
     private fun insertCharacter(args: JSONArray, promise: Promise) {
         val objectId = args.getString(0)
-        val character = args.getInt(1)
+        val codePoints = args.getOptReadableArray(1)
         val position = args.getInt(2)
-        powerAuthPasswordJsModule.insertCharacter(objectId, character, position, promise);
+        powerAuthPasswordJsModule.insertCharacter(objectId, codePoints, position, promise);
     }
 
     private fun removeCharacter(args: JSONArray, promise: Promise) {

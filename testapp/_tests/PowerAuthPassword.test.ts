@@ -153,9 +153,9 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p2.length()).toBe(5)
 
         await p3.addCharacter('★')
-        await p3.addCharacter('🤣🤫')
+        await p3.addCharacter('🤣')
         await p3.addCharacter('🤫')
-        await p3.addCharacter('🪘x')
+        await p3.addCharacter('🪘')
 
         expect(await p3.length()).toBe(4)
 
@@ -169,6 +169,68 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p3.isEqualTo(p4)).toBe(true)
         expect(await p3.isEqualTo(p1)).toBe(true)
         expect(await p4.isEqualTo(p1)).toBe(true)
+    }
+
+    async testMultiCodePointCharacter() {
+        // Thumbs up with medium skin tone modifier is one character composed of two code points.
+        const thumbsUp = '👍🏽'
+        const p1 = new PowerAuthPassword()
+        const p2 = new PowerAuthPassword()
+        const p3 = new PowerAuthPassword()
+        const p4 = await importPassword('a👍🏽b')
+        const p5 = await importPassword('a👍b')
+        const p6 = await importPassword('ab')
+        const p7 = await importPassword('axb')
+        this.cleanup.push(p1, p2, p3, p4, p5, p6, p7)
+
+        expect(await p1.addCharacter('a')).toBe(1)
+        expect(await p1.addCharacter(thumbsUp)).toBe(2)
+        expect(await p1.addCharacter('b')).toBe(3)
+
+        // Same character inserted in the middle
+        expect(await p2.addCharacter('a')).toBe(1)
+        expect(await p2.addCharacter('b')).toBe(2)
+        expect(await p2.insertCharacter(thumbsUp, 1)).toBe(3)
+
+        // Same code points added one by one
+        await p3.addCharacter('a')
+        await p3.addCharacter(0x1F44D)
+        await p3.addCharacter(0x1F3FD)
+        await p3.addCharacter('b')
+        expect(await p3.length()).toBe(4)
+
+        expect(await p1.isEqualTo(p2)).toBe(true)
+        expect(await p1.isEqualTo(p3)).toBe(true)
+        expect(await p1.isEqualTo(p4)).toBe(true)
+        // The modifier is not lost
+        expect(await p1.isEqualTo(p5)).toBe(false)
+
+        // Removing the character removes all its code points
+        expect(await p1.removeCharacterAt(1)).toBe(2)
+        expect(await p2.removeLastCharacter()).toBe(2)
+        expect(await p2.removeLastCharacter()).toBe(1)
+        expect(await p2.addCharacter('b')).toBe(2)
+        expect(await p1.isEqualTo(p2)).toBe(true)
+        expect(await p1.isEqualTo(p6)).toBe(true)
+
+        // Characters after a multi-code-point character are addressed by character position
+        expect(await p1.insertCharacter('👨‍👩‍👧', 1)).toBe(3)
+        expect(await p1.insertCharacter('x', 2)).toBe(4)
+        expect(await p1.removeCharacterAt(1)).toBe(3)
+        expect(await p1.isEqualTo(p7)).toBe(true)
+    }
+
+    async testInvalidCharacter() {
+        const p1 = new PowerAuthPassword()
+        this.cleanup.push(p1)
+
+        await expect(async () => p1.addCharacter('')).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => p1.addCharacter(-1)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => p1.addCharacter(1.5)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => p1.addCharacter(NaN)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => p1.addCharacter(0x110000)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        await expect(async () => p1.insertCharacter('', 0)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        expect(await p1.length()).toBe(0)
     }
 
     async testAutomaticCleanupInvalidatesPassword() {
@@ -401,7 +463,7 @@ export class PowerAuthPasswordTests extends TestSuite {
 
     async testFromString() {
         const passwordString = "Sk💀ll" // to contain other than unicode char
-        const codepoints = [83, 107, 128128/*, 56448*/, 108, 108] // S k 💀 l l (current implementation ommits `56448` codepoint)
+        const codepoints = [83, 107, 128128, 108, 108] // S k 💀 l l
 
         const p1 = await PowerAuthPassword.fromString(passwordString)
         const p2 = new PowerAuthPassword()

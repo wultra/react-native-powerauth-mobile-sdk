@@ -49,7 +49,7 @@ RCT_EXPORT_MODULE(PowerAuthPassphraseMeter);
 PAJS_METHOD_START(testPin,
                   PAJS_ARGUMENT(pin, id))
 {
-    PowerAuthCorePassword * corePin = TouchPassword(pin, _objectRegister, reject);
+    PowerAuthCorePassword * corePin = TouchPasswordCopy(pin, _objectRegister, reject);
     if (corePin) {
         __block NSDictionary * resolveResult = nil;
         __block NSString * rejectMessage = nil;
@@ -99,6 +99,7 @@ PAJS_METHOD_START(testPin,
             }
             return 0;
         }];
+        [corePin secureClear];
         if (resolveResult) {
             resolve(resolveResult);
         } else {
