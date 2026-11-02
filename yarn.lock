@@ -2360,6 +2360,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/eslint-plugin@npm:0.88.1":
+  version: 0.88.1
+  resolution: "@react-native/eslint-plugin@npm:0.88.1"
+  checksum: 10c0/2b83c9cc9559fc0b1bdd72e9a4facbc6c0c16b2eed22434b6639937da2a9ab525f33a4dcb2f0b060fe4217d21301fca186ed329658417e05d7296a2b0be1d703
+  languageName: node
+  linkType: hard
+
 "@react-native/gradle-plugin@npm:0.87.0":
   version: 0.87.0
   resolution: "@react-native/gradle-plugin@npm:0.87.0"
@@ -8236,7 +8243,7 @@ __metadata:
   resolution: "powerauth-mobile-sdk-js-monorepo@workspace:."
   dependencies:
     "@react-native/eslint-config": "npm:0.87.0"
-    "@react-native/eslint-plugin": "npm:0.87.0"
+    "@react-native/eslint-plugin": "npm:0.88.1"
     "@rollup/plugin-node-resolve": "npm:^16.0.1"
     "@rollup/plugin-terser": "npm:^1.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.72.0"
