@@ -82,7 +82,7 @@
     "@react-native/eslint-config": "0.87.0",
     "@react-native/eslint-plugin": "0.88.1",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-terser": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^8.72.0",
     "@typescript-eslint/parser": "^8.72.1",
     "eslint": "^8.57.0",
