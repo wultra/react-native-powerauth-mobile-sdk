@@ -138,7 +138,7 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 | `powerAuth.createPassword(destroyOnUse, onAutomaticCleanup)` | `powerAuth.createPassword(destroyOnUse)` |
 | `onAutomaticCleanup` callback | Handle `INVALID_NATIVE_OBJECT` and create a new password object. |
 
-`addCharacter()` and `insertCharacter()` are replaced with `addCodePoint()` and `insertCodePoint()`, which accept a single Unicode code point as a number, like the native PowerAuth mobile SDK. For consistency, `removeCharacterAt()` and `removeLastCharacter()` are renamed to `removeCodePointAt()` and `removeLastCodePoint()`. The `CharacterType` type is removed. In 4.x, a string passed to `addCharacter()` or `insertCharacter()` stored only its first code point, so a character such as `'👍🏽'` (U+1F44D U+1F3FD) was silently stored as `'👍'`. Now you decide which code points are added, and the length and all positions are counted in code points.
+`addCharacter()` and `insertCharacter()` are replaced with `addCodePoint()` and `insertCodePoint()`, which accept a single Unicode code point as a number, like the native PowerAuth mobile SDK. For consistency, `removeCharacterAt()` and `removeLastCharacter()` are renamed to `removeCodePointAt()` and `removeLastCodePoint()`. The `CharacterType` type is removed. In 4.x, a string passed to `addCharacter()` or `insertCharacter()` stored only its first code point, so a character such as `'👍🏽'` (U+1F44D U+1F3FD) was silently stored as `'👍'`. Now you decide which code points are added, and the length and all positions are counted in code points. To add all code points of a string, use the new `addCodePoints()` method.
 
 | 4.x | 5.0 |
 | --- | --- |
@@ -148,7 +148,7 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 | `password.removeCharacterAt(position)` | `password.removeCodePointAt(position)` |
 | `password.removeLastCharacter()` | `password.removeLastCodePoint()` |
 
-The code point must be an integer in the range from 0 to 0x10FFFF, otherwise `PowerAuthError` with `WRONG_PARAMETER` is thrown.
+The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `PowerAuthError` with `WRONG_PARAMETER` is thrown.
 
 <!-- begin box warning -->
 If your app passed characters made of multiple code points to `addCharacter()` or `insertCharacter()`, then passwords of existing activations contain only the first code point of each such character. Adding all code points of such a character to the password causes an authentication failure for these activations. To keep existing passwords valid, add only the first code point of each character the same way as 4.x did. `PowerAuthPassword.fromString()` already added all code points in 4.x and its behavior is unchanged.

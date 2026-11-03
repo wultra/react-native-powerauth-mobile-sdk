@@ -91,7 +91,7 @@ const reusablePassword = await PowerAuthPassword.fromString("1234", { destroyOnU
 
 ## Adding or removing code points
 
-The password accepts one Unicode code point at a time. The code point must be an integer in the range from 0 to 0x10FFFF, otherwise `WRONG_PARAMETER` error is reported.
+The password accepts one Unicode code point at a time. The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `WRONG_PARAMETER` error is reported.
 
 ```javascript
 const password = new PowerAuthPassword();
@@ -99,7 +99,7 @@ let length = await password.length();
 console.log(`length = ${length}`);          // length = 0
 
 length = await password.addCodePoint(65);   // 'A'
-length = await password.addCodePoint('B'.codePointAt(0));
+length = await password.addCodePoint(66);   // 'B'
 console.log(`length = ${length}`);          // length = 2
 
 length = await password.insertCodePoint(48, 2);
@@ -115,13 +115,11 @@ let empty = await password.isEmpty();
 console.log(`empty = ${empty}`);            // empty = true
 ```
 
-A single visible character can consist of multiple code points. For example, `'👍🏽'` consists of `0x1F44D` and `0x1F3FD`. If your input allows such characters, then add each of their code points, and keep in mind that the length and positions passed to `insertCodePoint()` and `removeCodePointAt()` are counted in code points:
+A single visible character can consist of multiple code points. For example, `'👍🏽'` consists of `0x1F44D` and `0x1F3FD`. If your input allows such characters, then add each of their code points, for example with `addCodePoints()`, and keep in mind that the length and positions passed to `insertCodePoint()` and `removeCodePointAt()` are counted in code points:
 
 ```javascript
 const password = new PowerAuthPassword();
-for (const c of '👍🏽') {
-    await password.addCodePoint(c.codePointAt(0));
-}
+await password.addCodePoints('👍🏽');        // adds 0x1F44D and 0x1F3FD
 console.log(`length = ${await password.length()}`); // length = 2
 
 // Removes only the skin tone modifier.
@@ -137,8 +135,7 @@ const p1 = new PowerAuthPassword();
 const p2 = new PowerAuthPassword();
 const p3 = new PowerAuthPassword();
 
-await p1.addCodePoint('0'.codePointAt(0));
-await p1.addCodePoint('A'.codePointAt(0));
+await p1.addCodePoints('0A');
 
 await p2.addCodePoint(48);
 await p2.addCodePoint(65);

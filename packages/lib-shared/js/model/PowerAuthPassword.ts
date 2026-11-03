@@ -139,15 +139,12 @@ export class PowerAuthPassword {
     static async fromString(password: string, options: PowerAuthPasswordOptions = {}): Promise<PowerAuthPassword> {
         validateOptions(options, arguments.length > 2)
         const pwd = new PowerAuthPassword(options)
-        for (const c of password) {
-            // Iterating a string yields whole code points, so `codePointAt(0)` is always defined.
-            await pwd.addCodePoint(c.codePointAt(0)!)
-        }
+        await pwd.addCodePoints(password)
         return pwd
     }
 
     /**
-     * Return number of code points stored in the pasword. This method also
+     * Return number of code points stored in the password. This method also
      * extends the lifetime of the underlying native password.
      * 
      * @returns Number of code points stored in the password.
@@ -197,15 +194,37 @@ export class PowerAuthPassword {
     }
 
     /**
+     * Append all Unicode code points of the string to the end of the password. This method also
+     * extends the lifetime of the underlying native password.
+     * 
+     * Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
+     * If the operation fails, then the password may contain only some of the code points.
+     * 
+     * @param text String with code points to add at the end of password. If it's not a string, then `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
+     * @returns Number of code points stored in the password.
+     */
+    async addCodePoints(text: string): Promise<number> {
+        if (typeof text !== 'string') {
+            throw new PowerAuthError(undefined, "Text must be a string", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        let length: number | undefined
+        for (const c of text) {
+            // Iterating a string yields whole code points, so `codePointAt(0)` is always defined.
+            length = await this.addCodePoint(c.codePointAt(0)!)
+        }
+        return length ?? await this.length()
+    }
+
+    /**
      * Insert Unicode code point at the specified position. This method also
      * extends the lifetime of the underlying native password.
      * 
      * @param codePoint Unicode code point to insert. Must be an integer in range 0 up to 0x10FFFF, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
-     * @param at Position in code points where the code point will be inserted. Must be in range 0, upt to length, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
+     * @param at Position in code points where the code point will be inserted. Must be an integer in range 0 up to length, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Number of code points stored in the password.
      */
     insertCodePoint(codePoint: number, at: number): Promise<number> {
-        return this.handle.withObjectId(id => NativePassword.insertCharacter(id, validateCodePoint(codePoint), at))
+        return this.handle.withObjectId(id => NativePassword.insertCharacter(id, validateCodePoint(codePoint), validatePosition(at)))
     }
 
     /**
@@ -215,11 +234,11 @@ export class PowerAuthPassword {
      * If a character consists of multiple code points, then remove each of its code points. For
      * example, removing `'👍🏽'` requires two calls.
      * 
-     * @param position Position of code point to be removed. Must be in range 0 up to length - 1, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
+     * @param position Position of code point to be removed. Must be an integer in range 0 up to length - 1, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Remaining number of code points stored in the password.
      */
     removeCodePointAt(position: number): Promise<number> {
-        return this.handle.withObjectId(id => NativePassword.removeCharacter(id, position))
+        return this.handle.withObjectId(id => NativePassword.removeCharacter(id, validatePosition(position)))
     }
 
     /**
@@ -277,6 +296,14 @@ function validateCodePoint(codePoint: number): number {
         throw new PowerAuthError(undefined, "Code point must be an integer in range 0 up to 0x10FFFF", PowerAuthErrorCode.WRONG_PARAMETER)
     }
     return codePoint
+}
+
+function validatePosition(position: number): number {
+    // Native bridges silently truncate fractions, convert NaN to 0 and wrap values above 32-bit range.
+    if (!Number.isInteger(position) || position < 0 || position > 0x7FFFFFFF) {
+        throw new PowerAuthError(undefined, "Position must be a non-negative integer", PowerAuthErrorCode.WRONG_PARAMETER)
+    }
+    return position
 }
 
 function toRawPasswordObject(objectId: string): PowerAuthRawPassword {

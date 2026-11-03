@@ -128,9 +128,7 @@ async function withPassword<T>(
   const nativePassword = sdk.createPassword();
   try {
     // Creating explicitly lets finally release even when adding a code point fails.
-    for (const character of values[key]) {
-      await nativePassword.addCodePoint(character.codePointAt(0)!);
-    }
+    await nativePassword.addCodePoints(values[key]);
     values[key] = '';
     return await operation(nativePassword);
   } finally {

@@ -142,6 +142,21 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.isEqualTo(p2)).toBe(true)
     }
 
+    async testInvalidPositions() {
+        const p1 = await importPassword('abc')
+        const expected = await importPassword('abc')
+        this.cleanup.push(p1, expected)
+
+        // Includes values that native code would truncate, convert to 0 or wrap into a valid position.
+        const invalidPositions = [1.5, 0.5, NaN, Infinity, -Infinity, 0x100000000, 0x100000001, 1e20, -1e20]
+        for (const position of invalidPositions) {
+            await expect(async () => p1.insertCodePoint(88, position)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+            await expect(async () => p1.removeCodePointAt(position)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        }
+        await expect(async () => p1.removeCodePointAt('0' as unknown as number)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        expect(await p1.isEqualTo(expected)).toBe(true)
+    }
+
     async testMultiCodePointPositions() {
         // 👍🏽 is one visible character made of two code points, so it occupies two positions.
         const p1 = await importPassword('ab')
@@ -420,9 +435,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         const p3 = new PowerAuthPassword()
         this.cleanup.push(p1, p2, p3)
 
-        for (const c of passwordString) {
-            await p2.addCodePoint(c.codePointAt(0)!)
-        }
+        expect(await p2.addCodePoints(passwordString)).toBe(7)
 
         for (const cp of codepoints) {
             await p3.addCodePoint(cp)
@@ -459,5 +472,22 @@ export class PowerAuthPasswordTests extends TestSuite {
         // Boundaries are valid
         expect(await p1.addCodePoint(0)).toBe(1)
         expect(await p1.addCodePoint(0x10FFFF)).toBe(2)
+    }
+
+    async testAddCodePointsOfString() {
+        const p1 = new PowerAuthPassword()
+        const expected = await importPassword('ab👍🏽')
+        this.cleanup.push(p1, expected)
+
+        expect(await p1.addCodePoints('')).toBe(0)
+        expect(await p1.addCodePoints('a')).toBe(1)
+        // Appends to existing content and returns the total length in code points
+        expect(await p1.addCodePoints('b👍🏽')).toBe(4)
+        expect(await p1.addCodePoints('')).toBe(4)
+        expect(await p1.isEqualTo(expected)).toBe(true)
+
+        await expect(async () => p1.addCodePoints(48 as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.addCodePoints(undefined as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        expect(await p1.length()).toBe(4)
     }
 }
