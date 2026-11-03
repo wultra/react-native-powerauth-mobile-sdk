@@ -215,7 +215,7 @@ export class PowerAuthPassword {
      * @param position Position of code point to be removed. Must be in range 0 up to length - 1, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Remaining number of code points stored in the password.
      */
-    removeCharacterAt(position: number): Promise<number> {
+    removeCodePointAt(position: number): Promise<number> {
         return this.handle.withObjectId(id => NativePassword.removeCharacter(id, position))
     }
 
@@ -225,7 +225,7 @@ export class PowerAuthPassword {
      * 
      * @returns Remaining number of code points stored in the password.
      */
-    removeLastCharacter(): Promise<number> {
+    removeLastCodePoint(): Promise<number> {
         return this.handle.withObjectId(id => NativePassword.removeLastCharacter(id))
     }
 

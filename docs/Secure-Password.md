@@ -106,8 +106,8 @@ length = await password.insertCodePoint(48, 2);
 length = await password.insertCodePoint(49, 2);
 console.log(`length = ${length}`);          // length = 4
 
-length = await password.removeLastCharacter();
-length = await password.removeCharacterAt(0);
+length = await password.removeLastCodePoint();
+length = await password.removeCodePointAt(0);
 console.log(`length = ${length}`);          // length = 2
 
 await password.clear();
@@ -115,7 +115,7 @@ let empty = await password.isEmpty();
 console.log(`empty = ${empty}`);            // empty = true
 ```
 
-A single visible character can consist of multiple code points. For example, `'👍🏽'` consists of `0x1F44D` and `0x1F3FD`. If your input allows such characters, then add each of their code points, and keep in mind that the length and positions passed to `insertCodePoint()` and `removeCharacterAt()` are counted in code points:
+A single visible character can consist of multiple code points. For example, `'👍🏽'` consists of `0x1F44D` and `0x1F3FD`. If your input allows such characters, then add each of their code points, and keep in mind that the length and positions passed to `insertCodePoint()` and `removeCodePointAt()` are counted in code points:
 
 ```javascript
 const password = new PowerAuthPassword();
@@ -125,7 +125,7 @@ for (const c of '👍🏽') {
 console.log(`length = ${await password.length()}`); // length = 2
 
 // Removes only the skin tone modifier.
-await password.removeLastCharacter();
+await password.removeLastCodePoint();
 ```
 
 ## Compare two passwords

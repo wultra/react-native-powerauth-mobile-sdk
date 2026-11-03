@@ -138,13 +138,15 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 | `powerAuth.createPassword(destroyOnUse, onAutomaticCleanup)` | `powerAuth.createPassword(destroyOnUse)` |
 | `onAutomaticCleanup` callback | Handle `INVALID_NATIVE_OBJECT` and create a new password object. |
 
-`addCharacter()` and `insertCharacter()` are replaced with `addCodePoint()` and `insertCodePoint()`, which accept a single Unicode code point as a number, like the native PowerAuth mobile SDK. The `CharacterType` type is removed. In 4.x, a string passed to `addCharacter()` or `insertCharacter()` stored only its first code point, so a character such as `'👍🏽'` (U+1F44D U+1F3FD) was silently stored as `'👍'`. Now you decide which code points are added, and the length and all positions are counted in code points.
+`addCharacter()` and `insertCharacter()` are replaced with `addCodePoint()` and `insertCodePoint()`, which accept a single Unicode code point as a number, like the native PowerAuth mobile SDK. For consistency, `removeCharacterAt()` and `removeLastCharacter()` are renamed to `removeCodePointAt()` and `removeLastCodePoint()`. The `CharacterType` type is removed. In 4.x, a string passed to `addCharacter()` or `insertCharacter()` stored only its first code point, so a character such as `'👍🏽'` (U+1F44D U+1F3FD) was silently stored as `'👍'`. Now you decide which code points are added, and the length and all positions are counted in code points.
 
 | 4.x | 5.0 |
 | --- | --- |
 | `password.addCharacter(48)` | `password.addCodePoint(48)` |
 | `password.addCharacter('0')` | `password.addCodePoint('0'.codePointAt(0)!)` |
 | `password.insertCharacter(character, at)` | `password.insertCodePoint(codePoint, at)` |
+| `password.removeCharacterAt(position)` | `password.removeCodePointAt(position)` |
+| `password.removeLastCharacter()` | `password.removeLastCodePoint()` |
 
 The code point must be an integer in the range from 0 to 0x10FFFF, otherwise `PowerAuthError` with `WRONG_PARAMETER` is thrown.
 
