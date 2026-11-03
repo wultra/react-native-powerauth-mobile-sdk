@@ -148,7 +148,7 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 | `password.removeCharacterAt(position)` | `password.removeCodePointAt(position)` |
 | `password.removeLastCharacter()` | `password.removeLastCodePoint()` |
 
-The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `PowerAuthError` with `WRONG_PARAMETER` is thrown.
+The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `PowerAuthError` with `WRONG_PARAMETER` is thrown. The native password is checked first, so a released password still reports `INVALID_NATIVE_OBJECT` and a password owned by an unconfigured `PowerAuth` instance reports `INSTANCE_NOT_CONFIGURED`.
 
 <!-- begin box warning -->
 If your app passed characters made of multiple code points to `addCharacter()` or `insertCharacter()`, then passwords of existing activations contain only the first code point of each such character. Adding all code points of such a character to the password causes an authentication failure for these activations. To keep existing passwords valid, add only the first code point of each character the same way as 4.x did. `PowerAuthPassword.fromString()` already added all code points in 4.x and its behavior is unchanged.

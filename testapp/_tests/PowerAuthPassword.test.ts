@@ -483,6 +483,50 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(p1)
         await expect(async () => p1.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
         await expect(async () => PowerAuthPassword.fromString(48 as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+
+        // Adding an empty string doesn't create the native password either
+        const p2 = new PowerAuthPassword({ powerAuthInstanceId: powerAuth.instanceId })
+        this.cleanup.push(p2)
+        expect(await p2.addCodePoints('')).toBe(0)
+        await expect(async () => p2.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+
+        // Once the native password is created, an empty string is validated against it
+        const p3 = new PowerAuthPassword()
+        this.cleanup.push(p3)
+        expect(await p3.addCodePoints('a')).toBe(1)
+        await p3.release()
+        await expect(async () => p3.addCodePoints('')).toThrow({errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+    }
+
+    async testFailedFromStringReleasesPassword() {
+        const powerAuth = await this.createConfiguredPowerAuth()
+        const baseline = await Register.countObjects(powerAuth.instanceId)
+
+        // Simulate a failure after the native password is created and already contains some code points.
+        // The sentinel code point is mapped to an invalid value, so adding it fails in the middle of `fromString()`.
+        const sentinel = '\uE000'
+        const originalCodePointAt = String.prototype.codePointAt
+        let sentinelSeen = false
+        // eslint-disable-next-line no-extend-native
+        String.prototype.codePointAt = function (this: string, pos: number) {
+            // `this` may be a boxed string, so compare its primitive value
+            if (String(this) === sentinel) {
+                sentinelSeen = true
+                return -1
+            }
+            return originalCodePointAt.call(this, pos)
+        }
+        try {
+            await expect(async () => PowerAuthPassword.fromString(`12${sentinel}34`, { powerAuthInstanceId: powerAuth.instanceId }))
+                .toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
+        } finally {
+            // eslint-disable-next-line no-extend-native
+            String.prototype.codePointAt = originalCodePointAt
+        }
+
+        expect(sentinelSeen).toBe(true)
+        // The partially filled native password must not stay in the memory
+        expect((await Register.countObjects(powerAuth.instanceId)).valid).toBe(baseline.valid)
     }
 
     async testAddCodePointsOfString() {

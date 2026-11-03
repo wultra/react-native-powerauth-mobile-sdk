@@ -91,7 +91,7 @@ const reusablePassword = await PowerAuthPassword.fromString("1234", { destroyOnU
 
 ## Adding or removing code points
 
-The password accepts one Unicode code point at a time. The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `WRONG_PARAMETER` error is reported.
+The password accepts one Unicode code point at a time. The code point must be an integer in the range from 0 to 0x10FFFF, and the position must be an integer within the password, otherwise `WRONG_PARAMETER` error is reported. The native password is checked first, so a released password still reports `INVALID_NATIVE_OBJECT` and a password owned by an unconfigured `PowerAuth` instance reports `INSTANCE_NOT_CONFIGURED`.
 
 ```javascript
 const password = new PowerAuthPassword();

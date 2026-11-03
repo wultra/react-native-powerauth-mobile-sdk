@@ -74,6 +74,11 @@ export interface PowerAuthPasswordOptions {
  * `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. Create a new `PowerAuthPassword` object when
  * you need the password again.
  * 
+ * The native password is resolved before the method arguments are validated. A released password
+ * therefore reports `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`, and a password owned by an unconfigured
+ * `PowerAuth` instance reports `PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED`, even if an argument is also
+ * invalid. `PowerAuthErrorCode.WRONG_PARAMETER` is reported only for a valid native password.
+ * 
  * The password is stored as a sequence of Unicode code points, the same way as in the native
  * PowerAuth mobile SDK. The length and all positions are counted in code points, not in visible
  * characters. For example, a character such as `'👍🏽'` consists of two code points (`0x1F44D`
@@ -132,6 +137,7 @@ export class PowerAuthPassword {
      * is added to the password, so the resulting length is the number of code points in the string.
      * 
      * Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
+     * If adding the code points fails, then the partially filled native password is released.
      * 
      * @param password Password string.
      * @param options Optional password options.
@@ -139,9 +145,12 @@ export class PowerAuthPassword {
     static async fromString(password: string, options: PowerAuthPasswordOptions = {}): Promise<PowerAuthPassword> {
         validateOptions(options, arguments.length > 2)
         const pwd = new PowerAuthPassword(options)
-        // Empty string keeps the native password uncreated, so it doesn't fail on an unconfigured instance.
-        if (password !== '') {
+        try {
             await pwd.addCodePoints(password)
+        } catch (error) {
+            // The caller never receives the password, so release the code points added so far.
+            await pwd.release()
+            throw error
         }
         return pwd
     }
@@ -206,12 +215,18 @@ export class PowerAuthPassword {
      * Code points are added one by one, so the operation is not atomic. If you modify the password
      * before the returned promise is resolved, then your changes may land between the added code points.
      * 
+     * An empty string doesn't create the native password if it wasn't created yet.
+     * 
      * @param text String with code points to add at the end of password. If it's not a string, then `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Number of code points stored in the password.
      */
     async addCodePoints(text: string): Promise<number> {
         if (typeof text !== 'string') {
             throw new PowerAuthError(undefined, "Text must be a string", PowerAuthErrorCode.WRONG_PARAMETER)
+        }
+        // Empty string keeps the native password uncreated, so it doesn't fail on an unconfigured instance.
+        if (text === '' && this.handle.isUninitialized) {
+            return 0
         }
         let length: number | undefined
         for (const c of text) {
