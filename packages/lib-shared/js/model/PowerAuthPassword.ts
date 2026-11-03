@@ -212,6 +212,9 @@ export class PowerAuthPassword {
      * Remove code point at the specified position. This method also
      * extends the lifetime of the underlying native password.
      * 
+     * If a character consists of multiple code points, then remove each of its code points. For
+     * example, removing `'👍🏽'` requires two calls.
+     * 
      * @param position Position of code point to be removed. Must be in range 0 up to length - 1, otherwise `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Remaining number of code points stored in the password.
      */
@@ -222,6 +225,9 @@ export class PowerAuthPassword {
     /**
      * Remove last code point and return the number of remaining code points stored in the password.
      * This method also extends the lifetime of the underlying native password.
+     * 
+     * If the last character consists of multiple code points, then this method removes only its last
+     * code point. For example, it removes only the skin tone modifier from `'👍🏽'`.
      * 
      * @returns Remaining number of code points stored in the password.
      */

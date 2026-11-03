@@ -128,6 +128,8 @@ console.log(`length = ${await password.length()}`); // length = 2
 await password.removeLastCodePoint();
 ```
 
+If you implement a custom keyboard or a masked input, then keep its state in code points too. Otherwise, the displayed placeholders (bullets), backspace, and cursor position get out of sync with the stored password.
+
 ## Compare two passwords
 
 ```javascript
