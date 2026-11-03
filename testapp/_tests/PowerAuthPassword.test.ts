@@ -287,6 +287,12 @@ export class PowerAuthPasswordTests extends TestSuite {
         await expect(async () => p1.toRawPassword()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         await expect(async () => p2.testPinStrength()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
 
+        // Released password is reported even if an argument is also invalid
+        await expect(async () => p1.addCodePoint(-1)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p1.addCodePoints(48 as unknown as string)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p1.insertCodePoint(-1, -1)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p1.removeCodePointAt(-1)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+
         // Now release for multiple times, to make sure that function doesn't fail
         await p1.release()
         await p2.release()
@@ -391,6 +397,11 @@ export class PowerAuthPasswordTests extends TestSuite {
         // PA instance is not configured yet, so the underlying password cannot be created.
         await expect(async () => p1.addCodePoint(48)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
         await expect(async () => p2.removeLastCodePoint()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        // Unconfigured instance is reported even if an argument is also invalid
+        await expect(async () => p1.addCodePoint(-1)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        await expect(async () => p1.addCodePoints(48 as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        await expect(async () => p1.insertCodePoint(-1, -1)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        await expect(async () => p2.removeCodePointAt(-1)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
 
         // Configure PA instance
         await powerAuth.configure(config)

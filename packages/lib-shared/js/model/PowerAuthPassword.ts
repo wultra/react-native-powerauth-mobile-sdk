@@ -221,13 +221,12 @@ export class PowerAuthPassword {
      * @returns Number of code points stored in the password.
      */
     async addCodePoints(text: string): Promise<number> {
-        if (typeof text !== 'string') {
-            throw new PowerAuthError(undefined, "Text must be a string", PowerAuthErrorCode.WRONG_PARAMETER)
-        }
         // Empty string keeps the native password uncreated, so it doesn't fail on an unconfigured instance.
         if (text === '' && this.handle.isUninitialized) {
             return 0
         }
+        // Like other methods, resolve the native password before the argument is validated.
+        await this.handle.withObjectId(async () => validateText(text))
         let length: number | undefined
         for (const c of text) {
             // Iterating a string yields whole code points, so `codePointAt(0)` is always defined.
@@ -317,6 +316,13 @@ function validateCodePoint(codePoint: number): number {
         throw new PowerAuthError(undefined, "Code point must be an integer in range 0 up to 0x10FFFF", PowerAuthErrorCode.WRONG_PARAMETER)
     }
     return codePoint
+}
+
+function validateText(text: string): string {
+    if (typeof text !== 'string') {
+        throw new PowerAuthError(undefined, "Text must be a string", PowerAuthErrorCode.WRONG_PARAMETER)
+    }
+    return text
 }
 
 function validatePosition(position: number): number {
