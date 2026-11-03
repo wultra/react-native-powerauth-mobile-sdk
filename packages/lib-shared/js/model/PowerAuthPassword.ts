@@ -139,7 +139,10 @@ export class PowerAuthPassword {
     static async fromString(password: string, options: PowerAuthPasswordOptions = {}): Promise<PowerAuthPassword> {
         validateOptions(options, arguments.length > 2)
         const pwd = new PowerAuthPassword(options)
-        await pwd.addCodePoints(password)
+        // Empty string keeps the native password uncreated, so it doesn't fail on an unconfigured instance.
+        if (password !== '') {
+            await pwd.addCodePoints(password)
+        }
         return pwd
     }
 
@@ -199,6 +202,9 @@ export class PowerAuthPassword {
      * 
      * Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
      * If the operation fails, then the password may contain only some of the code points.
+     * 
+     * Code points are added one by one, so the operation is not atomic. If you modify the password
+     * before the returned promise is resolved, then your changes may land between the added code points.
      * 
      * @param text String with code points to add at the end of password. If it's not a string, then `PowerAuthErrorCode.WRONG_PARAMETER` error is reported.
      * @returns Number of code points stored in the password.
@@ -301,7 +307,7 @@ function validateCodePoint(codePoint: number): number {
 function validatePosition(position: number): number {
     // Native bridges silently truncate fractions, convert NaN to 0 and wrap values above 32-bit range.
     if (!Number.isInteger(position) || position < 0 || position > 0x7FFFFFFF) {
-        throw new PowerAuthError(undefined, "Position must be a non-negative integer", PowerAuthErrorCode.WRONG_PARAMETER)
+        throw new PowerAuthError(undefined, "Position must be an integer in range 0 up to 0x7FFFFFFF", PowerAuthErrorCode.WRONG_PARAMETER)
     }
     return position
 }

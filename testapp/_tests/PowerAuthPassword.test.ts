@@ -465,13 +465,24 @@ export class PowerAuthPasswordTests extends TestSuite {
             await expect(async () => p1.addCodePoint(cp)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
             await expect(async () => p1.insertCodePoint(cp, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         }
-        // JavaScript callers can still pass a character string, as in 4.x
+        // A character string accepted by 4.x is now rejected
         await expect(async () => p1.addCodePoint('A' as unknown as number)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         expect(await p1.length()).toBe(0)
 
         // Boundaries are valid
         expect(await p1.addCodePoint(0)).toBe(1)
         expect(await p1.addCodePoint(0x10FFFF)).toBe(2)
+    }
+
+    async testEmptyFromStringDoesNotCreatePassword() {
+        // PowerAuth instance is not configured, so creating the native password would fail
+        const powerAuth = new PowerAuth(this.getRandomId())
+        this.cleanup.push(powerAuth)
+
+        const p1 = await PowerAuthPassword.fromString('', { powerAuthInstanceId: powerAuth.instanceId })
+        this.cleanup.push(p1)
+        await expect(async () => p1.isEmpty()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        await expect(async () => PowerAuthPassword.fromString(48 as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
     async testAddCodePointsOfString() {

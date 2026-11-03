@@ -143,7 +143,7 @@ The constructor and `fromString()` accept an options object. The `onAutomaticCle
 | 4.x | 5.0 |
 | --- | --- |
 | `password.addCharacter(48)` | `password.addCodePoint(48)` |
-| `password.addCharacter('0')` | `password.addCodePoint('0'.codePointAt(0)!)` |
+| `password.addCharacter('0')` | `password.addCodePoint(48)` |
 | `password.insertCharacter(character, at)` | `password.insertCodePoint(codePoint, at)` |
 | `password.removeCharacterAt(position)` | `password.removeCodePointAt(position)` |
 | `password.removeLastCharacter()` | `password.removeLastCodePoint()` |
