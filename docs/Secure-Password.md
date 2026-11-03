@@ -16,7 +16,9 @@ The `PowerAuthPassword` class implements safe storage for users' passwords. The 
 
 After the native password is destroyed or released, any other use of the object reports `PowerAuthErrorCode.INVALID_NATIVE_OBJECT`. The object is not restored, so create a new `PowerAuthPassword` object when you need the password again.
  
-Be aware that this class is effective only if you're using a numeric PIN for the passphrase although its API accepts any Unicode character at the input. This is because it's quite simple to re-implement the PIN keyboard with your custom UI components. On opposite to that, for the full alphanumeric input, you need to use the system keyboard, which already leaves traces of the user's password in memory.
+The password is stored as a sequence of Unicode code points, the same way as in the native PowerAuth mobile SDK. The length and all positions are counted in code points, not in visible characters. If you build the password from your own input, then you're responsible for adding the same code points each time the user enters the same password.
+
+Be aware that this class is effective only if you're using a numeric PIN for the passphrase although its API accepts full Unicode code point at the input. This is because it's quite simple to re-implement the PIN keyboard with your custom UI components. On opposite to that, for the full alphanumeric input, you need to use the system keyboard, which already leaves traces of the user's password in memory.
 
 If you're interested in more detail about why the passwords should be protected in the memory, then you can follow the [Working with passwords securely](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/PowerAuth-SDK-for-iOS.md#working-with-passwords-securely) chapter from the PowerAuth mobile SDK.
 
@@ -53,18 +55,18 @@ PowerAuth Mobile JS SDK allows you to use both strings and special password obje
 let changeData;
 try {
     const oldPassword = new PowerAuthPassword();
-    await oldPassword.addCharacter('0');
-    await oldPassword.addCharacter('1');
-    await oldPassword.addCharacter('2');
-    await oldPassword.addCharacter('3');
+    await oldPassword.addCodePoint(48);     // '0'
+    await oldPassword.addCodePoint(49);     // '1'
+    await oldPassword.addCodePoint(50);     // '2'
+    await oldPassword.addCodePoint(51);     // '3'
 
     changeData = await powerAuth.beginPasswordChange(oldPassword);
 
     const newPassword = new PowerAuthPassword();
-    await newPassword.addCharacter(51);
-    await newPassword.addCharacter(50);
-    await newPassword.addCharacter(49);
-    await newPassword.addCharacter(48);
+    await newPassword.addCodePoint(51);
+    await newPassword.addCodePoint(50);
+    await newPassword.addCodePoint(49);
+    await newPassword.addCodePoint(48);
 
     await powerAuth.finishPasswordChange(newPassword, changeData);
 } catch (e) {
@@ -75,7 +77,7 @@ try {
 }
 ```
 
-You can also create `PowerAuthPassword` from an already obtained string.
+You can also create `PowerAuthPassword` from an already obtained string. Each code point of the string is added to the password.
 
 <!-- begin box warning -->
 Note that this is not recommended. Do this only when you retrieve the whole string from a text input.
@@ -87,19 +89,21 @@ const password = await PowerAuthPassword.fromString("1234")
 const reusablePassword = await PowerAuthPassword.fromString("1234", { destroyOnUse: false })
 ```
 
-## Adding or removing characters
+## Adding or removing code points
+
+The password accepts one Unicode code point at a time. The code point must be an integer in the range from 0 to 0x10FFFF, otherwise `WRONG_PARAMETER` error is reported.
 
 ```javascript
 const password = new PowerAuthPassword();
 let length = await password.length();
 console.log(`length = ${length}`);          // length = 0
 
-length = await password.addCharacter('A');
-length = await password.addCharacter('B');
+length = await password.addCodePoint(65);   // 'A'
+length = await password.addCodePoint('B'.codePointAt(0));
 console.log(`length = ${length}`);          // length = 2
 
-length = await password.insertCharacter(48, 2);
-length = await password.insertCharacter(49, 2);
+length = await password.insertCodePoint(48, 2);
+length = await password.insertCodePoint(49, 2);
 console.log(`length = ${length}`);          // length = 4
 
 length = await password.removeLastCharacter();
@@ -111,16 +115,18 @@ let empty = await password.isEmpty();
 console.log(`empty = ${empty}`);            // empty = true
 ```
 
-A character is either a number with one Unicode code point or a non-empty string. All code points of the string are stored as one character, so you can add a character composed of multiple code points, such as an emoji with a skin tone modifier, with a single call. The password length and character positions count such characters, and removing a character removes all its code points. Numbers must be integers in the range from 0 to 0x10FFFF, otherwise the call fails with `WRONG_PARAMETER`.
+A single visible character can consist of multiple code points. For example, `'👍🏽'` consists of `0x1F44D` and `0x1F3FD`. If your input allows such characters, then add each of their code points, and keep in mind that the length and positions passed to `insertCodePoint()` and `removeCharacterAt()` are counted in code points:
 
 ```javascript
 const password = new PowerAuthPassword();
-let length = await password.addCharacter('👍🏽');
-console.log(`length = ${length}`);          // length = 1
-```
+for (const c of '👍🏽') {
+    await password.addCodePoint(c.codePointAt(0));
+}
+console.log(`length = ${await password.length()}`); // length = 2
 
-> [!NOTE]
-> Versions before 5.0 used only the first code point of the string, so `'👍🏽'` was stored as `'👍'`. To keep activations persisted by these versions working, the library continues to use only the first code point of each character added by `addCharacter()` or `insertCharacter()` when the password is used with such activation, including the new password set by a password change. Activations persisted by this version use all code points.
+// Removes only the skin tone modifier.
+await password.removeLastCharacter();
+```
 
 ## Compare two passwords
 
@@ -129,11 +135,11 @@ const p1 = new PowerAuthPassword();
 const p2 = new PowerAuthPassword();
 const p3 = new PowerAuthPassword();
 
-await p1.addCharacter('0');
-await p1.addCharacter('A');
+await p1.addCodePoint('0'.codePointAt(0));
+await p1.addCodePoint('A'.codePointAt(0));
 
-await p2.addCharacter(48);
-await p2.addCharacter(65);
+await p2.addCodePoint(48);
+await p2.addCodePoint(65);
 
 const p1p2equal = await p1.isEqualTo(p2);
 const p2p3equal = await p2.isEqualTo(p3);
@@ -148,7 +154,7 @@ The following code explains how the native password lifetime works:
 ```javascript
 const password = new PowerAuthPassword({ destroyOnUse: false });
 
-let length = await password.addCharacter(48);
+let length = await password.addCodePoint(48);
 console.log(`Length is ${length}`);         // prints 'Length is 1'
 
 // Release the native password.

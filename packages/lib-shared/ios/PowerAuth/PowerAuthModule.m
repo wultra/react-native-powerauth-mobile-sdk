@@ -19,7 +19,6 @@
 #import "PowerAuthObjectRegister.h"
 #import "Constants.h"
 #import "Utilities.h"
-#import "PowerAuthPasswordEncoding.h"
 #import "PAJS.h"
 
 #import "UIKit/UIKit.h"
@@ -323,10 +322,11 @@ PAJS_METHOD_START(beginPasswordChange,
                   PAJS_ARGUMENT(oldPassword, id))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * immutableOldPassword = UsePasswordCopy(oldPassword, powerAuth, _objectRegister, reject);
-    if (!immutableOldPassword) {
+    PowerAuthCorePassword * coreOldPassword = UsePassword(oldPassword, _objectRegister, reject);
+    if (!coreOldPassword) {
         return;
     }
+    PowerAuthCorePassword * immutableOldPassword = [coreOldPassword copyToImmutable];
     [powerAuth beginPasswordChangeWithCorePassword:immutableOldPassword callback:^(PowerAuthPasswordChangeData * changeData, NSError * error) {
         if (error) {
             [immutableOldPassword secureClear];
@@ -370,11 +370,12 @@ PAJS_METHOD_START(finishPasswordChange,
         reject(EC_INVALID_NATIVE_OBJECT, @"Password-change data object is no longer valid.", nil);
         return;
     }
-    PowerAuthCorePassword * immutableNewPassword = UsePasswordCopy(newPassword, powerAuth, _objectRegister, reject);
-    if (!immutableNewPassword) {
+    PowerAuthCorePassword * coreNewPassword = UsePassword(newPassword, _objectRegister, reject);
+    if (!coreNewPassword) {
         [handle clear];
         return;
     }
+    PowerAuthCorePassword * immutableNewPassword = [coreNewPassword copyToImmutable];
     @try {
         [powerAuth finishPasswordChangeWithNewCorePassword:immutableNewPassword changeData:changeData callback:^(NSError * error) {
             [immutableNewPassword secureClear];
@@ -627,7 +628,7 @@ PAJS_METHOD_START(startProtocolUpgrade,
                   PAJS_BOOL_ARGUMENT(upgradeBiometry))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * corePassword = UsePasswordCopy(password, powerAuth, _objectRegister, reject);
+    PowerAuthCorePassword * corePassword = [UsePassword(password, _objectRegister, reject) copyToImmutable];
     if (!corePassword) {
         return;
     }
@@ -734,15 +735,11 @@ PAJS_METHOD_START(persistActivation,
                   PAJS_ARGUMENT(authentication, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authentication powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authentication reject:reject];
     if (!auth) {
         return;
     }
-    // Activations persisted by this version use all code points of each password character.
-    if (![PowerAuthPasswordEncoding markPendingActivationForSdk:powerAuth]) {
-        reject(EC_UNKNOWN_ERROR, @"Failed to store password encoding", nil);
-        return;
-    }
+    
     [powerAuth persistActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
         // Referencing auth keeps its sensitive data alive until the asynchronous operation finishes.
         (void)auth;
@@ -779,7 +776,7 @@ PAJS_METHOD_START(removeActivationWithAuthentication,
                   PAJS_ARGUMENT(authDict, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [powerAuth removeActivationWithAuthentication:auth callback:^(NSError * _Nullable error) {
@@ -813,7 +810,7 @@ PAJS_METHOD_START(authenticationHeaderForRequestWithParams,
                   PAJS_ARGUMENT(params, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSError* error = nil;
@@ -846,7 +843,7 @@ PAJS_METHOD_START(authenticationHeaderForRequestWithBody,
                   PAJS_ARGUMENT(body, PAJS_NULLABLE_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSError* error = nil;
@@ -880,7 +877,7 @@ PAJS_METHOD_START(offlineAuthenticationCode,
                   PAJS_ARGUMENT(nonce, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     NSData * requestBody = body ? [body dataUsingEncoding:NSUTF8StringEncoding] : nil;
@@ -941,7 +938,7 @@ PAJS_METHOD_START(calculateDigitalSignature,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1050,7 +1047,7 @@ PAJS_METHOD_START(calculateJwsSignature,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1090,7 +1087,7 @@ PAJS_METHOD_START(createCertificateSigningRequest,
                   PAJS_ARGUMENT(signatureKeyId, PAJS_NONNULL_ARGUMENT NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1144,22 +1141,15 @@ PAJS_METHOD_START(unsafeChangePassword,
                   PAJS_ARGUMENT(newPassword, id))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * coreOldPassword = UsePasswordCopy(oldPassword, powerAuth, _objectRegister, reject);
+    PowerAuthCorePassword * coreOldPassword = UsePassword(oldPassword, _objectRegister, reject);
     if (!coreOldPassword) {
         return;
     }
-    PowerAuthCorePassword * newCorePassword = UsePasswordCopy(newPassword, powerAuth, _objectRegister, reject);
+    PowerAuthCorePassword * newCorePassword = UsePassword(newPassword, _objectRegister, reject);
     if (!newCorePassword) {
-        [coreOldPassword secureClear];
         return;
     }
-    BOOL result;
-    @try {
-        result = [powerAuth unsafeChangeCorePasswordFrom:coreOldPassword to:newCorePassword];
-    } @finally {
-        [coreOldPassword secureClear];
-        [newCorePassword secureClear];
-    }
+    BOOL result = [powerAuth unsafeChangeCorePasswordFrom:coreOldPassword to:newCorePassword];
     resolve(@(result));
     PA_BLOCK_END
 }
@@ -1171,15 +1161,16 @@ PAJS_METHOD_START(changePassword,
                   PAJS_ARGUMENT(newPassword, id))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * immutableOldPassword = UsePasswordCopy(oldPassword, powerAuth, _objectRegister, reject);
-    if (!immutableOldPassword) {
+    PowerAuthCorePassword * coreOldPassword = UsePassword(oldPassword, _objectRegister, reject);
+    if (!coreOldPassword) {
         return;
     }
-    PowerAuthCorePassword * immutableNewPassword = UsePasswordCopy(newPassword, powerAuth, _objectRegister, reject);
-    if (!immutableNewPassword) {
-        [immutableOldPassword secureClear];
+    PowerAuthCorePassword * newCorePassword = UsePassword(newPassword, _objectRegister, reject);
+    if (!newCorePassword) {
         return;
     }
+    PowerAuthCorePassword * immutableOldPassword = [coreOldPassword copyToImmutable];
+    PowerAuthCorePassword * immutableNewPassword = [newCorePassword copyToImmutable];
     @try {
         [powerAuth changeCorePasswordFrom:immutableOldPassword to:immutableNewPassword callback:^(NSError * error) {
             [immutableOldPassword secureClear];
@@ -1205,7 +1196,7 @@ PAJS_METHOD_START(addBiometryFactor,
                   PAJS_ARGUMENT(foo, id))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * corePassword = UsePasswordCopy(password, powerAuth, _objectRegister, reject);
+    PowerAuthCorePassword * corePassword = [UsePassword(password, _objectRegister, reject) copyToImmutable];
     if (!corePassword) {
         return;
     }
@@ -1336,7 +1327,7 @@ PAJS_METHOD_START(fetchEncryptionKey,
                   PAJS_ARGUMENT(index, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [powerAuth fetchEncryptionKey:auth index:[index integerValue]  callback:^(PowerAuthSecureData * encryptionKey, NSError * error) {
@@ -1362,7 +1353,7 @@ PAJS_METHOD_START(fetchSecureVaultKey,
     if (!PAJSParseSecureVaultKeyId(keyIdentifierValue, &keyIdentifier, reject)) {
         return;
     }
-    PowerAuthAuthentication * auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication * auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) {
         return;
     }
@@ -1422,7 +1413,7 @@ PAJS_METHOD_START(signDataWithDevicePrivateKey,
                   PAJS_ARGUMENT(dataFormat, NSString*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
 
     DataFormat format = GetPowerAuthDataFormat(dataFormat, reject);
@@ -1455,10 +1446,11 @@ PAJS_METHOD_START(validatePassword,
                   PAJS_ARGUMENT(password, id))
 {
     PA_BLOCK_START
-    PowerAuthCorePassword * immutablePassword = UsePasswordCopy(password, powerAuth, _objectRegister, reject);
-    if (!immutablePassword) {
+    PowerAuthCorePassword * corePassword = UsePassword(password, _objectRegister, reject);
+    if (!corePassword) {
         return;
     }
+    PowerAuthCorePassword * immutablePassword = [corePassword copyToImmutable];
     // Validation needs no registered handle; clear the native temporary data before returning.
     [powerAuth beginPasswordChangeWithCorePassword:immutablePassword callback:^(PowerAuthPasswordChangeData * changeData, NSError * error) {
         if (changeData) {
@@ -1587,7 +1579,7 @@ PAJS_METHOD_START(requestAccessToken,
                   PAJS_ARGUMENT(authDict, NSDictionary*))
 {
     PA_BLOCK_START
-    PowerAuthAuthentication *auth = [self constructAuthentication:authDict powerAuth:powerAuth reject:reject];
+    PowerAuthAuthentication *auth = [self constructAuthentication:authDict reject:reject];
     if (!auth) return;
     
     [[powerAuth tokenStore] requestAccessTokenWithName:tokenName authentication:auth completion:^(PowerAuthToken * token, NSError * error) {
@@ -1842,9 +1834,7 @@ PAJS_METHOD_END
 
 /// Translate dictionary into `PowerAuthAuthentication` object.
 /// @param dict Dictionary with authentication data.
-/// @param powerAuth PowerAuthSDK instance that will use the authentication.
 - (PowerAuthAuthentication*) constructAuthentication:(NSDictionary*)dict
-                                           powerAuth:(PowerAuthSDK*)powerAuth
                                               reject:(RCTPromiseRejectBlock)reject
 {
     id persistValue = dict[@"isPersist"];
@@ -1857,7 +1847,7 @@ PAJS_METHOD_END
     id userPassword = dict[@"password"];
     if (persist) {
         // Activation commit
-        PowerAuthCorePassword * password = UsePasswordCopy(userPassword, powerAuth, _objectRegister, reject);
+        PowerAuthCorePassword * password = [UsePassword(userPassword, _objectRegister, reject) copyToImmutable];
         if (!password) {
             return nil;
         }
@@ -1870,7 +1860,7 @@ PAJS_METHOD_END
     } else {
         // Data signing
         if (userPassword) {
-            PowerAuthCorePassword * password = UsePasswordCopy(userPassword, powerAuth, _objectRegister, reject);
+            PowerAuthCorePassword * password = [UsePassword(userPassword, _objectRegister, reject) copyToImmutable];
             if (!password) {
                 return nil;
             }

@@ -44,16 +44,6 @@ class PowerAuthJsModule(
 
     private val configurationLock = Any()
 
-    private val passwordEncoding = PasswordEncoding(context)
-
-    /**
-     * Return an immutable password owned by the caller, encoded as required by the SDK's activation.
-     */
-    @Throws(WrapperException::class)
-    private fun usePasswordCopy(sdk: PowerAuthSDK, password: Dynamic?): Password {
-        return passwordModule.usePasswordCopy(password) { passwordEncoding.useLegacyEncoding(sdk) }
-    }
-
     private fun clearPasswordChangeData(data: PowerAuthPasswordChangeData) {
         data.secureClear()
         data.oldPassword.destroy()
@@ -309,7 +299,7 @@ class PowerAuthJsModule(
             } else {
                 null
             }
-            val corePassword = usePasswordCopy(sdk, password)
+            val corePassword = passwordModule.usePasswordCopy(password)
             val listener = object : IProtocolUpgradeListener {
                 override fun onProtocolUpgradeSucceed(result: ProtocolUpgradeResult) {
                     corePassword.destroy()
@@ -462,12 +452,10 @@ class PowerAuthJsModule(
             var auth: PowerAuthAuthentication? = null
             try {
                 val authentication = constructAuthentication(
-                    sdk,
                     authMap,
                     sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
                 )
                 auth = authentication
-                passwordEncoding.markPendingActivation(sdk)
                 sdk.persistActivationWithAuthentication(
                     context,
                     authentication,
@@ -513,7 +501,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                withOwnedAuthentication(sdk, authMap) { authentication ->
+                withOwnedAuthentication(authMap) { authentication ->
                     sdk.removeActivationWithAuthentication(
                         context,
                         authentication,
@@ -560,7 +548,7 @@ class PowerAuthJsModule(
             override fun run(sdk: PowerAuthSDK) {
                 val paramMap = if (params == null) null else getStringMap(params)
                 val header =
-                    withOwnedAuthentication(sdk, authMap) { authentication ->
+                    withOwnedAuthentication(authMap) { authentication ->
                         sdk.authenticationHeaderForRequestWithParams(
                             authentication,
                             method,
@@ -587,7 +575,7 @@ class PowerAuthJsModule(
             override fun run(sdk: PowerAuthSDK) {
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 val header =
-                    withOwnedAuthentication(sdk, authMap) { authentication ->
+                    withOwnedAuthentication(authMap) { authentication ->
                         sdk.authenticationHeaderForRequestWithBody(
                             authentication,
                             method,
@@ -613,7 +601,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                val auth = constructAuthentication(sdk, authMap)
+                val auth = constructAuthentication(authMap)
                 val decodedBody = body?.toByteArray(StandardCharsets.UTF_8)
                 try {
                     sdk.offlineAuthenticationCode(
@@ -708,7 +696,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
             val decodedData = DataFormat.BASE64.decodeBytes(data)
                 ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode data.")
-            withOwnedAuthentication(sdk, authMap) { authentication ->
+            withOwnedAuthentication(authMap) { authentication ->
                 sdk.calculateDigitalSignature(
                     context,
                     authentication,
@@ -793,7 +781,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
             val decodedData = DataFormat.BASE64.decodeBytes(data)
                 ?: throw WrapperException(Errors.EC_WRONG_PARAMETER, "Failed to decode data.")
-            withOwnedAuthentication(sdk, authMap) { authentication ->
+            withOwnedAuthentication(authMap) { authentication ->
                 sdk.calculateJwsSignature(
                     context,
                     authentication,
@@ -826,7 +814,7 @@ class PowerAuthJsModule(
     ) {
         val context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
-            withOwnedAuthentication(sdk, authMap) { authentication ->
+            withOwnedAuthentication(authMap) { authentication ->
                 sdk.createCertificateSigningRequest(
                     context,
                     authentication,
@@ -855,17 +843,9 @@ class PowerAuthJsModule(
         promise: Promise
     ) {
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            val coreOldPassword = usePasswordCopy(sdk, oldPassword)
-            try {
-                val coreNewPassword = usePasswordCopy(sdk, newPassword)
-                try {
-                    promise.resolve(sdk.changePasswordUnsafe(coreOldPassword, coreNewPassword))
-                } finally {
-                    coreNewPassword.destroy()
-                }
-            } finally {
-                coreOldPassword.destroy()
-            }
+            val coreOldPassword: Password = passwordModule.usePassword(oldPassword)
+            val coreNewPassword: Password = passwordModule.usePassword(newPassword)
+            promise.resolve(sdk.changePasswordUnsafe(coreOldPassword, coreNewPassword))
         })
     }
 
@@ -878,9 +858,9 @@ class PowerAuthJsModule(
     ) {
         val context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
-            val coreOldPassword = usePasswordCopy(sdk, oldPassword)
+            val coreOldPassword = passwordModule.usePasswordCopy(oldPassword)
             val coreNewPassword = try {
-                usePasswordCopy(sdk, newPassword)
+                passwordModule.usePasswordCopy(newPassword)
             } catch (t: Throwable) {
                 coreOldPassword.destroy()
                 throw t
@@ -916,7 +896,7 @@ class PowerAuthJsModule(
     ) {
         val context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
-            val coreOldPassword = usePasswordCopy(sdk, oldPassword)
+            val coreOldPassword = passwordModule.usePasswordCopy(oldPassword)
             try {
                 sdk.beginPasswordChange(
                     context,
@@ -986,7 +966,7 @@ class PowerAuthJsModule(
                 "Password change data object is no longer valid"
             )
             val coreNewPassword = try {
-                usePasswordCopy(sdk, newPassword)
+                passwordModule.usePasswordCopy(newPassword)
             } catch (t: Throwable) {
                 clearPasswordChangeData(passwordChangeData)
                 throw t
@@ -1036,7 +1016,7 @@ class PowerAuthJsModule(
                     allowNoPrompt = true,
                     authenticateOnBiometricKeySetup = sdk.biometricConfiguration.isAuthenticateOnBiometricKeySetup
                 )
-                val corePassword = usePasswordCopy(sdk, password)
+                val corePassword = passwordModule.usePasswordCopy(password)
                 try {
                     sdk.addBiometryFactor(
                         context,
@@ -1141,7 +1121,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                withOwnedAuthentication(sdk, authMap) { authentication ->
+                withOwnedAuthentication(authMap) { authentication ->
                     sdk.fetchEncryptionKey(
                         context,
                         authentication,
@@ -1178,7 +1158,7 @@ class PowerAuthJsModule(
     ) {
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk ->
             val nativeKeyIdentifier = secureVaultKeyIdFromString(keyIdentifier)
-            withOwnedAuthentication(sdk, authMap) { authentication ->
+            withOwnedAuthentication(authMap) { authentication ->
                 sdk.fetchSecureVaultKey(
                     context,
                     authentication,
@@ -1263,7 +1243,7 @@ class PowerAuthJsModule(
                     )
                     return
                 }
-                withOwnedAuthentication(sdk, authMap) { authentication ->
+                withOwnedAuthentication(authMap) { authentication ->
                     sdk.calculateDigitalSignature(
                         context,
                         authentication,
@@ -1287,7 +1267,7 @@ class PowerAuthJsModule(
     fun validatePassword(instanceId: String, password: Dynamic?, promise: Promise) {
         val context: Context = this.context
         this.usePowerAuth(instanceId, promise, powerAuthBlock { sdk: PowerAuthSDK ->
-            val corePassword = usePasswordCopy(sdk, password)
+            val corePassword = passwordModule.usePasswordCopy(password)
             try {
                 // Keep the temporary change data native and clear its owned password immediately.
                 sdk.beginPasswordChange(context, corePassword, object : IBeginPasswordChangeListener {
@@ -1412,7 +1392,7 @@ class PowerAuthJsModule(
         this.usePowerAuth(instanceId, promise, object : PowerAuthBlock {
             @Throws(Exception::class)
             override fun run(sdk: PowerAuthSDK) {
-                withOwnedAuthentication(sdk, authMap) { authentication ->
+                withOwnedAuthentication(authMap) { authentication ->
                     sdk.tokenStore
                         .requestAccessToken(
                             context,
@@ -1701,7 +1681,6 @@ class PowerAuthJsModule(
      */
     @Throws(Throwable::class)
     private fun constructAuthentication(
-        sdk: PowerAuthSDK,
         map: ReadableMap,
         authenticateOnBiometricKeySetup: Boolean = true
     ): PowerAuthAuthentication {
@@ -1744,7 +1723,7 @@ class PowerAuthJsModule(
         var biometryKey: SecureData? = null
         try {
             password = if (map.hasKey("password")) {
-                usePasswordCopy(sdk, map.getDynamic("password"))
+                passwordModule.usePasswordCopy(map.getDynamic("password"))
             } else {
                 null
             }
@@ -1802,11 +1781,10 @@ class PowerAuthJsModule(
      * Executes an operation and destroys its copied authentication data after the native call returns.
      */
     private fun <T> withOwnedAuthentication(
-        sdk: PowerAuthSDK,
         map: ReadableMap,
         block: (PowerAuthAuthentication) -> T
     ): T {
-        val authentication = constructAuthentication(sdk, map)
+        val authentication = constructAuthentication(map)
         return try {
             block(authentication)
         } finally {

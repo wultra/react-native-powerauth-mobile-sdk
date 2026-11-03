@@ -58,7 +58,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         }
     }
 
-    async testAddCharacters() {
+    async testAddCodePoints() {
         const p1 = new PowerAuthPassword()
         const p2 = new PowerAuthPassword()
         const p3 = await importPassword('0123')
@@ -71,21 +71,21 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p2.isEqualTo(pEmpty)).toBe(true)
         expect(await p3.isEqualTo(pEmpty)).toBe(false)
 
-        expect(await p1.addCharacter('0')).toBe(1)
-        expect(await p2.addCharacter(48)).toBe(1)
+        expect(await p1.addCodePoint(48)).toBe(1)
+        expect(await p2.addCodePoint(48)).toBe(1)
         expect(await p1.isEqualTo(pEmpty)).toBe(false)
         expect(await p2.isEqualTo(pEmpty)).toBe(false)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(false)
 
-        expect(await p1.addCharacter('1')).toBe(2)
-        expect(await p2.addCharacter(49)).toBe(2)
-        expect(await p1.addCharacter('2')).toBe(3)
-        expect(await p2.addCharacter(50)).toBe(3)
-        expect(await p1.addCharacter('3')).toBe(4)
-        expect(await p2.addCharacter(51)).toBe(4)
+        expect(await p1.addCodePoint(49)).toBe(2)
+        expect(await p2.addCodePoint(49)).toBe(2)
+        expect(await p1.addCodePoint(50)).toBe(3)
+        expect(await p2.addCodePoint(50)).toBe(3)
+        expect(await p1.addCodePoint(51)).toBe(4)
+        expect(await p2.addCodePoint(51)).toBe(4)
 
-        await expect(async () => p1.addCharacter(0x110000)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.addCodePoint(0x110000)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
 
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
@@ -124,20 +124,20 @@ export class PowerAuthPasswordTests extends TestSuite {
         await expect(async () => p1.removeCharacterAt(0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
     }
 
-    async testInsertCharacters() {
+    async testInsertCodePoints() {
         const p1 = new PowerAuthPassword()
         const p2 = await importPassword('Sk💀ll')
         this.cleanup.push(p1, p2)
 
-        expect(await p1.insertCharacter('l', 0)).toBe(1)
-        expect(await p1.insertCharacter('l', 1)).toBe(2)
-        expect(await p1.insertCharacter('S', 0)).toBe(3)
-        expect(await p1.insertCharacter('k', 1)).toBe(4)
-        expect(await p1.insertCharacter(0x1F480, 2)).toBe(5)
+        expect(await p1.insertCodePoint(108, 0)).toBe(1)
+        expect(await p1.insertCodePoint(108, 1)).toBe(2)
+        expect(await p1.insertCodePoint(83, 0)).toBe(3)
+        expect(await p1.insertCodePoint(107, 1)).toBe(4)
+        expect(await p1.insertCodePoint(0x1F480, 2)).toBe(5)
 
-        await expect(async () => p1.insertCharacter('X', -1)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
-        await expect(async () => p1.insertCharacter('X', 6)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
-        await expect(async () => p1.insertCharacter(0x110000, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.insertCodePoint(88, -1)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.insertCodePoint(88, 6)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.insertCodePoint(0x110000, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
 
         expect(await p1.isEqualTo(p2)).toBe(true)
     }
@@ -152,85 +152,22 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await p1.length()).toBe(4)
         expect(await p2.length()).toBe(5)
 
-        await p3.addCharacter('★')
-        await p3.addCharacter('🤣')
-        await p3.addCharacter('🤫')
-        await p3.addCharacter('🪘')
+        for (const c of '★🤣🤫🪘') {
+            await p3.addCodePoint(c.codePointAt(0)!)
+        }
 
         expect(await p3.length()).toBe(4)
 
-        await p4.addCharacter(0x2605)
-        await p4.addCharacter(0x1F923)
-        await p4.addCharacter(0x1F92B)
-        await p4.addCharacter(0x1FA98)
+        await p4.addCodePoint(0x2605)
+        await p4.addCodePoint(0x1F923)
+        await p4.addCodePoint(0x1F92B)
+        await p4.addCodePoint(0x1FA98)
 
         expect(await p4.length()).toBe(4)
 
         expect(await p3.isEqualTo(p4)).toBe(true)
         expect(await p3.isEqualTo(p1)).toBe(true)
         expect(await p4.isEqualTo(p1)).toBe(true)
-    }
-
-    async testMultiCodePointCharacter() {
-        // Thumbs up with medium skin tone modifier is one character composed of two code points.
-        const thumbsUp = '👍🏽'
-        const p1 = new PowerAuthPassword()
-        const p2 = new PowerAuthPassword()
-        const p3 = new PowerAuthPassword()
-        const p4 = await importPassword('a👍🏽b')
-        const p5 = await importPassword('a👍b')
-        const p6 = await importPassword('ab')
-        const p7 = await importPassword('axb')
-        this.cleanup.push(p1, p2, p3, p4, p5, p6, p7)
-
-        expect(await p1.addCharacter('a')).toBe(1)
-        expect(await p1.addCharacter(thumbsUp)).toBe(2)
-        expect(await p1.addCharacter('b')).toBe(3)
-
-        // Same character inserted in the middle
-        expect(await p2.addCharacter('a')).toBe(1)
-        expect(await p2.addCharacter('b')).toBe(2)
-        expect(await p2.insertCharacter(thumbsUp, 1)).toBe(3)
-
-        // Same code points added one by one
-        await p3.addCharacter('a')
-        await p3.addCharacter(0x1F44D)
-        await p3.addCharacter(0x1F3FD)
-        await p3.addCharacter('b')
-        expect(await p3.length()).toBe(4)
-
-        expect(await p1.isEqualTo(p2)).toBe(true)
-        expect(await p1.isEqualTo(p3)).toBe(true)
-        expect(await p1.isEqualTo(p4)).toBe(true)
-        // The modifier is not lost
-        expect(await p1.isEqualTo(p5)).toBe(false)
-
-        // Removing the character removes all its code points
-        expect(await p1.removeCharacterAt(1)).toBe(2)
-        expect(await p2.removeLastCharacter()).toBe(2)
-        expect(await p2.removeLastCharacter()).toBe(1)
-        expect(await p2.addCharacter('b')).toBe(2)
-        expect(await p1.isEqualTo(p2)).toBe(true)
-        expect(await p1.isEqualTo(p6)).toBe(true)
-
-        // Characters after a multi-code-point character are addressed by character position
-        expect(await p1.insertCharacter('👨‍👩‍👧', 1)).toBe(3)
-        expect(await p1.insertCharacter('x', 2)).toBe(4)
-        expect(await p1.removeCharacterAt(1)).toBe(3)
-        expect(await p1.isEqualTo(p7)).toBe(true)
-    }
-
-    async testInvalidCharacter() {
-        const p1 = new PowerAuthPassword()
-        this.cleanup.push(p1)
-
-        await expect(async () => p1.addCharacter('')).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => p1.addCharacter(-1)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => p1.addCharacter(1.5)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => p1.addCharacter(NaN)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => p1.addCharacter(0x110000)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        await expect(async () => p1.insertCharacter('', 0)).toThrow({ errorCode: PowerAuthErrorCode.WRONG_PARAMETER })
-        expect(await p1.length()).toBe(0)
     }
 
     async testAutomaticCleanupInvalidatesPassword() {
@@ -250,7 +187,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await Register.findObject(id1, 'password')).toBe(true)
         expect(await Register.findObject(id2, 'password')).toBe(true)
         // Access 1st password, to extend it's lifetime
-        await p1.addCharacter(48)
+        await p1.addCodePoint(48)
         // Wait for another 50ms, p2 should be released now
         await this.sleep(50)
 
@@ -258,7 +195,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await Register.findObject(id2, 'password')).toBe(false)
         // Expired password is not recreated
         await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-        await expect(async () => p2.addCharacter(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p2.addCodePoint(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         expect(await objectIdOf(p2)).toBe(id2)
         await expect(async () => p1.isEqualTo(p2)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         // p1 is still valid
@@ -275,7 +212,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         const p2 = new PowerAuthPassword({ autoReleaseTimeMillis: 100 })
         this.cleanup.push(p1, p2)
 
-        await p1.addCharacter(48)
+        await p1.addCodePoint(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
 
@@ -302,7 +239,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         await p1.release()
         await p2.release()
 
-        await p1.addCharacter(48)
+        await p1.addCodePoint(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
 
@@ -317,7 +254,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(await Register.findObject(id2, 'password')).toBe(false)
 
         // Released passwords are not recreated
-        await expect(async () => p1.addCharacter(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        await expect(async () => p1.addCodePoint(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         await expect(async () => p1.toRawPassword()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
         await expect(async () => p2.testPinStrength()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
@@ -336,7 +273,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         const p = powerAuth.createPassword(false)
         this.cleanup.push(p)
         const characters = [...'0123456789']
-        const lengths = await Promise.all(characters.map(c => p.addCharacter(c)))
+        const lengths = await Promise.all(characters.map(c => p.addCodePoint(c.codePointAt(0)!)))
 
         expect(lengths.join(',')).toBe('1,2,3,4,5,6,7,8,9,10')
         expect(await p.length()).toBe(characters.length)
@@ -357,7 +294,7 @@ export class PowerAuthPasswordTests extends TestSuite {
         const p = powerAuth.createPassword(false)
         this.cleanup.push(p)
         // The first use starts native password creation and release is requested before it completes
-        const add = p.addCharacter('1')
+        const add = p.addCodePoint(49)
         const release = p.release()
 
         await expect(async () => add).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
@@ -424,14 +361,14 @@ export class PowerAuthPasswordTests extends TestSuite {
         expect(p2.destroyOnUse).toBe(true)
 
         // PA instance is not configured yet, so the underlying password cannot be created.
-        await expect(async () => p1.addCharacter(48)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
+        await expect(async () => p1.addCodePoint(48)).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
         await expect(async () => p2.removeLastCharacter()).toThrow({errorCode: PowerAuthErrorCode.INSTANCE_NOT_CONFIGURED })
 
         // Configure PA instance
         await powerAuth.configure(config)
 
         // Failed creation is retried, so everything should work as expected now
-        await p1.addCharacter(48)
+        await p1.addCodePoint(48)
         expect(await p1.isEmpty()).toBe(false)
         expect(await p2.isEmpty()).toBe(true)
 
@@ -462,8 +399,8 @@ export class PowerAuthPasswordTests extends TestSuite {
     }
 
     async testFromString() {
-        const passwordString = "Sk💀ll" // to contain other than unicode char
-        const codepoints = [83, 107, 128128, 108, 108] // S k 💀 l l
+        const passwordString = "Sk💀ll👍🏿" // 👍🏿 is a single visible character made of two code points
+        const codepoints = [83, 107, 0x1F480, 108, 108, 0x1F44D, 0x1F3FF] // S k 💀 l l 👍 🏿
 
         const p1 = await PowerAuthPassword.fromString(passwordString)
         const p2 = new PowerAuthPassword()
@@ -471,15 +408,35 @@ export class PowerAuthPasswordTests extends TestSuite {
         this.cleanup.push(p1, p2, p3)
 
         for (const c of passwordString) {
-            await p2.addCharacter(c)
+            await p2.addCodePoint(c.codePointAt(0)!)
         }
 
         for (const cp of codepoints) {
-            await p3.addCharacter(cp)
+            await p3.addCodePoint(cp)
         }
 
+        expect(await p1.length()).toBe(7)
+        expect(await p2.length()).toBe(7)
+        expect(await p3.length()).toBe(7)
         expect(await p1.isEqualTo(p2)).toBe(true)
         expect(await p1.isEqualTo(p3)).toBe(true)
         expect(await p2.isEqualTo(p3)).toBe(true)
+
+        // Removing the last code point removes only the skin tone modifier
+        expect(await p1.removeLastCharacter()).toBe(6)
+        const p4 = await PowerAuthPassword.fromString("Sk💀ll👍")
+        this.cleanup.push(p4)
+        expect(await p1.isEqualTo(p4)).toBe(true)
+    }
+
+    async testInvalidCodePoints() {
+        const p1 = new PowerAuthPassword()
+        this.cleanup.push(p1)
+
+        for (const cp of [-1, 1.5, 0x110000, NaN, Infinity]) {
+            await expect(async () => p1.addCodePoint(cp)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+            await expect(async () => p1.insertCodePoint(cp, 0)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        }
+        expect(await p1.length()).toBe(0)
     }
 }

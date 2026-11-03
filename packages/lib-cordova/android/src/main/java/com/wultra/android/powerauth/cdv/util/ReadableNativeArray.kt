@@ -26,12 +26,7 @@ open class ReadableNativeArray(srcList: List<Any?>) : ReadableArray {
     }
 
     override fun getDouble(index: Int): Double {
-        // Cordova passes integral JSON numbers as Int or Long, unlike React Native.
-        return when (val value = list[index]) {
-            is Int -> value.toDouble()
-            is Long -> value.toDouble()
-            else -> value as Double
-        }
+        return list[index] as Double
     }
 
     override fun getDynamic(index: Int): Dynamic {

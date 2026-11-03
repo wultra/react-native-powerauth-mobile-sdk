@@ -19,7 +19,6 @@
 #import "Utilities.h"
 #import "Constants.h"
 #import "PAJS.h"
-#import "PowerAuthGroupedPassword.h"
 
 @import PowerAuth2;
 
@@ -62,7 +61,7 @@ PAJS_METHOD_START(initialize,
     NSArray * policies = destroyAfterUse
         ? @[ RP_KEEP_ALIVE(releaseTime), RP_AFTER_USE(1) ]
         : @[ RP_KEEP_ALIVE(releaseTime) ];
-    resolve([_objectRegister registerObject:[PowerAuthGroupedPassword new]
+    resolve([_objectRegister registerObject:[PowerAuthCoreMutablePassword mutablePassword]
                                         tag:powerAuthInstanceId
                                    policies:policies]);
 }
@@ -71,7 +70,7 @@ PAJS_METHOD_END
 PAJS_METHOD_START(clear,
                   PAJS_ARGUMENT(objectId, NSString*))
 {
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
+    [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         [password clear];
         resolve(nil);
     }];
@@ -81,7 +80,7 @@ PAJS_METHOD_END
 PAJS_METHOD_START(length,
                   PAJS_ARGUMENT(objectId, NSString*))
 {
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
+    [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         resolve(@([password length]));
     }];
 }
@@ -92,9 +91,9 @@ PAJS_METHOD_START(isEqual,
                   PAJS_ARGUMENT(id1, NSString*)
                   PAJS_ARGUMENT(id2, NSString*))
 {
-    [self withPassword:id1 rejecter:reject action:^(PowerAuthGroupedPassword *password1) {
-        [self withPassword:id2 rejecter:reject action:^(PowerAuthGroupedPassword *password2) {
-            resolve([password1 isEqualToGroupedPassword:password2] ? @YES : @NO);
+    [self withPassword:id1 rejecter:reject action:^(PowerAuthCoreMutablePassword *password1) {
+        [self withPassword:id2 rejecter:reject action:^(PowerAuthCoreMutablePassword *password2) {
+            resolve([password1 isEqualToPassword:password2] ? @YES : @NO);
         }];
     }];
 }
@@ -102,14 +101,10 @@ PAJS_METHOD_END
 
 PAJS_METHOD_START(addCharacter,
                   PAJS_ARGUMENT(objectId, NSString*)
-                  PAJS_ARGUMENT(codePoints, NSArray*))
+                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
-    NSArray<NSNumber*> * validCodePoints = [self validateCodePoints:codePoints rejecter:reject];
-    if (!validCodePoints) {
-        return;
-    }
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
-        [password addCharacter:validCodePoints];
+    [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
+        [password addCharacter:character];
         resolve(@(password.length));
     }];
 }
@@ -117,16 +112,13 @@ PAJS_METHOD_END
 
 PAJS_METHOD_START(insertCharacter,
                   PAJS_ARGUMENT(objectId, NSString*)
-                  PAJS_ARGUMENT(codePoints, NSArray*)
+                  PAJS_ARGUMENT(character, PAJS_NONNULL_ARGUMENT NSNumber*)
                   PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
-    NSArray<NSNumber*> * validCodePoints = [self validateCodePoints:codePoints rejecter:reject];
-    if (!validCodePoints) {
-        return;
-    }
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
+    [self withPassword:objectId character:character rejecter:reject action:^(PowerAuthCoreMutablePassword *password, UInt32 character) {
         NSInteger pos = [[RCTConvert NSNumber:position] integerValue];
-        if (pos >= 0 && [password insertCharacter:validCodePoints atIndex:pos]) {
+        if (pos >= 0 && pos <= password.length) {
+            [password insertCharacter:character atIndex:pos];
             resolve(@(password.length));
         } else {
             reject(EC_WRONG_PARAMETER, @"Position is out of range", nil);
@@ -139,9 +131,10 @@ PAJS_METHOD_START(removeCharacter,
                   PAJS_ARGUMENT(objectId, NSString*)
                   PAJS_ARGUMENT(position, PAJS_NONNULL_ARGUMENT NSNumber*))
 {
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
+    [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         NSInteger pos = [[RCTConvert NSNumber:position] integerValue];
-        if (pos >= 0 && [password removeCharacterAtIndex:pos]) {
+        if (pos >= 0 && pos < password.length) {
+            [password removeCharacterAtIndex:pos];
             resolve(@(password.length));
         } else {
             reject(EC_WRONG_PARAMETER, @"Position is out of range", nil);
@@ -153,7 +146,7 @@ PAJS_METHOD_END
 PAJS_METHOD_START(removeLastCharacter,
                   PAJS_ARGUMENT(objectId, NSString*))
 {
-    [self withPassword:objectId rejecter:reject action:^(PowerAuthGroupedPassword *password) {
+    [self withPassword:objectId rejecter:reject action:^(PowerAuthCoreMutablePassword *password) {
         [password removeLastCharacter];
         resolve(@(password.length));
     }];
@@ -164,9 +157,9 @@ PAJS_METHOD_END
 
 - (void) withPassword:(NSString*)passwordId
              rejecter:(RCTPromiseRejectBlock)reject
-               action:(NS_NOESCAPE void(^)(PowerAuthGroupedPassword * password))action
+               action:(NS_NOESCAPE void(^)(PowerAuthCoreMutablePassword * password))action
 {
-    PowerAuthGroupedPassword * password = [_objectRegister touchObjectWithId:passwordId expectedClass:[PowerAuthGroupedPassword class]];
+    PowerAuthCoreMutablePassword * password = [_objectRegister touchObjectWithId:passwordId expectedClass:[PowerAuthCoreMutablePassword class]];
     if (password) {
         action(password);
     } else {
@@ -174,24 +167,27 @@ PAJS_METHOD_END
     }
 }
 
-/// Validate that the object is a non-empty array of Unicode code points.
-/// Returns nil and rejects the promise if validation fails.
-- (NSArray<NSNumber*>*) validateCodePoints:(id)codePoints
-                                  rejecter:(RCTPromiseRejectBlock)reject
+- (void) withPassword:(NSString*)passwordId
+            character:(NSNumber*)character
+             rejecter:(RCTPromiseRejectBlock)reject
+               action:(NS_NOESCAPE void(^)(PowerAuthCoreMutablePassword * password, UInt32 character))action
 {
-    NSArray * array = [codePoints isKindOfClass:[NSArray class]] ? codePoints : nil;
-    if (array.count == 0) {
+    NSNumber * cp = [RCTConvert NSNumber:character];
+    if (!cp) {
         reject(EC_WRONG_PARAMETER, @"Empty or invalid character object", nil);
-        return nil;
+        return;
     }
-    for (id item in array) {
-        double value = [item isKindOfClass:[NSNumber class]] ? [item doubleValue] : -1.0;
-        if (value < 0 || value > CODEPOINT_MAX || value != floor(value)) {
-            reject(EC_WRONG_PARAMETER, @"Invalid CodePoint", nil);
-            return nil;
-        }
+    NSUInteger codePoint = [cp unsignedIntValue];
+    if (codePoint > CODEPOINT_MAX) {
+        reject(EC_WRONG_PARAMETER, @"CodePoint is too big", nil);
+        return;
     }
-    return [array copy];
+    PowerAuthCoreMutablePassword * password = [_objectRegister touchObjectWithId:passwordId expectedClass:[PowerAuthCoreMutablePassword class]];
+    if (password) {
+        action(password, (UInt32)codePoint);
+    } else {
+        reject(EC_INVALID_NATIVE_OBJECT, @"Password object is no longer valid", nil);
+    }
 }
 
 @end

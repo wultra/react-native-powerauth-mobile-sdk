@@ -18,8 +18,6 @@
 #import "PowerAuthData.h"
 #import "PAJS.h"
 #import "PowerAuthEncryptorModule.h"
-#import "PowerAuthGroupedPassword.h"
-#import "PowerAuthPasswordEncoding.h"
 
 @import PowerAuth2;
 
@@ -85,7 +83,7 @@ PAJS_METHOD_START(debugCommand,
     } else if ([@"number" isEqual:objectType]) {
         objectClass = [NSNumber class];
     } else if ([@"password" isEqual:objectType]) {
-        objectClass = [PowerAuthGroupedPassword class];
+        objectClass = [PowerAuthCoreMutablePassword class];
     } else if ([@"encryptor" isEqual:objectType]) {
         objectClass = [PowerAuthEncryptor class];
     }
@@ -120,7 +118,7 @@ PAJS_METHOD_START(debugCommand,
             } else if ([@"number" isEqual:objectType]) {
                 instance = [[NSNumber alloc] initWithInt:42];
             } else if ([@"password" isEqual:objectType]) {
-                instance = [PowerAuthGroupedPassword new];
+                instance = [PowerAuthCoreMutablePassword mutablePassword];
             }
             if (instance) {
                 NSString * objectId = [self registerObject:instance tag:objectTag policies:policies];
@@ -156,15 +154,6 @@ PAJS_METHOD_START(debugCommand,
         // The "touch" command prolongs lifetime of object in the register and returns true / false if object still exists.
         if (objectClass && objectId) {
             resolve([self touchObjectWithId:objectId expectedClass:objectClass] != nil ? @YES : @NO);
-            return;
-        }
-    } else if ([@"resetPasswordEncoding" isEqual:command]) {
-        // The "resetPasswordEncoding" command removes the password encoding marker of PowerAuth instance
-        // with given identifier, so its activation uses the legacy password encoding.
-        PowerAuthSDK * sdk = objectId ? [self findObjectWithId:objectId expectedClass:[PowerAuthSDK class]] : nil;
-        if (sdk) {
-            [PowerAuthPasswordEncoding removeMarkerForSdk:sdk];
-            resolve(@YES);
             return;
         }
     } else if ([@"setPeriod" isEqual:command]) {

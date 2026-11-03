@@ -21,7 +21,6 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.BaseJavaModule;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.wultra.android.powerauth.js.PowerAuthPasswordJsModule;
@@ -74,13 +73,13 @@ public class PowerAuthPasswordModule extends BaseJavaModule {
     }
 
     @ReactMethod
-    public void addCharacter(String objectId, ReadableArray codePoints, Promise promise) {
-        powerAuthPasswordJsModule.addCharacter(objectId, codePoints, promise);
+    public void addCharacter(String objectId, int character, Promise promise) {
+        powerAuthPasswordJsModule.addCharacter(objectId, character, promise);
     }
 
     @ReactMethod
-    public void insertCharacter(String objectId, ReadableArray codePoints, int position, Promise promise) {
-        powerAuthPasswordJsModule.insertCharacter(objectId, codePoints, position, promise);
+    public void insertCharacter(String objectId, int character, int position, Promise promise) {
+        powerAuthPasswordJsModule.insertCharacter(objectId, character, position, promise);
     }
 
     @ReactMethod
