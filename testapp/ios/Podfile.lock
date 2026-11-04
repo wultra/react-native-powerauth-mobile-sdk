@@ -2185,7 +2185,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 12ffb3b95ec705a44b92f588a020eeffc2145f97
   React-mutationobservernativemodule: a825501a0e90527dfdb6040ae0a0f7269ac6281d
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
-  react-native-powerauth-mobile-sdk: a5811a705e42d90e5e4f3524b6cc1384a78fafba
+  react-native-powerauth-mobile-sdk: ceb1d67b22874b82e54db9ad1be0cf04bcf0c3a5
   react-native-safe-area-context: 66d12f37271cec232fc7fd28320fc209cbc128a6
   React-NativeModulesApple: a4716ae80f26c99de8619ffcd1391c5058c3e762
   React-networking: fbcd51c4ecee2c6fc5b64d6a7727a48360b3fefe

@@ -79,8 +79,10 @@ Trace every affected layer when adding or changing a native-backed method:
    `packages/lib-cordova/src/internal/`.
 3. Android's React Native `@ReactMethod` adapter and Cordova `execute` dispatch,
    both delegating to the shared `*JsModule` implementation.
-4. The shared iOS implementation in `packages/lib-shared/ios/PowerAuth/`,
-   exported for each wrapper through `PAJS.h` bridge macros.
+4. The shared Swift implementation in `packages/lib-shared/ios/PowerAuth/`,
+   exported to React Native by the `RCT_EXTERN_METHOD` declarations in
+   `packages/lib-rn/ios/PowerAuthBridge/` and to Cordova by the `+Cordova.swift`
+   extensions in `packages/lib-cordova/ios/PowerAuth/`.
 
 Keep method names, argument order/types, return shapes, null handling, error
 codes, and promise/callback completion consistent across these layers.
@@ -95,10 +97,11 @@ codes, and promise/callback completion consistent across these layers.
   `PowerAuthModule` with action `configure`. Plugin names must match the
   `plugin.xml` feature entries, and Android actions must match the plugin's
   `execute` dispatch and argument readers.
-- iOS `PAJS_METHOD_START` macros export the same method to React Native or
-  consume Cordova's positional arguments in declaration order. Cordova iOS
-  returns JSON strings with a `result` envelope for success and an error
-  object for failure; `NativeCordovaModule` unwraps them. Android Cordova
+- iOS Swift methods use explicit `@objc(name:...:resolve:reject:)` selectors.
+  The React Native declarations must repeat each selector and argument type,
+  and the Cordova extensions read positional arguments in declaration order.
+  Cordova iOS returns JSON strings with a `result` envelope for success and an
+  error object for failure; `NativeCordovaModule` unwraps them. Android Cordova
   returns values directly. Preserve this normalization in the JS adapter.
 
 ## Conventions
@@ -114,9 +117,10 @@ codes, and promise/callback completion consistent across these layers.
   enum wire values, optional fields, and numeric/string representations read
   by the native implementations. Native object references are opaque IDs;
   preserve ownership and release semantics when passing them across the bridge.
-- iOS bridge implementations are intentionally shared through `PAJS.h` macros
-  selected by each wrapper's `PAJSPlatform.h`; do not fork React Native and
-  Cordova implementations when the macro abstraction can express the change.
+- iOS bridge implementations are intentionally shared Swift classes derived
+  from each wrapper's `PAJSModule` base class; keep React Native declarations
+  and Cordova extensions as thin adapters and do not fork the implementation.
+  Only the React Native declarations and `LiftPowerAuthSdk.h` use Objective-C.
   Android business logic similarly belongs in `lib-shared/.../powerauth/js`,
   with wrapper directories kept as adapters.
 - Preserve native-object lifecycle semantics. Objects derived from
@@ -129,9 +133,9 @@ codes, and promise/callback completion consistent across these layers.
   sensitive arguments.
 - Public API or behavior changes require corresponding `docs/` and changelog
   updates.
-- New TypeScript, Java/Kotlin, and Objective-C source files should carry the
-  existing Apache 2.0 header with `Copyright <year> Wultra s.r.o.`; copy the
-  header style from a neighboring source file.
+- New TypeScript, Java/Kotlin, Swift, and Objective-C source files should carry
+  the existing Apache 2.0 header with `Copyright <year> Wultra s.r.o.`; copy
+  the header style from a neighboring source file.
 - Keep `<!-- PLACEHOLDER_MODULES -->` in the source Cordova `plugin.xml`; the
   build replaces it from Rollup's runtime exports. Use `yarn packCordova` to
   validate generated shims, ambient declarations, plugin entries, and package

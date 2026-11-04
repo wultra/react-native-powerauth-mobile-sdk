@@ -24,8 +24,23 @@ let package = Package(
         ),
     ],
     targets: [
+        // React Native module declarations and the public `LiftPowerAuthSdk.h` header.
+        // SwiftPM cannot mix Swift and Objective-C sources in one target.
         .target(
             name: "ReactNativePowerauthMobileSdk",
+            dependencies: [
+                "ReactNativePowerauthMobileSdkSwift",
+                .product(name: "ReactHeaders", package: "ReactNative"),
+                .product(name: "ReactNativeHeaders", package: "ReactNative"),
+                .product(name: "ReactNativeDependenciesHeaders", package: "ReactNative"),
+                .product(name: "PowerAuth2", package: "powerauth-mobile-sdk"),
+            ],
+            path: "ios/PowerAuthBridge",
+            publicHeadersPath: "."
+        ),
+        // Swift implementation of the modules.
+        .target(
+            name: "ReactNativePowerauthMobileSdkSwift",
             dependencies: [
                 .product(name: "ReactHeaders", package: "ReactNative"),
                 .product(name: "ReactNativeHeaders", package: "ReactNative"),
@@ -33,7 +48,9 @@ let package = Package(
                 .product(name: "PowerAuth2", package: "powerauth-mobile-sdk"),
             ],
             path: "ios/PowerAuth",
-            publicHeadersPath: ".",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ],
             linkerSettings: [
                 .linkedFramework("Foundation"),
                 .linkedFramework("UIKit"),

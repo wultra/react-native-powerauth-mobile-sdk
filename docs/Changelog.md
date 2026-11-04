@@ -6,8 +6,11 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
 
 - Updated the minimum supported React Native version to 0.87, Android version to 7.0 (API 24), and iOS version to 15.1. ([#440](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/440))
 - Updated the minimum supported iOS version for Cordova to 15.0. ([#518](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/518))
+- Migrated the iOS native implementation from Objective-C to Swift. React Native keeps only Objective-C module declarations and the unchanged `LiftPowerAuthSdk.h` header. ([#547](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/547))
+  - The Cordova plugin now requires cordova-ios 8 or later.
+  - Undocumented Objective-C headers are no longer published in the React Native package.
 - Added experimental Swift Package Manager support for iOS with React Native 0.87 or later. ([#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), [#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
-- Changed the Cordova plugin to use Swift Package Manager with cordova-ios 8 or later. cordova-ios 7 continues to use CocoaPods. ([#554](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/554))
+- Changed the Cordova plugin to use Swift Package Manager with cordova-ios 8 or later. ([#554](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/554))
 - Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
 - Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 - Updated the native PowerAuth SDK dependencies to 2.0.0. ([#447](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/447))
