@@ -308,9 +308,13 @@ jobs:
     permissions:
       actions: write
       contents: read
-    runs-on: macos-latest
+    # Xcode 27 (preview image). Xcode 26 rejects the SPM build: PowerAuth 2.0.1 declares
+    # iOS 13 but resolves cc7 0.8.0, which requires iOS 15.
+    runs-on: xcode-27
     timeout-minutes: 90
     env:
+      # Pinned to 27.0: the image's default (27.1) SDK has only an iPhone Duo simulator.
+      DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
       E2E_COLLECTOR_TIMEOUT: "90m"
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
