@@ -84,16 +84,13 @@ const patchNativeFiles = () =>
 
 const patchIOSPlists = () => {
 
-    const appDirCandidates = ["platforms/ios/App", "platforms/ios/PowerAuthTest"];
-    const appDir = appDirCandidates.find((dir) => fs.existsSync(dir));
-    if (!appDir) {
+    const appDir = "platforms/ios/App";
+    if (!fs.existsSync(appDir)) {
         console.warn("iOS app directory not found, skipping plist patch.");
         return Promise.resolve();
     }
 
-    const plistPath = appDir.endsWith("/App")
-        ? `${appDir}/App-Info.plist`
-        : `${appDir}/PowerAuthTest-Info.plist`;
+    const plistPath = `${appDir}/App-Info.plist`;
     const entlPaths = [`${appDir}/Entitlements-Debug.plist`, `${appDir}/Entitlements-Release.plist`]
     const plistBuddy = "/usr/libexec/PlistBuddy"
     const faceIdKey = "NSFaceIDUsageDescription"

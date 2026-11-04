@@ -54,7 +54,7 @@ Use `PowerAuthSharingConfiguration` for sharing. Keep matching instance and stor
 - React Native 0.87 or later, Android 7.0 (API 24) or later, and iOS 15.1 or later.
 - Cordova 12 or later, cordova-android 12 or later, and cordova-ios 7 or later. iOS 15.0 or later is required.
 - Android builds require Java 17 compatibility.
-- CocoaPods supplies the native `PowerAuth2` dependency. React Native's opt-in SwiftPM integration is experimental; Cordova continues to use CocoaPods.
+- CocoaPods supplies the native `PowerAuth2` dependency for React Native (SwiftPM integration is opt-in and experimental) and for Cordova with cordova-ios 7. Cordova with cordova-ios 8 or later uses SwiftPM.
 
 Follow [installation instructions](Installation.md) for dependency setup. Applications with custom native integration must update old `PowerAuthCore` imports to the native 2.0 surface; consult the [native migration guide](https://github.com/wultra/powerauth-mobile-sdk/blob/2.0.0/docs/Migration-from-1.9-to-2.0.md).
 

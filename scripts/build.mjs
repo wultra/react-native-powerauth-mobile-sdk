@@ -231,8 +231,8 @@ function stageCordova(version) {
   copy(path.join(sharedDir, "ios", "PowerAuth"), path.join(cordovaStageDir, "ios", "PowerAuth"))
   copy(path.join(cordovaDir, "ios", "PowerAuth"), path.join(cordovaStageDir, "ios", "PowerAuth"))
 
-  for (const fileName of ["README.md", "LICENSE", "plugin.xml"]) {
-    copy(path.join(cordovaDir, fileName), path.join(cordovaStageDir, fileName), fileName !== "plugin.xml")
+  for (const fileName of ["README.md", "LICENSE", "plugin.xml", "Package.swift"]) {
+    copy(path.join(cordovaDir, fileName), path.join(cordovaStageDir, fileName), ["README.md", "LICENSE"].includes(fileName))
   }
   const packageJson = readPackage(cordovaDir)
   packageJson.scripts = {}
