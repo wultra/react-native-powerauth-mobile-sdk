@@ -347,19 +347,6 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
-      - *setup-ruby
-
-      - name: Detect Xcode version
-        run: |
-          xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
-
-      - name: Cache CocoaPods downloads (Cordova)
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/CocoaPods
-          # PowerAuth prepares native frameworks in the download cache.
-          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-pods-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/Gemfile.lock', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json', 'yarn.lock') }}
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
@@ -369,8 +356,7 @@ jobs:
       - name: Run E2E (iOS simulator, Cordova)
         env:
           E2E_MODE: cordova
-          BUNDLE_GEMFILE: ${{ github.workspace }}/testapp/Gemfile
-        run: bundle exec bash scripts/e2e/run-ios-ci.sh
+        run: bash scripts/e2e/run-ios-ci.sh
 
       - name: Upload artifacts
         if: always()
