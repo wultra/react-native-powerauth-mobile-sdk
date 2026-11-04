@@ -178,14 +178,8 @@ function stageReactNative(version) {
   }
 
   copy(path.join(sharedDir, "ios", "PowerAuth"), path.join(rnStageDir, "ios", "PowerAuth"))
-  copy(
-    path.join(sharedDir, "ios", "PowerAuth.xcodeproj"),
-    path.join(rnStageDir, "ios", "PowerAuth.xcodeproj"),
-  )
-  copy(
-    path.join(rnDir, "ios", "PowerAuth", "PAJSPlatform.h"),
-    path.join(rnStageDir, "ios", "PowerAuth", "PAJSPlatform.h"),
-  )
+  copy(path.join(rnDir, "ios", "PowerAuth"), path.join(rnStageDir, "ios", "PowerAuth"))
+  copy(path.join(rnDir, "ios", "PowerAuthBridge"), path.join(rnStageDir, "ios", "PowerAuthBridge"))
 
   for (const fileName of [
     "Package.swift",

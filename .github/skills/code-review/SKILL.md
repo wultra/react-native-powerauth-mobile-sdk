@@ -83,7 +83,7 @@ native-object registration as compatibility-sensitive.
 For every JS/TypeScript-to-native operation, trace the complete bridge:
 
 1. public TypeScript method and its argument/result serialization;
-2. shared Android Java/Kotlin and iOS Objective-C implementation/export name,
+2. shared Android Java/Kotlin and iOS Swift implementation/export name,
    including the React Native or Cordova adapter;
 3. matching error code, nullable-value representation, and promise/callback
    completion on every path; and
