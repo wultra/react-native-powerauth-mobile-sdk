@@ -301,6 +301,9 @@ void WDBSetWebSecurityEnabled(WKPreferences* prefs, bool enabled) {
         uiDelegate.mediaPermissionGrantType = [self parsePermissionGrantType:[settings cordovaSettingForKey:@"MediaPermissionGrantType"]];
         uiDelegate.allowNewWindows = [settings cordovaBoolSettingForKey:@"AllowNewWindows" defaultValue:NO];
 
+        // WKWebView.UIDelegate is weak and cordova-ios 8.1.1 never assigns the strong
+        // uiDelegate property, so keep the fallback delegate alive here.
+        _uiDelegate = uiDelegate;
         wkWebView.UIDelegate = uiDelegate;
     }
 
