@@ -556,4 +556,26 @@ export class PowerAuthPasswordTests extends TestSuite {
         await expect(async () => p1.addCodePoints(undefined as unknown as string)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
         expect(await p1.length()).toBe(4)
     }
+
+    async testDeprecatedCharacterMethods() {
+        const p1 = new PowerAuthPassword()
+        const expected = await importPassword('Sk👍l')
+        const withoutModifier = await importPassword('S👍l')
+        this.cleanup.push(p1, expected, withoutModifier)
+
+        // A string adds only its first code point, so '👍🏽' is stored as '👍' as in 4.x
+        expect(await p1.addCharacter('S')).toBe(1)
+        expect(await p1.addCharacter('👍🏽')).toBe(2)
+        expect(await p1.addCharacter(0x6C)).toBe(3)
+        expect(await p1.insertCharacter('kx', 1)).toBe(4)
+        expect(await p1.isEqualTo(expected)).toBe(true)
+
+        expect(await p1.removeCharacterAt(1)).toBe(3)
+        expect(await p1.isEqualTo(withoutModifier)).toBe(true)
+        expect(await p1.removeLastCharacter()).toBe(2)
+
+        await expect(async () => p1.addCharacter('')).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        await expect(async () => p1.insertCharacter('x', 3)).toThrow({errorCode: PowerAuthErrorCode.WRONG_PARAMETER})
+        expect(await p1.length()).toBe(2)
+    }
 }
