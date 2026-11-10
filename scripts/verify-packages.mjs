@@ -173,6 +173,7 @@ function verifyCordova(packageDir, expectedPackage) {
   verifyDeclaration(requireEntry(packageDir, packageJson.types))
   const exports = runtimeExports(mainPath, "cordova")
 
+  requireFile(packageDir, "Package.swift")
   const pluginXml = fs.readFileSync(requireFile(packageDir, "plugin.xml"), "utf8")
   assert(!pluginXml.includes("PLACEHOLDER"), "Cordova plugin contains an unresolved placeholder")
   const pluginTag = pluginXml.match(/<plugin\b[^>]*>/)?.[0] ?? ""

@@ -1,21 +1,21 @@
 /*
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
- http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
- */
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 
 #import "CDVWebViewEngine.h"
 #import "CDVWebViewUIDelegate.h"
@@ -60,9 +60,6 @@ void WDBSetWebSecurityEnabled(WKPreferences* prefs, bool enabled) {
 @interface CDVWebViewEngine ()
 
 @property (nonatomic, strong, readwrite) UIView* engineWebView;
-@property (nonatomic, strong, readwrite) id <WKUIDelegate> uiDelegate;
-@property (nonatomic, weak) id <WKScriptMessageHandler> weakScriptMessageHandler;
-@property (nonatomic, strong) CDVURLSchemeHandler * schemeHandler;
 @property (nonatomic, readwrite) NSString *CDV_ASSETS_URL;
 @property (nonatomic, readwrite) Boolean cdvIsFileScheme;
 @property (nullable, nonatomic, strong, readwrite) WKWebViewConfiguration *configuration;
@@ -214,18 +211,37 @@ void WDBSetWebSecurityEnabled(WKPreferences* prefs, bool enabled) {
         self.CDV_ASSETS_URL = [NSString stringWithFormat:@"%@://%@", scheme, hostname];
     }
 
-    CDVWebViewUIDelegate* uiDelegate = [[CDVWebViewUIDelegate alloc] initWithViewController:self.viewController];
-    uiDelegate.title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    uiDelegate.mediaPermissionGrantType = [self parsePermissionGrantType:[settings cordovaSettingForKey:@"MediaPermissionGrantType"]];
-    uiDelegate.allowNewWindows = [settings cordovaBoolSettingForKey:@"AllowNewWindows" defaultValue:NO];
-    self.uiDelegate = uiDelegate;
 
-    CDVWebViewWeakScriptMessageHandler *weakScriptMessageHandler = [[CDVWebViewWeakScriptMessageHandler alloc] initWithScriptMessageHandler:self];
+    WKUserContentController *userContentController = [[WKUserContentController alloc] init];
 
-    WKUserContentController* userContentController = [[WKUserContentController alloc] init];
+    // This is where the Cordova magic happens...
+    //
+    // We register a script message handler that is exposed to the webview as
+    // `window.webkit.messageHandlers.cordova` and allows `postMessage()` to be
+    // called, which is how the `cordova.exec` bridge works for WKWebView to
+    // pass commands to Cordova plugins.
+    //
+    // If the view controller implements the WKScriptMessageHandler protocol,
+    // we allow that to be registered as the handler for Cordova messages,
+    // otherwise we register ourselves as the default implementation. This
+    // gives library consumers a way to override the default bridge behaviour
+    // if they need to.
+    //
+    // There's some indirection here with CDVWebViewWeakScriptMessageHandler to
+    // avoid retain cycles where the web view holds on to the view controller
+    // as a script handler while the view controller holds on to the web view
+    // as a child view.
+    CDVWebViewWeakScriptMessageHandler *weakScriptMessageHandler;
+    if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
+        weakScriptMessageHandler = [[CDVWebViewWeakScriptMessageHandler alloc] initWithScriptMessageHandler:(id<WKScriptMessageHandler>)self.viewController];
+    } else {
+        weakScriptMessageHandler = [[CDVWebViewWeakScriptMessageHandler alloc] initWithScriptMessageHandler:self];
+    }
     [userContentController addScriptMessageHandler:weakScriptMessageHandler name:CDV_BRIDGE_NAME];
 
-    if(self.CDV_ASSETS_URL) {
+    // If we have an asset URL, inject some JavaScript into the webview to
+    // make it available on the window object as a global variable
+    if (self.CDV_ASSETS_URL) {
         NSString *scriptCode = [NSString stringWithFormat:@"window.CDV_ASSETS_URL = '%@';", self.CDV_ASSETS_URL];
         WKUserScript *wkScript = [[WKUserScript alloc] initWithSource:scriptCode injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
 
@@ -234,18 +250,17 @@ void WDBSetWebSecurityEnabled(WKPreferences* prefs, bool enabled) {
         }
     }
 
-    WKWebViewConfiguration* configuration = [self createConfigurationFromSettings:settings];
+    WKWebViewConfiguration *configuration = [self createConfigurationFromSettings:settings];
     configuration.userContentController = userContentController;
 
-    // Do not configure the scheme handler if the scheme is default (file)
-    if(!self.cdvIsFileScheme) {
-        self.schemeHandler = [[CDVURLSchemeHandler alloc] initWithViewController:self.viewController];
-        [configuration setURLSchemeHandler:self.schemeHandler forURLScheme:scheme];
+    // Set up the scheme handler for the custom scheme (if we are not serving from a file:/// URL)
+    if (!self.cdvIsFileScheme) {
+        CDVURLSchemeHandler *schemeHandler = [[CDVURLSchemeHandler alloc] initWithViewController:self.viewController];
+        [configuration setURLSchemeHandler:schemeHandler forURLScheme:scheme];
     }
 
     // re-create WKWebView, since we need to update configuration
-    WKWebView* wkWebView = [[WKWebView alloc] initWithFrame:self.engineWebView.frame configuration:configuration];
-    wkWebView.UIDelegate = self.uiDelegate;
+    WKWebView *wkWebView = [[WKWebView alloc] initWithFrame:self.engineWebView.frame configuration:configuration];
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 160400
     // With the introduction of iOS 16.4 the webview is no longer inspectable by default.
@@ -261,31 +276,47 @@ void WDBSetWebSecurityEnabled(WKPreferences* prefs, bool enabled) {
     }
 #endif
 
-    /*
-     * This is where the "OverrideUserAgent" is handled. This will replace the entire UserAgent
-     * with the user defined custom UserAgent.
-     */
+    // This is where the "OverrideUserAgent" is handled. This will replace the entire UserAgent
+    // with the user defined custom UserAgent.
     if ([settings cordovaSettingForKey:@"OverrideUserAgent"] != nil) {
         wkWebView.customUserAgent = [settings cordovaSettingForKey:@"OverrideUserAgent"];
     }
 
-    [wkWebView addObserver:self forKeyPath:@"themeColor" options:NSKeyValueObservingOptionInitial context:nil];
-
-    self.engineWebView = wkWebView;
-
+    // Hook up the web view's UI delegate
+    //
+    // The UI delegate is responsible for determining how the app implements
+    // things like web view alerts, prompts, permission requests, and new
+    // windows.
+    //
+    // If the view controller implements the WKUIDelegate protocol, we allow
+    // that to be registered as the UI delegate, otherwise we create a
+    // CDVWebViewUIDelegate instance. This gives library consumers a way to
+    // override the UI delegate and customize behaviour if needed.
     if ([self.viewController conformsToProtocol:@protocol(WKUIDelegate)]) {
-        wkWebView.UIDelegate = (id <WKUIDelegate>)self.viewController;
+        wkWebView.UIDelegate = (id<WKUIDelegate>)self.viewController;
+    } else {
+        CDVWebViewUIDelegate *uiDelegate = [[CDVWebViewUIDelegate alloc] initWithViewController:self.viewController];
+
+        uiDelegate.title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        uiDelegate.mediaPermissionGrantType = [self parsePermissionGrantType:[settings cordovaSettingForKey:@"MediaPermissionGrantType"]];
+        uiDelegate.allowNewWindows = [settings cordovaBoolSettingForKey:@"AllowNewWindows" defaultValue:NO];
+
+        // WKWebView.UIDelegate is weak and cordova-ios 8.1.1 never assigns the strong
+        // uiDelegate property, so keep the fallback delegate alive here.
+        _uiDelegate = uiDelegate;
+        wkWebView.UIDelegate = uiDelegate;
     }
 
     if ([self.viewController conformsToProtocol:@protocol(WKNavigationDelegate)]) {
-        wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self.viewController;
+        wkWebView.navigationDelegate = (id<WKNavigationDelegate>)self.viewController;
     } else {
-        wkWebView.navigationDelegate = (id <WKNavigationDelegate>)self;
+        wkWebView.navigationDelegate = self;
     }
 
-    if ([self.viewController conformsToProtocol:@protocol(WKScriptMessageHandler)]) {
-        [wkWebView.configuration.userContentController addScriptMessageHandler:(id < WKScriptMessageHandler >)self.viewController name:CDV_BRIDGE_NAME];
-    }
+    // Add an observer to react to themeColor changes for status bar colouring
+    [wkWebView addObserver:self forKeyPath:@"themeColor" options:NSKeyValueObservingOptionInitial context:nil];
+
+    self.engineWebView = wkWebView;
 
     [self updateSettings:settings];
 
