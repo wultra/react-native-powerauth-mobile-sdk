@@ -19,7 +19,8 @@
     "ios/PowerAuth/*.mm",
     "ios/PowerAuth/*.c",
     "ios/PowerAuth/*.h",
-    "plugin.xml"
+    "plugin.xml",
+    "Package.swift"
   ],
   "homepage": "https://www.wultra.com/mobile-security-suite",
   "repository": {

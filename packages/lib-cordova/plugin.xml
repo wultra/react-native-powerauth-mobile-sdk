@@ -85,7 +85,7 @@
         
         <framework src="android/build.gradle" custom="true" type="gradleReference" />
     </platform>
-    <platform name="ios">
+    <platform name="ios" package="swift">
         <config-file target="config.xml" parent="/*">
             <feature name="PowerAuthModule">
                 <param name="ios-package" value="PowerAuthModule"/>
@@ -151,7 +151,7 @@
                 <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods use-frameworks="true">
-                <pod name="PowerAuth2" options="'~> 2.0.0'" />
+                <pod name="PowerAuth2" options="'~> 2.0.0'" nospm="true" />
             </pods>
         </podspec>
     </platform>

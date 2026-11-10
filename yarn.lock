@@ -3201,13 +3201,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"abbrev@npm:1":
-  version: 1.1.1
-  resolution: "abbrev@npm:1.1.1"
-  checksum: 10c0/3f762677702acb24f65e813070e306c61fafe25d4b2583f9dfc935131f774863f3addd5741572ed576bd69cabe473c5af18e1e108b829cb7b6b4747884f726e6
-  languageName: node
-  linkType: hard
-
 "abbrev@npm:^2.0.0":
   version: 2.0.0
   resolution: "abbrev@npm:2.0.0"
@@ -3757,13 +3750,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bplist-parser@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "bplist-parser@npm:0.0.6"
-  checksum: 10c0/72901f983f716ab5afe1f726cbf675c9ab1e893aa1c67eb2d72f3fbc6c9b590cf0bfe8db82262bb66a55002fd0f3ed87af9f391ec3324870ffba3c0fb4aae2a9
-  languageName: node
-  linkType: hard
-
 "brace-expansion@npm:^1.1.7":
   version: 1.1.16
   resolution: "brace-expansion@npm:1.1.16"
@@ -4124,7 +4110,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     chalk: "npm:^4.1.2"
     cordova-android: "npm:^13.0.0"
-    cordova-ios: "npm:^7.1.1"
+    cordova-ios: "npm:^8.1.1"
     dotenv: "npm:^16.4.5"
     esbuild: "npm:^0.23.1"
     gulp: "npm:^5.0.0"
@@ -4279,20 +4265,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cordova-ios@npm:^7.1.1":
-  version: 7.1.1
-  resolution: "cordova-ios@npm:7.1.1"
+"cordova-common@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "cordova-common@npm:6.0.0"
   dependencies:
-    cordova-common: "npm:^5.0.0"
+    "@netflix/nerror": "npm:^1.1.3"
+    ansi: "npm:^0.3.1"
+    bplist-parser: "npm:^0.3.2"
+    elementtree: "npm:^0.1.7"
+    endent: "npm:^2.1.0"
+    fast-glob: "npm:^3.3.3"
+    plist: "npm:^3.1.0"
+  checksum: 10c0/7ad523025d61b39df7d848e31af611a694dbb4462a119f4819bb97a62fee5b4a19a7045ed0ed9817003e61d446a7c0416ffd19a19e5c7fcfde9a50750b31224b
+  languageName: node
+  linkType: hard
+
+"cordova-ios@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "cordova-ios@npm:8.1.1"
+  dependencies:
+    bplist-parser: "npm:^0.3.2"
+    cordova-common: "npm:^6.0.0"
     elementtree: "npm:^0.1.7"
     execa: "npm:^5.1.1"
-    ios-sim: "npm:^8.0.2"
-    plist: "npm:^3.0.6"
-    semver: "npm:^7.4.0"
-    which: "npm:^4.0.0"
+    nopt: "npm:^9.0.0"
+    plist: "npm:^3.1.0"
+    semver: "npm:^7.7.3"
+    simctl: "npm:^3.0.0"
+    which: "npm:^6.0.0"
     xcode: "npm:^3.0.1"
-    xml-escape: "npm:^1.1.0"
-  checksum: 10c0/2f0a981adec86d2bdd9ff467728af82d1623b151b459792c83a47144488b5c3ec341901518f5557259fd25fee5edbba81647aba371338c8eda97960e5aaa4fbf
+  checksum: 10c0/f4af3f4bac2d5cc834a371a6426ee887c8595a8afa68a5526c6c15af10eab2eefccbd7995722861301a55fc32eac70357c161e040e4bb5a42753ed1fb35e95ac
   languageName: node
   linkType: hard
 
@@ -5830,7 +5832,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.0.0, glob@npm:^7.1.3":
+"glob@npm:^7.1.3":
   version: 7.2.3
   resolution: "glob@npm:7.2.3"
   dependencies:
@@ -6229,13 +6231,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"interpret@npm:^1.0.0":
-  version: 1.4.0
-  resolution: "interpret@npm:1.4.0"
-  checksum: 10c0/08c5ad30032edeec638485bc3f6db7d0094d9b3e85e0f950866600af3c52e9fd69715416d29564731c479d9f4d43ff3e4d302a178196bdc0e6837ec147640450
-  languageName: node
-  linkType: hard
-
 "interpret@npm:^3.1.1":
   version: 3.1.1
   resolution: "interpret@npm:3.1.1"
@@ -6249,20 +6244,6 @@ __metadata:
   dependencies:
     loose-envify: "npm:^1.0.0"
   checksum: 10c0/5af133a917c0bcf65e84e7f23e779e7abc1cd49cb7fdc62d00d1de74b0d8c1b5ee74ac7766099fb3be1b05b26dfc67bab76a17030d2fe7ea2eef867434362dfc
-  languageName: node
-  linkType: hard
-
-"ios-sim@npm:^8.0.2":
-  version: 8.0.2
-  resolution: "ios-sim@npm:8.0.2"
-  dependencies:
-    bplist-parser: "npm:^0.0.6"
-    nopt: "npm:1.0.9"
-    plist: "npm:^3.0.1"
-    simctl: "npm:^2"
-  bin:
-    ios-sim: ./bin/ios-sim
-  checksum: 10c0/94ec421fc7521aaf5bc21fdc2bc8a999befd21cfbcc40609fa9bd6e0f4b8e701b4160539cb1dea5e43227d6d5ea31401d7411f6455b4044a1ea2e2be5cfe21f9
   languageName: node
   linkType: hard
 
@@ -7735,17 +7716,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nopt@npm:1.0.9":
-  version: 1.0.9
-  resolution: "nopt@npm:1.0.9"
-  dependencies:
-    abbrev: "npm:1"
-  bin:
-    nopt: ./bin/nopt.js
-  checksum: 10c0/9349ec0d27ded31c88872a30025ce2ca05d1ad356dc91a128362ba809a50dac9ed55277b6d17a0b39b3a722ec0cd6beb61714c8b99281211ec0d1bcefec7ab84
-  languageName: node
-  linkType: hard
-
 "nopt@npm:^7.2.1":
   version: 7.2.1
   resolution: "nopt@npm:7.2.1"
@@ -8227,7 +8197,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plist@npm:^3.0.1, plist@npm:^3.0.5, plist@npm:^3.0.6, plist@npm:^3.1.0":
+"plist@npm:^3.0.5, plist@npm:^3.1.0":
   version: 3.1.0
   resolution: "plist@npm:3.1.0"
   dependencies:
@@ -8608,15 +8578,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rechoir@npm:^0.6.2":
-  version: 0.6.2
-  resolution: "rechoir@npm:0.6.2"
-  dependencies:
-    resolve: "npm:^1.1.6"
-  checksum: 10c0/22c4bb32f4934a9468468b608417194f7e3ceba9a508512125b16082c64f161915a28467562368eeb15dc16058eb5b7c13a20b9eb29ff9927d1ebb3b5aa83e84
-  languageName: node
-  linkType: hard
-
 "rechoir@npm:^0.8.0":
   version: 0.8.0
   resolution: "rechoir@npm:0.8.0"
@@ -8783,7 +8744,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@npm:^1.1.6, resolve@npm:^1.20.0, resolve@npm:^1.22.10":
+"resolve@npm:^1.20.0, resolve@npm:^1.22.10":
   version: 1.22.11
   resolution: "resolve@npm:1.22.11"
   dependencies:
@@ -8823,7 +8784,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@patch:resolve@npm%3A^1.1.6#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.20.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.10#optional!builtin<compat/resolve>":
+"resolve@patch:resolve@npm%3A^1.20.0#optional!builtin<compat/resolve>, resolve@patch:resolve@npm%3A^1.22.10#optional!builtin<compat/resolve>":
   version: 1.22.11
   resolution: "resolve@patch:resolve@npm%3A1.22.11#optional!builtin<compat/resolve>::version=1.22.11&hash=c3c19d"
   dependencies:
@@ -9138,7 +9099,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.1.3, semver@npm:^7.3.5, semver@npm:^7.4.0, semver@npm:^7.5.2, semver@npm:^7.6.2, semver@npm:^7.7.3":
+"semver@npm:^7.1.3, semver@npm:^7.3.5, semver@npm:^7.5.2, semver@npm:^7.6.2, semver@npm:^7.7.3":
   version: 7.7.3
   resolution: "semver@npm:7.7.3"
   bin:
@@ -9277,19 +9238,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shelljs@npm:^0.8.5":
-  version: 0.8.5
-  resolution: "shelljs@npm:0.8.5"
-  dependencies:
-    glob: "npm:^7.0.0"
-    interpret: "npm:^1.0.0"
-    rechoir: "npm:^0.6.2"
-  bin:
-    shjs: bin/shjs
-  checksum: 10c0/feb25289a12e4bcd04c40ddfab51aff98a3729f5c2602d5b1a1b95f6819ec7804ac8147ebd8d9a85dfab69d501bcf92d7acef03247320f51c1552cec8d8e2382
-  languageName: node
-  linkType: hard
-
 "side-channel-list@npm:^1.0.0":
   version: 1.0.0
   resolution: "side-channel-list@npm:1.0.0"
@@ -9368,13 +9316,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simctl@npm:^2":
-  version: 2.0.3
-  resolution: "simctl@npm:2.0.3"
-  dependencies:
-    shelljs: "npm:^0.8.5"
-    tail: "npm:^0.4.0"
-  checksum: 10c0/b8591806af295707244c51a82366badc88c98c70fc632137891493d92c234e8b945036e05544be0fb87a61466640ae9d940265b1ec04f9db358d1e67457f65a5
+"simctl@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "simctl@npm:3.0.0"
+  checksum: 10c0/374698c7c84a54e68a877cdf391dc2a7b3043865252a1ac7ff54dee696b72ba7bf1ae82be220936990178d00fcf361c7d706814848f6a7b448eaa879cfa1dcee
   languageName: node
   linkType: hard
 
@@ -9750,13 +9695,6 @@ __metadata:
     semver:
       optional: true
   checksum: 10c0/94c4ef9e59be9014e7ea7efa687b858152be0752e21c0dce3af1133504e02335a5c3f75a2791bcf5e5a28b243d2759cd5d7c79e4f4b94b64f848ab9b26d36239
-  languageName: node
-  linkType: hard
-
-"tail@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "tail@npm:0.4.0"
-  checksum: 10c0/739711453c6aa6799eca6e145b2736036ac20871cd251c75ad8a5ab4064c16f1389d451e930751afcfe046cf901ce5c3e177feb2967283a6292532fd8f62b707
   languageName: node
   linkType: hard
 
@@ -10551,13 +10489,6 @@ __metadata:
     simple-plist: "npm:^1.1.0"
     uuid: "npm:^7.0.3"
   checksum: 10c0/51bf35cee52909aeb18f868ecf9828f93b8042fadf968159320f9f11e757a52e43f6563a53b586986cfe5a34d576f3300c4c0cf1e14300084344ae206eaa53c3
-  languageName: node
-  linkType: hard
-
-"xml-escape@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "xml-escape@npm:1.1.0"
-  checksum: 10c0/973cef0e383c373d1ccbacbba33ac49e7f2afd60d2710ed1308e153d2aa3b3189477f79315eb10eed43b7221add040a5eab18107170b658559e4d29ce7653a76
   languageName: node
   linkType: hard
 

@@ -12,7 +12,8 @@ yarn workspace com.wultra.pwatest freshIos
 yarn workspace com.wultra.pwatest freshAndroid
 ```
 
-No Metro needed. Re-run after changing the app or `.env`.
+No Metro needed. Re-run after changing the app or `.env`. After upgrading
+cordova-ios, remove `platforms` and `plugins` once.
 
 ## Tests
 

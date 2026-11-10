@@ -7,16 +7,15 @@
     "scripts": {
         "android": "yarn dlx cordova run android",
         "ios": "yarn dlx cordova run ios",
-        "pods": "(cd \"platforms/ios\" && yarn dlx pod-install --non-interactive)",
         "rebuildPlugin": "(cd .. && yarn workspace cordova-powerauth-mobile-sdk build)",
         "installPlugin": "npm_config_workspaces=false yarn dlx cordova plugin add cordova-powerauth-mobile-sdk --noregistry --searchpath ../packages/lib-cordova/build --force",
         "reinstallPlugin": "(npm_config_workspaces=false yarn dlx cordova plugin remove cordova-powerauth-mobile-sdk --no-save --force || true) && yarn rebuildPlugin && yarn installPlugin",
         "bundle": "node node_modules/gulp/bin/gulp.js bundle",
         "prepare": "node node_modules/gulp/bin/gulp.js",
         "buildAndroid": "yarn reinstallPlugin && yarn prepare && yarn dlx cordova build android",
-        "buildIos": "yarn reinstallPlugin && yarn prepare && (cd platforms/ios && yarn dlx pod-install --non-interactive && xcodebuild archive -workspace PowerAuthTest.xcworkspace -scheme PowerAuthTest -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO)",
+        "buildIos": "yarn reinstallPlugin && yarn prepare && (cd platforms/ios && xcodebuild archive -workspace App.xcworkspace -scheme App -sdk iphoneos CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_ALLOWED=NO)",
         "freshAndroid": "yarn reinstallPlugin && yarn prepare && yarn android",
-        "freshIos": "yarn reinstallPlugin && yarn prepare && yarn pods && yarn ios"
+        "freshIos": "yarn reinstallPlugin && yarn prepare && yarn ios"
     },
     "keywords": [
         "ecosystem:cordova"
@@ -27,7 +26,7 @@
         "buffer": "^6.0.3",
         "chalk": "^4.1.2",
         "cordova-android": "^13.0.0",
-        "cordova-ios": "^7.1.1",
+        "cordova-ios": "^8.1.1",
         "dotenv": "^16.4.5",
         "esbuild": "^0.23.1",
         "gulp": "^5.0.0",
