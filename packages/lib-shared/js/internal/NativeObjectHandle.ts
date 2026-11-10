@@ -50,6 +50,11 @@ export class NativeObjectHandle {
         return new NativeObjectHandle(undefined, initializer)
     }
 
+    /** `true` if this is a lazy handle whose native object creation hasn't started yet. */
+    get isUninitialized(): boolean {
+        return !this.releaseRequested && this.objectId === undefined && this.initialization === undefined
+    }
+
     async withObjectId<T>(action: (objectId: string) => Promise<T>): Promise<T> {
         try {
             return await action(await this.getObjectId())
@@ -65,7 +70,7 @@ export class NativeObjectHandle {
      */
     release(): Promise<void> {
         // A lazy handle owns no native object before its initialization starts.
-        if (!this.releaseRequested && this.objectId === undefined && this.initialization === undefined) {
+        if (this.isUninitialized) {
             return Promise.resolve()
         }
         if (!this.releasePromise) {
