@@ -308,9 +308,13 @@ jobs:
     permissions:
       actions: write
       contents: read
-    runs-on: macos-latest
+    # Xcode 27 (preview image). Xcode 26 rejects the SPM build: PowerAuth 2.0.1 declares
+    # iOS 13 but resolves cc7 0.8.0, which requires iOS 15.
+    runs-on: xcode-27
     timeout-minutes: 90
     env:
+      # Pinned to 27.0: the image's default (27.1) SDK has only an iPhone Duo simulator.
+      DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
       E2E_COLLECTOR_TIMEOUT: "90m"
       E2E_RUN_START_TIMEOUT_SEC: "5400"
       E2E_COMPLETE_TIMEOUT_SEC: "5400"
@@ -347,19 +351,6 @@ jobs:
         with:
           env-file: ${{ secrets.ENV_TEST_FILE }}
 
-      - *setup-ruby
-
-      - name: Detect Xcode version
-        run: |
-          xcodebuild -version | awk '/^Build version/ { print "XCODE_VERSION=" $3 }' >> "$GITHUB_ENV"
-
-      - name: Cache CocoaPods downloads (Cordova)
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/CocoaPods
-          # PowerAuth prepares native frameworks in the download cache.
-          key: pa-ci-v3-${{ runner.os }}-${{ runner.arch }}-pods-cordova-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('testapp/Gemfile.lock', 'packages/lib-cordova/plugin.xml', 'testapp-cordova/config.xml', 'testapp-cordova/package.json', 'yarn.lock') }}
-
       - name: Build test infra packages
         run: |
           yarn workspace mobile-testbed build
@@ -369,8 +360,7 @@ jobs:
       - name: Run E2E (iOS simulator, Cordova)
         env:
           E2E_MODE: cordova
-          BUNDLE_GEMFILE: ${{ github.workspace }}/testapp/Gemfile
-        run: bundle exec bash scripts/e2e/run-ios-ci.sh
+        run: bash scripts/e2e/run-ios-ci.sh
 
       - name: Upload artifacts
         if: always()

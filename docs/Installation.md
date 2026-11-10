@@ -66,7 +66,7 @@ cordova plugin add cordova-powerauth-mobile-sdk
 
 #### 2. Install pods for iOS (if needed)
 
-To make integration working with iOS, you might need to install Pods:
+With cordova-ios 8 or later, the plugin resolves `PowerAuth2` with Swift Package Manager, but Cordova still requires CocoaPods 1.16.0 or later to be installed. With cordova-ios 7, the plugin uses CocoaPods. To make integration working with iOS, you might need to install Pods:
 
 ```sh
 cd platforms/ios
