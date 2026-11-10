@@ -14,12 +14,37 @@
 // limitations under the License.
 //
 
-import { PowerAuth, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthErrorCode } from "react-native-powerauth-mobile-sdk";
+import { PasswordType, PowerAuth, PowerAuthAlgorithm, PowerAuthAuthentication, PowerAuthErrorCode, PowerAuthPassword } from "react-native-powerauth-mobile-sdk";
 import { expect } from "mobile-testbed";
 import { importPassword } from "./helpers/PasswordHelper";
 import { TestWithActivation } from "./helpers/TestWithActivation";
 
 export class PowerAuth_PasswordTests extends TestWithActivation {
+
+    private async isSignatureValid(password: PasswordType): Promise<boolean> {
+        const auth = PowerAuthAuthentication.password(password)
+        const header = await this.sdk.authenticationHeaderForRequestWithBody(auth, 'POST', '/some/uriId', '{}')
+        return (await this.helper.verifySignature('POST', '/some/uriId', '{}', header.value)).signatureValid
+    }
+
+    async testMultiCodePointPassword() {
+        // 👍🏽 is one visible character made of two code points (U+1F44D U+1F3FD)
+        const password = 'Sk💀ll👍🏽'
+        const codePoints = [0x53, 0x6B, 0x1F480, 0x6C, 0x6C, 0x1F44D, 0x1F3FD]
+        await this.sdk.changePassword(this.credentials.validPassword, password)
+
+        // A string password and a password object with the same code points must be interchangeable
+        expect(await this.isSignatureValid(password)).toBe(true)
+        expect(await this.isSignatureValid(await importPassword(password))).toBe(true)
+        const fromCodePoints = new PowerAuthPassword()
+        for (const cp of codePoints) {
+            await fromCodePoints.addCodePoint(cp)
+        }
+        expect(await this.isSignatureValid(fromCodePoints)).toBe(true)
+
+        // 4.x `addCharacter('👍🏽')` stored only the first code point, which is a different password
+        expect(await this.isSignatureValid(await importPassword('Sk💀ll👍'))).toBe(false)
+    }
     async testValidatePassword() {
         // Valid password
         await this.sdk.validatePassword(this.credentials.validPassword)

@@ -37,6 +37,7 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
   - Deprecated the legacy server and device signature helpers.
 - Added `fetchSecureVaultKey()` and the native-backed `PowerAuthSecureVaultKey` object with `deriveKey()` and `release()` methods. ([#480](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/480))
   - Deprecated `fetchEncryptionKey()`.
+- Added `PowerAuthPassword.addCodePoint()`, `insertCodePoint()`, `removeCodePointAt()`, `removeLastCodePoint()`, and `addCodePoints()`, which work with Unicode code points, like the native PowerAuth mobile SDK. Deprecated `addCharacter()`, `insertCharacter()`, `removeCharacterAt()`, `removeLastCharacter()`, and the `CharacterType` type. The deprecated methods keep their 4.x behavior, so a string passed to `addCharacter()` or `insertCharacter()` still stores only its first code point, and characters such as emoji with skin tone modifiers are silently truncated. ([#310](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/310))
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
