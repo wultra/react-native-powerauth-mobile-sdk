@@ -199,40 +199,68 @@ export class PowerAuthPasswordTests extends TestSuite {
     }
 
     async testAutomaticCleanupInvalidatesPassword() {
-        const p1 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: 100 })
-        const p2 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: 100 })
+        // Automatic cleanup depends on real time, and a busy device can stall for longer than
+        // the release time. Such an attempt proves nothing, so try again.
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            if (await this.tryAutomaticCleanup(1000)) {
+                return
+            }
+            this.reportWarning(`Device stalled in attempt ${attempt}, trying again`)
+        }
+        throw new Error('Device is too slow to test the automatic cleanup')
+    }
+
+    /**
+     * @returns `false` if the device stalled for so long that p1 was released while the test still needed it.
+     */
+    private async tryAutomaticCleanup(releaseTime: number): Promise<boolean> {
+        const p1 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: releaseTime })
+        const p2 = new PowerAuthPassword({ destroyOnUse: false, autoReleaseTimeMillis: releaseTime })
         this.cleanup.push(p1, p2)
 
-        // We have to call at least some function to create underlying native object
-        expect(await p1.isEmpty()).toBe(true)
-        expect(await p2.length()).toBe(0)
-        const id1 = await objectIdOf(p1)
-        const id2 = await objectIdOf(p2)
+        let id1: string
+        // Taken before the last access that extended p1's lifetime. p2 is created after p1.
+        let p1AccessTime = Date.now()
+        try {
+            // We have to call at least some function to create underlying native object
+            expect(await p1.isEmpty()).toBe(true)
+            expect(await p2.length()).toBe(0)
+            id1 = await objectIdOf(p1)
+            const id2 = await objectIdOf(p2)
 
-        // Wait for 50ms
-        await this.sleep(50)
-        // Both passwords should exist now
-        expect(await Register.findObject(id1, 'password')).toBe(true)
-        expect(await Register.findObject(id2, 'password')).toBe(true)
-        // Access 1st password, to extend it's lifetime
-        await p1.addCodePoint(48)
-        // Wait for another 50ms, p2 should be released now
-        await this.sleep(50)
+            // Wait for a half of the release time
+            await this.sleep(releaseTime * 0.5)
+            // Both passwords should exist now
+            expect(await Register.findObject(id1, 'password')).toBe(true)
+            expect(await Register.findObject(id2, 'password')).toBe(true)
+            // Access 1st password, to extend it's lifetime
+            const accessTime = Date.now()
+            await p1.addCodePoint(48)
+            p1AccessTime = accessTime
+            // Wait until p2 is released, but p1 is not
+            await this.sleep(releaseTime * 0.6)
 
-        expect(await Register.findObject(id1, 'password')).toBe(true)
-        expect(await Register.findObject(id2, 'password')).toBe(false)
-        // Expired password is not recreated
-        await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-        await expect(async () => p2.addCodePoint(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-        expect(await objectIdOf(p2)).toBe(id2)
-        await expect(async () => p1.isEqualTo(p2)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
-        // p1 is still valid
-        expect(await p1.length()).toBe(1)
+            expect(await Register.findObject(id1, 'password')).toBe(true)
+            expect(await Register.findObject(id2, 'password')).toBe(false)
+            // Expired password is not recreated
+            await expect(async () => p2.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+            await expect(async () => p2.addCodePoint(48)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+            expect(await objectIdOf(p2)).toBe(id2)
+            await expect(async () => p1.isEqualTo(p2)).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+            // p1 is still valid
+            expect(await p1.length()).toBe(1)
+        } catch (error) {
+            if (Date.now() - p1AccessTime >= releaseTime) {
+                return false
+            }
+            throw error
+        }
 
-        // Now sleep for another 150ms, so p1 will be released too
-        await this.sleep(150)
+        // Now wait until p1 is released too
+        await this.sleep(releaseTime * 1.1)
         expect(await Register.findObject(id1, 'password')).toBe(false)
         await expect(async () => p1.isEmpty()).toThrow({ errorCode: PowerAuthErrorCode.INVALID_NATIVE_OBJECT })
+        return true
     }
 
     async testReleaseAfterUse() {
