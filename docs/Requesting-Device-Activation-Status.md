@@ -52,6 +52,8 @@ if (await powerAuth.hasValidActivation()) {
         const currentFailCount = status.failCount;
         const maxAllowedFailCount = status.maxFailCount;
         const remainingFailCount = status.remainingAttempts;
+        // Time when a temporarily blocked activation will be unblocked, otherwise null
+        const blockExpirationTime = status.blockExpirationTime;
         // Custom object contains any proprietary server specific data
         const customObject = status.customObject;
     } catch (e) {
@@ -63,6 +65,26 @@ if (await powerAuth.hasValidActivation()) {
 ```
 
 Note that the status fetch may fail at an unrecoverable error `PowerAuthErrorCode.PROTOCOL_UPGRADE`, meaning that it's not possible to upgrade the PowerAuth protocol to a newer version. In this case, it's recommended to [remove the activation locally](Device-Activation-Removal.md).
+
+## Temporarily Blocked Activation
+
+If the activation is temporarily blocked, `status.blockExpirationTime` contains the time when it will be unblocked, in milliseconds since the Unix epoch. Otherwise the value is `null`. To compare it with the current time, use the [synchronized time](Time-Synchronization.md) instead of the device's local time:
+
+```javascript
+const status = await powerAuth.fetchActivationStatus();
+if (status.state === PowerAuthActivationState.BLOCKED && status.blockExpirationTime !== null) {
+    const timeService = powerAuth.timeSynchronizationService;
+    if (!await timeService.isTimeSynchronized()) {
+        // Without synchronization, currentTime() returns the device's local time.
+        await timeService.synchronizeTime();
+    }
+    const now = await timeService.currentTime();
+    const remainingSeconds = Math.max(0, Math.ceil((status.blockExpirationTime - now) / 1000));
+    console.log(`Activation will be unblocked in ${remainingSeconds} seconds`);
+}
+```
+
+The block expiration time requires PowerAuth Server `2.2.0` or later. With older servers, or with the legacy protocol 3.3, the value is always `null`.
 
 ## Authenticated Protocol Upgrade
 

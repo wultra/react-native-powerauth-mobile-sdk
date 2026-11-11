@@ -593,6 +593,7 @@ PAJS_METHOD_START(fetchActivationStatus,
                 @"failCount": [[NSNumber alloc] initWithUnsignedInt:status.failCount],
                 @"maxFailCount": [[NSNumber alloc] initWithUnsignedInt:status.maxFailCount],
                 @"remainingAttempts": [[NSNumber alloc] initWithUnsignedInt:status.remainingAttempts],
+                @"blockExpirationTime": status.blockExpirationTime ? @([self convertTimestamp:status.blockExpirationTime.timeIntervalSince1970]) : [NSNull null],
                 @"customObject": status.customObject ? [RCTConvert NSDictionary:status.customObject] : [NSNull null]
             };
             resolve(response);
