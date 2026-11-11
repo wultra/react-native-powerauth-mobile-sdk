@@ -226,14 +226,21 @@ export class PowerAuth_ActivationTests extends TestWithActivation {
 
         let status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
+        expect(status.blockExpirationTime).toBeNull()
         await this.helper.changeActivation("BLOCK")
 
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.BLOCKED)
+        // Only a temporary block has an expiration time, in milliseconds since the Unix epoch.
+        if (status.blockExpirationTime !== null) {
+            const now = await this.sdk.timeSynchronizationService.currentTime()
+            expect(Math.abs(status.blockExpirationTime - now) < 365 * 24 * 60 * 60 * 1000).toBe(true)
+        }
 
         await this.helper.changeActivation("UNBLOCK")
         status = await this.sdk.fetchActivationStatus()
         expect(status.state).toBe(PowerAuthActivationState.ACTIVE)
+        expect(status.blockExpirationTime).toBeNull()
 
         await this.helper.removeRegistration()
         status = await this.sdk.fetchActivationStatus()

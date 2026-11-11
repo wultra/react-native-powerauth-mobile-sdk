@@ -37,6 +37,14 @@ export interface PowerAuthActivationStatus {
      */
     remainingAttempts: number
     /**
+     * If the activation is temporarily blocked, contains the time when it will be unblocked, in milliseconds
+     * since the reference date 1.1.1970 (e.g. unix timestamp.) Otherwise the value is `null`.
+     *
+     * To compare the value with the current time, use `PowerAuthTimeSynchronizationService.currentTime()`.
+     * The value requires PowerAuth Server 2.2.0 or later and is always `null` for the legacy protocol 3.3.
+     */
+    blockExpirationTime: number | null
+    /**
      * Contains custom object returned from the server. The value is optional and PowerAuth Application Server must support this custom object.
      */
     customObject?: any

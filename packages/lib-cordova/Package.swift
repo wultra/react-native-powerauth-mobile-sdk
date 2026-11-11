@@ -18,10 +18,10 @@ let package = Package(
     dependencies: [
         // cordova-ios rewrites this line to its local Cordova package.
         .package(url: "https://github.com/apache/cordova-ios.git", from: "8.0.0"),
-        // Mirrors the CocoaPods `PowerAuth2` dependency (`~> 2.0.0`).
+        // Mirrors the CocoaPods `PowerAuth2` dependency (`~> 2.1.0`).
         .package(
             url: "https://github.com/wultra/powerauth-mobile-sdk",
-            .upToNextMinor(from: "2.0.0")
+            .upToNextMinor(from: "2.1.0")
         ),
     ],
     targets: [

@@ -151,7 +151,7 @@
                 <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods use-frameworks="true">
-                <pod name="PowerAuth2" options="'~> 2.0.0'" nospm="true" />
+                <pod name="PowerAuth2" options="'~> 2.1.0'" nospm="true" />
             </pods>
         </podspec>
     </platform>

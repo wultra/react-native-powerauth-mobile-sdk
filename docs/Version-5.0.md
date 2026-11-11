@@ -1,6 +1,6 @@
 # Migration from 4.x.x to 5.0.0
 
-This guide covers migration from PowerAuth Mobile JavaScript SDK `4.x.x` to `5.0.0` for React Native and Cordova. JavaScript SDK `5.0.0` uses native PowerAuth Mobile SDK `2.0.0` on Android and iOS, replacing native SDK `1.9.x`.
+This guide covers migration from PowerAuth Mobile JavaScript SDK `4.x.x` to `5.0.0` for React Native and Cordova. JavaScript SDK `5.0.0` uses native PowerAuth Mobile SDK `2.1.0` on Android and iOS, replacing native SDK `1.9.x`.
 
 Both wrappers use the same public API. The sections below describe JavaScript API changes and the application changes required by the native SDK upgrade. JavaScript retains the deprecated compatibility APIs listed below, and binary values cross the bridge as Base64 strings. Some obsolete APIs have been removed and require updates to calling code.
 
@@ -56,7 +56,7 @@ Use `PowerAuthSharingConfiguration` for sharing. Keep matching instance and stor
 - Android builds require Java 17 compatibility.
 - CocoaPods supplies the native `PowerAuth2` dependency for React Native (SwiftPM integration is opt-in and experimental) and for Cordova with cordova-ios 7. Cordova with cordova-ios 8 or later uses SwiftPM.
 
-Follow [installation instructions](Installation.md) for dependency setup. Applications with custom native integration must update old `PowerAuthCore` imports to the native 2.0 surface; consult the [native migration guide](https://github.com/wultra/powerauth-mobile-sdk/blob/2.0.0/docs/Migration-from-1.9-to-2.0.md).
+Follow [installation instructions](Installation.md) for dependency setup. Applications with custom native integration must update old `PowerAuthCore` imports to the native 2.0 surface; consult the native migration guides [from 1.9 to 2.0](https://github.com/wultra/powerauth-mobile-sdk/blob/2.1.0/docs/Migration-from-1.9-to-2.0.md) and [from 2.0 to 2.1](https://github.com/wultra/powerauth-mobile-sdk/blob/2.1.0/docs/Migration-from-2.0-to-2.1.md).
 
 ## Configuration Changes
 
@@ -208,6 +208,6 @@ Plan local-data migration before upgrading an activation: the legacy key must be
 
 ## References
 
-See the [native SDK 2.0 migration guide](https://github.com/wultra/powerauth-mobile-sdk/blob/2.0.0/docs/Migration-from-1.9-to-2.0.md) for details about the underlying native SDK changes.
+See the native SDK migration guides [from 1.9 to 2.0](https://github.com/wultra/powerauth-mobile-sdk/blob/2.1.0/docs/Migration-from-1.9-to-2.0.md) and [from 2.0 to 2.1](https://github.com/wultra/powerauth-mobile-sdk/blob/2.1.0/docs/Migration-from-2.0-to-2.1.md) for details about the underlying native SDK changes.
 
 See the native SDK's [Upgrading to Post-Quantum Cryptography](https://github.com/wultra/powerauth-mobile-sdk/blob/develop/docs/Upgrading-to-Post-Quantum-Cryptography.md) tutorial for guidance on choosing a protocol migration strategy for existing users.

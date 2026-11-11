@@ -17,10 +17,10 @@ let package = Package(
         // React Native resolves this path through its generated
         // build/generated/autolinking/libs/<SwiftName> package alias.
         .package(name: "ReactNative", path: "../../../../xcframeworks"),
-        // Mirrors the CocoaPods `PowerAuth2` dependency (`~> 2.0.0`).
+        // Mirrors the CocoaPods `PowerAuth2` dependency (`~> 2.1.0`).
         .package(
             url: "https://github.com/wultra/powerauth-mobile-sdk",
-            .upToNextMinor(from: "2.0.0")
+            .upToNextMinor(from: "2.1.0")
         ),
     ],
     targets: [
