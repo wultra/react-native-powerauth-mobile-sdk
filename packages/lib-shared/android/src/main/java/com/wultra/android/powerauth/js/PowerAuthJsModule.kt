@@ -254,6 +254,9 @@ class PowerAuthJsModule(
                         map.putInt("failCount", status.failCount)
                         map.putInt("maxFailCount", status.maxFailCount)
                         map.putInt("remainingAttempts", status.getRemainingAttempts())
+                        status.blockExpirationTime?.let {
+                            map.putDouble("blockExpirationTime", it.toDouble())
+                        } ?: map.putNull("blockExpirationTime")
                         map.putMap(
                             "customObject",
                             Arguments.makeNativeMap(status.customObject)
