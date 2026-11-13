@@ -309,34 +309,53 @@ pick_simulator_from_list() {
   [ -n "${SIM_ID}" ]
 }
 
+# Prints "<udid> <device type> <name>" of a simulator on the active SDK's runtime.
+find_sdk_runtime_simulator() {
+  local available_json sdk_version runtime_id
+  sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
+  runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
+
+  if ! available_json="$(simctl_list devices available --json)"; then
+    echo "[e2e] ERROR: Failed to list available iOS simulators." >&2
+    return 1
+  fi
+
+  if ! printf '%s\n' "${available_json}" |
+    RUNTIME_ID="${runtime_id}" node -e '
+      const devices = JSON.parse(require("node:fs").readFileSync(0)).devices[process.env.RUNTIME_ID] || [];
+      const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
+        devices.find(d => d.deviceTypeIdentifier.includes(".iPad-"));
+      if (!device) process.exit(1);
+      process.stdout.write(`${device.udid} ${device.deviceTypeIdentifier.split(".").pop()} ${device.name}`);
+    '; then
+    echo "[e2e] No simulator matches the active iOS ${sdk_version} SDK." >&2
+    return 1
+  fi
+}
+
+# An app built with the active SDK should also run on that SDK's iOS version.
+pick_sdk_runtime_simulator() {
+  local simulator
+  if ! simulator="$(find_sdk_runtime_simulator)"; then
+    return 1
+  fi
+  SIM_ID="${simulator%% *}"
+  SIM_LINE="${simulator#* }"
+}
+
 resolve_cordova_sim_target() {
   if [ -n "${E2E_IOS_SIMULATOR_TARGET:-}" ]; then
     CORDOVA_SIM_TARGET="${E2E_IOS_SIMULATOR_TARGET}"
     return 0
   fi
 
-  local available_json sdk_version runtime_id
-  sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
-  runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${sdk_version//./-}"
-
-  if ! available_json="$(simctl_list devices available --json)"; then
-    echo "[e2e] ERROR: Failed to list available iOS simulators."
+  local simulator
+  if ! simulator="$(find_sdk_runtime_simulator)"; then
+    echo "[e2e] ERROR: No Cordova simulator target available."
     return 1
   fi
-
-  if ! CORDOVA_SIM_TARGET="$(
-    printf '%s\n' "${available_json}" |
-      RUNTIME_ID="${runtime_id}" node -e '
-        const devices = JSON.parse(require("node:fs").readFileSync(0)).devices[process.env.RUNTIME_ID] || [];
-        const device = devices.find(d => d.deviceTypeIdentifier.includes(".iPhone-")) ||
-          devices.find(d => d.deviceTypeIdentifier.includes(".iPad-"));
-        if (!device) process.exit(1);
-        process.stdout.write(device.deviceTypeIdentifier.split(".").pop());
-      '
-  )"; then
-    echo "[e2e] ERROR: No simulator matches the active iOS ${sdk_version} SDK."
-    return 1
-  fi
+  simulator="${simulator#* }"
+  CORDOVA_SIM_TARGET="${simulator%% *}"
 }
 
 if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
@@ -352,7 +371,7 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
       echo "[e2e] ERROR: Failed to list available iOS simulators."
       exit 1
     fi
-    if pick_simulator_from_list "${available_list}"; then
+    if pick_sdk_runtime_simulator || pick_simulator_from_list "${available_list}"; then
       echo "[e2e] Booting iOS simulator asynchronously: ${SIM_LINE}"
       SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
       if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
