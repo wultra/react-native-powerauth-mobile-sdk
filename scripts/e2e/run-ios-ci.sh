@@ -439,8 +439,17 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
 
   echo "[e2e] Waiting for iOS simulator ${SIM_ID} to finish booting..."
   if ! wait_for_simulator_ready "${SIMULATOR_BOOT_DEADLINE}"; then
-    echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting."
-    abort_with_logs
+    # A boot started alongside the build can hang on some runner images; retry once while idle.
+    echo "[e2e] WARNING: Simulator ${SIM_ID} did not finish booting; rebooting it."
+    run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
+    if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
+      echo "[e2e] ERROR: Failed to restart simulator ${SIM_ID}."
+      abort_with_logs
+    fi
+    if ! wait_for_simulator_ready "$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"; then
+      echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting."
+      abort_with_logs
+    fi
   fi
   if [ "${SIMULATOR_NEEDS_BIOMETRIC_SETUP}" = true ]; then
     configure_simulator_biometrics
