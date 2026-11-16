@@ -251,8 +251,20 @@ wait_for_simulator_ready() {
     if run_with_timeout "${remaining}" xcrun simctl bootstatus "${SIM_ID}" 2>/dev/null; then
       return 0
     fi
-    if [ "$(date +%s)" -ge "${deadline}" ] && [ "$(simulator_state)" != "Shutdown" ]; then
-      return 1
+    state="$(simulator_state)"
+    if [ "$(date +%s)" -ge "${deadline}" ] && [ "${state}" != "Shutdown" ]; then
+      # Stuck mid-boot: shut it down so the next pass boots it again with a fresh deadline.
+      if [ "${boots}" -ge "${SIM_BOOT_ATTEMPTS}" ]; then
+        echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting after ${boots} boot attempts." >&2
+        return 1
+      fi
+      echo "[e2e] WARNING: Simulator ${SIM_ID} did not finish booting (state: ${state:-unknown}); shutting it down."
+      run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
+      if [ "$(simulator_state)" != "Shutdown" ]; then
+        echo "[e2e] ERROR: Failed to shut down simulator ${SIM_ID}." >&2
+        return 1
+      fi
+      continue
     fi
     sleep 5
   done
