@@ -230,11 +230,15 @@ simulator_state() {
 wait_for_simulator_ready() {
   local deadline="$1"
   local boots=0
+  local need_boot=false
   local now remaining state
 
   while true; do
-    state="$(simulator_state)"
-    if [ "${state}" = "Shutdown" ]; then
+    if [ "${need_boot}" = false ] && [ "$(simulator_state)" = "Shutdown" ]; then
+      need_boot=true
+    fi
+    # Every pass that needs a boot issues one and counts it, so the loop is bounded.
+    if [ "${need_boot}" = true ]; then
       if [ "${boots}" -ge "${SIM_BOOT_ATTEMPTS}" ]; then
         echo "[e2e] ERROR: Simulator ${SIM_ID} did not boot after ${boots} boot attempts." >&2
         return 1
@@ -247,6 +251,7 @@ wait_for_simulator_ready() {
       echo "[e2e] WARNING: Simulator ${SIM_ID} is shut down; booting it (attempt ${boots}/${SIM_BOOT_ATTEMPTS})."
       run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}" || true
       deadline="$(( $(date +%s) + SIM_BOOT_RETRY_TIMEOUT_SEC ))"
+      need_boot=false
       continue
     fi
 
@@ -265,11 +270,12 @@ wait_for_simulator_ready() {
 
     state="$(simulator_state)"
     if [ "${state}" = "Shutdown" ]; then
-      # It went down mid-boot; the next pass boots it again.
+      # It went down mid-boot.
+      need_boot=true
       continue
     fi
     if [ "$(date +%s)" -ge "${deadline}" ]; then
-      # Stuck mid-boot (or state unknown): shut it down so the next pass boots it again.
+      # Stuck mid-boot (or state unknown): shut it down and boot it again.
       if [ "${boots}" -ge "${SIM_BOOT_ATTEMPTS}" ]; then
         echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting after ${boots} boot attempts." >&2
         return 1
@@ -281,11 +287,8 @@ wait_for_simulator_ready() {
         echo "[e2e] ERROR: Failed to shut down simulator ${SIM_ID} (state: ${state})." >&2
         return 1
       fi
-      if [ -z "${state}" ]; then
-        # Unknown state: count it as an attempt so a broken simctl cannot loop forever.
-        boots=$((boots + 1))
-        deadline="$(( $(date +%s) + SIM_BOOT_RETRY_TIMEOUT_SEC ))"
-      fi
+      # Confirmed or unknown: boot next, which counts against SIM_BOOT_ATTEMPTS.
+      need_boot=true
       continue
     fi
     sleep 5
