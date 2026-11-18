@@ -65,6 +65,10 @@ RUN_COMPLETE_TIMEOUT_SEC="${E2E_COMPLETE_TIMEOUT_SEC:-3600}"
 LAUNCH_GRACE_TIMEOUT_SEC="${E2E_LAUNCH_GRACE_TIMEOUT_SEC:-120}"
 SIM_BOOT_TIMEOUT_SEC="${E2E_SIM_BOOT_TIMEOUT_SEC:-900}"
 SIM_BOOTSTATUS_GRACE_SEC="${E2E_SIM_BOOTSTATUS_GRACE_SEC:-30}"
+SIM_BOOT_POLL_SEC="${E2E_SIM_BOOT_POLL_SEC:-60}"
+SIM_BOOT_ATTEMPTS="${E2E_SIM_BOOT_ATTEMPTS:-4}"
+SIM_BOOT_RETRY_TIMEOUT_SEC="${E2E_SIM_BOOT_RETRY_TIMEOUT_SEC:-300}"
+SIM_BOOT_RETRY_DELAY_SEC="${E2E_SIM_BOOT_RETRY_DELAY_SEC:-30}"
 SIMCTL_COMMAND_TIMEOUT_SEC="${E2E_SIMCTL_COMMAND_TIMEOUT_SEC:-30}"
 SIMCTL_LIST_TIMEOUT_SEC="${E2E_SIMCTL_LIST_TIMEOUT_SEC:-120}"
 SIMCTL_LIST_ATTEMPTS="${E2E_SIMCTL_LIST_ATTEMPTS:-3}"
@@ -199,16 +203,96 @@ simctl_list() {
   return 1
 }
 
+# Prints the simulator's state (Booted, Booting, Shutdown, ...), or nothing if it cannot be read.
+# simctl can hang or fail transiently on hosted runners, so retry before giving up.
+simulator_state() {
+  local attempt state
+  for attempt in 1 2 3; do
+    state="$(run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl list devices --json 2>/dev/null |
+      SIM_ID="${SIM_ID}" node -e '
+        const devices = Object.values(JSON.parse(require("node:fs").readFileSync(0)).devices).flat();
+        const device = devices.find(d => d.udid === process.env.SIM_ID);
+        if (device) process.stdout.write(device.state);
+      ' 2>/dev/null)" || true
+    if [ -n "${state}" ]; then
+      printf '%s' "${state}"
+      return 0
+    fi
+    [ "${attempt}" -lt 3 ] && sleep 5
+  done
+}
+
+# Shortly after a runner starts, macOS can remount simulator runtime disk images under a new
+# path. A boot sent during the remount fails, and a simulator booted from the old mount shuts
+# down or never finishes booting. Boot it again whenever it is found shut down, and shut it
+# down when it misses the deadline. Retries use the shorter SIM_BOOT_RETRY_TIMEOUT_SEC so the
+# worst case stays well inside the job timeout.
 wait_for_simulator_ready() {
   local deadline="$1"
-  local now remaining
+  local boots=0
+  local need_boot=false
+  local now remaining state
 
-  now="$(date +%s)"
-  remaining="$((deadline - now))"
-  if [ "${remaining}" -lt "${SIM_BOOTSTATUS_GRACE_SEC}" ]; then
-    remaining="${SIM_BOOTSTATUS_GRACE_SEC}"
-  fi
-  run_with_timeout "${remaining}" xcrun simctl bootstatus "${SIM_ID}" -b
+  while true; do
+    if [ "${need_boot}" = false ] && [ "$(simulator_state)" = "Shutdown" ]; then
+      need_boot=true
+    fi
+    # Every pass that needs a boot issues one and counts it, so the loop is bounded.
+    if [ "${need_boot}" = true ]; then
+      if [ "${boots}" -ge "${SIM_BOOT_ATTEMPTS}" ]; then
+        echo "[e2e] ERROR: Simulator ${SIM_ID} did not boot after ${boots} boot attempts." >&2
+        return 1
+      fi
+      if [ "${boots}" -gt 0 ]; then
+        # Give an in-progress runtime remount time to settle before the next attempt.
+        sleep "${SIM_BOOT_RETRY_DELAY_SEC}"
+      fi
+      boots=$((boots + 1))
+      echo "[e2e] WARNING: Simulator ${SIM_ID} is shut down; booting it (attempt ${boots}/${SIM_BOOT_ATTEMPTS})."
+      run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}" || true
+      deadline="$(( $(date +%s) + SIM_BOOT_RETRY_TIMEOUT_SEC ))"
+      need_boot=false
+      continue
+    fi
+
+    now="$(date +%s)"
+    remaining="$((deadline - now))"
+    if [ "${remaining}" -lt "${SIM_BOOTSTATUS_GRACE_SEC}" ]; then
+      remaining="${SIM_BOOTSTATUS_GRACE_SEC}"
+    fi
+    # Wait in short slices so a simulator that shuts down mid-boot is noticed and rebooted.
+    if [ "${remaining}" -gt "${SIM_BOOT_POLL_SEC}" ]; then
+      remaining="${SIM_BOOT_POLL_SEC}"
+    fi
+    if run_with_timeout "${remaining}" xcrun simctl bootstatus "${SIM_ID}" 2>/dev/null; then
+      return 0
+    fi
+
+    state="$(simulator_state)"
+    if [ "${state}" = "Shutdown" ]; then
+      # It went down mid-boot.
+      need_boot=true
+      continue
+    fi
+    if [ "$(date +%s)" -ge "${deadline}" ]; then
+      # Stuck mid-boot (or state unknown): shut it down and boot it again.
+      if [ "${boots}" -ge "${SIM_BOOT_ATTEMPTS}" ]; then
+        echo "[e2e] ERROR: Simulator ${SIM_ID} did not finish booting after ${boots} boot attempts." >&2
+        return 1
+      fi
+      echo "[e2e] WARNING: Simulator ${SIM_ID} did not finish booting (state: ${state:-unknown}); shutting it down."
+      run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl shutdown "${SIM_ID}" >/dev/null 2>&1 || true
+      state="$(simulator_state)"
+      if [ -n "${state}" ] && [ "${state}" != "Shutdown" ]; then
+        echo "[e2e] ERROR: Failed to shut down simulator ${SIM_ID} (state: ${state})." >&2
+        return 1
+      fi
+      # Confirmed or unknown: boot next, which counts against SIM_BOOT_ATTEMPTS.
+      need_boot=true
+      continue
+    fi
+    sleep 5
+  done
 }
 
 configure_simulator_biometrics() {
@@ -375,8 +459,8 @@ if [ "${MODE}" = "rn" ] || [ "${MODE}" = "full" ]; then
       echo "[e2e] Booting iOS simulator asynchronously: ${SIM_LINE}"
       SIMULATOR_BOOT_DEADLINE="$(( $(date +%s) + SIM_BOOT_TIMEOUT_SEC ))"
       if ! run_with_timeout "${SIMCTL_COMMAND_TIMEOUT_SEC}" xcrun simctl boot "${SIM_ID}"; then
-        echo "[e2e] ERROR: Failed to start simulator ${SIM_ID}."
-        exit 1
+        # The runtime may be mid-remount; wait_for_simulator_ready boots it again after the build.
+        echo "[e2e] WARNING: Failed to start simulator ${SIM_ID}; retrying after the build."
       fi
       SIMULATOR_NEEDS_BIOMETRIC_SETUP=true
     else
