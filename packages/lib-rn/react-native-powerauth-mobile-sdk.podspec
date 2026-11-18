@@ -13,7 +13,9 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "15.1" }
   s.source       = { :git => "https://github.com/wultra/react-native-powerauth-mobile-sdk.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/PowerAuth/*.{h,m,c}"
+  s.source_files = "ios/PowerAuth/*.swift", "ios/PowerAuthBridge/*.{h,m}"
+  s.public_header_files = "ios/PowerAuthBridge/LiftPowerAuthSdk.h"
+  s.swift_version = "5.0"
   s.requires_arc = true
 
   s.dependency "PowerAuth2", "~> 2.1.0"

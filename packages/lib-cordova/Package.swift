@@ -2,7 +2,7 @@
 
 import PackageDescription
 
-// Used by cordova-ios 8 or later. Older cordova-ios versions use the plugin.xml sources and CocoaPods.
+// Used by cordova-ios 8 or later, which the plugin requires.
 let package = Package(
     name: "cordova-powerauth-mobile-sdk",
     platforms: [
@@ -31,9 +31,7 @@ let package = Package(
                 .product(name: "Cordova", package: "cordova-ios"),
                 .product(name: "PowerAuth2", package: "powerauth-mobile-sdk"),
             ],
-            path: "ios/PowerAuth",
-            exclude: ["Info.plist"],
-            publicHeadersPath: "."
+            path: "ios/PowerAuth"
         ),
     ]
 )

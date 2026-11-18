@@ -26,10 +26,9 @@
     "android/src/main/java/com/wultra/android/powerauth/reactnative/*.*",
     "android/build.gradle",
     "lib/**/*",
-    "ios/PowerAuth.xcodeproj/project.pbxproj",
-    "ios/PowerAuth/*.m",
-    "ios/PowerAuth/*.c",
-    "ios/PowerAuth/*.h",
+    "ios/PowerAuth/*.swift",
+    "ios/PowerAuthBridge/*.m",
+    "ios/PowerAuthBridge/*.h",
     "Package.swift",
     "react-native-powerauth-mobile-sdk.podspec"
   ],

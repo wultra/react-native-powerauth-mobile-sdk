@@ -9,7 +9,7 @@
     <engines>
         <engine name="cordova" version=">=12.0.0"/>
         <engine name="cordova-android" version=">=12.0.0" />
-        <engine name="cordova-ios" version=">=7.0.0" />
+        <engine name="cordova-ios" version=">=8.0.0" />
     </engines>
     <platform name="android" kotlin="2.1.20">
         <!-- Base Configuration -->
@@ -113,38 +113,29 @@
             <preference name="UseSwiftLanguageVersion" value="5" />
         </config-file>
 
-        <header-file src="ios/PowerAuth/Constants.h" />
-        <header-file src="ios/PowerAuth/Errors.h" />
-        <source-file src="ios/PowerAuth/Errors.m" />
-        <header-file src="ios/PowerAuth/PowerAuthData.h" />
-        <source-file src="ios/PowerAuth/PowerAuthData.m" />
-        <header-file src="ios/PowerAuth/PowerAuthEncryptorModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthEncryptorModule.m" />
-        <header-file src="ios/PowerAuth/PowerAuthModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthModule.m" />
-        <source-file src="ios/PowerAuth/PowerAuthObjectRegister+JS.m" />
-        <header-file src="ios/PowerAuth/PowerAuthObjectRegister.h" />
-        <source-file src="ios/PowerAuth/PowerAuthObjectRegister.m" />
-        <header-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.m" />
-        <header-file src="ios/PowerAuth/PowerAuthPasswordModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthPasswordModule.m" />
-        <header-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.m" />
-        <header-file src="ios/PowerAuth/PowerAuthStorageUtilsModule.h" />
-        <source-file src="ios/PowerAuth/PowerAuthStorageUtilsModule.m" />
-        <header-file src="ios/PowerAuth/Utilities.h" />
-        <source-file src="ios/PowerAuth/Utilities.m" />
-        <source-file src="ios/PowerAuth/pin_tester.c" />
-        <header-file src="ios/PowerAuth/pin_tester.h" />
-        <header-file src="ios/PowerAuth/wpm_types.h" />
-        <header-file src="ios/PowerAuth/PAJS.h" />
+        <source-file src="ios/PowerAuth/Constants.swift" />
+        <source-file src="ios/PowerAuth/Errors.swift" />
+        <source-file src="ios/PowerAuth/PinTester.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthData.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthEncryptorModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthObjectRegister.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthObjectRegister+JS.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthPasswordModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthStorageUtilsModule.swift" />
+        <source-file src="ios/PowerAuth/Utilities.swift" />
 
         <!-- Cordova specific files. -->
-        <header-file src="ios/PowerAuth/PAJSPlatform.h" />
-        <header-file src="ios/PowerAuth/RCTDefines.h" />
-        <header-file src="ios/PowerAuth/RCTConvert.h" />
-        <source-file src="ios/PowerAuth/RCTConvert.mm" />
+        <source-file src="ios/PowerAuth/PAJSModule.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthCryptoUtilsModule+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthEncryptorModule+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthModule+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthObjectRegister+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthPassphraseMeterModule+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthPasswordModule+Cordova.swift" />
+        <source-file src="ios/PowerAuth/PowerAuthStorageUtilsModule+Cordova.swift" />
 
         <podspec>
             <config>
