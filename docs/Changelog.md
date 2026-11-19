@@ -2,14 +2,14 @@
 
 ## TBA
 
+## 5.0.0 (11/2026)
+
 See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking changes and migration instructions.
 
 - Updated the minimum supported React Native version to 0.87, Android version to 7.0 (API 24), and iOS version to 15.1. ([#440](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/440))
 - Updated the minimum supported iOS version for Cordova to 15.0. ([#518](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/518))
 - Added experimental Swift Package Manager support for iOS with React Native 0.87 or later. ([#463](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/463), [#416](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/416))
 - Changed the Cordova plugin to use Swift Package Manager with cordova-ios 8 or later. cordova-ios 7 continues to use CocoaPods. ([#554](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/554))
-- Added support for OIDC activation. ([#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
-- Fixed an issue where a correct password was occasionally reported as invalid. ([#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 - Updated the native PowerAuth SDK dependencies to 2.1.0. ([#447](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/447), [#558](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/558))
   - Android now resolves the latest native `2.1.x` patch release, matching the existing iOS CocoaPods and Swift Package Manager ranges. ([#546](https://github.com/wultra/react-native-powerauth-mobile-sdk/pull/546))
   - Added `PowerAuthActivationStatus.blockExpirationTime` with the time when a temporarily blocked activation will be unblocked.
@@ -34,6 +34,10 @@ See the [JavaScript SDK 5.0.0 migration guide](Version-5.0.md) for breaking chan
   - Removed `BaseNativeObject` and `BaseReleasableObject`.
 - Added `PowerAuthPassword.addCodePoint()`, `insertCodePoint()`, `removeCodePointAt()`, `removeLastCodePoint()`, and `addCodePoints()`, which work with Unicode code points, like the native PowerAuth mobile SDK. Deprecated `addCharacter()`, `insertCharacter()`, `removeCharacterAt()`, `removeLastCharacter()`, and the `CharacterType` type. The deprecated methods keep their 4.x behavior, so a string passed to `addCharacter()` or `insertCharacter()` still stores only its first code point, and characters such as emoji with skin tone modifiers are silently truncated. ([#310](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/310))
 - Removed the deprecated `PowerAuthAuthentication` constructor, the mutable `usePossession`, `useBiometry`, `userPassword`, `biometryMessage`, and `biometryTitle` properties, and `convertLegacyObject()`. Use the static factories instead. This also removes an issue where constructor arguments were ignored, so signing used possession only. ([#509](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/509))
+
+## 4.3.0 (2/2026)
+- Added support for OIDC Activation (issue[#235](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/235))
+- Fixed issue, when entered correct password was reported as invalid in some rare cases (issue[#329](https://github.com/wultra/react-native-powerauth-mobile-sdk/issues/329))
 
 ## 4.2.0 (12/2025)
 - Added `PowerAuthCryptoUtils` with functions for hashing and random bytes generation (see [Crypto Utilities](./Crypto-Utilities.md) for more details)
